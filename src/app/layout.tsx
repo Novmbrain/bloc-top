@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import OfflineIndicator from "@/components/offline-indicator";
+import SWUpdatePrompt from "@/components/sw-update-prompt";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,18 +15,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PWA Demo App",
-  description: "A simple PWA demo built with Next.js",
+  title: "罗源野抱 TOPO",
+  description: "福州罗源攀岩线路分享 - 野外抱石攀岩指南",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "PWA Demo",
+    title: "罗源TOPO",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: "#667eea",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -37,11 +39,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <OfflineIndicator />
         {children}
+        <SWUpdatePrompt />
       </body>
     </html>
   );

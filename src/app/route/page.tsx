@@ -8,6 +8,12 @@ import { getAllRoutes, getRoutesByCragId } from '@/data/routes'
 import { getAllCrags } from '@/data/crags'
 import { getGradeColor } from '@/lib/tokens'
 
+const gradeGroups = [
+  { label: 'V0-V3', grades: ['V0', 'V1', 'V2', 'V3'] },
+  { label: 'V4-V6', grades: ['V4', 'V5', 'V6'] },
+  { label: 'V7+', grades: ['V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13'] },
+]
+
 function RouteListContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -19,13 +25,6 @@ function RouteListContent() {
   const allRoutes = cragFilter ? getRoutesByCragId(cragFilter) : getAllRoutes()
   const crags = getAllCrags()
   const currentCrag = crags.find((c) => c.id === cragFilter)
-
-  // 难度分组
-  const gradeGroups = [
-    { label: 'V0-V3', grades: ['V0', 'V1', 'V2', 'V3'] },
-    { label: 'V4-V6', grades: ['V4', 'V5', 'V6'] },
-    { label: 'V7+', grades: ['V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13'] },
-  ]
 
   // 筛选逻辑
   const filteredRoutes = useMemo(() => {
