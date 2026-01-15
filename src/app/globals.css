@@ -50,6 +50,43 @@
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+
+  /* Design Tokens - Colors (M3 风格) */
+  --m3-primary: #667eea;
+  --m3-on-primary: #ffffff;
+  --m3-primary-container: #e0e5ff;
+  --m3-on-primary-container: #1a1b4b;
+  --m3-secondary: #5c5d72;
+  --m3-on-secondary: #ffffff;
+  --m3-secondary-container: #e1e0f9;
+  --m3-surface: #fefbff;
+  --m3-surface-variant: #e4e1ec;
+  --m3-on-surface: #1c1b1f;
+  --m3-on-surface-variant: #46464f;
+  --m3-outline: #777680;
+  --m3-outline-variant: #c7c5d0;
+
+  /* Design Tokens - Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.5rem;
+  --space-page: 1rem;
+
+  /* Design Tokens - Radius */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.75rem;
+
+  /* Design Tokens - Elevation */
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --elevation-2: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --elevation-3: 0 3px 8px rgba(0, 0, 0, 0.12);
+  --elevation-4: 0 4px 12px rgba(0, 0, 0, 0.14);
+  --elevation-5: 0 6px 16px rgba(0, 0, 0, 0.16);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -122,4 +159,21 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* 自定义动画 */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.35s cubic-bezier(0, 0, 0.2, 1) forwards;
+  opacity: 0;
 }

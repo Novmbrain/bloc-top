@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This project requires Node.js >= 20.9.0. Use nvm to manage Node versions:
 
 ```bash
-nvm use 20       # Switch to Node 20
+nvm use          # Auto-switch using .nvmrc
 ```
 
 ## Build Commands
