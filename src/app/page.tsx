@@ -8,6 +8,7 @@ import { CragCardSkeleton } from '@/components/crag-card-skeleton'
 import { FloatingSearch } from '@/components/floating-search'
 import { SearchOverlay } from '@/components/search-overlay'
 import { AppTabbar } from '@/components/app-tabbar'
+import { InstallPrompt } from '@/components/install-prompt'
 import { useRouteSearch } from '@/hooks/use-route-search'
 import { getAllCrags } from '@/data/crags'
 import { getAllRoutes } from '@/data/routes'
@@ -50,6 +51,9 @@ export default function HomePage() {
 
       {/* 岩场列表（可滚动区域） */}
       <main className="flex-1 overflow-y-auto pb-36">
+        {/* PWA 安装提示 */}
+        <InstallPrompt />
+
         {isLoading ? (
           <CragCardSkeleton count={4} />
         ) : (
