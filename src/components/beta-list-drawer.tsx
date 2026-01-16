@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { ExternalLink, BookHeart, Music2, Play, Youtube, Ruler, ArrowUpFromLine, Plus, Loader2 } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { ExternalLink, BookHeart, Music2, Play, Youtube, Ruler, ArrowUpFromLine, Plus, Loader2, Copy, Check } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { BETA_PLATFORMS } from '@/lib/beta-constants'
 import type { BetaLink, BetaPlatform } from '@/types'
@@ -70,6 +70,38 @@ export function BetaListDrawer({
       setApiBetaLinks(null)
     }
   }, [isOpen])
+
+  // 复制成功状态（记录哪个链接被复制）
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  /**
+   * 复制链接到剪贴板
+   */
+  const handleCopyLink = useCallback(async (url: string, betaId: string, e: React.MouseEvent) => {
+    e.stopPropagation() // 阻止触发父元素的点击事件
+
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedId(betaId)
+      console.log('[BetaListDrawer] Copied URL:', url)
+
+      // 2秒后重置复制状态
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch (err) {
+      console.error('[BetaListDrawer] Failed to copy:', err)
+      // 降级方案：使用传统的复制方法
+      const textArea = document.createElement('textarea')
+      textArea.value = url
+      textArea.style.position = 'fixed'
+      textArea.style.opacity = '0'
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopiedId(betaId)
+      setTimeout(() => setCopiedId(null), 2000)
+    }
+  }, [])
 
   /**
    * 打开外部链接
@@ -215,11 +247,26 @@ export function BetaListDrawer({
                     </div>
                   </div>
 
-                  {/* 外链图标 */}
-                  <ExternalLink
-                    className="w-5 h-5 flex-shrink-0"
-                    style={{ color: 'var(--theme-on-surface-variant)' }}
-                  />
+                  {/* 复制链接按钮 */}
+                  <button
+                    onClick={(e) => handleCopyLink(beta.url, beta.id, e)}
+                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
+                    style={{
+                      backgroundColor: copiedId === beta.id
+                        ? 'var(--theme-success, #22c55e)'
+                        : 'var(--theme-surface-variant)',
+                    }}
+                    title="复制链接"
+                  >
+                    {copiedId === beta.id ? (
+                      <Check className="w-5 h-5 text-white" />
+                    ) : (
+                      <Copy
+                        className="w-5 h-5"
+                        style={{ color: 'var(--theme-on-surface-variant)' }}
+                      />
+                    )}
+                  </button>
                 </button>
               )
             })}
