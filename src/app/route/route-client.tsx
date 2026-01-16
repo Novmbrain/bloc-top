@@ -8,6 +8,7 @@ import { GRADE_GROUPS, FILTER_PARAMS, getGradesByValues } from '@/lib/filter-con
 import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
 import { FilterDrawer } from '@/components/filter-drawer'
+import { AppTabbar } from '@/components/app-tabbar'
 import type { Route, Crag } from '@/types'
 
 interface RouteListClientProps {
@@ -282,7 +283,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         </header>
 
         {/* 线路列表 */}
-        <main className="flex-1 overflow-y-auto px-4 pb-4">
+        <main className="flex-1 overflow-y-auto px-4 pb-20">
           <p className="text-xs mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
             共 {filteredRoutes.length} 条线路
           </p>
@@ -366,6 +367,9 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         selectedGrades={selectedGrades}
         onApply={handleFilterApply}
       />
+
+      {/* 底部导航栏 */}
+      <AppTabbar />
     </>
   )
 }
