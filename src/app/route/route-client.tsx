@@ -117,37 +117,53 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   }, [routes, selectedCrag, selectedGrades, searchQuery])
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[var(--m3-surface)]">
+    <div
+      className="flex flex-col h-screen overflow-hidden"
+      style={{
+        backgroundColor: 'var(--theme-surface)',
+        transition: 'var(--theme-transition)',
+      }}
+    >
       {/* 头部 */}
       <header className="flex-shrink-0 pt-12 px-4 pb-3">
         <div className="flex items-center gap-3 mb-3">
           <button
             onClick={() => router.back()}
-            className="w-10 h-10 rounded-full bg-[var(--m3-surface-variant)] flex items-center justify-center"
+            className="w-10 h-10 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: 'var(--theme-surface-variant)' }}
           >
-            <ChevronLeft className="w-5 h-5 text-[var(--m3-on-surface)]" />
+            <ChevronLeft className="w-5 h-5" style={{ color: 'var(--theme-on-surface)' }} />
           </button>
-          <h1 className="text-2xl font-bold text-[var(--m3-on-surface)]">
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
             {currentCragName}
           </h1>
         </div>
 
         {/* 搜索框 */}
         <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--m3-outline)]" />
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+            style={{ color: 'var(--theme-on-surface-variant)' }}
+          />
           <input
             type="text"
             placeholder="搜索线路名称"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full h-10 pl-10 pr-10 rounded-full bg-[var(--m3-surface-variant)] text-[var(--m3-on-surface)] placeholder:text-[var(--m3-outline)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--m3-primary)]"
+            className="w-full h-10 pl-10 pr-10 text-sm focus:outline-none"
+            style={{
+              backgroundColor: 'var(--theme-surface-variant)',
+              color: 'var(--theme-on-surface)',
+              borderRadius: 'var(--theme-radius-full)',
+            }}
           />
           {searchQuery && (
             <button
               onClick={() => handleSearchChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[var(--m3-outline)] flex items-center justify-center"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'var(--theme-on-surface-variant)' }}
             >
-              <X className="w-3 h-3 text-white" />
+              <X className="w-3 h-3" style={{ color: 'var(--theme-surface)' }} />
             </button>
           )}
         </div>
@@ -183,7 +199,11 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
           {hasFilters && (
             <button
               onClick={clearAllFilters}
-              className="px-3 py-1.5 rounded-full text-xs font-medium text-[var(--m3-primary)] whitespace-nowrap flex-shrink-0 hover:bg-[var(--m3-primary-container)] transition-colors"
+              className="px-3 py-1.5 text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors"
+              style={{
+                color: 'var(--theme-primary)',
+                borderRadius: 'var(--theme-radius-full)',
+              }}
             >
               清除
             </button>
@@ -193,7 +213,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
 
       {/* 线路列表 */}
       <main className="flex-1 overflow-y-auto px-4 pb-4">
-        <p className="text-xs text-[var(--m3-outline)] mb-2">
+        <p className="text-xs mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
           共 {filteredRoutes.length} 条线路
         </p>
 
@@ -202,13 +222,21 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
             <Link
               key={route.id}
               href={`/route/${route.id}`}
-              className="flex items-center p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-all active:scale-[0.98] animate-fade-in-up"
-              style={{ animationDelay: `${index * 30}ms` }}
+              className="flex items-center p-3 transition-all active:scale-[0.98] animate-fade-in-up"
+              style={{
+                backgroundColor: 'var(--theme-surface)',
+                borderRadius: 'var(--theme-radius-xl)',
+                boxShadow: 'var(--theme-shadow-sm)',
+                animationDelay: `${index * 30}ms`,
+              }}
             >
               {/* 难度标签 */}
               <div
-                className="w-12 h-12 rounded-lg flex items-center justify-center mr-3 flex-shrink-0"
-                style={{ backgroundColor: getGradeColor(route.grade) + '20' }}
+                className="w-12 h-12 flex items-center justify-center mr-3 flex-shrink-0"
+                style={{
+                  backgroundColor: getGradeColor(route.grade) + '20',
+                  borderRadius: 'var(--theme-radius-lg)',
+                }}
               >
                 <span
                   className="text-sm font-bold"
@@ -220,24 +248,30 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
 
               {/* 线路信息 */}
               <div className="flex-1 min-w-0">
-                <span className="text-base font-semibold text-[var(--m3-on-surface)] block truncate">
+                <span
+                  className="text-base font-semibold block truncate"
+                  style={{ color: 'var(--theme-on-surface)' }}
+                >
                   {route.name}
                 </span>
-                <span className="text-xs text-[var(--m3-on-surface-variant)]">
+                <span className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
                   {route.area}
                   {route.FA && ` · FA: ${route.FA}`}
                 </span>
               </div>
 
               {/* 箭头 */}
-              <ChevronRight className="w-5 h-5 text-[var(--m3-outline)] flex-shrink-0" />
+              <ChevronRight
+                className="w-5 h-5 flex-shrink-0"
+                style={{ color: 'var(--theme-on-surface-variant)' }}
+              />
             </Link>
           ))}
         </div>
 
         {filteredRoutes.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-[var(--m3-on-surface-variant)]">
+            <p style={{ color: 'var(--theme-on-surface-variant)' }}>
               没有找到匹配的线路
             </p>
           </div>

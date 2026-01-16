@@ -12,7 +12,7 @@ interface CragCardProps {
   index?: number
 }
 
-export function CragCard({ crag, routes, index = 0 }: CragCardProps) {
+export function CragCard({ crag, routes = [], index = 0 }: CragCardProps) {
   const routeCount = routes.length
   const theme = getCragTheme(crag.id)
 

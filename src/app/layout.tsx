@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
 import OfflineIndicator from "@/components/offline-indicator";
 import SWUpdatePrompt from "@/components/sw-update-prompt";
 import "./globals.css";
@@ -43,13 +44,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <body
         className={`${jakartaSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        <OfflineIndicator />
-        {children}
-        <SWUpdatePrompt />
+        <ThemeProvider>
+          <OfflineIndicator />
+          {children}
+          <SWUpdatePrompt />
+        </ThemeProvider>
       </body>
     </html>
   );

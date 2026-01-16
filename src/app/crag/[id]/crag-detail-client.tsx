@@ -39,7 +39,13 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
       : '暂无'
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[var(--m3-surface)]">
+    <div
+      className="flex flex-col h-screen overflow-hidden"
+      style={{
+        backgroundColor: 'var(--theme-surface)',
+        transition: 'var(--theme-transition)',
+      }}
+    >
       {/* 封面图区域 */}
       <div className="relative flex-shrink-0">
         {/* 返回按钮 */}
@@ -103,18 +109,38 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
         {/* 标题区域 */}
         <div className="py-4">
           <div className="flex flex-col mb-2">
-            <h1 className="text-3xl font-bold text-[var(--m3-on-surface)] tracking-wide leading-tight">
+            <h1
+              className="text-3xl font-bold tracking-wide leading-tight"
+              style={{ color: 'var(--theme-on-surface)' }}
+            >
               {crag.name}
             </h1>
-            <div className="w-10 h-0.5 mt-1 bg-gradient-to-r from-[var(--m3-primary)] to-transparent" />
+            <div
+              className="w-10 h-0.5 mt-1"
+              style={{ background: 'linear-gradient(to right, var(--theme-primary), transparent)' }}
+            />
           </div>
 
           {/* 徽章组 */}
           <div className="flex flex-wrap gap-1 mt-2">
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)]">
+            <span
+              className="inline-flex items-center px-2.5 py-1 text-xs font-medium"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))',
+                color: 'var(--theme-primary)',
+                borderRadius: 'var(--theme-radius-full)',
+              }}
+            >
               {routes.length} 条线路
             </span>
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--m3-surface-variant)] text-[var(--m3-on-surface-variant)]">
+            <span
+              className="inline-flex items-center px-2.5 py-1 text-xs font-medium"
+              style={{
+                backgroundColor: 'var(--theme-surface-variant)',
+                color: 'var(--theme-on-surface-variant)',
+                borderRadius: 'var(--theme-radius-full)',
+              }}
+            >
               {gradeRange}
             </span>
           </div>
@@ -122,8 +148,8 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
 
         {/* 位置卡片 */}
         <InfoCard
-          icon={<MapPin className="w-5 h-5 text-[var(--m3-primary)]" />}
-          iconBg="var(--m3-primary-container)"
+          icon={<MapPin className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />}
+          iconBg="color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))"
           title="位置"
           content={crag.location}
           delay={0}
@@ -131,8 +157,8 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
 
         {/* 岩场介绍卡片 */}
         <InfoCard
-          icon={<FileText className="w-5 h-5 text-[var(--m3-secondary)]" />}
-          iconBg="var(--m3-secondary-container)"
+          icon={<FileText className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />}
+          iconBg="var(--theme-surface-variant)"
           title="岩场介绍"
           content={crag.description}
           delay={50}
@@ -141,8 +167,8 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
         {/* 前往方式卡片 */}
         {crag.approach && (
           <InfoCard
-            icon={<Car className="w-5 h-5 text-[var(--m3-on-surface-variant)]" />}
-            iconBg="var(--m3-surface-variant)"
+            icon={<Car className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />}
+            iconBg="var(--theme-surface-variant)"
             title="前往方式"
             content={crag.approach}
             delay={100}
@@ -151,10 +177,19 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
       </main>
 
       {/* 底部操作按钮 */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--m3-surface)] to-transparent">
+      <div
+        className="fixed bottom-0 left-0 right-0 p-4"
+        style={{ background: `linear-gradient(to top, var(--theme-surface), transparent)` }}
+      >
         <Button
           onClick={() => router.push(`/route?crag=${crag.id}`)}
-          className="w-full h-12 bg-[var(--m3-primary)] hover:bg-[var(--m3-primary)]/90 text-white font-semibold rounded-xl shadow-lg"
+          className="w-full h-12 font-semibold"
+          style={{
+            backgroundColor: 'var(--theme-primary)',
+            color: 'var(--theme-on-primary)',
+            borderRadius: 'var(--theme-radius-xl)',
+            boxShadow: 'var(--theme-shadow-lg)',
+          }}
         >
           开始探索线路
         </Button>
@@ -174,8 +209,14 @@ interface InfoCardProps {
 function InfoCard({ icon, iconBg, title, content, delay = 0 }: InfoCardProps) {
   return (
     <div
-      className="p-3 bg-[var(--m3-surface)] rounded-xl mb-2 shadow-sm animate-fade-in-up"
-      style={{ animationDelay: `${delay}ms` }}
+      className="p-3 mb-2 animate-fade-in-up"
+      style={{
+        backgroundColor: 'var(--theme-surface)',
+        borderRadius: 'var(--theme-radius-xl)',
+        boxShadow: 'var(--theme-shadow-sm)',
+        animationDelay: `${delay}ms`,
+        transition: 'var(--theme-transition)',
+      }}
     >
       <div className="flex items-center mb-2">
         <div
@@ -184,11 +225,11 @@ function InfoCard({ icon, iconBg, title, content, delay = 0 }: InfoCardProps) {
         >
           {icon}
         </div>
-        <span className="text-base font-semibold text-[var(--m3-on-surface)]">
+        <span className="text-base font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
           {title}
         </span>
       </div>
-      <p className="text-sm text-[var(--m3-on-surface-variant)] leading-relaxed">
+      <p className="text-sm leading-relaxed" style={{ color: 'var(--theme-on-surface-variant)' }}>
         {content}
       </p>
     </div>

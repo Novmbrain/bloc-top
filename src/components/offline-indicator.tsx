@@ -26,7 +26,14 @@ export default function OfflineIndicator() {
   if (!isOffline) return null
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white px-4 py-2 flex items-center justify-center gap-2 animate-fade-in-up">
+    <div
+      className="fixed top-0 left-0 right-0 z-50 px-4 py-2 flex items-center justify-center gap-2 animate-fade-in-up"
+      style={{
+        backgroundColor: 'var(--theme-warning)',
+        color: 'white',
+        transition: 'var(--theme-transition)',
+      }}
+    >
       <WifiOff className="w-4 h-4" />
       <span className="text-sm font-medium">当前处于离线模式</span>
     </div>

@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Mountain, User } from 'lucide-react'
-import { colors } from '@/lib/tokens'
 
 const TAB_ITEMS = [
   { name: 'home', path: '/', icon: Home, label: '首页' },
@@ -20,7 +19,14 @@ export function AppTabbar() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-[var(--m3-outline-variant)]/50 safe-area-bottom z-50">
+    <nav
+      className="fixed bottom-0 left-0 right-0 backdrop-blur-xl safe-area-bottom z-50"
+      style={{
+        backgroundColor: 'color-mix(in srgb, var(--theme-surface) 80%, transparent)',
+        borderTop: '1px solid color-mix(in srgb, var(--theme-outline) 30%, transparent)',
+        transition: 'var(--theme-transition)',
+      }}
+    >
       <div className="flex items-center justify-around h-16 max-w-md mx-auto">
         {TAB_ITEMS.map((tab) => {
           const Icon = tab.icon
@@ -36,15 +42,20 @@ export function AppTabbar() {
               <div className="relative flex items-center justify-center w-16 h-8 mb-1">
                 <div
                   className={`absolute inset-0 rounded-full transition-all duration-300 ease-out ${active
-                      ? 'bg-[var(--m3-primary-container)] scale-100 opacity-100'
-                      : 'bg-transparent scale-75 opacity-0 group-hover:bg-[var(--m3-surface-variant)]/50 group-hover:scale-100 group-hover:opacity-100'
+                      ? 'scale-100 opacity-100'
+                      : 'bg-transparent scale-75 opacity-0 group-hover:scale-100 group-hover:opacity-100'
                     }`}
+                  style={{
+                    backgroundColor: active
+                      ? 'color-mix(in srgb, var(--theme-primary) 15%, transparent)'
+                      : undefined,
+                  }}
                 />
                 <Icon
                   className={`relative z-10 w-5 h-5 transition-all duration-200 ${active ? 'scale-110' : 'group-hover:scale-105'
                     }`}
                   style={{
-                    color: active ? colors.primary : colors.outline,
+                    color: active ? 'var(--theme-primary)' : 'var(--theme-on-surface-variant)',
                     strokeWidth: active ? 2.5 : 2
                   }}
                 />
@@ -54,7 +65,7 @@ export function AppTabbar() {
               <span
                 className={`relative z-10 text-[11px] font-medium transition-all duration-200 ${active ? 'font-semibold' : ''
                   }`}
-                style={{ color: active ? colors.primary : colors.outline }}
+                style={{ color: active ? 'var(--theme-primary)' : 'var(--theme-on-surface-variant)' }}
               >
                 {tab.label}
               </span>

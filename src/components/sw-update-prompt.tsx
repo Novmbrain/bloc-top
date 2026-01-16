@@ -56,20 +56,38 @@ export default function SWUpdatePrompt() {
   if (!showPrompt) return null
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-50 bg-[var(--m3-primary)] text-white p-4 rounded-xl shadow-lg animate-fade-in-up">
+    <div
+      className="fixed bottom-20 left-4 right-4 z-50 p-4 animate-fade-in-up"
+      style={{
+        backgroundColor: 'var(--theme-primary)',
+        color: 'var(--theme-on-primary)',
+        borderRadius: 'var(--theme-radius-xl)',
+        boxShadow: 'var(--theme-shadow-lg)',
+        transition: 'var(--theme-transition)',
+      }}
+    >
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+        <div
+          className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--theme-on-primary) 20%, transparent)' }}
+        >
           <RefreshCw className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-medium">发现新版本</p>
-          <p className="text-sm text-white/80 mt-0.5">
+          <p
+            className="text-sm mt-0.5"
+            style={{ opacity: 0.8 }}
+          >
             刷新以获取最新内容
           </p>
         </div>
         <button
           onClick={handleDismiss}
-          className="flex-shrink-0 p-1 rounded-full hover:bg-white/10 transition-colors"
+          className="flex-shrink-0 p-1 rounded-full transition-colors"
+          style={{ backgroundColor: 'transparent' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--theme-on-primary) 10%, transparent)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           aria-label="关闭"
         >
           <X className="w-5 h-5" />
@@ -78,13 +96,22 @@ export default function SWUpdatePrompt() {
       <div className="flex gap-2 mt-3">
         <button
           onClick={handleUpdate}
-          className="flex-1 py-2 px-4 bg-white text-[var(--m3-primary)] font-medium rounded-lg transition-transform active:scale-[0.98]"
+          className="flex-1 py-2 px-4 font-medium transition-transform active:scale-[0.98]"
+          style={{
+            backgroundColor: 'var(--theme-on-primary)',
+            color: 'var(--theme-primary)',
+            borderRadius: 'var(--theme-radius-lg)',
+          }}
         >
           立即刷新
         </button>
         <button
           onClick={handleDismiss}
-          className="py-2 px-4 bg-white/20 font-medium rounded-lg transition-transform active:scale-[0.98]"
+          className="py-2 px-4 font-medium transition-transform active:scale-[0.98]"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--theme-on-primary) 20%, transparent)',
+            borderRadius: 'var(--theme-radius-lg)',
+          }}
         >
           稍后
         </button>

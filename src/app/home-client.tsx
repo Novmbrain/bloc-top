@@ -28,23 +28,38 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden px-4 bg-[var(--m3-surface)]">
+    <div
+      className="flex flex-col h-screen overflow-hidden px-4"
+      style={{
+        backgroundColor: 'var(--theme-surface)',
+        transition: 'var(--theme-transition)',
+      }}
+    >
       {/* 头部区域 */}
       <header className="pt-12 pb-3">
         <div className="flex items-start justify-between">
           <div className="flex flex-col">
-            <h1 className="text-4xl font-bold text-[var(--m3-on-surface)] tracking-wide leading-tight">
+            <h1
+              className="text-4xl font-bold tracking-wide leading-tight"
+              style={{ color: 'var(--theme-on-surface)' }}
+            >
               罗源
             </h1>
-            <div className="w-16 h-0.5 mt-1 mb-3 bg-gradient-to-r from-[var(--m3-primary)] to-transparent" />
+            <div
+              className="w-16 h-0.5 mt-1 mb-3"
+              style={{
+                background: `linear-gradient(to right, var(--theme-primary), transparent)`,
+              }}
+            />
           </div>
 
           {/* 用户头像 */}
           <Link
             href="/profile"
-            className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--m3-surface-variant)] flex items-center justify-center transition-transform active:scale-95"
+            className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-95"
+            style={{ backgroundColor: 'var(--theme-surface-variant)' }}
           >
-            <User className="w-5 h-5 text-[var(--m3-on-surface-variant)]" />
+            <User className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />
           </Link>
         </div>
       </header>
@@ -59,7 +74,7 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
             <CragCard
               key={crag.id}
               crag={crag}
-              routes={allRoutes.filter((r) => r.cragId === crag.id)}
+              routes={(allRoutes || []).filter((r) => r.cragId === crag.id)}
               index={index}
             />
           ))}
@@ -67,7 +82,7 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
 
         {/* 底部提示 */}
         <div className="text-center py-4">
-          <span className="text-xs text-[var(--m3-outline)]">
+          <span className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
             更多岩场正在向你爬来，请耐心等待
           </span>
         </div>

@@ -25,18 +25,21 @@ export function FilterChip({
     <button
       onClick={onClick}
       className={cn(
-        'px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0',
+        'px-3 py-1.5 text-xs font-medium whitespace-nowrap flex-shrink-0',
         'active:scale-95',
         selected
-          ? 'text-white shadow-sm'
-          : 'bg-[var(--m3-surface-variant)] text-[var(--m3-on-surface-variant)] hover:bg-[var(--m3-outline-variant)]',
+          ? 'text-[var(--theme-on-primary)]'
+          : 'text-[var(--theme-on-surface-variant)] hover:bg-[var(--theme-outline-variant)]',
         className
       )}
-      style={
-        selected
-          ? { backgroundColor: color || 'var(--m3-primary)' }
-          : undefined
-      }
+      style={{
+        backgroundColor: selected
+          ? (color || 'var(--theme-primary)')
+          : 'var(--theme-surface-variant)',
+        borderRadius: 'var(--theme-radius-full)',
+        boxShadow: selected ? 'var(--theme-shadow-sm)' : undefined,
+        transition: 'var(--theme-transition)',
+      }}
     >
       {label}
     </button>

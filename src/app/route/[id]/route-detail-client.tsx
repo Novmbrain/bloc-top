@@ -24,7 +24,13 @@ export default function RouteDetailClient({ route, crag }: RouteDetailClientProp
   const topoImage = `${COS_BASE_URL}/${route.cragId}/${encodeURIComponent(route.name)}.jpg`
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[var(--m3-surface)]">
+    <div
+      className="flex flex-col h-screen overflow-hidden"
+      style={{
+        backgroundColor: 'var(--theme-surface)',
+        transition: 'var(--theme-transition)',
+      }}
+    >
       {/* TOPO 图区域 */}
       <div className="relative flex-shrink-0 h-[50vh] bg-black">
         {/* 返回按钮 */}
@@ -82,12 +88,12 @@ export default function RouteDetailClient({ route, crag }: RouteDetailClientProp
       {/* 内容区域 */}
       <main className="flex-1 overflow-y-auto">
         {/* 线路信息 */}
-        <div className="px-4 py-4 bg-white">
-          <h1 className="text-2xl font-bold text-[var(--m3-on-surface)] mb-1">
+        <div className="px-4 py-4" style={{ backgroundColor: 'var(--theme-surface)' }}>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--theme-on-surface)' }}>
             {route.name}
           </h1>
 
-          <div className="flex items-center gap-2 text-sm text-[var(--m3-on-surface-variant)]">
+          <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
             <MapPin className="w-4 h-4" />
             <span>{crag?.name || route.area}</span>
           </div>
@@ -95,16 +101,28 @@ export default function RouteDetailClient({ route, crag }: RouteDetailClientProp
           {/* 元信息 */}
           <div className="flex flex-wrap gap-2 mt-3">
             {route.FA && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--m3-surface-variant)]">
-                <User className="w-3 h-3 text-[var(--m3-on-surface-variant)]" />
-                <span className="text-xs text-[var(--m3-on-surface-variant)]">
+              <div
+                className="flex items-center gap-1 px-2 py-1"
+                style={{
+                  backgroundColor: 'var(--theme-surface-variant)',
+                  borderRadius: 'var(--theme-radius-full)',
+                }}
+              >
+                <User className="w-3 h-3" style={{ color: 'var(--theme-on-surface-variant)' }} />
+                <span className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
                   FA: {route.FA}
                 </span>
               </div>
             )}
             {route.setter && route.setter !== 'TODO' && (
-              <div className="px-2 py-1 rounded-full bg-[var(--m3-surface-variant)]">
-                <span className="text-xs text-[var(--m3-on-surface-variant)]">
+              <div
+                className="px-2 py-1"
+                style={{
+                  backgroundColor: 'var(--theme-surface-variant)',
+                  borderRadius: 'var(--theme-radius-full)',
+                }}
+              >
+                <span className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
                   定线: {route.setter}
                 </span>
               </div>
@@ -114,23 +132,29 @@ export default function RouteDetailClient({ route, crag }: RouteDetailClientProp
 
         {/* 线路描述 */}
         {route.description && route.description !== 'TODO' && (
-          <div className="px-4 py-4 border-t border-[var(--m3-outline-variant)]">
-            <h2 className="text-sm font-semibold text-[var(--m3-on-surface)] mb-2">
+          <div
+            className="px-4 py-4"
+            style={{ borderTop: '1px solid var(--theme-outline-variant)' }}
+          >
+            <h2 className="text-sm font-semibold mb-2" style={{ color: 'var(--theme-on-surface)' }}>
               线路说明
             </h2>
-            <p className="text-sm text-[var(--m3-on-surface-variant)] leading-relaxed">
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--theme-on-surface-variant)' }}>
               {route.description}
             </p>
           </div>
         )}
 
         {/* 评论区占位 */}
-        <div className="px-4 py-4 border-t border-[var(--m3-outline-variant)]">
-          <h2 className="text-sm font-semibold text-[var(--m3-on-surface)] mb-2">
+        <div
+          className="px-4 py-4"
+          style={{ borderTop: '1px solid var(--theme-outline-variant)' }}
+        >
+          <h2 className="text-sm font-semibold mb-2" style={{ color: 'var(--theme-on-surface)' }}>
             评论
           </h2>
           <div className="text-center py-8">
-            <p className="text-sm text-[var(--m3-outline)]">
+            <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
               评论功能开发中...
             </p>
           </div>
