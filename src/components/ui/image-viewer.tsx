@@ -22,10 +22,12 @@ export function ImageViewer({ isOpen, onClose, src, alt = '' }: ImageViewerProps
   const lastTapRef = useRef<number>(0)
   const startYRef = useRef<number>(0)
 
-  // 重置状态
+  // 重置状态（打开时重置缩放和位置）
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 重置缩放状态是必要的 UX 行为
       setScale(1)
+       
       setPosition({ x: 0, y: 0 })
     }
   }, [isOpen])

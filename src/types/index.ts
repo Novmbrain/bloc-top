@@ -68,4 +68,8 @@ export interface BetaLink {
   url: string
   title?: string
   author?: string
+  // 提交者身体数据（可选）
+  climberHeight?: number  // 身高 (cm)
+  climberReach?: number   // 臂长 (cm)
+  createdAt?: Date
 }

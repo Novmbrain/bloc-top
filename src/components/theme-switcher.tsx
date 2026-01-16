@@ -33,8 +33,9 @@ export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  // 确保客户端渲染
+  // 确保客户端渲染（Next.js SSR hydration 标准模式）
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR hydration 必需
     setMounted(true)
   }, [])
 

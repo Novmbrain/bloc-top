@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { MapPin, FileText, Car, ChevronLeft, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { getCragCoverUrl } from '@/lib/constants'
 import type { Crag, Route } from '@/types'
-
-const COS_BASE_URL = 'https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com'
 
 interface CragDetailClientProps {
   crag: Crag
@@ -19,7 +18,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
   const [currentIndex, setCurrentIndex] = useState(0)
 
   // 生成封面图 URL
-  const images = [1, 2].map((n) => `${COS_BASE_URL}/CragSurface/${crag.id}/${n}.jpg`)
+  const images = [1, 2].map((n) => getCragCoverUrl(crag.id, n))
 
   // 计算难度范围
   const grades = routes

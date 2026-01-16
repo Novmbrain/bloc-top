@@ -9,7 +9,7 @@ import type { WithId, Document } from 'mongodb'
  * MongoDB 使用 _id 作为主键，需要转换为业务 id
  */
 function toCrag(doc: WithId<Document>): Crag {
-  const { _id, createdAt, updatedAt, ...rest } = doc
+  const { _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = doc
   return { id: _id as unknown as string, ...rest } as Crag
 }
 
@@ -17,7 +17,7 @@ function toCrag(doc: WithId<Document>): Crag {
  * 将 MongoDB 文档转换为 Route 类型
  */
 function toRoute(doc: WithId<Document>): Route {
-  const { _id, createdAt, updatedAt, ...rest } = doc
+  const { _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = doc
   return { id: _id as unknown as number, ...rest } as Route
 }
 

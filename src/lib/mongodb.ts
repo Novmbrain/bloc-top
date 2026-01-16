@@ -22,7 +22,7 @@ const options = {
 // 全局变量用于在开发模式下缓存连接
 // 防止 HMR (Hot Module Replacement) 导致连接泄漏
 declare global {
-  // eslint-disable-next-line no-var
+   
   var _mongoClientPromise: Promise<MongoClient> | undefined
 }
 

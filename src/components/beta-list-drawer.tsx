@@ -1,6 +1,6 @@
 'use client'
 
-import { ExternalLink, BookHeart, Music2, Play, Youtube } from 'lucide-react'
+import { ExternalLink, BookHeart, Music2, Play, Youtube, Ruler, ArrowUpFromLine, Plus } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { BETA_PLATFORMS } from '@/lib/beta-constants'
 import type { BetaLink, BetaPlatform } from '@/types'
@@ -10,6 +10,8 @@ interface BetaListDrawerProps {
   onClose: () => void
   betaLinks: BetaLink[]
   routeName: string
+  routeId: number
+  onAddBeta?: () => void
 }
 
 // 平台图标映射
@@ -26,6 +28,9 @@ export function BetaListDrawer({
   onClose,
   betaLinks,
   routeName,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  routeId, // 预留给未来功能使用（如 API 调用）
+  onAddBeta,
 }: BetaListDrawerProps) {
   const handleLinkClick = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer')
@@ -40,8 +45,25 @@ export function BetaListDrawer({
       showCloseButton
     >
       <div className="px-4 pb-4">
+        {/* 分享 Beta 按钮 */}
+        {onAddBeta && (
+          <button
+            onClick={onAddBeta}
+            className="w-full flex items-center justify-center gap-2 p-3 mb-4 transition-all active:scale-[0.98]"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--theme-primary) 10%, var(--theme-surface))',
+              borderRadius: 'var(--theme-radius-xl)',
+              border: '1px dashed var(--theme-primary)',
+              color: 'var(--theme-primary)',
+            }}
+          >
+            <Plus className="w-5 h-5" />
+            <span className="text-sm font-medium">分享 Beta 视频</span>
+          </button>
+        )}
+
         {betaLinks.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-8">
             <div
               className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
               style={{ backgroundColor: 'var(--theme-surface-variant)' }}
@@ -61,7 +83,7 @@ export function BetaListDrawer({
               className="text-sm"
               style={{ color: 'var(--theme-on-surface-variant)' }}
             >
-              还没有人分享这条线路的攻略视频
+              成为第一个分享攻略的人吧！
             </p>
           </div>
         ) : (
@@ -98,12 +120,34 @@ export function BetaListDrawer({
                     >
                       {beta.title || `${platform.name}视频`}
                     </span>
-                    <span
-                      className="text-xs"
-                      style={{ color: 'var(--theme-on-surface-variant)' }}
-                    >
-                      {beta.author ? `@${beta.author}` : platform.name}
-                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--theme-on-surface-variant)' }}
+                      >
+                        {beta.author ? `@${beta.author}` : platform.name}
+                      </span>
+                      {/* 身高臂长信息 */}
+                      {(beta.climberHeight || beta.climberReach) && (
+                        <span
+                          className="text-xs flex items-center gap-1"
+                          style={{ color: 'var(--theme-primary)' }}
+                        >
+                          {beta.climberHeight && (
+                            <span className="flex items-center gap-0.5">
+                              <Ruler className="w-3 h-3" />
+                              {beta.climberHeight}
+                            </span>
+                          )}
+                          {beta.climberReach && (
+                            <span className="flex items-center gap-0.5">
+                              <ArrowUpFromLine className="w-3 h-3" />
+                              {beta.climberReach}
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* 外链图标 */}

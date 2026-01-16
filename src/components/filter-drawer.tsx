@@ -31,7 +31,9 @@ export function FilterDrawer({
   // 当抽屉打开时，同步外部状态
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 抽屉打开时需要同步外部筛选状态
       setLocalCrag(initialCrag)
+       
       setLocalGrades(initialGrades)
     }
   }, [isOpen, initialCrag, initialGrades])

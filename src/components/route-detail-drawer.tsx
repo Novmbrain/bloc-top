@@ -6,10 +6,10 @@ import { MapPin, User, Wrench, Video, ImageIcon } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
 import { BetaListDrawer } from '@/components/beta-list-drawer'
+import { BetaSubmitDrawer } from '@/components/beta-submit-drawer'
 import { getGradeColor } from '@/lib/tokens'
+import { getRouteTopoUrl } from '@/lib/constants'
 import type { Route, Crag } from '@/types'
-
-const COS_BASE_URL = 'https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com'
 
 interface RouteDetailDrawerProps {
   isOpen: boolean
@@ -26,22 +26,26 @@ export function RouteDetailDrawer({
 }: RouteDetailDrawerProps) {
   const [imageViewerOpen, setImageViewerOpen] = useState(false)
   const [betaListOpen, setBetaListOpen] = useState(false)
+  const [betaSubmitOpen, setBetaSubmitOpen] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
   const [imageError, setImageError] = useState(false)
 
   // 当线路变化时重置图片加载状态
   useEffect(() => {
     if (route) {
+       
       setImageLoading(true)
+       
       setImageError(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅依赖 route.id 变化
   }, [route?.id])
 
   if (!route) return null
 
   const betaCount = route.betaLinks?.length || 0
   // 自动拼接 COS URL，无需依赖 route.image 字段
-  const topoImageUrl = `${COS_BASE_URL}/${route.cragId}/${encodeURIComponent(route.name)}.jpg`
+  const topoImageUrl = getRouteTopoUrl(route.cragId, route.name)
 
   return (
     <>
@@ -317,6 +321,22 @@ export function RouteDetailDrawer({
         onClose={() => setBetaListOpen(false)}
         betaLinks={route.betaLinks || []}
         routeName={route.name}
+        routeId={route.id}
+        onAddBeta={() => {
+          setBetaListOpen(false)
+          setBetaSubmitOpen(true)
+        }}
+      />
+
+      {/* Beta 提交抽屉 */}
+      <BetaSubmitDrawer
+        isOpen={betaSubmitOpen}
+        onClose={() => setBetaSubmitOpen(false)}
+        routeId={route.id}
+        routeName={route.name}
+        onSuccess={() => {
+          // TODO: 可以触发数据刷新
+        }}
       />
     </>
   )

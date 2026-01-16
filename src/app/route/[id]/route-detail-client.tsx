@@ -6,9 +6,8 @@ import Image from 'next/image'
 import { ChevronLeft, User, MapPin, ImageOff } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getGradeColor } from '@/lib/tokens'
+import { getRouteTopoUrl } from '@/lib/constants'
 import type { Route, Crag } from '@/types'
-
-const COS_BASE_URL = 'https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com'
 
 interface RouteDetailClientProps {
   route: Route
@@ -21,7 +20,7 @@ export default function RouteDetailClient({ route, crag }: RouteDetailClientProp
   const [imageError, setImageError] = useState(false)
 
   // 生成 TOPO 图 URL
-  const topoImage = `${COS_BASE_URL}/${route.cragId}/${encodeURIComponent(route.name)}.jpg`
+  const topoImage = getRouteTopoUrl(route.cragId, route.name)
 
   return (
     <div
