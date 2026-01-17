@@ -113,8 +113,8 @@ interface Route {
   betaLinks?: BetaLink[]  // Beta 视频链接
 }
 
-// Beta 视频链接
-type BetaPlatform = 'xiaohongshu' | 'douyin' | 'bilibili' | 'youtube' | 'other'
+// Beta 视频链接（目前仅支持小红书）
+type BetaPlatform = 'xiaohongshu'
 
 interface BetaLink {
   id: string

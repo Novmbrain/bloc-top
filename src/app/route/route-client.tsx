@@ -1,11 +1,12 @@
 'use client'
 
-import { useMemo, useCallback, useState } from 'react'
+import { useMemo, useCallback, useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ChevronLeft, Search, ChevronRight, X, SlidersHorizontal } from 'lucide-react'
+import { Search, ChevronRight, X, SlidersHorizontal } from 'lucide-react'
 import { getGradeColor } from '@/lib/tokens'
-import { GRADE_GROUPS, FILTER_PARAMS, getGradesByValues } from '@/lib/filter-constants'
+import { FILTER_PARAMS, getGradesByValues } from '@/lib/filter-constants'
 import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
+import { GradeRangeSelector } from '@/components/grade-range-selector'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
 import { FilterDrawer } from '@/components/filter-drawer'
 import { AppTabbar } from '@/components/app-tabbar'
@@ -19,6 +20,7 @@ interface RouteListClientProps {
 export default function RouteListClient({ routes, crags }: RouteListClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [isPending, startTransition] = useTransition()
 
   // 抽屉状态
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
@@ -33,7 +35,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   }, [searchParams])
   const searchQuery = searchParams.get(FILTER_PARAMS.QUERY) || ''
 
-  // 更新 URL 参数
+  // 更新 URL 参数（使用 startTransition 实现平滑更新，避免闪烁）
   const updateSearchParams = useCallback(
     (key: string, value: string | string[] | null) => {
       const params = new URLSearchParams(searchParams.toString())
@@ -47,9 +49,14 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
       }
 
       const queryString = params.toString()
-      router.push(queryString ? `/route?${queryString}` : '/route', { scroll: false })
+      const newUrl = queryString ? `/route?${queryString}` : '/route'
+
+      // 使用 startTransition 将路由更新标记为非紧急，避免阻塞 UI
+      startTransition(() => {
+        router.replace(newUrl, { scroll: false })
+      })
     },
-    [router, searchParams]
+    [router, searchParams, startTransition]
   )
 
   // 处理岩场筛选（单选）
@@ -58,17 +65,6 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
       updateSearchParams(FILTER_PARAMS.CRAG, cragId === selectedCrag ? null : cragId)
     },
     [selectedCrag, updateSearchParams]
-  )
-
-  // 处理难度筛选（多选）
-  const handleGradeToggle = useCallback(
-    (gradeValue: string) => {
-      const newGrades = selectedGrades.includes(gradeValue)
-        ? selectedGrades.filter((g) => g !== gradeValue)
-        : [...selectedGrades, gradeValue]
-      updateSearchParams(FILTER_PARAMS.GRADE, newGrades)
-    },
-    [selectedGrades, updateSearchParams]
   )
 
   // 处理搜索
@@ -81,8 +77,10 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
 
   // 清除所有筛选
   const clearAllFilters = useCallback(() => {
-    router.push('/route', { scroll: false })
-  }, [router])
+    startTransition(() => {
+      router.replace('/route', { scroll: false })
+    })
+  }, [router, startTransition])
 
   // 处理筛选抽屉应用
   const handleFilterApply = useCallback(
@@ -102,9 +100,11 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
       }
 
       const queryString = params.toString()
-      router.push(queryString ? `/route?${queryString}` : '/route', { scroll: false })
+      startTransition(() => {
+        router.replace(queryString ? `/route?${queryString}` : '/route', { scroll: false })
+      })
     },
-    [router, searchParams]
+    [router, searchParams, startTransition]
   )
 
   // 处理线路卡片点击
@@ -178,13 +178,6 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         {/* 头部 */}
         <header className="flex-shrink-0 pt-12 px-4 pb-3">
           <div className="flex items-center gap-3 mb-3">
-            <button
-              onClick={() => router.back()}
-              className="w-10 h-10 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'var(--theme-surface-variant)' }}
-            >
-              <ChevronLeft className="w-5 h-5" style={{ color: 'var(--theme-on-surface)' }} />
-            </button>
             <h1 className="text-2xl font-bold flex-1" style={{ color: 'var(--theme-on-surface)' }}>
               {currentCragName}
             </h1>
@@ -256,34 +249,16 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
             ))}
           </FilterChipGroup>
 
-          {/* 难度筛选（第二行） */}
-          <FilterChipGroup>
-            {GRADE_GROUPS.map((group) => (
-              <FilterChip
-                key={group.value}
-                label={group.label}
-                selected={selectedGrades.includes(group.value)}
-                onClick={() => handleGradeToggle(group.value)}
-                color={group.color}
-              />
-            ))}
-            {hasFilters && (
-              <button
-                onClick={clearAllFilters}
-                className="px-3 py-1.5 text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors"
-                style={{
-                  color: 'var(--theme-primary)',
-                  borderRadius: 'var(--theme-radius-full)',
-                }}
-              >
-                清除
-              </button>
-            )}
-          </FilterChipGroup>
+          {/* 难度筛选（色谱条） */}
+          <GradeRangeSelector
+            selectedGrades={selectedGrades}
+            onChange={(grades) => updateSearchParams(FILTER_PARAMS.GRADE, grades)}
+            className="mt-3"
+          />
         </header>
 
         {/* 线路列表 */}
-        <main className="flex-1 overflow-y-auto px-4 pb-20">
+        <main className="flex-1 overflow-y-auto px-4 pb-28">
           <p className="text-xs mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
             共 {filteredRoutes.length} 条线路
           </p>

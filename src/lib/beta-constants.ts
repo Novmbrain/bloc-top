@@ -1,8 +1,7 @@
 import type { BetaPlatform } from '@/types'
 
 /**
- * Beta 视频平台配置
- * 包含平台名称、品牌色和对应的 Lucide 图标名
+ * Beta 视频平台配置（目前仅支持小红书）
  */
 export const BETA_PLATFORMS: Record<
   BetaPlatform,
@@ -17,46 +16,23 @@ export const BETA_PLATFORMS: Record<
     color: '#FF2442',
     iconName: 'BookHeart',
   },
-  douyin: {
-    name: '抖音',
-    color: '#000000',
-    iconName: 'Music2',
-  },
-  bilibili: {
-    name: 'B站',
-    color: '#FB7299',
-    iconName: 'Play',
-  },
-  youtube: {
-    name: 'YouTube',
-    color: '#FF0000',
-    iconName: 'Youtube',
-  },
-  other: {
-    name: '其他',
-    color: '#6B7280',
-    iconName: 'ExternalLink',
-  },
 }
 
 /**
- * 根据 URL 自动检测平台
+ * 验证 URL 是否为小红书链接
  */
-export function detectPlatformFromUrl(url: string): BetaPlatform {
+export function isXiaohongshuUrl(url: string): boolean {
   const urlLower = url.toLowerCase()
+  return urlLower.includes('xiaohongshu.com') || urlLower.includes('xhslink.com')
+}
 
-  if (urlLower.includes('xiaohongshu.com') || urlLower.includes('xhslink.com')) {
+/**
+ * 根据 URL 检测平台（目前仅支持小红书）
+ * @returns 如果是小红书链接返回 'xiaohongshu'，否则返回 null
+ */
+export function detectPlatformFromUrl(url: string): BetaPlatform | null {
+  if (isXiaohongshuUrl(url)) {
     return 'xiaohongshu'
   }
-  if (urlLower.includes('douyin.com') || urlLower.includes('iesdouyin.com')) {
-    return 'douyin'
-  }
-  if (urlLower.includes('bilibili.com') || urlLower.includes('b23.tv')) {
-    return 'bilibili'
-  }
-  if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
-    return 'youtube'
-  }
-
-  return 'other'
+  return null
 }

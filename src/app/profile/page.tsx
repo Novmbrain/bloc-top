@@ -1,13 +1,10 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { ChevronLeft, Info, Palette, Mountain } from 'lucide-react'
+import { Info, Palette, Mountain } from 'lucide-react'
 import { AppTabbar } from '@/components/app-tabbar'
 import { ThemeSwitcher } from '@/components/theme-switcher'
 
 export default function ProfilePage() {
-  const router = useRouter()
-
   const menuItems = [
     { icon: Info, label: '关于', description: '关于罗源野抱 TOPO' },
   ]
@@ -22,18 +19,9 @@ export default function ProfilePage() {
     >
       {/* 头部 */}
       <header className="pt-12 px-4 pb-6">
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => router.back()}
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: 'var(--theme-surface-variant)' }}
-          >
-            <ChevronLeft className="w-5 h-5" style={{ color: 'var(--theme-on-surface)' }} />
-          </button>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
-            设置
-          </h1>
-        </div>
+        <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--theme-on-surface)' }}>
+          设置
+        </h1>
 
         {/* 应用信息卡片 */}
         <div

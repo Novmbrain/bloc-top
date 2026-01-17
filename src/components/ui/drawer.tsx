@@ -93,7 +93,7 @@ export function Drawer({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-[60]">
       {/* 背景遮罩 */}
       <div
         className="absolute inset-0 bg-black/40 animate-fade-in"

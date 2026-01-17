@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { User } from 'lucide-react'
 import { CragCard } from '@/components/crag-card'
 import { FloatingSearch } from '@/components/floating-search'
-import { SearchOverlay } from '@/components/search-overlay'
+import { SearchDrawer } from '@/components/search-drawer'
 import { AppTabbar } from '@/components/app-tabbar'
 import { InstallPrompt } from '@/components/install-prompt'
 import { useRouteSearch } from '@/hooks/use-route-search'
@@ -19,6 +19,7 @@ interface HomePageClientProps {
 export default function HomePageClient({ crags, allRoutes }: HomePageClientProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
+  // 不限制搜索结果数量，由 SearchDrawer 内部控制显示
   const { searchQuery, setSearchQuery, searchResults, clearSearch } =
     useRouteSearch(allRoutes, { limit: 0 })
 
@@ -91,14 +92,14 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
       {/* 浮动搜索框 */}
       <FloatingSearch onClick={() => setIsSearchOpen(true)} />
 
-      {/* 搜索覆盖层 */}
-      <SearchOverlay
+      {/* 搜索抽屉 */}
+      <SearchDrawer
         isOpen={isSearchOpen}
         onClose={handleCloseSearch}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         results={searchResults}
-        allRoutes={allRoutes}
+        crags={crags}
       />
 
       {/* 底部导航栏 */}

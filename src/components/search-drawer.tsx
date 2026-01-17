@@ -1,0 +1,229 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Search, X, ChevronRight, ArrowRight } from 'lucide-react'
+import { Drawer } from '@/components/ui/drawer'
+import { RouteDetailDrawer } from '@/components/route-detail-drawer'
+import { getGradeColor } from '@/lib/tokens'
+import type { Route, Crag } from '@/types'
+
+interface SearchDrawerProps {
+  isOpen: boolean
+  onClose: () => void
+  searchQuery: string
+  onSearchChange: (value: string) => void
+  results: Route[]
+  crags: Crag[]
+}
+
+const MAX_DISPLAY_RESULTS = 8
+
+export function SearchDrawer({
+  isOpen,
+  onClose,
+  searchQuery,
+  onSearchChange,
+  results,
+  crags,
+}: SearchDrawerProps) {
+  const router = useRouter()
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // 线路详情抽屉状态
+  const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
+
+  // 打开时聚焦输入框
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 300)
+    }
+  }, [isOpen])
+
+  // 限制显示数量
+  const displayResults = results.slice(0, MAX_DISPLAY_RESULTS)
+  const hasMoreResults = results.length > MAX_DISPLAY_RESULTS
+
+  // 处理线路点击 - 打开详情抽屉
+  const handleRouteClick = (route: Route) => {
+    setSelectedRoute(route)
+    setIsDetailOpen(true)
+  }
+
+  // 获取选中线路对应的岩场
+  const selectedCrag = selectedRoute
+    ? crags.find((c) => c.id === selectedRoute.cragId) || null
+    : null
+
+  // 跳转到线路页面并带上搜索词
+  const handleViewAll = () => {
+    onClose()
+    router.push(`/route?q=${encodeURIComponent(searchQuery)}`)
+  }
+
+  // 跳转到线路筛选页面
+  const handleGoToRoutes = () => {
+    onClose()
+    router.push('/route')
+  }
+
+  return (
+    <>
+      <Drawer isOpen={isOpen} onClose={onClose} height="three-quarter">
+        <div className="px-4 pb-4">
+          {/* 搜索输入框 */}
+          <div className="relative mb-4">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+              style={{ color: 'var(--theme-on-surface-variant)' }}
+            />
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="搜索线路名称"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full h-11 pl-10 pr-10 text-sm focus:outline-none"
+              style={{
+                backgroundColor: 'var(--theme-surface-variant)',
+                color: 'var(--theme-on-surface)',
+                borderRadius: 'var(--theme-radius-full)',
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => onSearchChange('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'var(--theme-on-surface-variant)' }}
+              >
+                <X className="w-3 h-3" style={{ color: 'var(--theme-surface)' }} />
+              </button>
+            )}
+          </div>
+
+          {/* 搜索结果 */}
+          {searchQuery.trim() ? (
+            <>
+              <p
+                className="text-xs mb-3"
+                style={{ color: 'var(--theme-on-surface-variant)' }}
+              >
+                找到 {results.length} 条线路
+              </p>
+
+              {displayResults.length > 0 ? (
+                <div className="space-y-2">
+                  {displayResults.map((route, index) => (
+                    <button
+                      key={route.id}
+                      onClick={() => handleRouteClick(route)}
+                      className="w-full flex items-center p-3 transition-all active:scale-[0.98] animate-fade-in-up text-left"
+                      style={{
+                        backgroundColor: 'var(--theme-surface)',
+                        borderRadius: 'var(--theme-radius-xl)',
+                        boxShadow: 'var(--theme-shadow-sm)',
+                        animationDelay: `${index * 30}ms`,
+                      }}
+                    >
+                      {/* 难度标签 */}
+                      <div
+                        className="w-10 h-10 flex items-center justify-center mr-3 flex-shrink-0"
+                        style={{
+                          backgroundColor: getGradeColor(route.grade) + '20',
+                          borderRadius: 'var(--theme-radius-lg)',
+                        }}
+                      >
+                        <span
+                          className="text-xs font-bold"
+                          style={{ color: getGradeColor(route.grade) }}
+                        >
+                          {route.grade}
+                        </span>
+                      </div>
+
+                      {/* 线路信息 */}
+                      <div className="flex-1 min-w-0">
+                        <span
+                          className="text-sm font-semibold block truncate"
+                          style={{ color: 'var(--theme-on-surface)' }}
+                        >
+                          {route.name}
+                        </span>
+                        <span
+                          className="text-xs"
+                          style={{ color: 'var(--theme-on-surface-variant)' }}
+                        >
+                          {route.area}
+                        </span>
+                      </div>
+
+                      {/* 箭头 */}
+                      <ChevronRight
+                        className="w-4 h-4 flex-shrink-0"
+                        style={{ color: 'var(--theme-on-surface-variant)' }}
+                      />
+                    </button>
+                  ))}
+
+                  {/* 查看更多按钮 */}
+                  {hasMoreResults && (
+                    <button
+                      onClick={handleViewAll}
+                      className="w-full py-3 flex items-center justify-center gap-2 transition-colors"
+                      style={{
+                        color: 'var(--theme-primary)',
+                        borderRadius: 'var(--theme-radius-xl)',
+                      }}
+                    >
+                      <span className="text-sm font-medium">
+                        查看全部 {results.length} 条结果
+                      </span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p style={{ color: 'var(--theme-on-surface-variant)' }}>
+                    没有找到匹配的线路
+                  </p>
+                </div>
+              )}
+            </>
+          ) : (
+            /* 无搜索词时的引导 */
+            <div className="text-center py-8">
+              <p
+                className="text-sm mb-4"
+                style={{ color: 'var(--theme-on-surface-variant)' }}
+              >
+                输入线路名称开始搜索
+              </p>
+              <button
+                onClick={handleGoToRoutes}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors"
+                style={{
+                  backgroundColor: 'var(--theme-surface-variant)',
+                  color: 'var(--theme-on-surface)',
+                  borderRadius: 'var(--theme-radius-full)',
+                }}
+              >
+                浏览全部线路
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </Drawer>
+
+      {/* 线路详情抽屉 */}
+      <RouteDetailDrawer
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        route={selectedRoute}
+        crag={selectedCrag}
+      />
+    </>
+  )
+}

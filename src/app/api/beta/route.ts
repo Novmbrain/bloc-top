@@ -1,22 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/mongodb'
-import { detectPlatformFromUrl } from '@/lib/beta-constants'
+import { detectPlatformFromUrl, isXiaohongshuUrl } from '@/lib/beta-constants'
 import type { Document } from 'mongodb'
 
 /**
- * 解析短链接，获取最终 URL
+ * 解析小红书短链接，获取最终 URL
  * 通过跟踪重定向获取最终目标地址
  *
- * 注意：小红书等平台会根据 User-Agent 返回不同响应，
+ * 注意：小红书会根据 User-Agent 返回不同响应，
  * 需要使用移动端 UA 才能正常解析
  */
 async function resolveShortUrl(url: string): Promise<string> {
-  // 识别常见短链接域名
-  const shortUrlDomains = ['xhslink.com', 'v.douyin.com', 'b23.tv', 'youtu.be']
   const urlObj = new URL(url)
 
-  // 如果不是短链接，直接返回原 URL
-  if (!shortUrlDomains.some(domain => urlObj.hostname.includes(domain))) {
+  // 仅处理小红书短链接（xhslink.com）
+  if (!urlObj.hostname.includes('xhslink.com')) {
     return url
   }
 
@@ -68,6 +66,14 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json(
         { error: '无效的 URL 格式' },
+        { status: 400 }
+      )
+    }
+
+    // 验证是否为小红书链接（服务器端验证）
+    if (!isXiaohongshuUrl(url)) {
+      return NextResponse.json(
+        { error: '目前仅支持小红书链接' },
         { status: 400 }
       )
     }

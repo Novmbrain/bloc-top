@@ -58,8 +58,8 @@ export const GRADE_LEVELS = [
 
 export type GradeLevel = typeof GRADE_LEVELS[number]
 
-// Beta 视频平台类型
-export type BetaPlatform = 'xiaohongshu' | 'douyin' | 'bilibili' | 'youtube' | 'other'
+// Beta 视频平台类型（目前仅支持小红书）
+export type BetaPlatform = 'xiaohongshu'
 
 // Beta 链接数据类型
 export interface BetaLink {

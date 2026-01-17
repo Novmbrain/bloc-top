@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { ExternalLink, BookHeart, Music2, Play, Youtube, Ruler, ArrowUpFromLine, Plus, Loader2, Copy, Check } from 'lucide-react'
+import { ExternalLink, BookHeart, Ruler, ArrowUpFromLine, Plus, Loader2, Copy, Check } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { BETA_PLATFORMS } from '@/lib/beta-constants'
 import type { BetaLink, BetaPlatform } from '@/types'
@@ -15,13 +15,9 @@ interface BetaListDrawerProps {
   onAddBeta?: () => void
 }
 
-// 平台图标映射
+// 平台图标映射（目前仅支持小红书）
 const PLATFORM_ICONS: Record<BetaPlatform, React.ComponentType<{ className?: string }>> = {
   xiaohongshu: BookHeart,
-  douyin: Music2,
-  bilibili: Play,
-  youtube: Youtube,
-  other: ExternalLink,
 }
 
 export function BetaListDrawer({

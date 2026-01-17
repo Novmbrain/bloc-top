@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { Link2, Ruler, ArrowUpFromLine, Check, AlertCircle } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
-import { detectPlatformFromUrl, BETA_PLATFORMS } from '@/lib/beta-constants'
+import { detectPlatformFromUrl, isXiaohongshuUrl, BETA_PLATFORMS } from '@/lib/beta-constants'
 
 interface BetaSubmitDrawerProps {
   isOpen: boolean
@@ -67,6 +67,12 @@ export function BetaSubmitDrawer({
   const handleSubmit = async () => {
     if (!isValidUrl(url)) {
       setError('请输入有效的链接地址')
+      return
+    }
+
+    // 验证是否为小红书链接
+    if (!isXiaohongshuUrl(url)) {
+      setError('目前仅支持小红书链接')
       return
     }
 
@@ -158,7 +164,7 @@ export function BetaSubmitDrawer({
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="粘贴小红书、抖音、B站链接..."
+              placeholder="粘贴小红书视频链接..."
               className="w-full pl-10 pr-4 py-3 text-sm outline-none"
               style={{
                 backgroundColor: 'var(--theme-surface-variant)',
