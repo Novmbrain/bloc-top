@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { MapPin, User, Wrench, Video, ImageIcon } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
@@ -9,7 +9,7 @@ import { BetaListDrawer } from '@/components/beta-list-drawer'
 import { BetaSubmitDrawer } from '@/components/beta-submit-drawer'
 import { getGradeColor } from '@/lib/tokens'
 import { getRouteTopoUrl } from '@/lib/constants'
-import type { Route, Crag } from '@/types'
+import type { Route, Crag, BetaLink } from '@/types'
 
 interface RouteDetailDrawerProps {
   isOpen: boolean
@@ -30,20 +30,38 @@ export function RouteDetailDrawer({
   const [imageLoading, setImageLoading] = useState(true)
   const [imageError, setImageError] = useState(false)
 
-  // 当线路变化时重置图片加载状态
+  // 本地 Beta 数据状态，用于绕过 ISR 缓存实现即时更新
+  const [localBetaLinks, setLocalBetaLinks] = useState<BetaLink[] | null>(null)
+
+  // 当线路变化时重置状态
   useEffect(() => {
     if (route) {
-       
       setImageLoading(true)
-       
       setImageError(false)
+      setLocalBetaLinks(null) // 重置本地 Beta 数据
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅依赖 route.id 变化
   }, [route?.id])
 
+  // 从 API 获取最新 Beta 数据
+  const fetchLatestBetas = useCallback(async () => {
+    if (!route) return
+    try {
+      const res = await fetch(`/api/beta?routeId=${route.id}`)
+      const data = await res.json()
+      if (data.success && data.betaLinks) {
+        setLocalBetaLinks(data.betaLinks)
+      }
+    } catch (err) {
+      console.error('[RouteDetailDrawer] Failed to fetch betas:', err)
+    }
+  }, [route])
+
   if (!route) return null
 
-  const betaCount = route.betaLinks?.length || 0
+  // 使用本地数据（如果有）或 props 数据
+  const betaLinks = localBetaLinks ?? route.betaLinks ?? []
+  const betaCount = betaLinks.length
   // 自动拼接 COS URL，无需依赖 route.image 字段
   const topoImageUrl = getRouteTopoUrl(route.cragId, route.name)
 
@@ -319,7 +337,7 @@ export function RouteDetailDrawer({
       <BetaListDrawer
         isOpen={betaListOpen}
         onClose={() => setBetaListOpen(false)}
-        betaLinks={route.betaLinks || []}
+        betaLinks={betaLinks}
         routeName={route.name}
         routeId={route.id}
         onAddBeta={() => {
@@ -335,7 +353,8 @@ export function RouteDetailDrawer({
         routeId={route.id}
         routeName={route.name}
         onSuccess={() => {
-          // TODO: 可以触发数据刷新
+          // 提交成功后刷新 Beta 数据
+          fetchLatestBetas()
         }}
       />
     </>
