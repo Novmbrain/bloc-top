@@ -1,6 +1,6 @@
 {
-  "name": "罗源野抱 TOPO",
-  "short_name": "罗源TOPO",
+  "name": "寻岩记",
+  "short_name": "寻岩记",
   "description": "福州罗源攀岩线路分享 - 野外抱石攀岩指南",
   "start_url": "/",
   "display": "standalone",
@@ -13,13 +13,25 @@
       "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "categories": ["sports", "navigation", "lifestyle"]
