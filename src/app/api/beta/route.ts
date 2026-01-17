@@ -176,15 +176,14 @@ export async function POST(request: NextRequest) {
     )
 
     if (isDuplicate) {
-      // 静默成功：返回成功但不存储
-      console.log(`[Beta] 重复提交被忽略: routeId=${routeId}, noteId=${noteId}`)
+      // 返回冲突错误：该 Beta 已被分享过
+      console.log(`[Beta] 重复提交被拒绝: routeId=${routeId}, noteId=${noteId}`)
       return NextResponse.json(
         {
-          success: true,
-          message: 'Beta 分享成功',
-          duplicate: true, // 前端可选择性使用此标记
+          error: '该视频已被分享过啦～',
+          code: 'DUPLICATE_BETA',
         },
-        { status: 200 }
+        { status: 409 } // 409 Conflict
       )
     }
 

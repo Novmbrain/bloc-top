@@ -2,9 +2,10 @@
 
 import { useState, useCallback } from 'react'
 import Image from 'next/image'
-import { Palette, Heart, Copy, Check, ExternalLink } from 'lucide-react'
+import { Palette, Heart, Copy, Check, User, Mountain } from 'lucide-react'
 import { AppTabbar } from '@/components/app-tabbar'
 import { ThemeSwitcher } from '@/components/theme-switcher'
+import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
 
 // 作者信息常量
@@ -18,6 +19,9 @@ const AUTHOR = {
 }
 
 export default function ProfilePage() {
+  // 作者抽屉状态
+  const [authorDrawerOpen, setAuthorDrawerOpen] = useState(false)
+
   // 图片查看器状态
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerImage, setViewerImage] = useState('')
@@ -66,34 +70,110 @@ export default function ProfilePage() {
           transition: 'var(--theme-transition)',
         }}
       >
-        {/* 作者形象区域 - 酷炫渐变背景 */}
-        <header
-          className="relative pt-12 pb-8 px-4 overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, var(--theme-primary) 0%, color-mix(in srgb, var(--theme-primary) 60%, #000) 100%)',
-          }}
-        >
-          {/* 装饰性背景圆圈 */}
-          <div
-            className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-10"
-            style={{ backgroundColor: 'white' }}
-          />
-          <div
-            className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full opacity-10"
-            style={{ backgroundColor: 'white' }}
-          />
+        {/* 头部 */}
+        <header className="pt-12 px-4 pb-6">
+          <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--theme-on-surface)' }}>
+            设置
+          </h1>
 
-          {/* 作者头像 */}
-          <div className="flex justify-center mb-6">
+          {/* 应用信息卡片 */}
+          <div
+            className="p-4"
+            style={{
+              backgroundColor: 'var(--theme-surface)',
+              borderRadius: 'var(--theme-radius-xl)',
+              boxShadow: 'var(--theme-shadow-sm)',
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
+              >
+                <Mountain className="w-8 h-8" style={{ color: 'var(--theme-primary)' }} />
+              </div>
+              <div>
+                <p className="text-lg font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
+                  罗源野抱 TOPO
+                </p>
+                <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                  福州罗源攀岩线路分享
+                </p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* 内容区 */}
+        <main className="flex-1 px-4 pb-24">
+          {/* 外观设置区块 */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Palette className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
+              <span className="text-sm font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
+                外观设置
+              </span>
+            </div>
+            <ThemeSwitcher />
+          </div>
+
+          {/* 关于作者按钮 */}
+          <div className="mb-6">
             <button
-              onClick={() => openViewer(AUTHOR.avatarUrl, '作者头像')}
-              className="relative w-32 h-32 rounded-2xl overflow-hidden transition-transform active:scale-95"
+              onClick={() => setAuthorDrawerOpen(true)}
+              className="w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
               style={{
-                boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                border: '3px solid rgba(255,255,255,0.3)',
+                backgroundColor: 'var(--theme-surface)',
+                borderRadius: 'var(--theme-radius-xl)',
+                boxShadow: 'var(--theme-shadow-sm)',
               }}
             >
-              {/* 加载骨架 */}
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
+              >
+                <User className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-base font-medium" style={{ color: 'var(--theme-on-surface)' }}>
+                  关于作者
+                </p>
+                <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                  联系方式与支持
+                </p>
+              </div>
+            </button>
+          </div>
+
+          {/* 版本信息 */}
+          <div className="mt-8 text-center">
+            <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
+              罗源野抱 TOPO v1.0.0
+            </p>
+          </div>
+        </main>
+
+        {/* 底部导航栏 */}
+        <AppTabbar />
+      </div>
+
+      {/* 作者信息抽屉 */}
+      <Drawer
+        isOpen={authorDrawerOpen}
+        onClose={() => setAuthorDrawerOpen(false)}
+        height="half"
+        showHandle
+      >
+        <div className="px-4 pb-6">
+          {/* 作者头像和信息 */}
+          <div className="flex flex-col items-center mb-6">
+            <button
+              onClick={() => openViewer(AUTHOR.avatarUrl, '作者头像')}
+              className="relative w-24 h-24 rounded-2xl overflow-hidden mb-4 transition-transform active:scale-95"
+              style={{
+                boxShadow: 'var(--theme-shadow-md)',
+              }}
+            >
               {!avatarLoaded && (
                 <div className="absolute inset-0 skeleton-shimmer" />
               )}
@@ -103,38 +183,25 @@ export default function ProfilePage() {
                 fill
                 className={`object-cover transition-opacity duration-300 ${avatarLoaded ? 'opacity-100' : 'opacity-0'}`}
                 onLoad={() => setAvatarLoaded(true)}
-                sizes="128px"
+                sizes="96px"
               />
             </button>
-          </div>
-
-          {/* 作者名称和简介 */}
-          <div className="text-center relative z-10">
-            <h1
-              className="text-2xl font-bold mb-1"
-              style={{ color: 'var(--theme-on-primary)' }}
+            <h2
+              className="text-xl font-bold mb-1"
+              style={{ color: 'var(--theme-on-surface)' }}
             >
               {AUTHOR.name}
-            </h1>
+            </h2>
             <p
-              className="text-sm opacity-80"
-              style={{ color: 'var(--theme-on-primary)' }}
+              className="text-sm"
+              style={{ color: 'var(--theme-on-surface-variant)' }}
             >
               {AUTHOR.bio}
             </p>
           </div>
-        </header>
 
-        {/* 联系方式卡片 */}
-        <div className="px-4 -mt-4 relative z-10">
-          <div
-            className="p-4 space-y-3"
-            style={{
-              backgroundColor: 'var(--theme-surface)',
-              borderRadius: 'var(--theme-radius-xl)',
-              boxShadow: 'var(--theme-shadow-lg)',
-            }}
-          >
+          {/* 联系方式 */}
+          <div className="space-y-3 mb-4">
             {/* 微信 */}
             <button
               onClick={() => copyToClipboard(AUTHOR.wechat, 'wechat')}
@@ -198,51 +265,24 @@ export default function ProfilePage() {
                 <Copy className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />
               )}
             </button>
-
-            {/* 赞赏按钮 */}
-            <button
-              onClick={() => openViewer(AUTHOR.donateUrl, '赞赏码')}
-              className="w-full flex items-center justify-center gap-2 p-4 mt-2 transition-all active:scale-[0.98]"
-              style={{
-                background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%)',
-                borderRadius: 'var(--theme-radius-xl)',
-                color: 'white',
-                boxShadow: '0 4px 15px rgba(238, 90, 90, 0.4)',
-              }}
-            >
-              <Heart className="w-5 h-5" fill="white" />
-              <span className="font-medium">给小傅买杯咖啡 ☕️</span>
-            </button>
           </div>
+
+          {/* 赞赏按钮 */}
+          <button
+            onClick={() => openViewer(AUTHOR.donateUrl, '赞赏码')}
+            className="w-full flex items-center justify-center gap-2 p-4 transition-all active:scale-[0.98]"
+            style={{
+              background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%)',
+              borderRadius: 'var(--theme-radius-xl)',
+              color: 'white',
+              boxShadow: '0 4px 15px rgba(238, 90, 90, 0.3)',
+            }}
+          >
+            <Heart className="w-5 h-5" fill="white" />
+            <span className="font-medium">给小傅买杯咖啡 ☕️</span>
+          </button>
         </div>
-
-        {/* 内容区 */}
-        <main className="flex-1 px-4 pt-6 pb-24">
-          {/* 外观设置区块 */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Palette className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
-              <span className="text-sm font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-                外观设置
-              </span>
-            </div>
-            <ThemeSwitcher />
-          </div>
-
-          {/* 版本信息 */}
-          <div className="mt-8 text-center">
-            <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-              罗源野抱 TOPO v1.0.0
-            </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--theme-on-surface-variant)' }}>
-              Made with ❤️ by 傅文杰
-            </p>
-          </div>
-        </main>
-
-        {/* 底部导航栏 */}
-        <AppTabbar />
-      </div>
+      </Drawer>
 
       {/* 图片查看器 */}
       <ImageViewer
