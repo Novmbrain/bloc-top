@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useCallback, useState, useTransition } from 'react'
+import { useMemo, useCallback, useState, useTransition, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, ChevronRight, X, SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { getGradeColor } from '@/lib/tokens'
@@ -27,6 +27,16 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false)
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
+
+  // 是否已完成首次渲染（用于控制入场动画）
+  const [hasInitialRender, setHasInitialRender] = useState(false)
+
+  // 首次渲染完成后标记，避免后续筛选/排序时重复播放入场动画
+  useEffect(() => {
+    // 等待入场动画完成后再标记
+    const timer = setTimeout(() => setHasInitialRender(true), 500)
+    return () => clearTimeout(timer)
+  }, [])
 
   // 从 URL 读取筛选状态
   const selectedCrag = searchParams.get(FILTER_PARAMS.CRAG) || ''
@@ -297,26 +307,25 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
               <button
                 key={route.id}
                 onClick={() => handleRouteClick(route)}
-                className="w-full flex items-center p-3 transition-all active:scale-[0.98] animate-fade-in-up text-left"
+                className={`w-full flex items-center p-3 transition-all active:scale-[0.98] text-left ${
+                  !hasInitialRender ? 'animate-fade-in-up' : ''
+                }`}
                 style={{
                   backgroundColor: 'var(--theme-surface)',
                   borderRadius: 'var(--theme-radius-xl)',
                   boxShadow: 'var(--theme-shadow-sm)',
-                  animationDelay: `${index * 30}ms`,
+                  ...(hasInitialRender ? {} : { animationDelay: `${index * 30}ms` }),
                 }}
               >
-                {/* 难度标签 */}
+                {/* 难度标签 - 实色背景，与难度选择 bar 颜色一致 */}
                 <div
                   className="w-12 h-12 flex items-center justify-center mr-3 flex-shrink-0"
                   style={{
-                    backgroundColor: getGradeColor(route.grade) + '20',
+                    backgroundColor: getGradeColor(route.grade),
                     borderRadius: 'var(--theme-radius-lg)',
                   }}
                 >
-                  <span
-                    className="text-sm font-bold"
-                    style={{ color: getGradeColor(route.grade) }}
-                  >
+                  <span className="text-sm font-bold text-white">
                     {route.grade}
                   </span>
                 </div>

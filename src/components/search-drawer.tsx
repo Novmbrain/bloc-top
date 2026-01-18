@@ -126,18 +126,15 @@ export function SearchDrawer({
                         animationDelay: `${index * 30}ms`,
                       }}
                     >
-                      {/* 难度标签 */}
+                      {/* 难度标签 - 实色背景，与难度选择 bar 颜色一致 */}
                       <div
                         className="w-10 h-10 flex items-center justify-center mr-3 flex-shrink-0"
                         style={{
-                          backgroundColor: getGradeColor(route.grade) + '20',
+                          backgroundColor: getGradeColor(route.grade),
                           borderRadius: 'var(--theme-radius-lg)',
                         }}
                       >
-                        <span
-                          className="text-xs font-bold"
-                          style={{ color: getGradeColor(route.grade) }}
-                        >
+                        <span className="text-xs font-bold text-white">
                           {route.grade}
                         </span>
                       </div>
