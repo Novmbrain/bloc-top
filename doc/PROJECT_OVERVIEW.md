@@ -148,53 +148,64 @@ getAllRoutes()         // 全部查询
 
 ---
 
-## 五、样式系统 (Material Design 3)
+## 五、样式系统 (主题系统)
 
 ### 5.1 CSS 变量结构
 
-在 `globals.css` 中定义了设计令牌：
+在 `globals.css` 中定义了设计令牌，使用 `--theme-*` 前缀支持主题切换：
 
-**颜色令牌：**
+**主题颜色变量 (支持 minimal/outdoor 两种主题)：**
 ```css
---m3-primary: #667eea              /* 主色 (紫蓝) */
---m3-on-primary: #ffffff           /* 主色上的文本 */
---m3-primary-container: #e0e5ff    /* 浅色容器背景 */
---m3-on-primary-container: #1a1b4b /* 容器内文本 */
+--theme-primary              /* 主色 */
+--theme-on-primary           /* 主色上的文本 */
+--theme-primary-container    /* 浅色容器背景 */
+--theme-on-primary-container /* 容器内文本 */
 
---m3-surface: #fefbff              /* 背景 */
---m3-surface-variant: #e4e1ec      /* 变体背景 (稍暗) */
---m3-on-surface: #1c1b1f           /* 表面文本 */
---m3-on-surface-variant: #46464f   /* 变体文本 */
+--theme-surface              /* 背景 */
+--theme-surface-variant      /* 变体背景 (稍暗) */
+--theme-on-surface           /* 表面文本 */
+--theme-on-surface-variant   /* 变体文本 */
 
---m3-outline: #777680              /* 边框 */
---m3-outline-variant: #c7c5d0      /* 变体边框 */
+--theme-outline              /* 边框 */
+--theme-outline-variant      /* 变体边框 */
+
+--theme-warning              /* 警告色 */
+--theme-error                /* 错误色 */
+--theme-success              /* 成功色 */
 ```
 
-**间距 (8px 基础)：**
+**主题圆角和阴影：**
 ```css
+--theme-radius-sm/md/lg/xl/full  /* 主题感知圆角 */
+--theme-shadow-sm/md/lg          /* 主题感知阴影 */
+--theme-transition               /* 主题过渡动画 */
+```
+
+**通用令牌 (非主题相关)：**
+```css
+/* 间距 (8px 基础) */
 --space-xs: 0.25rem  /* 4px */
 --space-sm: 0.5rem   /* 8px */
 --space-md: 0.75rem  /* 12px */
 --space-lg: 1rem     /* 16px */
 --space-xl: 1.5rem   /* 24px */
-```
 
-**圆角：**
-```css
---radius-xs: 0.25rem
---radius-sm: 0.5rem
---radius-md: 0.75rem
---radius-lg: 1rem
---radius-xl: 1.75rem
+/* 基础圆角 */
+--radius-xs/sm/md/lg/xl: 0.25-1.75rem
 ```
 
 ### 5.2 在组件中使用
 
 ```tsx
-<div className="bg-[var(--m3-primary)]">
+// 使用主题变量 (推荐 style 属性)
+<div style={{
+  backgroundColor: 'var(--theme-primary)',
+  color: 'var(--theme-on-primary)',
+  borderRadius: 'var(--theme-radius-xl)',
+}}>
 ```
 
-CSS 变量让主题色可以统一管理，如果要改主题色，只需改一处。
+CSS 变量让主题色可以统一管理，通过 `data-theme` 属性切换主题。
 
 ### 5.3 自定义动画
 
@@ -333,7 +344,7 @@ app/
 ```
 
 选中状态实现：
-- 药丸背景：`bg-[var(--m3-primary-container)]`
+- 药丸背景：`bg-[var(--theme-primary-container)]`
 - 图标放大：`scale-110`
 - 图标变色：`colors.primary`
 - 文字加粗：`font-semibold`
@@ -342,20 +353,28 @@ app/
 
 **底部弹窗模式 (sw-update-prompt.tsx):**
 ```tsx
-<div className="fixed bottom-20 left-4 right-4 z-50 bg-[var(--m3-primary)] text-white p-4 rounded-xl shadow-lg animate-fade-in-up">
+<div className="fixed bottom-20 left-4 right-4 z-50" style={{
+  backgroundColor: 'var(--theme-primary)',
+  color: 'var(--theme-on-primary)',
+  borderRadius: 'var(--theme-radius-xl)',
+}}>
   <div className="flex items-start gap-3">
-    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white/20">
+    <div className="flex-shrink-0 w-10 h-10 rounded-full" style={{
+      backgroundColor: 'color-mix(in srgb, var(--theme-on-primary) 20%, transparent)'
+    }}>
       <Icon />
     </div>
     <div className="flex-1">
       <p className="font-medium">标题</p>
-      <p className="text-sm text-white/80">描述</p>
+      <p className="text-sm" style={{ opacity: 0.8 }}>描述</p>
     </div>
     <button onClick={onClose}><X /></button>
   </div>
   <div className="flex gap-2 mt-3">
-    <button className="flex-1 bg-white text-[var(--m3-primary)]">主要操作</button>
-    <button className="bg-white/20">次要操作</button>
+    <button style={{
+      backgroundColor: 'var(--theme-on-primary)',
+      color: 'var(--theme-primary)',
+    }}>主要操作</button>
   </div>
 </div>
 ```
@@ -472,7 +491,7 @@ images: {
 |----------|------------|
 | 添加新岩场 | `src/data/crags.ts` |
 | 添加新线路 | `src/data/routes.ts` |
-| 修改主题色 | `src/app/globals.css` 中的 `--m3-*` |
+| 修改主题色 | `src/app/globals.css` 中的 `--theme-*` |
 | 修改底部导航 | `src/components/app-tabbar.tsx` |
 | 修改首页布局 | `src/app/page.tsx` |
 | 修改搜索逻辑 | `src/hooks/use-route-search.ts` |

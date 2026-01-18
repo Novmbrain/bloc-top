@@ -55,21 +55,6 @@
   --theme-transition: color 0.2s ease, background-color 0.2s ease,
                       border-color 0.2s ease, box-shadow 0.2s ease;
 
-  /* Design Tokens - Colors (M3 风格) - 保留兼容性 */
-  --m3-primary: #667eea;
-  --m3-on-primary: #ffffff;
-  --m3-primary-container: #e0e5ff;
-  --m3-on-primary-container: #1a1b4b;
-  --m3-secondary: #5c5d72;
-  --m3-on-secondary: #ffffff;
-  --m3-secondary-container: #e1e0f9;
-  --m3-surface: #fefbff;
-  --m3-surface-variant: #e4e1ec;
-  --m3-on-surface: #1c1b1f;
-  --m3-on-surface-variant: #46464f;
-  --m3-outline: #777680;
-  --m3-outline-variant: #c7c5d0;
-
   /* Design Tokens - Spacing */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -165,6 +150,8 @@
   /* 主色 */
   --theme-primary: #1a1a1a;
   --theme-on-primary: #ffffff;
+  --theme-primary-container: #f0f0f0;
+  --theme-on-primary-container: #1a1a1a;
   /* 表面色 */
   --theme-surface: #ffffff;
   --theme-surface-variant: #f5f5f5;
@@ -195,6 +182,8 @@
   /* 主色 - 岩石棕 */
   --theme-primary: #8B7355;
   --theme-on-primary: #ffffff;
+  --theme-primary-container: #F5EDE5;
+  --theme-on-primary-container: #3D3229;
   /* 表面色 - 暖白 */
   --theme-surface: #FAF8F5;
   --theme-surface-variant: #F0EDE8;
@@ -225,6 +214,8 @@
   /* 主色 */
   --theme-primary: #1a1a1a;
   --theme-on-primary: #ffffff;
+  --theme-primary-container: #f0f0f0;
+  --theme-on-primary-container: #1a1a1a;
   /* 表面色 */
   --theme-surface: #ffffff;
   --theme-surface-variant: #f5f5f5;
@@ -292,9 +283,9 @@
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    var(--m3-surface-variant) 25%,
-    var(--m3-outline-variant) 50%,
-    var(--m3-surface-variant) 75%
+    var(--theme-surface-variant) 25%,
+    var(--theme-outline-variant) 50%,
+    var(--theme-surface-variant) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;

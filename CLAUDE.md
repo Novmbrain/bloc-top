@@ -185,40 +185,16 @@ interface BetaLink {
 
 ## Design System
 
-使用 CSS 变量，定义在 `globals.css`。
+使用 CSS 变量，定义在 `globals.css`，通过 `data-theme` 属性控制主题切换。
 
-> ⚠️ **重要**: `--m3-*` 变量为旧版兼容，**新代码请使用 `--theme-*` 变量**（见下方 Theme System）
-
-```css
-/* 旧版变量 (仅兼容用途，勿在新代码中使用) */
---m3-primary: #667eea
---m3-on-primary: #ffffff
---m3-surface: #fefbff
---m3-surface-variant: #e4e1ec
---m3-on-surface: #1c1b1f
---m3-on-surface-variant: #46464f
---m3-outline: #777680
-
-/* 间距 */
---space-xs/sm/md/lg/xl: 0.25-1.5rem
-
-/* 圆角 */
---radius-xs/sm/md/lg/xl: 0.25-1.75rem
-
-/* 阴影 */
---elevation-1 到 --elevation-5
-```
-
-## Theme System (双主题)
-
-支持两种主题切换，通过 `data-theme` 属性控制：
-
-### 主题变量 (使用 `--theme-*` 前缀)
+### 主题变量 (`--theme-*`)
 
 ```css
 /* 颜色 */
 --theme-primary          /* 主色 */
 --theme-on-primary       /* 主色上的文字 */
+--theme-primary-container /* 浅色容器背景 */
+--theme-on-primary-container /* 容器内文字 */
 --theme-surface          /* 表面色/背景色 */
 --theme-surface-variant  /* 表面变体色 */
 --theme-on-surface       /* 表面上的文字 */
@@ -237,6 +213,20 @@ interface BetaLink {
 
 /* 过渡动画 */
 --theme-transition
+```
+
+### 通用令牌 (非主题相关)
+
+```css
+/* 间距 */
+--space-xs/sm/md/lg/xl: 0.25-1.5rem
+--space-page: 1rem
+
+/* 基础圆角 */
+--radius-xs/sm/md/lg/xl: 0.25-1.75rem
+
+/* 阴影 (非主题感知) */
+--elevation-1 到 --elevation-5
 ```
 
 ### 主题定义
