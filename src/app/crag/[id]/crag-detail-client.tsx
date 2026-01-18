@@ -9,11 +9,10 @@ import { getCragCoverUrl } from '@/lib/constants'
 import AMapContainer from '@/components/amap-container'
 import type { Crag, Route } from '@/types'
 
-// 模拟岩场坐标数据 (罗源县附近)
-// TODO: 之后从数据库获取真实坐标
-const MOCK_COORDINATES: Record<string, { lng: number; lat: number }> = {
-  'yuan-tong-si': { lng: 119.549, lat: 26.489 },    // 圆通寺岩场
-  'ba-jing-cun': { lng: 119.523, lat: 26.512 },     // 八井村岩场
+// 岩场真实 GPS 坐标
+const CRAG_COORDINATES: Record<string, { lng: number; lat: number }> = {
+  'yuan-tong-si': { lng: 119.52508494257924, lat: 26.47524770432985 }, // 圆通寺岩场
+  'ba-jing-cun': { lng: 119.55549, lat: 26.43837 },                    // 八井村岩场
   // 默认坐标 (罗源县中心)
   default: { lng: 119.5495, lat: 26.4893 },
 }
@@ -209,7 +208,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             </span>
           </div>
           <AMapContainer
-            center={crag.coordinates || MOCK_COORDINATES[crag.id] || MOCK_COORDINATES.default}
+            center={crag.coordinates || CRAG_COORDINATES[crag.id] || CRAG_COORDINATES.default}
             name={crag.name}
             zoom={15}
             height="180px"
