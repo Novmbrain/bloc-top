@@ -40,10 +40,9 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
 
   // 从 URL 读取筛选状态
   const selectedCrag = searchParams.get(FILTER_PARAMS.CRAG) || ''
-  const selectedGrades = useMemo(() => {
-    const gradeParam = searchParams.get(FILTER_PARAMS.GRADE)
-    return gradeParam ? gradeParam.split(',') : []
-  }, [searchParams])
+  // 直接从 URL 解析，不使用 useMemo，确保每次 URL 变化都能正确获取最新值
+  const gradeParam = searchParams.get(FILTER_PARAMS.GRADE)
+  const selectedGrades = gradeParam ? gradeParam.split(',') : []
   const searchQuery = searchParams.get(FILTER_PARAMS.QUERY) || ''
   const sortDirection = (searchParams.get(FILTER_PARAMS.SORT) as SortDirection) || DEFAULT_SORT_DIRECTION
 
