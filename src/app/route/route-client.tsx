@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback, useState, useTransition, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Search, ChevronRight, X, SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { Search, ChevronRight, X, SlidersHorizontal, ArrowUp, ArrowDown } from 'lucide-react'
 import { getGradeColor } from '@/lib/tokens'
 import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, type SortDirection } from '@/lib/filter-constants'
 import { compareGrades } from '@/lib/grade-utils'
@@ -40,9 +40,12 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
 
   // 从 URL 读取筛选状态
   const selectedCrag = searchParams.get(FILTER_PARAMS.CRAG) || ''
-  // 直接从 URL 解析，不使用 useMemo，确保每次 URL 变化都能正确获取最新值
   const gradeParam = searchParams.get(FILTER_PARAMS.GRADE)
-  const selectedGrades = gradeParam ? gradeParam.split(',') : []
+  // 使用 useMemo 避免每次渲染创建新数组，依赖 gradeParam 字符串确保响应性
+  const selectedGrades = useMemo(
+    () => (gradeParam ? gradeParam.split(',') : []),
+    [gradeParam]
+  )
   const searchQuery = searchParams.get(FILTER_PARAMS.QUERY) || ''
   const sortDirection = (searchParams.get(FILTER_PARAMS.SORT) as SortDirection) || DEFAULT_SORT_DIRECTION
 

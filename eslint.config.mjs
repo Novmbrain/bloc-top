@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Generated service worker
     "public/sw.js",
+    // Claude Code skills (non-project files)
+    ".claude/**",
+    // Test coverage reports
+    "coverage/**",
   ]),
 ]);
 

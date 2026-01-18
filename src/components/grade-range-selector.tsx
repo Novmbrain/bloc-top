@@ -34,7 +34,9 @@ export function GradeRangeSelector({
   const [optimisticSelection, setOptimisticSelection] = useState<string[] | null>(null)
 
   // 当 selectedGrades prop 更新时，清除乐观状态
+  // 这是 React 推荐的"根据 prop 变化重置状态"的用例
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 合理用例：prop 变化时重置内部状态
     setOptimisticSelection(null)
   }, [selectedGrades])
 
