@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { ExternalLink, BookHeart, Ruler, ArrowUpFromLine, Plus, Loader2, Copy, Check } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { ExternalLink, BookHeart, Ruler, ArrowUpFromLine, Plus, Copy, Check, RefreshCw } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { BETA_PLATFORMS } from '@/lib/beta-constants'
 import type { BetaLink, BetaPlatform } from '@/types'
@@ -28,43 +28,34 @@ export function BetaListDrawer({
   routeId,
   onAddBeta,
 }: BetaListDrawerProps) {
-  // 从 API 获取最新数据，绕过 ISR 缓存
-  const [apiBetaLinks, setApiBetaLinks] = useState<BetaLink[] | null>(null)
-  const [loading, setLoading] = useState(false)
+  // 手动刷新获取的数据（优先于 props 数据）
+  const [refreshedLinks, setRefreshedLinks] = useState<BetaLink[] | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
-  // 使用 API 数据（如果有）或 props 数据
-  const betaLinks = apiBetaLinks ?? propsBetaLinks
+  // 优先使用刷新后的数据，否则使用 props 数据（来自 ISR 缓存）
+  const betaLinks = refreshedLinks ?? propsBetaLinks
 
-  // 抽屉打开时从 API 获取最新数据
-  useEffect(() => {
-    if (isOpen && routeId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLoading(true)
-      fetch(`/api/beta?routeId=${routeId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.betaLinks) {
-            // 调试：打印 API 返回的 URL
-            console.log('[BetaListDrawer] API betaLinks:', JSON.stringify(data.betaLinks, null, 2))
-            setApiBetaLinks(data.betaLinks)
-          }
-        })
-        .catch(err => {
-          console.error('[BetaListDrawer] Failed to fetch:', err)
-        })
-        .finally(() => {
-          setLoading(false)
-        })
+  /**
+   * 手动刷新 Beta 列表
+   * 只在用户主动点击刷新按钮时调用 API
+   */
+  const handleRefresh = useCallback(async () => {
+    if (refreshing || !routeId) return
+
+    setRefreshing(true)
+    try {
+      const res = await fetch(`/api/beta?routeId=${routeId}`)
+      const data = await res.json()
+      if (data.success && data.betaLinks) {
+        console.log('[BetaListDrawer] Refreshed betaLinks:', data.betaLinks.length)
+        setRefreshedLinks(data.betaLinks)
+      }
+    } catch (err) {
+      console.error('[BetaListDrawer] Failed to refresh:', err)
+    } finally {
+      setRefreshing(false)
     }
-  }, [isOpen, routeId])
-
-  // 抽屉关闭时清除 API 数据（下次打开重新获取）
-  useEffect(() => {
-    if (!isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setApiBetaLinks(null)
-    }
-  }, [isOpen])
+  }, [refreshing, routeId])
 
   // 复制成功状态（记录哪个链接被复制）
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -141,20 +132,7 @@ export function BetaListDrawer({
           </button>
         )}
 
-        {loading ? (
-          <div className="text-center py-8">
-            <Loader2
-              className="w-8 h-8 mx-auto animate-spin"
-              style={{ color: 'var(--theme-primary)' }}
-            />
-            <p
-              className="text-sm mt-2"
-              style={{ color: 'var(--theme-on-surface-variant)' }}
-            >
-              加载中...
-            </p>
-          </div>
-        ) : betaLinks.length === 0 ? (
+        {betaLinks.length === 0 ? (
           <div className="text-center py-8">
             <div
               className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
@@ -179,8 +157,33 @@ export function BetaListDrawer({
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {betaLinks.map((beta, index) => {
+          <>
+            {/* 刷新按钮区域 */}
+            <div className="flex items-center justify-between mb-3">
+              <span
+                className="text-xs"
+                style={{ color: 'var(--theme-on-surface-variant)' }}
+              >
+                {refreshedLinks ? '已刷新' : '来自缓存'}
+                {betaLinks.length > 0 && ` · ${betaLinks.length} 个视频`}
+              </span>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all active:scale-95 disabled:opacity-50"
+                style={{
+                  backgroundColor: 'var(--theme-surface-variant)',
+                  color: 'var(--theme-on-surface-variant)',
+                  borderRadius: 'var(--theme-radius-lg)',
+                }}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? '刷新中...' : '刷新'}
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {betaLinks.map((beta, index) => {
               const platform = BETA_PLATFORMS[beta.platform]
               const Icon = PLATFORM_ICONS[beta.platform]
 
@@ -265,7 +268,8 @@ export function BetaListDrawer({
                 </button>
               )
             })}
-          </div>
+            </div>
+          </>
         )}
       </div>
     </Drawer>
