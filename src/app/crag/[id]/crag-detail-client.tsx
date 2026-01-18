@@ -156,26 +156,6 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
           </div>
         </div>
 
-        {/* 岩场介绍卡片 */}
-        <InfoCard
-          icon={<FileText className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />}
-          iconBg="var(--theme-surface-variant)"
-          title="岩场介绍"
-          content={crag.description}
-          delay={50}
-        />
-
-        {/* 前往方式卡片 */}
-        {crag.approach && (
-          <InfoCard
-            icon={<Car className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />}
-            iconBg="var(--theme-surface-variant)"
-            title="前往方式"
-            content={crag.approach}
-            delay={100}
-          />
-        )}
-
         {/* 地图卡片 */}
         <div
           className="p-3 mb-2 animate-fade-in-up"
@@ -183,7 +163,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             backgroundColor: 'var(--theme-surface)',
             borderRadius: 'var(--theme-radius-xl)',
             boxShadow: 'var(--theme-shadow-sm)',
-            animationDelay: '150ms',
+            animationDelay: '0ms',
             transition: 'var(--theme-transition)',
           }}
         >
@@ -212,6 +192,26 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             点击导航按钮可跳转高德地图
           </p>
         </div>
+
+        {/* 岩场介绍卡片 */}
+        <InfoCard
+          icon={<FileText className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />}
+          iconBg="var(--theme-surface-variant)"
+          title="岩场介绍"
+          content={crag.description}
+          delay={50}
+        />
+
+        {/* 前往方式卡片 */}
+        {crag.approach && (
+          <InfoCard
+            icon={<Car className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />}
+            iconBg="var(--theme-surface-variant)"
+            title="前往方式"
+            content={crag.approach}
+            delay={100}
+          />
+        )}
       </main>
 
       {/* 底部操作按钮 */}
