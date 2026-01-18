@@ -13,12 +13,25 @@ Node.js >= 20.9.0，使用 `nvm use` 自动切换
 ## Commands
 
 ```bash
+# 开发
 npm run dev           # 开发服务器 (Turbopack)
 npm run build         # 生产构建 (webpack)
 npm run start         # 生产服务器
 npm run lint          # ESLint
+
+# 测试
+npm run test          # Vitest watch 模式
+npm run test:run      # Vitest 单次运行
+npm run test:coverage # Vitest + 覆盖率报告
+npm run test:ct       # Playwright 组件测试
+npm run test:ct:ui    # Playwright 显示浏览器
+npm run test:ct:debug # Playwright 慢动作调试
+
+# 数据库
 npm run db:seed       # 数据迁移 (开发环境)
 npm run db:seed:prod  # 数据迁移 (生产环境)
+
+# UI
 npx shadcn@latest add <component>  # 添加 UI 组件
 ```
 
@@ -29,6 +42,8 @@ npx shadcn@latest add <component>  # 添加 UI 组件
 - **Styling:** Tailwind CSS v4 + shadcn/ui (new-york style)
 - **Theming:** next-themes (双主题: 极简/户外)
 - **PWA:** Serwist (service worker at `src/app/sw.ts`)
+- **Testing:** Vitest + Testing Library + Playwright (组件测试)
+- **CI/CD:** GitHub Actions (质量检查) + Vercel (部署)
 - **Icons:** lucide-react
 - **Fonts:** Plus Jakarta Sans (sans) + JetBrains Mono (mono)
 
@@ -67,6 +82,9 @@ src/
 ├── types/index.ts         # TypeScript 类型定义
 ├── hooks/                 # 自定义 Hooks
 │   └── use-route-search.ts # 线路搜索 Hook (首页搜索用)
+├── test/                  # 测试工具
+│   ├── setup.tsx          # Vitest 全局设置 (mocks)
+│   └── utils.tsx          # 测试辅助函数
 └── lib/
     ├── utils.ts           # cn() 工具函数
     ├── tokens.ts          # 设计令牌
@@ -84,8 +102,16 @@ src/
 scripts/
 └── seed.ts                # 数据库迁移脚本
 
+playwright/                # Playwright 组件测试配置
+├── index.html             # 测试入口 HTML
+└── index.tsx              # 测试入口 (加载全局样式)
+
 doc/
 └── PROJECT_OVERVIEW.md    # 项目技术文档 (详细)
+
+# 根目录配置文件
+vitest.config.ts           # Vitest 测试配置
+playwright-ct.config.ts    # Playwright 组件测试配置
 ```
 
 ## Core Data Types
@@ -348,6 +374,40 @@ import { ImageViewer } from '@/components/ui/image-viewer'
 - `.animate-drawer-in` - 抽屉底部滑入
 - `.skeleton-shimmer` - 骨架屏闪烁
 - `.scrollbar-hide` - 隐藏滚动条但保留滚动功能
+
+## Testing
+
+### 测试文件命名
+
+- `*.test.ts` / `*.test.tsx` - Vitest 单元/组件测试
+- `*.ct.tsx` - Playwright 组件测试 (需要真实浏览器)
+
+### 测试分层
+
+| 层级 | 工具 | 用途 |
+|------|------|------|
+| 单元测试 | Vitest | 工具函数、纯逻辑 |
+| 组件测试 | Vitest + Testing Library | 组件渲染、基础交互 |
+| 浏览器测试 | Playwright | 复杂交互 (拖拽、手势) |
+
+### 已测试模块
+
+**Lib (工具函数)**:
+- `grade-utils.ts`, `tokens.ts`, `filter-constants.ts`
+- `beta-constants.ts`, `rate-limit.ts`, `crag-theme.ts`
+- `themes/index.ts`, `utils.ts`
+
+**Components (组件)**:
+- `filter-chip.tsx`, `grade-range-selector.tsx`
+- `drawer.tsx`, `crag-card.tsx`, `search-overlay.tsx`
+
+### CI 流水线
+
+GitHub Actions 自动运行 (push/PR 到 main/dev):
+1. 🔍 ESLint - 代码规范
+2. 📘 TypeScript - 类型检查
+3. 🧪 Unit Tests - Vitest + 覆盖率
+4. 🎭 Playwright - 组件测试
 
 ## Documentation Rules
 
