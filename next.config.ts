@@ -50,7 +50,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com https://restapi.amap.com https://*.amap.com",
+              "connect-src 'self' https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com https://restapi.amap.com https://*.amap.com https://*.is.autonavi.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
