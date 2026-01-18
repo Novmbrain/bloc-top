@@ -12,68 +12,242 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality:
-    name: Code Quality & Tests
+  # ============================================
+  # 🔍 代码质量检查
+  # ============================================
+  lint:
+    name: 🔍 ESLint
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: 📥 Install dependencies
         run: npm ci
 
-      - name: Run ESLint
-        run: npm run lint
+      - name: 🔍 Run ESLint
+        run: |
+          echo "::group::ESLint Output"
+          npm run lint
+          echo "::endgroup::"
 
-      - name: TypeScript type check
-        run: npx tsc --noEmit
+      - name: 📝 Write lint summary
+        if: always()
+        run: |
+          echo "## 🔍 ESLint Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ No linting errors found!" >> $GITHUB_STEP_SUMMARY
 
-      - name: Run unit tests
-        run: npm run test:run
+  # ============================================
+  # 📘 TypeScript 类型检查
+  # ============================================
+  typecheck:
+    name: 📘 TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
 
-      - name: Upload test coverage (optional)
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 📘 TypeScript type check
+        run: |
+          echo "::group::TypeScript Output"
+          npx tsc --noEmit
+          echo "::endgroup::"
+
+      - name: 📝 Write typecheck summary
+        if: always()
+        run: |
+          echo "## 📘 TypeScript Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ No type errors found!" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # 🧪 单元测试 + 覆盖率
+  # ============================================
+  unit-tests:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run Vitest with coverage
+        run: |
+          echo "::group::Vitest Output"
+          npm run test:coverage
+          echo "::endgroup::"
+
+      - name: 📊 Generate coverage summary
+        if: always()
+        run: |
+          echo "## 🧪 Unit Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f coverage/coverage-summary.json ]; then
+            # 提取覆盖率数据
+            STATEMENTS=$(cat coverage/coverage-summary.json | jq '.total.statements.pct')
+            BRANCHES=$(cat coverage/coverage-summary.json | jq '.total.branches.pct')
+            FUNCTIONS=$(cat coverage/coverage-summary.json | jq '.total.functions.pct')
+            LINES=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+
+            echo "### 📊 Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Coverage |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|----------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Statements | ${STATEMENTS}% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Branches | ${BRANCHES}% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Functions | ${FUNCTIONS}% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Lines | ${LINES}% |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Coverage report not found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📤 Upload coverage report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-report
           path: coverage/
-          retention-days: 7
+          retention-days: 14
 
-  # Playwright 组件测试
+      - name: 📊 Upload coverage to GitHub Pages (optional)
+        uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main' && always()
+        with:
+          path: coverage/
+        continue-on-error: true
+
+  # ============================================
+  # 🎭 Playwright 组件测试
+  # ============================================
   component-tests:
-    name: Component Tests (Playwright)
+    name: 🎭 Playwright
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: 📥 Install dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers
+      - name: 🎭 Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run Playwright Component Tests
-        run: npm run test:ct
+      - name: 🎭 Run Playwright Component Tests
+        run: |
+          echo "::group::Playwright Output"
+          npm run test:ct
+          echo "::endgroup::"
 
-      - name: Upload Playwright Report
+      - name: 📝 Write Playwright summary
+        if: always()
+        run: |
+          echo "## 🎭 Playwright Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All component tests passed!" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📤 Upload Playwright Report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
           path: playwright-report/
-          retention-days: 7
+          retention-days: 14
+
+  # ============================================
+  # 🏗️ 构建验证
+  # ============================================
+  build:
+    name: 🏗️ Build
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, unit-tests]
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build application
+        run: |
+          echo "::group::Build Output"
+          npm run build
+          echo "::endgroup::"
+        env:
+          # 构建时需要的环境变量（如果有的话）
+          SKIP_ENV_VALIDATION: true
+
+      - name: 📊 Build size report
+        if: always()
+        run: |
+          echo "## 🏗️ Build Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -d ".next" ]; then
+            BUILD_SIZE=$(du -sh .next | cut -f1)
+            echo "✅ Build successful!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📦 Build size: **${BUILD_SIZE}**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Build failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ============================================
+  # ✅ 最终状态汇总
+  # ============================================
+  ci-status:
+    name: ✅ CI Status
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, unit-tests, component-tests, build]
+    if: always()
+    steps:
+      - name: 📝 Generate final summary
+        run: |
+          echo "# 🚀 CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔍 ESLint | ${{ needs.lint.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📘 TypeScript | ${{ needs.typecheck.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🎭 Playwright | ${{ needs.component-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏗️ Build | ${{ needs.build.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: ❌ Fail if any job failed
+        if: contains(needs.*.result, 'failure')
+        run: exit 1

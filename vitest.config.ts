@@ -13,7 +13,7 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.tsx'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html'],
+      reporter: ['text', 'text-summary', 'html', 'json-summary'],
       include: ['src/lib/**/*.ts', 'src/components/**/*.tsx'],
       exclude: [
         'src/lib/mongodb.ts',
@@ -21,6 +21,13 @@ export default defineConfig({
         'src/test/**',
         '**/*.test.{ts,tsx}',
       ],
+      // CI 环境下的阈值检查（可选）
+      // thresholds: {
+      //   statements: 60,
+      //   branches: 60,
+      //   functions: 60,
+      //   lines: 60,
+      // },
     },
   },
   resolve: {
