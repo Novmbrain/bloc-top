@@ -13,7 +13,10 @@ interface GradeRangeSelectorProps {
 
 /**
  * 难度色谱条组件
- * 支持点击单选和拖动范围选择
+ * 支持三种选择方式：
+ * 1. 单击切换（toggle）：点击某个等级，切换其选中状态，支持不连续的复合选择
+ * 2. 拖动范围选择：拖动选择连续范围，会替换当前选择
+ * 3. 清除按钮：清除所有选择
  */
 export function GradeRangeSelector({
   selectedGrades,
@@ -24,6 +27,8 @@ export function GradeRangeSelector({
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState<number | null>(null)
   const [dragEnd, setDragEnd] = useState<number | null>(null)
+  // 追踪是否发生了实际的拖动移动（用于区分单击和拖动）
+  const [hasMoved, setHasMoved] = useState(false)
 
   // 本地乐观状态：在 URL 更新期间保持显示新选择
   const [optimisticSelection, setOptimisticSelection] = useState<string[] | null>(null)
@@ -52,41 +57,70 @@ export function GradeRangeSelector({
     return V_GRADES.slice(min, max + 1) as string[]
   }, [])
 
+  // 切换单个等级的选中状态（用于单击）
+  const toggleGrade = useCallback((index: number) => {
+    const grade = V_GRADES[index]
+    const isSelected = displayedSelection.includes(grade)
+
+    let newSelection: string[]
+    if (isSelected) {
+      // 已选中，取消选择
+      newSelection = displayedSelection.filter(g => g !== grade)
+    } else {
+      // 未选中，添加到选择中
+      newSelection = [...displayedSelection, grade]
+    }
+
+    // 设置乐观状态
+    setOptimisticSelection(newSelection)
+    onChange(newSelection)
+  }, [displayedSelection, onChange])
+
   // 处理拖动开始
   const handleDragStart = useCallback((clientX: number) => {
     const index = getGradeIndexFromPosition(clientX)
     setIsDragging(true)
     setDragStart(index)
     setDragEnd(index)
+    setHasMoved(false) // 重置移动标记
   }, [getGradeIndexFromPosition])
 
   // 处理拖动移动
   const handleDragMove = useCallback((clientX: number) => {
-    if (!isDragging) return
+    if (!isDragging || dragStart === null) return
     const index = getGradeIndexFromPosition(clientX)
+
+    // 只有当移动到不同的格子时才标记为已移动
+    if (index !== dragStart) {
+      setHasMoved(true)
+    }
     setDragEnd(index)
-  }, [isDragging, getGradeIndexFromPosition])
+  }, [isDragging, dragStart, getGradeIndexFromPosition])
 
   // 处理拖动结束
   const handleDragEnd = useCallback(() => {
     if (!isDragging || dragStart === null || dragEnd === null) {
       setIsDragging(false)
+      setHasMoved(false)
       return
     }
 
-    const newSelection = getSelectedFromRange(dragStart, dragEnd)
-
-    // 设置乐观状态，立即显示新选择
-    setOptimisticSelection(newSelection)
+    if (hasMoved) {
+      // 实际发生了拖动 → 范围选择，替换当前选择
+      const newSelection = getSelectedFromRange(dragStart, dragEnd)
+      setOptimisticSelection(newSelection)
+      onChange(newSelection)
+    } else {
+      // 没有移动 → 单击，切换单个等级
+      toggleGrade(dragStart)
+    }
 
     // 清除拖动状态
     setIsDragging(false)
     setDragStart(null)
     setDragEnd(null)
-
-    // 通知父组件更新 URL
-    onChange(newSelection)
-  }, [isDragging, dragStart, dragEnd, getSelectedFromRange, onChange])
+    setHasMoved(false)
+  }, [isDragging, dragStart, dragEnd, hasMoved, getSelectedFromRange, onChange, toggleGrade])
 
   // 鼠标事件处理
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -131,13 +165,15 @@ export function GradeRangeSelector({
 
   // 判断某个等级是否被选中（包括拖动预览）
   const isGradeSelected = useCallback((index: number): boolean => {
-    if (isDragging && dragStart !== null && dragEnd !== null) {
+    // 拖动中且已经移动了 → 显示范围预览
+    if (isDragging && hasMoved && dragStart !== null && dragEnd !== null) {
       const min = Math.min(dragStart, dragEnd)
       const max = Math.max(dragStart, dragEnd)
       return index >= min && index <= max
     }
+    // 否则显示实际选中状态
     return displayedSelection.includes(V_GRADES[index])
-  }, [isDragging, dragStart, dragEnd, displayedSelection])
+  }, [isDragging, hasMoved, dragStart, dragEnd, displayedSelection])
 
   // 清除选择
   const handleClear = useCallback(() => {
@@ -147,21 +183,40 @@ export function GradeRangeSelector({
 
   // 计算显示的范围文本
   const getRangeText = (): string => {
-    if (isDragging && dragStart !== null && dragEnd !== null) {
+    // 拖动范围预览
+    if (isDragging && hasMoved && dragStart !== null && dragEnd !== null) {
       const min = Math.min(dragStart, dragEnd)
       const max = Math.max(dragStart, dragEnd)
       if (min === max) return V_GRADES[min]
       return `${V_GRADES[min]} - ${V_GRADES[max]}`
     }
+
     if (displayedSelection.length === 0) return '全部难度'
     if (displayedSelection.length === 1) return displayedSelection[0]
 
-    // 找出选中范围的最小和最大
-    const indices = displayedSelection.map(g => V_GRADES.indexOf(g as typeof V_GRADES[number])).filter(i => i >= 0)
+    // 检查是否是连续选择
+    const indices = displayedSelection
+      .map(g => V_GRADES.indexOf(g as typeof V_GRADES[number]))
+      .filter(i => i >= 0)
+      .sort((a, b) => a - b)
+
     if (indices.length === 0) return '全部难度'
-    const min = Math.min(...indices)
-    const max = Math.max(...indices)
-    return `${V_GRADES[min]} - ${V_GRADES[max]}`
+
+    // 检查是否连续
+    const isContiguous = indices.every((val, i) =>
+      i === 0 || val === indices[i - 1] + 1
+    )
+
+    if (isContiguous) {
+      // 连续范围，显示 "V2 - V5"
+      const min = indices[0]
+      const max = indices[indices.length - 1]
+      if (min === max) return V_GRADES[min]
+      return `${V_GRADES[min]} - ${V_GRADES[max]}`
+    } else {
+      // 不连续，显示 "已选 3 个难度"
+      return `已选 ${displayedSelection.length} 个难度`
+    }
   }
 
   return (
@@ -230,7 +285,7 @@ export function GradeRangeSelector({
         className="text-xs mt-2 text-center"
         style={{ color: 'var(--theme-on-surface-variant)' }}
       >
-        拖动选择难度范围
+        点击切换单个难度，拖动选择范围
       </p>
     </div>
   )
