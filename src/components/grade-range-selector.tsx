@@ -25,6 +25,17 @@ export function GradeRangeSelector({
   const [dragStart, setDragStart] = useState<number | null>(null)
   const [dragEnd, setDragEnd] = useState<number | null>(null)
 
+  // 本地乐观状态：在 URL 更新期间保持显示新选择
+  const [optimisticSelection, setOptimisticSelection] = useState<string[] | null>(null)
+
+  // 当 selectedGrades prop 更新时，清除乐观状态
+  useEffect(() => {
+    setOptimisticSelection(null)
+  }, [selectedGrades])
+
+  // 实际显示的选中状态（优先使用乐观状态）
+  const displayedSelection = optimisticSelection ?? selectedGrades
+
   // 计算触摸/点击位置对应的等级索引
   const getGradeIndexFromPosition = useCallback((clientX: number): number => {
     if (!containerRef.current) return 0
@@ -64,11 +75,17 @@ export function GradeRangeSelector({
     }
 
     const newSelection = getSelectedFromRange(dragStart, dragEnd)
-    onChange(newSelection)
 
+    // 设置乐观状态，立即显示新选择
+    setOptimisticSelection(newSelection)
+
+    // 清除拖动状态
     setIsDragging(false)
     setDragStart(null)
     setDragEnd(null)
+
+    // 通知父组件更新 URL
+    onChange(newSelection)
   }, [isDragging, dragStart, dragEnd, getSelectedFromRange, onChange])
 
   // 鼠标事件处理
@@ -119,11 +136,12 @@ export function GradeRangeSelector({
       const max = Math.max(dragStart, dragEnd)
       return index >= min && index <= max
     }
-    return selectedGrades.includes(V_GRADES[index])
-  }, [isDragging, dragStart, dragEnd, selectedGrades])
+    return displayedSelection.includes(V_GRADES[index])
+  }, [isDragging, dragStart, dragEnd, displayedSelection])
 
   // 清除选择
   const handleClear = useCallback(() => {
+    setOptimisticSelection([])
     onChange([])
   }, [onChange])
 
@@ -135,11 +153,11 @@ export function GradeRangeSelector({
       if (min === max) return V_GRADES[min]
       return `${V_GRADES[min]} - ${V_GRADES[max]}`
     }
-    if (selectedGrades.length === 0) return '全部难度'
-    if (selectedGrades.length === 1) return selectedGrades[0]
+    if (displayedSelection.length === 0) return '全部难度'
+    if (displayedSelection.length === 1) return displayedSelection[0]
 
     // 找出选中范围的最小和最大
-    const indices = selectedGrades.map(g => V_GRADES.indexOf(g as typeof V_GRADES[number])).filter(i => i >= 0)
+    const indices = displayedSelection.map(g => V_GRADES.indexOf(g as typeof V_GRADES[number])).filter(i => i >= 0)
     if (indices.length === 0) return '全部难度'
     const min = Math.min(...indices)
     const max = Math.max(...indices)
@@ -156,7 +174,7 @@ export function GradeRangeSelector({
         >
           {getRangeText()}
         </span>
-        {selectedGrades.length > 0 && (
+        {displayedSelection.length > 0 && (
           <button
             onClick={handleClear}
             className="flex items-center gap-1 px-2 py-1 text-xs transition-colors active:scale-95"
