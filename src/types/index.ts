@@ -12,6 +12,21 @@ export interface Route {
   betaLinks?: BetaLink[] // Beta 视频链接
 }
 
+// 岩场坐标类型
+export interface Coordinates {
+  lng: number  // 经度
+  lat: number  // 纬度
+}
+
+// 接近路径点类型 (用于 KML 导入后的路径绘制)
+export interface ApproachPath {
+  id: string
+  name: string
+  points: Coordinates[]  // 路径点数组
+  color?: string         // 路径颜色
+  description?: string   // 路径描述
+}
+
 // 岩场数据类型
 export interface Crag {
   id: string
@@ -21,6 +36,8 @@ export interface Crag {
   description: string
   approach: string
   coverImages?: string[]
+  coordinates?: Coordinates     // 岩场坐标 (用于地图标记)
+  approachPaths?: ApproachPath[] // 接近路径 (用于 KML 导入)
 }
 
 // 评论数据类型

@@ -17,6 +17,7 @@
     "db:seed:prod": "npx tsx scripts/seed.ts production"
   },
   "dependencies": {
+    "@amap/amap-jsapi-loader": "^1.0.1",
     "@radix-ui/react-slot": "^1.2.4",
     "@serwist/next": "^9.5.0",
     "class-variance-authority": "^0.7.1",

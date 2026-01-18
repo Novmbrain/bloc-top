@@ -71,6 +71,7 @@ npx shadcn@latest add <component>  # 添加 UI 组件
 - **PWA:** Serwist (service worker at `src/app/sw.ts`)
 - **Testing:** Vitest + Testing Library + Playwright (组件测试)
 - **CI/CD:** GitHub Actions (质量检查) + Vercel (部署)
+- **Map:** 高德地图 JS API 1.4.15 (@amap/amap-jsapi-loader)
 - **Icons:** lucide-react
 - **Fonts:** Plus Jakarta Sans (sans) + JetBrains Mono (mono)
 
@@ -102,7 +103,8 @@ src/
 │   ├── search-overlay.tsx # 搜索覆盖层
 │   ├── offline-indicator.tsx  # 离线状态提示 (顶部横幅)
 │   ├── sw-update-prompt.tsx   # SW 更新提示 (底部弹窗)
-│   └── install-prompt.tsx # PWA 安装提示 (首页卡片)
+│   ├── install-prompt.tsx # PWA 安装提示 (首页卡片)
+│   └── amap-container.tsx # 高德地图容器组件
 ├── data/
 │   ├── crags.ts           # 岩场数据 (静态备份)
 │   └── routes.ts          # 线路数据 (静态备份)
@@ -144,6 +146,19 @@ playwright-ct.config.ts    # Playwright 组件测试配置
 ## Core Data Types
 
 ```typescript
+interface Coordinates {
+  lng: number             // 经度
+  lat: number             // 纬度
+}
+
+interface ApproachPath {
+  id: string
+  name: string
+  points: Coordinates[]   // 路径点数组
+  color?: string          // 路径颜色
+  description?: string
+}
+
 interface Crag {
   id: string              // 'yuan-tong-si', 'ba-jing-cun'
   name: string            // 岩场名称
@@ -152,6 +167,8 @@ interface Crag {
   description: string     // 描述
   approach: string        // 接近方式
   coverImages?: string[]  // 封面图片
+  coordinates?: Coordinates     // 岩场坐标 (高德地图)
+  approachPaths?: ApproachPath[] // 接近路径 (KML导入)
 }
 
 interface Route {
@@ -367,6 +384,45 @@ import { ImageViewer } from '@/components/ui/image-viewer'
 - ESC 键关闭
 - Body 滚动锁定
 - iOS 安全区域适配
+
+### 地图组件模式 (参考 amap-container.tsx)
+
+```tsx
+import AMapContainer from '@/components/amap-container'
+
+// 基础使用 - 显示岩场位置
+<AMapContainer
+  center={{ lng: 119.549, lat: 26.489 }}
+  name="圆通寺岩场"
+  zoom={15}
+  height="200px"
+/>
+
+// 带接近路径 - KML 导入后绘制
+<AMapContainer
+  center={crag.coordinates}
+  name={crag.name}
+  approachPaths={[
+    {
+      id: 'path-1',
+      name: '主要接近路径',
+      points: [
+        { lng: 119.545, lat: 26.485 },
+        { lng: 119.547, lat: 26.487 },
+        { lng: 119.549, lat: 26.489 },
+      ],
+      color: '#3366FF',
+    }
+  ]}
+/>
+```
+
+**地图组件特性:**
+- 异步加载高德地图 API (避免首屏阻塞)
+- 岩场标记 + 名称标签
+- 接近路径绘制 (支持方向箭头)
+- 控制按钮: 重置视图 / 导航 / 全屏
+- 点击导航按钮跳转高德 App
 
 ## PWA Configuration
 

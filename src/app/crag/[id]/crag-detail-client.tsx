@@ -3,10 +3,20 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { MapPin, FileText, Car, ChevronLeft, Play } from 'lucide-react'
+import { MapPin, FileText, Car, ChevronLeft, Play, Map } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getCragCoverUrl } from '@/lib/constants'
+import AMapContainer from '@/components/amap-container'
 import type { Crag, Route } from '@/types'
+
+// 模拟岩场坐标数据 (罗源县附近)
+// TODO: 之后从数据库获取真实坐标
+const MOCK_COORDINATES: Record<string, { lng: number; lat: number }> = {
+  'yuan-tong-si': { lng: 119.549, lat: 26.489 },    // 圆通寺岩场
+  'ba-jing-cun': { lng: 119.523, lat: 26.512 },     // 八井村岩场
+  // 默认坐标 (罗源县中心)
+  default: { lng: 119.5495, lat: 26.4893 },
+}
 
 interface CragDetailClientProps {
   crag: Crag
@@ -175,6 +185,43 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             delay={100}
           />
         )}
+
+        {/* 地图卡片 */}
+        <div
+          className="p-3 mb-2 animate-fade-in-up"
+          style={{
+            backgroundColor: 'var(--theme-surface)',
+            borderRadius: 'var(--theme-radius-xl)',
+            boxShadow: 'var(--theme-shadow-sm)',
+            animationDelay: '150ms',
+            transition: 'var(--theme-transition)',
+          }}
+        >
+          <div className="flex items-center mb-3">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
+            >
+              <Map className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
+            </div>
+            <span className="text-base font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
+              岩场地图
+            </span>
+          </div>
+          <AMapContainer
+            center={crag.coordinates || MOCK_COORDINATES[crag.id] || MOCK_COORDINATES.default}
+            name={crag.name}
+            zoom={15}
+            height="180px"
+            approachPaths={crag.approachPaths}
+          />
+          <p
+            className="text-xs mt-2 text-center"
+            style={{ color: 'var(--theme-on-surface-variant)' }}
+          >
+            点击导航按钮可跳转高德地图
+          </p>
+        </div>
       </main>
 
       {/* 底部操作按钮 */}

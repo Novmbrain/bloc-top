@@ -46,11 +46,11 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://webapi.amap.com https://*.amap.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com",
+              "connect-src 'self' https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com https://restapi.amap.com https://*.amap.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
