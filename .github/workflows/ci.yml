@@ -46,12 +46,10 @@ jobs:
           path: coverage/
           retention-days: 7
 
-  # Playwright 组件测试（可选，消耗更多资源）
+  # Playwright 组件测试
   component-tests:
     name: Component Tests (Playwright)
     runs-on: ubuntu-latest
-    # 只在 main 分支或手动触发时运行，节省 CI 资源
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
