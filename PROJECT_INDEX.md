@@ -13,10 +13,11 @@ src/
 ├── app/                    # Next.js App Router (Pages)
 │   ├── page.tsx           # 首页 - 岩场列表
 │   ├── layout.tsx         # 根布局
+│   ├── loading.tsx        # 全局加载骨架屏
 │   ├── sw.ts              # Service Worker (Serwist)
 │   ├── api/beta/          # Beta API 端点
 │   ├── crag/[id]/         # 岩场详情页
-│   ├── route/             # 线路列表页
+│   ├── route/             # 线路列表页 (含专用 loading.tsx)
 │   ├── route/[id]/        # 线路详情页
 │   └── profile/           # 设置页面
 ├── components/            # React 组件
@@ -87,6 +88,7 @@ scripts/
 | Drawer | `components/ui/drawer.tsx` | 通用抽屉 (手势关闭) |
 | ImageViewer | `components/ui/image-viewer.tsx` | 全屏图片 (双指缩放) |
 | FilterChip | `components/filter-chip.tsx` | 筛选芯片 |
+| GradeRangeSelector | `components/grade-range-selector.tsx` | 难度色谱条 (点击+拖动) |
 | AppTabbar | `components/app-tabbar.tsx` | 底部导航 |
 
 ---
@@ -186,14 +188,16 @@ npm run db:seed
 
 | 日期 | 功能 |
 |------|------|
+| 2026-01-18 | 难度选择器复合多选 (点击切换 + 拖动范围) |
+| 2026-01-18 | 线路列表颜色统一 (饱和色背景) |
+| 2026-01-18 | 难度选择器乐观更新 (防止闪回) |
+| 2026-01-18 | 统一骨架屏样式 + 专用 loading 页面 |
+| 2026-01-18 | 线路列表排序功能 (难度升序/降序) |
+| 2026-01-18 | 图片加载优化 (priority + 7天缓存) |
 | 2026-01-18 | Beta 列表加载优化 (ISR 缓存 + 手动刷新) |
 | 2026-01-18 | Beta 计数即时刷新 |
 | 2026-01-17 | PWA 图标 + 品牌更名为"寻岩记" |
 | 2026-01-17 | 核心工具函数单元测试 |
-| 2026-01-17 | Beta URL 智能提取 (小红书分享文本) |
-| 2026-01-17 | 设置页面重新设计 (作者信息抽屉) |
-| 2026-01-17 | Beta 去重 + IP 限流 |
-| 2026-01-17 | Dev/Prod 数据库分离 |
 
 ---
 
