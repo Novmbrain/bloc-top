@@ -156,6 +156,17 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
           </div>
         </div>
 
+        {/* 前往方式卡片 */}
+        {crag.approach && (
+          <InfoCard
+            icon={<Car className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />}
+            iconBg="var(--theme-surface-variant)"
+            title="前往方式"
+            content={crag.approach}
+            delay={0}
+          />
+        )}
+
         {/* 地图卡片 */}
         <div
           className="p-3 mb-2 animate-fade-in-up"
@@ -163,7 +174,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             backgroundColor: 'var(--theme-surface)',
             borderRadius: 'var(--theme-radius-xl)',
             boxShadow: 'var(--theme-shadow-sm)',
-            animationDelay: '0ms',
+            animationDelay: '50ms',
             transition: 'var(--theme-transition)',
           }}
         >
@@ -199,19 +210,8 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
           iconBg="var(--theme-surface-variant)"
           title="岩场介绍"
           content={crag.description}
-          delay={50}
+          delay={100}
         />
-
-        {/* 前往方式卡片 */}
-        {crag.approach && (
-          <InfoCard
-            icon={<Car className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />}
-            iconBg="var(--theme-surface-variant)"
-            title="前往方式"
-            content={crag.approach}
-            delay={100}
-          />
-        )}
       </main>
 
       {/* 底部操作按钮 */}
