@@ -66,7 +66,7 @@ src/
 │   └── routes.ts          # 线路数据 (静态备份)
 ├── types/index.ts         # TypeScript 类型定义
 ├── hooks/                 # 自定义 Hooks
-│   └── use-drawer.ts      # 抽屉状态管理 Hook
+│   └── use-route-search.ts # 线路搜索 Hook (首页搜索用)
 └── lib/
     ├── utils.ts           # cn() 工具函数
     ├── tokens.ts          # 设计令牌

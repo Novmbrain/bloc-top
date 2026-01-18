@@ -1,7 +1,7 @@
 /**
  * 腾讯云 COS 图片存储配置
  */
-export const COS_BASE_URL = 'https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com'
+const COS_BASE_URL = 'https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com'
 
 /**
  * 生成线路 TOPO 图片 URL

@@ -4,7 +4,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Route as RouteIcon } from 'lucide-react'
 import type { Crag, Route } from '@/types'
-import { getCragTheme, getGradeColor } from '@/lib/crag-theme'
+import { getCragTheme } from '@/lib/crag-theme'
+import { getGradeColor } from '@/lib/tokens'
+import { compareGrades } from '@/lib/grade-utils'
 
 interface CragCardProps {
   crag: Crag
@@ -20,11 +22,7 @@ export function CragCard({ crag, routes = [], index = 0 }: CragCardProps) {
   const grades = routes
     .map((r) => r.grade)
     .filter((g) => g !== '？')
-    .sort((a, b) => {
-      const numA = parseInt(a.replace('V', ''))
-      const numB = parseInt(b.replace('V', ''))
-      return numA - numB
-    })
+    .sort(compareGrades)
 
   const minGrade = grades[0] || 'V0'
   const maxGrade = grades[grades.length - 1] || minGrade

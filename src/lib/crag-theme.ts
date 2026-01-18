@@ -71,32 +71,3 @@ export function getCragTheme(cragId: string): CragTheme {
   return FALLBACK_THEMES[index]
 }
 
-/**
- * 根据难度等级获取颜色
- */
-export function getGradeColor(grade: string): string {
-  const gradeNum = parseInt(grade.replace('V', ''))
-
-  if (isNaN(gradeNum)) return '#777680' // 未知难度
-  if (gradeNum <= 2) return '#4CAF50'   // V0-V2 绿色 (入门)
-  if (gradeNum <= 4) return '#8BC34A'   // V3-V4 浅绿 (初级)
-  if (gradeNum <= 6) return '#FFC107'   // V5-V6 琥珀 (中级)
-  if (gradeNum <= 8) return '#FF9800'   // V7-V8 橙色 (高级)
-  if (gradeNum <= 10) return '#F44336'  // V9-V10 红色 (精英)
-  return '#9C27B0'                       // V11+ 紫色 (大师)
-}
-
-/**
- * 获取难度等级标签
- */
-export function getGradeLabel(grade: string): string {
-  const gradeNum = parseInt(grade.replace('V', ''))
-
-  if (isNaN(gradeNum)) return '未知'
-  if (gradeNum <= 2) return '入门'
-  if (gradeNum <= 4) return '初级'
-  if (gradeNum <= 6) return '中级'
-  if (gradeNum <= 8) return '高级'
-  if (gradeNum <= 10) return '精英'
-  return '大师'
-}
