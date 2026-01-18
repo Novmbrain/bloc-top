@@ -3,18 +3,20 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Route as RouteIcon } from 'lucide-react'
-import type { Crag, Route } from '@/types'
+import type { Crag, Route, WeatherData } from '@/types'
 import { getCragTheme } from '@/lib/crag-theme'
 import { getGradeColor } from '@/lib/tokens'
 import { compareGrades } from '@/lib/grade-utils'
+import { WeatherBadge } from '@/components/weather-badge'
 
 interface CragCardProps {
   crag: Crag
   routes: Route[]
   index?: number
+  weather?: WeatherData | null
 }
 
-export function CragCard({ crag, routes = [], index = 0 }: CragCardProps) {
+export function CragCard({ crag, routes = [], index = 0, weather }: CragCardProps) {
   const routeCount = routes.length
   const theme = getCragTheme(crag.id)
 
@@ -40,6 +42,14 @@ export function CragCard({ crag, routes = [], index = 0 }: CragCardProps) {
     >
       {/* 背景层 - 图片或渐变 */}
       <div className="relative h-44 overflow-hidden">
+        {/* 天气角标 */}
+        {weather && (
+          <WeatherBadge
+            temperature={weather.live.temperature}
+            weather={weather.live.weather}
+          />
+        )}
+
         {hasCoverImage ? (
           // 有封面图时显示图片
           <Image

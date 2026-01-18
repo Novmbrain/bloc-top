@@ -92,3 +92,64 @@ export interface BetaLink {
   climberReach?: number   // 臂长 (cm)
   createdAt?: Date
 }
+
+// ==================== 天气相关类型 ====================
+
+/**
+ * 攀岩适宜度等级
+ * - excellent: 极佳 (绿色)
+ * - good: 良好 (蓝色)
+ * - fair: 一般 (黄色)
+ * - poor: 不宜 (红色)
+ */
+export type ClimbingSuitability = 'excellent' | 'good' | 'fair' | 'poor'
+
+/**
+ * 天气实况数据 (当前天气)
+ */
+export interface WeatherLive {
+  weather: string           // 天气现象 (晴、多云、阴、雨等)
+  temperature: number       // 温度 (摄氏度)
+  humidity: number          // 湿度 (百分比)
+  windDirection: string     // 风向
+  windPower: string         // 风力等级
+  reportTime: string        // 数据发布时间
+}
+
+/**
+ * 天气预报数据 (单日)
+ */
+export interface WeatherForecast {
+  date: string              // 日期 (YYYY-MM-DD)
+  week: string              // 星期
+  dayWeather: string        // 白天天气
+  nightWeather: string      // 夜间天气
+  dayTemp: number           // 白天温度
+  nightTemp: number         // 夜间温度
+  dayWind: string           // 白天风向
+  nightWind: string         // 夜间风向
+  dayPower: string          // 白天风力
+  nightPower: string        // 夜间风力
+}
+
+/**
+ * 攀岩适宜度评估结果
+ */
+export interface ClimbingCondition {
+  level: ClimbingSuitability  // 适宜度等级
+  label: string               // 显示标签 (适合攀岩、谨慎出行等)
+  description: string         // 详细描述
+  factors: string[]           // 影响因素列表
+}
+
+/**
+ * 完整天气响应数据
+ */
+export interface WeatherData {
+  adcode: string              // 城市编码
+  city: string                // 城市名称
+  live: WeatherLive           // 实况天气
+  forecasts?: WeatherForecast[] // 未来天气预报 (可选)
+  climbing: ClimbingCondition // 攀岩适宜度评估
+  updatedAt: string           // 数据更新时间 (ISO 8601)
+}

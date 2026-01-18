@@ -7,6 +7,7 @@ import { FileText, Car, ChevronLeft, Play, Map } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getCragCoverUrl } from '@/lib/constants'
 import AMapContainer from '@/components/amap-container'
+import { WeatherCard } from '@/components/weather-card'
 import type { Crag, Route } from '@/types'
 
 // 岩场真实 GPS 坐标
@@ -166,6 +167,12 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             delay={0}
           />
         )}
+
+        {/* 天气卡片 */}
+        <WeatherCard
+          coordinates={crag.coordinates || CRAG_COORDINATES[crag.id] || CRAG_COORDINATES.default}
+          delay={25}
+        />
 
         {/* 地图卡片 */}
         <div

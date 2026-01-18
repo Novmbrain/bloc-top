@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { User } from 'lucide-react'
 import { CragCard } from '@/components/crag-card'
@@ -8,8 +8,9 @@ import { FloatingSearch } from '@/components/floating-search'
 import { SearchDrawer } from '@/components/search-drawer'
 import { AppTabbar } from '@/components/app-tabbar'
 import { InstallPrompt } from '@/components/install-prompt'
+import { WeatherStrip } from '@/components/weather-strip'
 import { useRouteSearch } from '@/hooks/use-route-search'
-import type { Crag, Route } from '@/types'
+import type { Crag, Route, WeatherData } from '@/types'
 
 interface HomePageClientProps {
   crags: Crag[]
@@ -18,6 +19,23 @@ interface HomePageClientProps {
 
 export default function HomePageClient({ crags, allRoutes }: HomePageClientProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [weather, setWeather] = useState<WeatherData | null>(null)
+
+  // 获取天气数据 (用于卡片角标)
+  useEffect(() => {
+    async function fetchWeather() {
+      try {
+        const response = await fetch('/api/weather?forecast=false')
+        if (response.ok) {
+          const data: WeatherData = await response.json()
+          setWeather(data)
+        }
+      } catch (err) {
+        console.error('[HomePageClient] Failed to fetch weather:', err)
+      }
+    }
+    fetchWeather()
+  }, [])
 
   // 不限制搜索结果数量，由 SearchDrawer 内部控制显示
   const { searchQuery, setSearchQuery, searchResults, clearSearch } =
@@ -67,6 +85,9 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
 
       {/* 岩场列表（可滚动区域） */}
       <main className="flex-1 overflow-y-auto pb-36">
+        {/* 天气条 */}
+        <WeatherStrip />
+
         {/* PWA 安装提示 */}
         <InstallPrompt />
 
@@ -77,6 +98,7 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
               crag={crag}
               routes={(allRoutes || []).filter((r) => r.cragId === crag.id)}
               index={index}
+              weather={weather}
             />
           ))}
         </div>

@@ -34,6 +34,7 @@ npm run dev
 | 变量 | 必需 | 说明 |
 |------|------|------|
 | `MONGODB_URI` | ✅ | MongoDB Atlas 连接字符串 |
+| `AMAP_WEB_API_KEY` | ✅ | 高德地图 Web 服务 API Key (天气/逆地理编码) |
 
 > 生产环境变量在 Vercel 项目设置中配置
 
@@ -104,7 +105,10 @@ src/
 │   ├── offline-indicator.tsx  # 离线状态提示 (顶部横幅)
 │   ├── sw-update-prompt.tsx   # SW 更新提示 (底部弹窗)
 │   ├── install-prompt.tsx # PWA 安装提示 (首页卡片)
-│   └── amap-container.tsx # 高德地图容器组件
+│   ├── amap-container.tsx # 高德地图容器组件
+│   ├── weather-strip.tsx  # 首页天气条 (攀岩适宜度)
+│   ├── weather-badge.tsx  # 卡片天气角标 (温度+图标)
+│   └── weather-card.tsx   # 详情页天气卡 (完整信息+预报)
 ├── data/
 │   ├── crags.ts           # 岩场数据 (静态备份)
 │   └── routes.ts          # 线路数据 (静态备份)
@@ -121,6 +125,8 @@ src/
     ├── rate-limit.ts      # 内存级 Rate Limiting (IP 限流)
     ├── filter-constants.ts # 筛选配置常量 (难度分组, URL参数)
     ├── beta-constants.ts   # Beta 平台配置 (小红书, 抖音等)
+    ├── weather-constants.ts # 天气配置 (图标, 适宜度阈值)
+    ├── weather-utils.ts   # 天气工具 (攀岩适宜度评估)
     ├── mongodb.ts         # MongoDB 连接层
     ├── db/index.ts        # 数据访问层 (CRUD)
     └── themes/            # 主题系统
@@ -437,6 +443,7 @@ import AMapContainer from '@/components/amap-container'
 |------|------|------|
 | `GET` | `/api/beta?routeId=123` | 获取线路的 Beta 视频列表 |
 | `POST` | `/api/beta` | 提交 Beta 视频 (Rate Limited) |
+| `GET` | `/api/weather?lng=119&lat=26` | 获取天气数据 (含攀岩适宜度, 1h缓存) |
 
 > 岩场/线路数据通过 Server Components 直接从 MongoDB 获取，无需 API 路由
 
