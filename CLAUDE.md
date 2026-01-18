@@ -34,7 +34,7 @@ npm run dev
 | 变量 | 必需 | 说明 |
 |------|------|------|
 | `MONGODB_URI` | ✅ | MongoDB Atlas 连接字符串 |
-| `AMAP_WEB_API_KEY` | ✅ | 高德地图 Web 服务 API Key (天气/逆地理编码) |
+| `NEXT_PUBLIC_AMAP_KEY` | ✅ | 高德地图 API Key (地图展示 + 天气查询) |
 
 > 生产环境变量在 Vercel 项目设置中配置
 

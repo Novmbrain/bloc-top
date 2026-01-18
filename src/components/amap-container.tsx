@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { MapPin, Navigation, Maximize2 } from 'lucide-react'
 import type { Coordinates, ApproachPath } from '@/types'
 
-// 高德地图 API Key
-const AMAP_KEY = '74353b0f808e720ded79b9495c101656'
+// 高德地图 API Key (从环境变量读取)
+const AMAP_KEY = process.env.NEXT_PUBLIC_AMAP_KEY || ''
 
 interface AMapContainerProps {
   /** 地图中心点坐标 */

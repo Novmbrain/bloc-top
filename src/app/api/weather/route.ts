@@ -171,10 +171,10 @@ async function fetchWeatherData(
  */
 export async function GET(request: NextRequest) {
   try {
-    const apiKey = process.env.AMAP_WEB_API_KEY
+    const apiKey = process.env.NEXT_PUBLIC_AMAP_KEY
 
     if (!apiKey) {
-      console.error('[Weather] AMAP_WEB_API_KEY not configured')
+      console.error('[Weather] NEXT_PUBLIC_AMAP_KEY not configured')
       return NextResponse.json(
         { error: '天气服务未配置' },
         { status: 503 }
