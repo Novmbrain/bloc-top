@@ -7,7 +7,7 @@
  * - 标题和关闭按钮
  * - 速度/距离关闭判定
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@/test/utils'
 import { Drawer } from './drawer'
 
