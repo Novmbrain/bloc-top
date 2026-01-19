@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback, type ReactNode } from 'react'
+import { useEffect, useRef, useCallback, useState, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 
 export type DrawerHeight = 'auto' | 'quarter' | 'half' | 'three-quarter' | 'full'
@@ -23,6 +23,13 @@ const HEIGHT_MAP: Record<DrawerHeight, string> = {
   full: '100vh',
 }
 
+// iOS 风格弹簧动画曲线
+const SPRING_EASING = 'cubic-bezier(0.32, 0.72, 0, 1)'
+
+// 交互阈值
+const VELOCITY_THRESHOLD = 0.5 // px/ms (500px/s)
+const DISTANCE_RATIO_THRESHOLD = 0.25 // 抽屉高度的 25%
+
 export function Drawer({
   isOpen,
   onClose,
@@ -33,9 +40,29 @@ export function Drawer({
   children,
 }: DrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
   const startYRef = useRef<number>(0)
+  const startTimeRef = useRef<number>(0)
   const currentYRef = useRef<number>(0)
   const isDraggingRef = useRef<boolean>(false)
+  const drawerHeightRef = useRef<number>(0)
+
+  // 控制关闭动画状态
+  const [isClosing, setIsClosing] = useState(false)
+
+  // 获取抽屉高度用于计算关闭阈值，并重置关闭状态
+  useEffect(() => {
+    if (isOpen) {
+      // 使用 requestAnimationFrame 延迟状态重置，避免在 effect 中同步 setState
+      const frame = requestAnimationFrame(() => {
+        setIsClosing(false)
+        if (drawerRef.current) {
+          drawerHeightRef.current = drawerRef.current.offsetHeight
+        }
+      })
+      return () => cancelAnimationFrame(frame)
+    }
+  }, [isOpen])
 
   // 锁定 body 滚动
   useEffect(() => {
@@ -48,22 +75,54 @@ export function Drawer({
     }
   }, [isOpen])
 
+  // 带动画的关闭函数
+  const handleClose = useCallback(() => {
+    if (!drawerRef.current) {
+      onClose()
+      return
+    }
+
+    setIsClosing(true)
+
+    // 动画结束后调用 onClose
+    const animationDuration = 280
+    setTimeout(() => {
+      onClose()
+    }, animationDuration)
+  }, [onClose])
+
   // ESC 键关闭
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose()
+        handleClose()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
+  }, [isOpen, handleClose])
+
+  // 更新遮罩透明度（拖拽视觉反馈）
+  const updateOverlayOpacity = useCallback((dragDistance: number) => {
+    if (!overlayRef.current || !drawerHeightRef.current) return
+
+    // 根据拖拽距离计算遮罩透明度 (0.4 -> 0)
+    const progress = Math.min(dragDistance / drawerHeightRef.current, 1)
+    const opacity = 0.4 * (1 - progress)
+    overlayRef.current.style.backgroundColor = `rgba(0, 0, 0, ${opacity})`
+  }, [])
 
   // 触摸手势处理
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     startYRef.current = e.touches[0].clientY
+    startTimeRef.current = Date.now()
     currentYRef.current = 0
     isDraggingRef.current = true
+
+    // 拖拽时禁用过渡动画，实现即时响应
+    if (drawerRef.current) {
+      drawerRef.current.style.transition = 'none'
+    }
   }, [])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
@@ -74,22 +133,49 @@ export function Drawer({
     if (deltaY > 0) {
       currentYRef.current = deltaY
       drawerRef.current.style.transform = `translateY(${deltaY}px)`
+      // 更新遮罩透明度
+      updateOverlayOpacity(deltaY)
     }
-  }, [])
+  }, [updateOverlayOpacity])
 
   const handleTouchEnd = useCallback(() => {
     if (!isDraggingRef.current || !drawerRef.current) return
 
     isDraggingRef.current = false
-    // 如果下滑超过 100px，关闭抽屉
-    if (currentYRef.current > 100) {
-      onClose()
+
+    // 计算滑动速度
+    const deltaTime = Date.now() - startTimeRef.current
+    const velocity = currentYRef.current / deltaTime // px/ms
+
+    // 计算距离阈值（抽屉高度的 25%）
+    const distanceThreshold = drawerHeightRef.current * DISTANCE_RATIO_THRESHOLD
+
+    // 恢复过渡动画
+    drawerRef.current.style.transition = `transform 0.28s ${SPRING_EASING}`
+
+    // 基于速度和距离判断是否关闭
+    const shouldClose = velocity > VELOCITY_THRESHOLD || currentYRef.current > distanceThreshold
+
+    if (shouldClose) {
+      // 关闭抽屉
+      handleClose()
     } else {
-      // 回弹
+      // 回弹到原位
       drawerRef.current.style.transform = 'translateY(0)'
+      // 恢复遮罩透明度
+      if (overlayRef.current) {
+        overlayRef.current.style.transition = `background-color 0.28s ${SPRING_EASING}`
+        overlayRef.current.style.backgroundColor = 'rgba(0, 0, 0, 0.4)'
+      }
     }
+
     currentYRef.current = 0
-  }, [onClose])
+  }, [handleClose])
+
+  // 遮罩点击关闭
+  const handleOverlayClick = useCallback(() => {
+    handleClose()
+  }, [handleClose])
 
   if (!isOpen) return null
 
@@ -97,15 +183,22 @@ export function Drawer({
     <div className="fixed inset-0 z-[60]">
       {/* 背景遮罩 */}
       <div
-        className="absolute inset-0 bg-black/40 animate-fade-in"
-        onClick={onClose}
-        style={{ backdropFilter: 'blur(2px)' }}
+        ref={overlayRef}
+        className={`absolute inset-0 ${isClosing ? '' : 'animate-fade-in'}`}
+        onClick={handleOverlayClick}
+        style={{
+          backgroundColor: isClosing ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.4)',
+          backdropFilter: 'blur(2px)',
+          transition: isClosing ? `background-color 0.28s ${SPRING_EASING}` : undefined,
+        }}
       />
 
       {/* 抽屉主体 */}
       <div
         ref={drawerRef}
-        className="absolute bottom-0 left-0 right-0 animate-drawer-in overflow-hidden flex flex-col"
+        className={`absolute bottom-0 left-0 right-0 overflow-hidden flex flex-col ${
+          isClosing ? '' : 'animate-drawer-in'
+        }`}
         style={{
           height: HEIGHT_MAP[height],
           maxHeight: 'calc(100vh - env(safe-area-inset-top) - 20px)',
@@ -113,7 +206,8 @@ export function Drawer({
           borderTopLeftRadius: 'var(--theme-radius-xl)',
           borderTopRightRadius: 'var(--theme-radius-xl)',
           boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.15)',
-          transition: 'transform 0.2s ease-out',
+          transform: isClosing ? 'translateY(100%)' : undefined,
+          transition: isClosing ? `transform 0.28s ${SPRING_EASING}` : `transform 0.28s ${SPRING_EASING}`,
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -121,9 +215,9 @@ export function Drawer({
       >
         {/* 拖拽手柄 */}
         {showHandle && (
-          <div className="flex justify-center py-3 flex-shrink-0">
+          <div className="flex justify-center py-3 flex-shrink-0 cursor-grab active:cursor-grabbing">
             <div
-              className="w-10 h-1 rounded-full"
+              className="w-10 h-1 rounded-full transition-all duration-150"
               style={{ backgroundColor: 'var(--theme-outline)' }}
             />
           </div>
@@ -142,7 +236,7 @@ export function Drawer({
             )}
             {showCloseButton && (
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
                 style={{ backgroundColor: 'var(--theme-surface-variant)' }}
                 aria-label="关闭"

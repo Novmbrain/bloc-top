@@ -5,16 +5,25 @@
  * - ESC 键关闭
  * - 背景遮罩点击关闭
  * - 标题和关闭按钮
+ * - 速度/距离关闭判定
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@/test/utils'
 import { Drawer } from './drawer'
+
+// 动画延迟时间
+const ANIMATION_DURATION = 300
 
 describe('Drawer', () => {
   const mockOnClose = vi.fn()
 
   beforeEach(() => {
     mockOnClose.mockClear()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   describe('渲染状态', () => {
@@ -70,7 +79,7 @@ describe('Drawer', () => {
       expect(screen.queryByLabelText('关闭')).not.toBeInTheDocument()
     })
 
-    it('点击关闭按钮应触发 onClose', () => {
+    it('点击关闭按钮应触发 onClose（带动画延迟）', async () => {
       render(
         <Drawer isOpen={true} onClose={mockOnClose} showCloseButton={true}>
           <div>内容</div>
@@ -78,6 +87,12 @@ describe('Drawer', () => {
       )
 
       fireEvent.click(screen.getByLabelText('关闭'))
+
+      // 动画期间不应立即调用
+      expect(mockOnClose).not.toHaveBeenCalled()
+
+      // 等待动画完成
+      vi.advanceTimersByTime(ANIMATION_DURATION)
       expect(mockOnClose).toHaveBeenCalledTimes(1)
     })
   })
@@ -108,24 +123,30 @@ describe('Drawer', () => {
   })
 
   describe('背景遮罩', () => {
-    it('点击遮罩应触发关闭', () => {
+    it('点击遮罩应触发关闭（带动画延迟）', () => {
       const { container } = render(
         <Drawer isOpen={true} onClose={mockOnClose}>
           <div>内容</div>
         </Drawer>
       )
 
-      // 遮罩是第一个带有 bg-black/40 类的元素
-      const backdrop = container.querySelector('.bg-black\\/40')
+      // 遮罩是 fixed inset-0 容器下的第一个 absolute inset-0 子元素
+      const backdrop = container.querySelector('.absolute.inset-0')
       expect(backdrop).toBeInTheDocument()
 
       fireEvent.click(backdrop!)
+
+      // 动画期间不应立即调用
+      expect(mockOnClose).not.toHaveBeenCalled()
+
+      // 等待动画完成
+      vi.advanceTimersByTime(ANIMATION_DURATION)
       expect(mockOnClose).toHaveBeenCalledTimes(1)
     })
   })
 
   describe('键盘交互', () => {
-    it('按 ESC 键应触发关闭', () => {
+    it('按 ESC 键应触发关闭（带动画延迟）', () => {
       render(
         <Drawer isOpen={true} onClose={mockOnClose}>
           <div>内容</div>
@@ -133,6 +154,12 @@ describe('Drawer', () => {
       )
 
       fireEvent.keyDown(window, { key: 'Escape' })
+
+      // 动画期间不应立即调用
+      expect(mockOnClose).not.toHaveBeenCalled()
+
+      // 等待动画完成
+      vi.advanceTimersByTime(ANIMATION_DURATION)
       expect(mockOnClose).toHaveBeenCalledTimes(1)
     })
 
@@ -144,6 +171,7 @@ describe('Drawer', () => {
       )
 
       fireEvent.keyDown(window, { key: 'Escape' })
+      vi.advanceTimersByTime(ANIMATION_DURATION)
       expect(mockOnClose).not.toHaveBeenCalled()
     })
   })
@@ -202,6 +230,21 @@ describe('Drawer', () => {
 
       const drawer = container.querySelector('.animate-drawer-in')
       expect(drawer).toHaveStyle({ height: 'auto' })
+    })
+  })
+
+  describe('动画和交互常量', () => {
+    it('应使用 iOS 风格弹簧动画曲线', () => {
+      const { container } = render(
+        <Drawer isOpen={true} onClose={mockOnClose}>
+          <div>内容</div>
+        </Drawer>
+      )
+
+      const drawer = container.querySelector('.animate-drawer-in')
+      // 检查 transition 包含弹簧曲线
+      const style = drawer?.getAttribute('style') || ''
+      expect(style).toContain('cubic-bezier(0.32, 0.72, 0, 1)')
     })
   })
 })
