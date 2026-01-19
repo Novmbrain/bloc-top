@@ -2,14 +2,13 @@
 
 import { useMemo, useCallback, useState, useTransition, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Search, ChevronRight, X, SlidersHorizontal, ArrowUp, ArrowDown } from 'lucide-react'
+import { Search, ChevronRight, X, ArrowUp, ArrowDown } from 'lucide-react'
 import { getGradeColor } from '@/lib/tokens'
 import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, type SortDirection } from '@/lib/filter-constants'
 import { compareGrades } from '@/lib/grade-utils'
 import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
 import { GradeRangeSelector } from '@/components/grade-range-selector'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
-import { FilterDrawer } from '@/components/filter-drawer'
 import { AppTabbar } from '@/components/app-tabbar'
 import type { Route, Crag } from '@/types'
 
@@ -26,7 +25,6 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   // 抽屉状态
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false)
-  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
 
   // 是否已完成首次渲染（用于控制入场动画）
   const [hasInitialRender, setHasInitialRender] = useState(false)
@@ -95,44 +93,11 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
     updateSearchParams(FILTER_PARAMS.SORT, newDirection)
   }, [sortDirection, updateSearchParams])
 
-  // 处理筛选抽屉应用
-  const handleFilterApply = useCallback(
-    (crag: string, grades: string[]) => {
-      const params = new URLSearchParams(searchParams.toString())
-
-      if (crag) {
-        params.set(FILTER_PARAMS.CRAG, crag)
-      } else {
-        params.delete(FILTER_PARAMS.CRAG)
-      }
-
-      if (grades.length > 0) {
-        params.set(FILTER_PARAMS.GRADE, grades.join(','))
-      } else {
-        params.delete(FILTER_PARAMS.GRADE)
-      }
-
-      const queryString = params.toString()
-      startTransition(() => {
-        router.replace(queryString ? `/route?${queryString}` : '/route', { scroll: false })
-      })
-    },
-    [router, searchParams, startTransition]
-  )
-
   // 处理线路卡片点击
   const handleRouteClick = useCallback((route: Route) => {
     setSelectedRoute(route)
     setIsDetailDrawerOpen(true)
   }, [])
-
-  // 活跃筛选数量（用于显示徽章）
-  const activeFilterCount = useMemo(() => {
-    let count = 0
-    if (selectedCrag) count++
-    count += selectedGrades.length
-    return count
-  }, [selectedCrag, selectedGrades])
 
   // 获取当前选中岩场名称
   const currentCragName = useMemo(() => {
@@ -193,30 +158,10 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
       >
         {/* 头部 */}
         <header className="flex-shrink-0 pt-12 px-4 pb-3">
-          <div className="flex items-center gap-3 mb-3">
-            <h1 className="text-2xl font-bold flex-1" style={{ color: 'var(--theme-on-surface)' }}>
+          <div className="mb-3">
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
               {currentCragName}
             </h1>
-            {/* 筛选按钮 */}
-            <button
-              onClick={() => setIsFilterDrawerOpen(true)}
-              className="relative w-10 h-10 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'var(--theme-surface-variant)' }}
-              aria-label="筛选"
-            >
-              <SlidersHorizontal className="w-5 h-5" style={{ color: 'var(--theme-on-surface)' }} />
-              {activeFilterCount > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-                  style={{
-                    backgroundColor: 'var(--theme-primary)',
-                    color: 'var(--theme-on-primary)',
-                  }}
-                >
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
           </div>
 
           {/* 搜索框 */}
@@ -371,16 +316,6 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         onClose={() => setIsDetailDrawerOpen(false)}
         route={selectedRoute}
         crag={selectedCragData}
-      />
-
-      {/* 筛选抽屉 */}
-      <FilterDrawer
-        isOpen={isFilterDrawerOpen}
-        onClose={() => setIsFilterDrawerOpen(false)}
-        crags={crags}
-        selectedCrag={selectedCrag}
-        selectedGrades={selectedGrades}
-        onApply={handleFilterApply}
       />
 
       {/* 底部导航栏 */}
