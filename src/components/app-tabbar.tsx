@@ -20,7 +20,7 @@ export function AppTabbar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 md:left-1/2 md:-translate-x-1/2 md:max-w-[480px] backdrop-blur-xl safe-area-bottom z-50"
+      className="fixed bottom-0 left-0 right-0 desktop-center-full backdrop-blur-xl safe-area-bottom z-50"
       style={{
         backgroundColor: 'color-mix(in srgb, var(--theme-surface) 80%, transparent)',
         borderTop: '1px solid color-mix(in srgb, var(--theme-outline) 30%, transparent)',
