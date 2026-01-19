@@ -42,11 +42,6 @@ export default async function HomePage() {
                   style={{ backgroundColor: 'var(--theme-surface-variant)' }}
                 />
               </div>
-              {/* 用户头像骨架 */}
-              <div
-                className="w-10 h-10 rounded-full"
-                style={{ backgroundColor: 'var(--theme-surface-variant)' }}
-              />
             </div>
           </header>
 

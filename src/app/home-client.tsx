@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import Link from 'next/link'
-import { User } from 'lucide-react'
 import { CragCard } from '@/components/crag-card'
 import { FloatingSearch } from '@/components/floating-search'
 import { SearchDrawer } from '@/components/search-drawer'
@@ -98,15 +96,6 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
               }}
             />
           </div>
-
-          {/* 用户头像 */}
-          <Link
-            href="/profile"
-            className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-95"
-            style={{ backgroundColor: 'var(--theme-surface-variant)' }}
-          >
-            <User className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />
-          </Link>
         </div>
       </header>
 
