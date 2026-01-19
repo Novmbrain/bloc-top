@@ -46,12 +46,12 @@ describe('SearchOverlay', () => {
   describe('显示状态', () => {
     it('isOpen=false 时不渲染', () => {
       render(<SearchOverlay {...defaultProps} isOpen={false} />)
-      expect(screen.queryByPlaceholderText('搜索线路名称')).not.toBeInTheDocument()
+      expect(screen.queryByPlaceholderText('搜索线路，支持拼音如 yts')).not.toBeInTheDocument()
     })
 
     it('isOpen=true 时渲染', () => {
       render(<SearchOverlay {...defaultProps} />)
-      expect(screen.getByPlaceholderText('搜索线路名称')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('搜索线路，支持拼音如 yts')).toBeInTheDocument()
     })
   })
 
@@ -115,7 +115,7 @@ describe('SearchOverlay', () => {
       const onSearchChange = vi.fn()
       render(<SearchOverlay {...defaultProps} onSearchChange={onSearchChange} />)
 
-      const input = screen.getByPlaceholderText('搜索线路名称')
+      const input = screen.getByPlaceholderText('搜索线路，支持拼音如 yts')
       await userEvent.type(input, '猴')
 
       expect(onSearchChange).toHaveBeenCalledWith('猴')
