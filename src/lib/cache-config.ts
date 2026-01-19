@@ -35,14 +35,23 @@ export const MILLISECONDS = {
  * Next.js ISR (Incremental Static Regeneration) 重新验证时间
  * 单位: 秒
  *
- * 使用场景: export const revalidate = ISR_REVALIDATE.PAGE
+ * ⚠️ 注意：Next.js 不支持在 `export const revalidate` 中使用变量引用
+ * 构建时会报错 "Unsupported node type MemberExpression"
+ * 页面中需要直接使用字面量值 (如 2592000)
+ *
+ * 此处仅作为配置值的文档记录和计算参考。
+ * 修改此值时，需同步更新以下文件中的字面量：
+ * - src/app/page.tsx
+ * - src/app/route/page.tsx
+ * - src/app/crag/[id]/page.tsx
+ * - src/app/route/[id]/page.tsx
  */
 export const ISR_REVALIDATE = {
   /** 列表页面 ISR - 首页、线路列表等 */
-  PAGE: SECONDS.MONTH, // 1 个月
+  PAGE: SECONDS.MONTH, // 2592000 秒 = 30 天
 
   /** 详情页面 ISR - 岩场详情、线路详情等 */
-  DETAIL: SECONDS.MONTH, // 1 个月
+  DETAIL: SECONDS.MONTH, // 2592000 秒 = 30 天
 } as const
 
 // ==================== Service Worker 缓存配置 ====================

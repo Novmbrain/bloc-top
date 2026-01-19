@@ -2,10 +2,9 @@ import { Suspense } from 'react'
 import { getAllCrags, getAllRoutes } from '@/lib/db'
 import { CragCardSkeleton } from '@/components/crag-card-skeleton'
 import HomePageClient from './home-client'
-import { ISR_REVALIDATE } from '@/lib/cache-config'
 
-// ISR: 每月重新验证一次
-export const revalidate = ISR_REVALIDATE.PAGE
+// ISR: 每月重新验证 - 配置见 @/lib/cache-config.ts
+export const revalidate = 2592000 // 30 天 (秒)
 
 async function HomePageContent() {
   // 并行获取所有数据
