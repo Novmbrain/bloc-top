@@ -68,7 +68,7 @@ npx shadcn@latest add <component>  # 添加 UI 组件
 - **Framework:** Next.js 16.1.2 + App Router + ISR
 - **Database:** MongoDB Atlas (原生驱动)
 - **Styling:** Tailwind CSS v4 + shadcn/ui (new-york style)
-- **Theming:** next-themes (双主题: 极简/户外)
+- **Theming:** next-themes (日间/暗夜/自动模式，Dracula 配色)
 - **PWA:** Serwist (service worker at `src/app/sw.ts`)
 - **Testing:** Vitest + Testing Library + Playwright (组件测试)
 - **CI/CD:** GitHub Actions (质量检查) + Vercel (部署)
@@ -138,8 +138,8 @@ src/
     ├── db/index.ts        # 数据访问层 (CRUD, 带日志)
     └── themes/            # 主题系统
         ├── index.ts       # 主题类型和工具函数
-        ├── minimal.ts     # 极简专业主题
-        └── outdoor.ts     # 户外探险主题
+        ├── light.ts       # 日间主题 (Dracula Light)
+        └── dark.ts        # 暗夜主题 (Dracula)
 
 scripts/
 └── seed.ts                # 数据库迁移脚本
@@ -227,7 +227,7 @@ interface BetaLink {
 
 ## Design System
 
-使用 CSS 变量，定义在 `globals.css`，通过 `data-theme` 属性控制主题切换。
+使用 CSS 变量，定义在 `globals.css`，通过 `.dark` 类控制主题切换（next-themes class 模式）。
 
 ### 主题变量 (`--theme-*`)
 
@@ -273,10 +273,17 @@ interface BetaLink {
 
 ### 主题定义
 
-| 主题 | name | 特点 |
-|-----|------|-----|
-| 极简专业 | `minimal` | 黑白灰、高对比、专业 (默认) |
-| 户外探险 | `outdoor` | 大地色、暖色调、户外氛围 |
+| 主题模式 | 值 | 特点 |
+|---------|-----|-----|
+| 日间 | `light` | 明亮清爽，紫色主色调 |
+| 暗夜 | `dark` | Dracula 配色，护眼舒适 |
+| 自动 | `system` | 跟随系统偏好 (默认) |
+
+**Dracula 配色方案** (暗夜模式)：
+- 背景: `#282A36` (深紫灰)
+- 前景: `#F8F8F2` (浅色文字)
+- 主色: `#BD93F9` (Dracula Purple)
+- 官方规范: https://draculatheme.com/contribute
 
 ### 使用方式
 
@@ -299,8 +306,15 @@ style={{
 
 // 切换主题 (在组件中使用 next-themes)
 import { useTheme } from 'next-themes'
-const { theme, setTheme } = useTheme()
-setTheme('outdoor') // 或 'minimal'
+const { theme, setTheme, resolvedTheme } = useTheme()
+
+// 设置主题模式
+setTheme('light')   // 日间模式
+setTheme('dark')    // 暗夜模式
+setTheme('system')  // 自动模式 (跟随系统)
+
+// resolvedTheme 返回实际应用的主题 ('light' 或 'dark')
+// 当 theme='system' 时，resolvedTheme 会根据系统偏好返回实际值
 ```
 
 ## Component Patterns

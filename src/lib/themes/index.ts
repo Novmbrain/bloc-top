@@ -1,11 +1,14 @@
 /**
  * 主题系统类型定义和导出
  *
- * 支持两种主题：极简专业 (minimal) 和 户外探险 (outdoor)
+ * 支持三种模式：
+ * - light: 日间模式（Dracula Light）
+ * - dark: 暗夜模式（Dracula）
+ * - system: 自动模式（跟随系统偏好）
  */
 
-import { minimalTheme } from './minimal'
-import { outdoorTheme } from './outdoor'
+import { lightTheme } from './light'
+import { darkTheme } from './dark'
 
 // 主题颜色配置接口
 export interface ThemeColors {
@@ -41,7 +44,7 @@ export interface ThemeShadow {
 
 // 完整主题配置接口
 export interface Theme {
-  name: 'minimal' | 'outdoor'
+  name: 'light' | 'dark'
   label: string
   description: string
   colors: ThemeColors
@@ -49,25 +52,32 @@ export interface Theme {
   shadow: ThemeShadow
 }
 
-// 主题名称类型
+// 主题名称类型（实际应用的主题）
 export type ThemeName = Theme['name']
+
+// 主题模式类型（用户选择的模式，包含 auto）
+export type ThemeMode = 'light' | 'dark' | 'system'
 
 // 主题配置映射
 export const themes: Record<ThemeName, Theme> = {
-  minimal: minimalTheme,
-  outdoor: outdoorTheme,
+  light: lightTheme,
+  dark: darkTheme,
 }
 
-// 主题列表（用于切换器展示）
-export const themeList: Theme[] = [minimalTheme, outdoorTheme]
+// 主题模式列表（用于切换器展示）
+export const themeModes: { mode: ThemeMode; label: string; description: string }[] = [
+  { mode: 'light', label: '日间', description: '明亮清爽' },
+  { mode: 'dark', label: '暗夜', description: 'Dracula 配色' },
+  { mode: 'system', label: '自动', description: '跟随系统设置' },
+]
 
-// 默认主题
-export const defaultTheme: ThemeName = 'minimal'
+// 默认主题模式
+export const defaultThemeMode: ThemeMode = 'system'
 
 // 获取主题配置
 export function getThemeConfig(name: ThemeName): Theme {
-  return themes[name] || themes[defaultTheme]
+  return themes[name] || themes.light
 }
 
 // 导出主题配置
-export { minimalTheme, outdoorTheme }
+export { lightTheme, darkTheme }

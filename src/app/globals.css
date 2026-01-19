@@ -143,28 +143,34 @@
 
 /* ============================
    主题系统 - Theme System
-   ============================ */
+   ============================
 
-/* 极简专业主题 (默认) */
-[data-theme="minimal"] {
-  /* 主色 */
-  --theme-primary: #1a1a1a;
+   使用 next-themes 的 class 模式
+   - 日间模式: :root (默认)
+   - 暗夜模式: .dark 类
+   - 自动模式: 由 next-themes 根据系统偏好自动切换
+*/
+
+/* 日间主题 (Light) - Dracula Light */
+:root {
+  /* 主色 - Dracula Purple 日间变体 */
+  --theme-primary: #7C3AED;
   --theme-on-primary: #ffffff;
-  --theme-primary-container: #f0f0f0;
-  --theme-on-primary-container: #1a1a1a;
-  /* 表面色 */
-  --theme-surface: #ffffff;
-  --theme-surface-variant: #f5f5f5;
+  --theme-primary-container: #EDE9FE;
+  --theme-on-primary-container: #5B21B6;
+  /* 表面色 - 带微妙紫色调的浅色 */
+  --theme-surface: #FAFAFA;
+  --theme-surface-variant: #F3F0F7;
   /* 文字色 */
-  --theme-on-surface: #1a1a1a;
-  --theme-on-surface-variant: #666666;
+  --theme-on-surface: #1E1E2E;
+  --theme-on-surface-variant: #6B7280;
   /* 边框色 */
-  --theme-outline: #e0e0e0;
-  --theme-outline-variant: #f0f0f0;
+  --theme-outline: #E5E5E5;
+  --theme-outline-variant: #F0F0F0;
   /* 状态色 */
-  --theme-warning: #f59e0b;
-  --theme-error: #ef4444;
-  --theme-success: #22c55e;
+  --theme-warning: #D97706;
+  --theme-error: #DC2626;
+  --theme-success: #059669;
   /* 圆角 */
   --theme-radius-sm: 4px;
   --theme-radius-md: 6px;
@@ -177,68 +183,36 @@
   --theme-shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* 户外探险主题 */
-[data-theme="outdoor"] {
-  /* 主色 - 岩石棕 */
-  --theme-primary: #8B7355;
-  --theme-on-primary: #ffffff;
-  --theme-primary-container: #F5EDE5;
-  --theme-on-primary-container: #3D3229;
-  /* 表面色 - 暖白 */
-  --theme-surface: #FAF8F5;
-  --theme-surface-variant: #F0EDE8;
-  /* 文字色 - 深棕 */
-  --theme-on-surface: #2C2826;
-  --theme-on-surface-variant: #6B635C;
+/* 暗夜主题 (Dark) - Dracula */
+.dark {
+  /* 主色 - Dracula Purple (#BD93F9) */
+  --theme-primary: #BD93F9;
+  --theme-on-primary: #282A36;
+  --theme-primary-container: #44475A;
+  --theme-on-primary-container: #BD93F9;
+  /* 表面色 - Dracula Background (#282A36) */
+  --theme-surface: #282A36;
+  --theme-surface-variant: #44475A;
+  /* 文字色 - Dracula Foreground (#F8F8F2) */
+  --theme-on-surface: #F8F8F2;
+  --theme-on-surface-variant: #6272A4;
   /* 边框色 */
-  --theme-outline: #D4CFC7;
-  --theme-outline-variant: #E8E4DE;
-  /* 状态色 */
-  --theme-warning: #d97706;
-  --theme-error: #dc2626;
-  --theme-success: #16a34a;
-  /* 圆角 - 稍大 */
-  --theme-radius-sm: 6px;
-  --theme-radius-md: 8px;
-  --theme-radius-lg: 12px;
-  --theme-radius-xl: 16px;
-  --theme-radius-full: 9999px;
-  /* 阴影 - 暖色调 */
-  --theme-shadow-sm: 0 1px 3px rgba(139, 115, 85, 0.08);
-  --theme-shadow-md: 0 2px 6px rgba(139, 115, 85, 0.12);
-  --theme-shadow-lg: 0 4px 16px rgba(139, 115, 85, 0.15);
-}
-
-/* 未设置主题时使用极简主题作为默认 */
-:root:not([data-theme]) {
-  /* 主色 */
-  --theme-primary: #1a1a1a;
-  --theme-on-primary: #ffffff;
-  --theme-primary-container: #f0f0f0;
-  --theme-on-primary-container: #1a1a1a;
-  /* 表面色 */
-  --theme-surface: #ffffff;
-  --theme-surface-variant: #f5f5f5;
-  /* 文字色 */
-  --theme-on-surface: #1a1a1a;
-  --theme-on-surface-variant: #666666;
-  /* 边框色 */
-  --theme-outline: #e0e0e0;
-  --theme-outline-variant: #f0f0f0;
-  /* 状态色 */
-  --theme-warning: #f59e0b;
-  --theme-error: #ef4444;
-  --theme-success: #22c55e;
+  --theme-outline: #44475A;
+  --theme-outline-variant: #383A46;
+  /* 状态色 - Dracula 官方色彩 */
+  --theme-warning: #FFB86C;
+  --theme-error: #FF5555;
+  --theme-success: #50FA7B;
   /* 圆角 */
   --theme-radius-sm: 4px;
   --theme-radius-md: 6px;
   --theme-radius-lg: 8px;
   --theme-radius-xl: 12px;
   --theme-radius-full: 9999px;
-  /* 阴影 */
-  --theme-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --theme-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08);
-  --theme-shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
+  /* 阴影 - 暗色模式下更深的阴影 */
+  --theme-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --theme-shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --theme-shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 @layer base {
