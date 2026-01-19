@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import Image from 'next/image'
-import { Palette, Heart, Copy, Check, User, Mountain } from 'lucide-react'
+import { Palette, Heart, Copy, Check, User, Send } from 'lucide-react'
 import { AppTabbar } from '@/components/app-tabbar'
 import { ThemeSwitcher } from '@/components/theme-switcher'
 import { Drawer } from '@/components/ui/drawer'
@@ -33,12 +33,41 @@ export default function ProfilePage() {
   // 头像加载状态
   const [avatarLoaded, setAvatarLoaded] = useState(false)
 
+  // 留言状态
+  const [feedbackContent, setFeedbackContent] = useState('')
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+
   // 打开图片查看器
   const openViewer = useCallback((src: string, alt: string) => {
     setViewerImage(src)
     setViewerAlt(alt)
     setViewerOpen(true)
   }, [])
+
+  // 提交留言
+  const submitFeedback = useCallback(async () => {
+    if (!feedbackContent.trim() || feedbackSubmitting) return
+
+    setFeedbackSubmitting(true)
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: feedbackContent.trim() }),
+      })
+
+      if (response.ok) {
+        setFeedbackSubmitted(true)
+        setFeedbackContent('')
+        setTimeout(() => setFeedbackSubmitted(false), 3000)
+      }
+    } catch {
+      // 静默失败
+    } finally {
+      setFeedbackSubmitting(false)
+    }
+  }, [feedbackContent, feedbackSubmitting])
 
   // 复制到剪贴板
   const copyToClipboard = useCallback(async (text: string, field: string) => {
@@ -72,36 +101,9 @@ export default function ProfilePage() {
       >
         {/* 头部 */}
         <header className="pt-12 px-4 pb-6">
-          <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--theme-on-surface)' }}>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
             设置
           </h1>
-
-          {/* 应用信息卡片 */}
-          <div
-            className="p-4"
-            style={{
-              backgroundColor: 'var(--theme-surface)',
-              borderRadius: 'var(--theme-radius-xl)',
-              boxShadow: 'var(--theme-shadow-sm)',
-            }}
-          >
-            <div className="flex items-center gap-4">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
-              >
-                <Mountain className="w-8 h-8" style={{ color: 'var(--theme-primary)' }} />
-              </div>
-              <div>
-                <p className="text-lg font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-                  罗源野抱 TOPO
-                </p>
-                <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  福州罗源攀岩线路分享
-                </p>
-              </div>
-            </div>
-          </div>
         </header>
 
         {/* 内容区 */}
@@ -136,10 +138,10 @@ export default function ProfilePage() {
               </div>
               <div className="flex-1 text-left">
                 <p className="text-base font-medium" style={{ color: 'var(--theme-on-surface)' }}>
-                  关于作者
+                  幕后黑手 🤫
                 </p>
                 <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  联系方式与支持
+                  有建议？来找我
                 </p>
               </div>
             </button>
@@ -265,6 +267,44 @@ export default function ProfilePage() {
                 <Copy className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />
               )}
             </button>
+          </div>
+
+          {/* 留言区域 */}
+          <div className="mb-4">
+            <div className="relative">
+              <textarea
+                value={feedbackContent}
+                onChange={(e) => setFeedbackContent(e.target.value)}
+                placeholder="有什么想说的？"
+                maxLength={500}
+                rows={3}
+                className="w-full p-3 pr-12 text-sm resize-none outline-none"
+                style={{
+                  backgroundColor: 'var(--theme-surface-variant)',
+                  color: 'var(--theme-on-surface)',
+                  borderRadius: 'var(--theme-radius-lg)',
+                }}
+              />
+              <button
+                onClick={submitFeedback}
+                disabled={!feedbackContent.trim() || feedbackSubmitting}
+                className="absolute right-2 bottom-2 p-2 transition-all disabled:opacity-40"
+                style={{
+                  color: feedbackSubmitted ? 'var(--theme-success)' : 'var(--theme-primary)',
+                }}
+              >
+                {feedbackSubmitted ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+            {feedbackSubmitted && (
+              <p className="text-xs mt-1 text-center" style={{ color: 'var(--theme-success)' }}>
+                感谢你的留言 💚
+              </p>
+            )}
           </div>
 
           {/* 赞赏按钮 */}

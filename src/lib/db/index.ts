@@ -1,6 +1,6 @@
 import { getDatabase } from '@/lib/mongodb'
 import { createModuleLogger } from '@/lib/logger'
-import type { Crag, Route } from '@/types'
+import type { Crag, Route, Feedback } from '@/types'
 import type { WithId, Document } from 'mongodb'
 
 // 创建数据库模块专用 logger
@@ -26,6 +26,7 @@ function toRoute(doc: WithId<Document>): Route {
   const { _id, createdAt, updatedAt, ...rest } = doc
   return { id: _id as unknown as number, ...rest } as Route
 }
+
 
 // ============ Crag 相关操作 ============
 
@@ -181,6 +182,43 @@ export async function getRoutesByCragId(cragId: string): Promise<Route[]> {
       action: 'getRoutesByCragId',
       duration: Date.now() - start,
       metadata: { cragId },
+    })
+    throw error
+  }
+}
+
+// ============ Feedback 相关操作 ============
+
+/**
+ * 创建用户反馈
+ */
+export async function createFeedback(content: string): Promise<Feedback> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const doc = {
+      content,
+      createdAt: new Date(),
+    }
+
+    const result = await db.collection('feedbacks').insertOne(doc)
+
+    log.info('Feedback created', {
+      action: 'createFeedback',
+      duration: Date.now() - start,
+      metadata: { feedbackId: result.insertedId.toString() },
+    })
+
+    return {
+      id: result.insertedId.toString(),
+      content,
+      createdAt: doc.createdAt,
+    }
+  } catch (error) {
+    log.error('Failed to create feedback', error, {
+      action: 'createFeedback',
+      duration: Date.now() - start,
     })
     throw error
   }

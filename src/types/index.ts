@@ -154,3 +154,14 @@ export interface WeatherData {
   climbing: ClimbingCondition // 攀岩适宜度评估
   updatedAt: string           // 数据更新时间 (ISO 8601)
 }
+
+// ==================== 用户反馈类型 ====================
+
+/**
+ * 用户反馈/留言数据 (极简设计)
+ */
+export interface Feedback {
+  id: string                  // 唯一标识 (MongoDB ObjectId)
+  content: string             // 留言内容
+  createdAt: Date             // 创建时间
+}
