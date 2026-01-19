@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { User } from 'lucide-react'
 import { CragCard } from '@/components/crag-card'
@@ -9,7 +9,10 @@ import { SearchDrawer } from '@/components/search-drawer'
 import { AppTabbar } from '@/components/app-tabbar'
 import { InstallPrompt } from '@/components/install-prompt'
 import { WeatherStrip } from '@/components/weather-strip'
+import { CitySelector } from '@/components/city-selector'
+import { EmptyCity } from '@/components/empty-city'
 import { useRouteSearch } from '@/hooks/use-route-search'
+import { useCitySelection } from '@/hooks/use-city-selection'
 import type { Crag, Route, WeatherData } from '@/types'
 
 interface HomePageClientProps {
@@ -20,6 +23,28 @@ interface HomePageClientProps {
 export default function HomePageClient({ crags, allRoutes }: HomePageClientProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [weather, setWeather] = useState<WeatherData | null>(null)
+
+  // 城市选择
+  const {
+    cityId,
+    city,
+    cities,
+    setCity,
+    isFirstVisit,
+    dismissFirstVisitHint,
+  } = useCitySelection()
+
+  // 根据城市筛选岩场
+  const filteredCrags = useMemo(() => {
+    // 如果岩场没有 cityId 字段（兼容旧数据），默认归属罗源
+    return crags.filter((crag) => (crag.cityId || 'luoyuan') === cityId)
+  }, [crags, cityId])
+
+  // 根据城市筛选线路（用于搜索）
+  const filteredRoutes = useMemo(() => {
+    const cragIds = new Set(filteredCrags.map((c) => c.id))
+    return allRoutes.filter((route) => cragIds.has(route.cragId))
+  }, [allRoutes, filteredCrags])
 
   // 获取天气数据 (用于卡片角标)
   useEffect(() => {
@@ -39,7 +64,7 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
 
   // 不限制搜索结果数量，由 SearchDrawer 内部控制显示
   const { searchQuery, setSearchQuery, searchResults, clearSearch } =
-    useRouteSearch(allRoutes, { limit: 0 })
+    useRouteSearch(filteredRoutes, { limit: 0 })
 
   const handleCloseSearch = () => {
     setIsSearchOpen(false)
@@ -58,12 +83,14 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
       <header className="pt-12 pb-3">
         <div className="flex items-start justify-between">
           <div className="flex flex-col">
-            <h1
-              className="text-4xl font-bold tracking-wide leading-tight"
-              style={{ color: 'var(--theme-on-surface)' }}
-            >
-              罗源
-            </h1>
+            {/* 城市选择器 */}
+            <CitySelector
+              currentCity={city}
+              cities={cities}
+              onCityChange={setCity}
+              showHint={isFirstVisit}
+              onDismissHint={dismissFirstVisitHint}
+            />
             <div
               className="w-16 h-0.5 mt-1 mb-3"
               style={{
@@ -85,34 +112,43 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
 
       {/* 岩场列表（可滚动区域） */}
       <main className="flex-1 overflow-y-auto pb-36">
-        {/* 天气条 */}
-        <WeatherStrip />
+        {/* 天气条 - 仅在有数据时显示 */}
+        {city.available && <WeatherStrip />}
 
-        {/* PWA 安装提示 */}
-        <InstallPrompt />
+        {/* PWA 安装提示 - 仅在有数据时显示 */}
+        {city.available && <InstallPrompt />}
 
-        <div className="space-y-3">
-          {crags.map((crag, index) => (
-            <CragCard
-              key={crag.id}
-              crag={crag}
-              routes={(allRoutes || []).filter((r) => r.cragId === crag.id)}
-              index={index}
-              weather={weather}
-            />
-          ))}
-        </div>
+        {/* 根据城市数据可用性显示内容 */}
+        {city.available ? (
+          <>
+            <div className="space-y-3">
+              {filteredCrags.map((crag, index) => (
+                <CragCard
+                  key={crag.id}
+                  crag={crag}
+                  routes={(filteredRoutes || []).filter((r) => r.cragId === crag.id)}
+                  index={index}
+                  weather={weather}
+                />
+              ))}
+            </div>
 
-        {/* 底部提示 */}
-        <div className="text-center py-4">
-          <span className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-            更多岩场正在向你爬来，请耐心等待
-          </span>
-        </div>
+            {/* 底部提示 */}
+            <div className="text-center py-4">
+              <span className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                更多岩场正在向你爬来，请耐心等待
+              </span>
+            </div>
+          </>
+        ) : (
+          <EmptyCity city={city} />
+        )}
       </main>
 
-      {/* 浮动搜索框 */}
-      <FloatingSearch onClick={() => setIsSearchOpen(true)} />
+      {/* 浮动搜索框 - 仅在有数据时显示 */}
+      {city.available && (
+        <FloatingSearch onClick={() => setIsSearchOpen(true)} />
+      )}
 
       {/* 搜索抽屉 */}
       <SearchDrawer
@@ -121,7 +157,7 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         results={searchResults}
-        crags={crags}
+        crags={filteredCrags}
       />
 
       {/* 底部导航栏 */}

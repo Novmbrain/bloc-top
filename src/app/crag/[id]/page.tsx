@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation'
 import { getCragById, getAllCrags, getRoutesByCragId } from '@/lib/db'
 import CragDetailClient from './crag-detail-client'
 
-// ISR: 每小时重新验证一次
-export const revalidate = 3600
+// ISR: 每月重新验证 - 配置见 @/lib/cache-config.ts
+export const revalidate = 2592000 // 30 天 (秒)
 
 interface PageProps {
   params: Promise<{ id: string }>

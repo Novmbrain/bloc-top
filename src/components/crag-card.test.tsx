@@ -18,6 +18,7 @@ vi.mock('next/link', () => ({
 const mockCrag: Crag = {
   id: 'test-crag',
   name: '测试岩场',
+  cityId: 'luoyuan',
   location: '福州市罗源县',
   developmentTime: '2020年',
   description: '测试描述',

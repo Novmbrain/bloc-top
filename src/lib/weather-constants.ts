@@ -194,11 +194,11 @@ export function parseWindPower(power: string): number {
   return parseInt(cleaned, 10) || 0
 }
 
-/**
- * 天气 API 缓存时间 (毫秒)
- * 默认 1 小时，天气数据不需要频繁更新
- */
-export const WEATHER_CACHE_TTL = 60 * 60 * 1000 // 1 hour
+// 缓存配置已迁移到 cache-config.ts，这里只做 re-export 保持向后兼容
+export { API_CACHE } from './cache-config'
+
+/** @deprecated 使用 API_CACHE.WEATHER_TTL 代替 */
+export { API_CACHE as WEATHER_CACHE_TTL_CONFIG } from './cache-config'
 
 /**
  * 罗源县默认坐标 (用于区域天气)

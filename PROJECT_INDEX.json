@@ -8,7 +8,8 @@
     "database": "MongoDB Atlas",
     "styling": "Tailwind CSS v4 + shadcn/ui",
     "pwa": "Serwist 9.5.0",
-    "icons": "lucide-react"
+    "icons": "lucide-react",
+    "map": "@amap/amap-jsapi-loader 1.0.1"
   },
   "entryPoints": {
     "home": "src/app/page.tsx",
@@ -16,7 +17,9 @@
     "cragDetail": "src/app/crag/[id]/page.tsx",
     "routeDetail": "src/app/route/[id]/page.tsx",
     "serviceWorker": "src/app/sw.ts",
-    "dataAccess": "src/lib/db/index.ts"
+    "dataAccess": "src/lib/db/index.ts",
+    "weatherApi": "src/app/api/weather/route.ts",
+    "betaApi": "src/app/api/beta/route.ts"
   },
   "coreModules": {
     "db": {
@@ -27,9 +30,17 @@
       "path": "src/lib/filter-constants.ts",
       "exports": ["V_GRADES", "GRADE_GROUPS", "FILTER_PARAMS", "SortDirection", "getGradesByValue", "getGradesByValues"]
     },
+    "weatherConstants": {
+      "path": "src/lib/weather-constants.ts",
+      "exports": ["WEATHER_ICONS", "WEATHER_CACHE_TTL", "LUOYUAN_DEFAULT_COORDS", "SUITABILITY_CONFIG"]
+    },
+    "weatherUtils": {
+      "path": "src/lib/weather-utils.ts",
+      "exports": ["evaluateClimbingCondition", "getWeatherIcon"]
+    },
     "types": {
       "path": "src/types/index.ts",
-      "exports": ["Crag", "Route"]
+      "exports": ["Crag", "Route", "Coordinates", "WeatherData", "ClimbingCondition"]
     },
     "mongodb": {
       "path": "src/lib/mongodb.ts",
@@ -41,7 +52,9 @@
     }
   },
   "components": {
-    "ui": ["button", "card", "skeleton"],
+    "ui": ["button", "card", "skeleton", "drawer", "image-viewer"],
+    "weather": ["weather-strip", "weather-badge", "weather-card"],
+    "map": ["amap-container"],
     "custom": [
       "filter-chip",
       "grade-range-selector",
@@ -53,7 +66,10 @@
       "sw-update-prompt",
       "offline-indicator",
       "crag-card-skeleton",
-      "route-card-skeleton"
+      "route-card-skeleton",
+      "beta-list-drawer",
+      "beta-submit-drawer",
+      "route-detail-drawer"
     ]
   },
   "routes": {
@@ -63,6 +79,17 @@
     "/route/[id]": { "page": "线路详情", "params": ["id"] },
     "/profile": { "page": "用户页面" }
   },
+  "apiRoutes": {
+    "/api/weather": {
+      "method": "GET",
+      "params": ["lng", "lat", "forecast"],
+      "description": "获取天气数据和攀岩适宜度"
+    },
+    "/api/beta": {
+      "methods": ["GET", "POST"],
+      "description": "Beta 视频 CRUD"
+    }
+  },
   "dataTypes": {
     "Crag": {
       "id": "string",
@@ -71,7 +98,8 @@
       "developmentTime": "string",
       "description": "string",
       "approach": "string",
-      "coverImages": "string[]?"
+      "coverImages": "string[]?",
+      "coordinates": "Coordinates?"
     },
     "Route": {
       "id": "number",
@@ -82,7 +110,16 @@
       "setter": "string?",
       "FA": "string?",
       "description": "string?",
-      "image": "string?"
+      "image": "string?",
+      "betaLinks": "BetaLink[]?"
+    },
+    "WeatherData": {
+      "adcode": "string",
+      "city": "string",
+      "live": "WeatherLive",
+      "forecasts": "WeatherForecast[]?",
+      "climbing": "ClimbingCondition",
+      "updatedAt": "string (ISO 8601)"
     }
   },
   "scripts": {
@@ -90,23 +127,32 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "db:seed": "npx tsx scripts/seed.ts development",
     "db:seed:prod": "npx tsx scripts/seed.ts production"
   },
   "designSystem": {
-    "style": "Material 3",
-    "primaryColor": "#667eea",
-    "cssVariables": ["--m3-primary", "--m3-surface", "--m3-on-surface", "--m3-outline"],
+    "themes": ["minimal (默认)", "outdoor"],
+    "cssVariables": ["--theme-primary", "--theme-surface", "--theme-on-surface", "--theme-radius-*", "--theme-shadow-*"],
     "animations": ["animate-fade-in-up", "animate-scale-in", "skeleton-shimmer", "scrollbar-hide"]
+  },
+  "environmentVariables": {
+    "MONGODB_URI": "MongoDB 连接字符串 (必需)",
+    "MONGODB_DB_NAME": "数据库名称 (dev/prod)",
+    "NEXT_PUBLIC_AMAP_KEY": "高德地图 API Key (地图 + 天气)"
   },
   "documentation": {
     "aiGuide": "CLAUDE.md",
     "techOverview": "doc/PROJECT_OVERVIEW.md",
     "index": "PROJECT_INDEX.md"
   },
-  "fileCount": {
-    "sourceFiles": 42,
-    "components": 14,
-    "pages": 6
+  "stats": {
+    "sourceFiles": 64,
+    "testFiles": 13,
+    "linesOfCode": 9900,
+    "components": 27,
+    "apiEndpoints": 2
   }
 }

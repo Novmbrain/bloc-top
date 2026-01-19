@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { AlertTriangle, RotateCcw, Home } from "lucide-react";
 import Link from "next/link";
+import { clientLogger } from "@/lib/client-logger";
 
 export default function Error({
   error,
@@ -12,7 +13,12 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Application error:", error);
+    // 上报到服务端（Vercel 可见）
+    clientLogger.error("Unhandled application error", error, {
+      component: "ErrorBoundary",
+      action: "render",
+      metadata: { digest: error.digest },
+    });
   }, [error]);
 
   return (

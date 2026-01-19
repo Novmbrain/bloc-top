@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Mountain, RotateCcw, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { clientLogger } from "@/lib/client-logger";
 
 export default function CragError({
   error,
@@ -12,7 +13,12 @@ export default function CragError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Crag page error:", error);
+    // 上报到服务端（Vercel 可见）
+    clientLogger.error("Crag page error", error, {
+      component: "CragErrorBoundary",
+      action: "render",
+      metadata: { digest: error.digest },
+    });
   }, [error]);
 
   return (

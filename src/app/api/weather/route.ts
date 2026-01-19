@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { WeatherData, WeatherLive, WeatherForecast } from '@/types'
 import { evaluateClimbingCondition } from '@/lib/weather-utils'
-import { WEATHER_CACHE_TTL, LUOYUAN_DEFAULT_COORDS } from '@/lib/weather-constants'
+import { LUOYUAN_DEFAULT_COORDS } from '@/lib/weather-constants'
+import { API_CACHE, HTTP_CACHE } from '@/lib/cache-config'
+import { createModuleLogger } from '@/lib/logger'
+
+// 创建 Weather 模块专用 logger
+const log = createModuleLogger('Weather')
 
 // ==================== 类型定义 ====================
 
@@ -73,7 +78,7 @@ function getCachedWeather(adcode: string): WeatherData | null {
 function setCachedWeather(adcode: string, data: WeatherData): void {
   weatherCache.set(adcode, {
     data,
-    expireAt: Date.now() + WEATHER_CACHE_TTL,
+    expireAt: Date.now() + API_CACHE.WEATHER_TTL,
   })
 }
 
@@ -96,14 +101,20 @@ async function getAdcodeFromCoords(
     })
 
     if (!response.ok) {
-      console.error(`[Weather] Geocode API error: ${response.status}`)
+      log.error(`Geocode API HTTP error: ${response.status}`, undefined, {
+        action: 'getAdcodeFromCoords',
+        metadata: { status: response.status, lng, lat },
+      })
       return null
     }
 
     const data: GeoCodeResponse = await response.json()
 
     if (data.status !== '1' || !data.regeocode?.addressComponent?.adcode) {
-      console.error('[Weather] Geocode failed:', data.info)
+      log.warn(`Geocode API failed: ${data.info}`, {
+        action: 'getAdcodeFromCoords',
+        metadata: { info: data.info, lng, lat },
+      })
       return null
     }
 
@@ -114,7 +125,10 @@ async function getAdcodeFromCoords(
 
     return { adcode, city: cityName }
   } catch (error) {
-    console.error('[Weather] Geocode error:', error)
+    log.error('Geocode request failed', error, {
+      action: 'getAdcodeFromCoords',
+      metadata: { lng, lat },
+    })
     return null
   }
 }
@@ -138,20 +152,29 @@ async function fetchWeatherData(
     })
 
     if (!response.ok) {
-      console.error(`[Weather] Weather API error: ${response.status}`)
+      log.error(`Weather API HTTP error: ${response.status}`, undefined, {
+        action: 'fetchWeatherData',
+        metadata: { status: response.status, adcode, extensions },
+      })
       return null
     }
 
     const data: WeatherResponse = await response.json()
 
     if (data.status !== '1') {
-      console.error('[Weather] Weather API failed:', data.info)
+      log.warn(`Weather API failed: ${data.info}`, {
+        action: 'fetchWeatherData',
+        metadata: { info: data.info, adcode },
+      })
       return null
     }
 
     return data
   } catch (error) {
-    console.error('[Weather] Weather fetch error:', error)
+    log.error('Weather request failed', error, {
+      action: 'fetchWeatherData',
+      metadata: { adcode },
+    })
     return null
   }
 }
@@ -170,11 +193,15 @@ async function fetchWeatherData(
  * - WeatherData 对象
  */
 export async function GET(request: NextRequest) {
+  const start = Date.now()
+
   try {
     const apiKey = process.env.NEXT_PUBLIC_AMAP_KEY
 
     if (!apiKey) {
-      console.error('[Weather] NEXT_PUBLIC_AMAP_KEY not configured')
+      log.error('NEXT_PUBLIC_AMAP_KEY not configured', undefined, {
+        action: 'GET /api/weather',
+      })
       return NextResponse.json(
         { error: '天气服务未配置' },
         { status: 503 }
@@ -210,10 +237,15 @@ export async function GET(request: NextRequest) {
     // 2. 检查缓存
     const cached = getCachedWeather(adcode)
     if (cached) {
+      log.debug('Weather cache hit', {
+        action: 'GET /api/weather',
+        duration: Date.now() - start,
+        metadata: { adcode, city },
+      })
       return NextResponse.json(cached, {
         headers: {
           'X-Cache': 'HIT',
-          'Cache-Control': 'public, max-age=3600',
+          'Cache-Control': `public, max-age=${HTTP_CACHE.WEATHER_MAX_AGE}`,
         },
       })
     }
@@ -227,6 +259,11 @@ export async function GET(request: NextRequest) {
     ])
 
     if (!liveData?.lives?.[0]) {
+      log.error('Failed to get weather live data', undefined, {
+        action: 'GET /api/weather',
+        duration: Date.now() - start,
+        metadata: { adcode },
+      })
       return NextResponse.json(
         { error: '无法获取天气数据' },
         { status: 500 }
@@ -277,14 +314,28 @@ export async function GET(request: NextRequest) {
     // 8. 缓存并返回
     setCachedWeather(adcode, weatherData)
 
+    log.info(`Fetched weather for ${city}`, {
+      action: 'GET /api/weather',
+      duration: Date.now() - start,
+      metadata: {
+        adcode,
+        temperature: live.temperature,
+        weather: live.weather,
+        climbingLevel: climbing.level,
+      },
+    })
+
     return NextResponse.json(weatherData, {
       headers: {
         'X-Cache': 'MISS',
-        'Cache-Control': 'public, max-age=3600',
+        'Cache-Control': `public, max-age=${HTTP_CACHE.WEATHER_MAX_AGE}`,
       },
     })
   } catch (error) {
-    console.error('[Weather] Unexpected error:', error)
+    log.error('Weather API unexpected error', error, {
+      action: 'GET /api/weather',
+      duration: Date.now() - start,
+    })
     return NextResponse.json(
       { error: '服务器错误' },
       { status: 500 }

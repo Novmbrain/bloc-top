@@ -14,7 +14,10 @@
     "test:ct:ui": "playwright test -c playwright-ct.config.ts --headed",
     "test:ct:debug": "SLOW_MO=800 playwright test -c playwright-ct.config.ts --headed --workers=1",
     "db:seed": "npx tsx scripts/seed.ts development",
-    "db:seed:prod": "npx tsx scripts/seed.ts production"
+    "db:seed:prod": "npx tsx scripts/seed.ts production",
+    "db:migrate": "npx tsx scripts/migrate-add-cityid.ts development",
+    "db:migrate:prod": "npx tsx scripts/migrate-add-cityid.ts production",
+    "db:backup": "npx tsx scripts/backup-to-db.ts"
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",

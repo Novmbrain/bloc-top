@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Route, RotateCcw, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { clientLogger } from "@/lib/client-logger";
 
 export default function RouteError({
   error,
@@ -12,7 +13,12 @@ export default function RouteError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Route page error:", error);
+    // 上报到服务端（Vercel 可见）
+    clientLogger.error("Route page error", error, {
+      component: "RouteErrorBoundary",
+      action: "render",
+      metadata: { digest: error.digest },
+    });
   }, [error]);
 
   return (
