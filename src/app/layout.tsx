@@ -66,8 +66,8 @@ export default function RootLayout({
             {/* 居中容器 - 移动端全宽，桌面端固定宽度居中 + 阴影 */}
             <div
               id="app-shell"
-              className="relative mx-auto w-full max-w-[480px] min-h-screen md:shadow-2xl"
-              style={{ backgroundColor: "var(--theme-surface)" }}
+              className="relative mx-auto w-full min-h-screen md:shadow-2xl"
+              style={{ maxWidth: "var(--app-shell-width)", backgroundColor: "var(--theme-surface)" }}
             >
               <OfflineIndicator />
               {children}

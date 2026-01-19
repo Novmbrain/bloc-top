@@ -55,6 +55,10 @@
   --theme-transition: color 0.2s ease, background-color 0.2s ease,
                       border-color 0.2s ease, box-shadow 0.2s ease;
 
+  /* Design Tokens - App Shell (桌面端容器) */
+  --app-shell-width: 480px;
+  --app-shell-padding: 16px; /* 内边距，用于计算内容区宽度 */
+
   /* Design Tokens - Spacing */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -334,4 +338,37 @@
 
 .animate-fade-in {
   animation: fade-in 0.2s ease-out forwards;
+}
+
+/* ==================== 桌面端适配工具类 ==================== */
+
+/**
+ * 桌面端居中容器
+ * 移动端：全宽
+ * 桌面端 (≥768px)：居中 + 固定宽度
+ */
+.desktop-center-full {
+  /* 桌面端：居中并限制为容器宽度 */
+  @media (min-width: 768px) {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    max-width: var(--app-shell-width);
+    width: 100%;
+  }
+}
+
+/**
+ * 桌面端居中容器（带内边距）
+ * 用于需要保留左右边距的固定元素（如搜索框、提示框）
+ * 内容宽度 = 容器宽度 - 2 * padding
+ */
+.desktop-center-padded {
+  @media (min-width: 768px) {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    max-width: calc(var(--app-shell-width) - var(--app-shell-padding) * 2);
+    width: 100%;
+  }
 }

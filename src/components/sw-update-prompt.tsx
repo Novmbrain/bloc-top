@@ -57,7 +57,7 @@ export default function SWUpdatePrompt() {
 
   return (
     <div
-      className="fixed bottom-20 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-[448px] md:w-full z-50 p-4 animate-fade-in-up"
+      className="fixed bottom-20 left-4 right-4 desktop-center-padded z-50 p-4 animate-fade-in-up"
       style={{
         backgroundColor: 'var(--theme-primary)',
         color: 'var(--theme-on-primary)',

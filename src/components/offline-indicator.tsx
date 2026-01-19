@@ -27,7 +27,7 @@ export default function OfflineIndicator() {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 md:left-1/2 md:-translate-x-1/2 md:max-w-[480px] z-50 px-4 py-2 flex items-center justify-center gap-2 animate-fade-in-up"
+      className="fixed top-0 left-0 right-0 desktop-center-full z-50 px-4 py-2 flex items-center justify-center gap-2 animate-fade-in-up"
       style={{
         backgroundColor: 'var(--theme-warning)',
         color: 'white',
