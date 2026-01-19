@@ -111,9 +111,6 @@ src/
 │   ├── weather-card.tsx   # 详情页天气卡 (完整信息+预报)
 │   ├── city-selector.tsx  # 城市选择器 (标题下拉菜单)
 │   └── empty-city.tsx     # 城市无数据空状态
-├── data/
-│   ├── crags.ts           # 岩场数据 (静态备份)
-│   └── routes.ts          # 线路数据 (静态备份)
 ├── types/index.ts         # TypeScript 类型定义
 ├── hooks/                 # 自定义 Hooks
 │   ├── use-route-search.ts # 线路搜索 Hook (首页搜索用)
