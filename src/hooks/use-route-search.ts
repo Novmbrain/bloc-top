@@ -1,9 +1,21 @@
 import { useState, useMemo, useCallback } from 'react'
+import { match as pinyinMatch } from 'pinyin-pro'
 import type { Route } from '@/types'
 
+/**
+ * 匹配类型优先级：
+ * 1 = 中文完全匹配 (最高)
+ * 2 = 中文连续匹配
+ * 3 = 拼音全拼匹配
+ * 4 = 拼音首字母/混合匹配
+ * 5 = 中文非连续匹配 (最低)
+ */
+type MatchType = 1 | 2 | 3 | 4 | 5
+
 interface MatchInfo {
-  type: 1 | 2 | 3 // 1=完全匹配, 2=连续部分匹配, 3=非连续匹配
+  type: MatchType
   position: number
+  matchedIndices?: number[] // 拼音匹配时返回的索引
 }
 
 interface MatchedRoute extends Route {
@@ -15,8 +27,34 @@ interface UseRouteSearchOptions {
 }
 
 /**
+ * 检测字符串是否包含中文
+ */
+function containsChinese(str: string): boolean {
+  return /[\u4e00-\u9fa5]/.test(str)
+}
+
+/**
+ * 检测字符串是否为纯拼音（字母）
+ */
+function isPureAlpha(str: string): boolean {
+  return /^[a-zA-Z]+$/.test(str)
+}
+
+/**
+ * 判断拼音匹配是否为全拼匹配
+ * 全拼：匹配索引连续且等于文本长度
+ */
+function isFullPinyinMatch(text: string, matchedIndices: number[]): boolean {
+  if (matchedIndices.length !== text.length) return false
+  for (let i = 0; i < matchedIndices.length; i++) {
+    if (matchedIndices[i] !== i) return false
+  }
+  return true
+}
+
+/**
  * 线路搜索 Hook
- * 实现三级优先级搜索算法
+ * 实现五级优先级搜索算法（支持拼音）
  */
 export function useRouteSearch(
   routes: Route[],
@@ -26,7 +64,7 @@ export function useRouteSearch(
   const [searchQuery, setSearchQuery] = useState('')
 
   /**
-   * 查找非连续匹配
+   * 查找中文非连续匹配
    */
   const findDiscontinuousMatch = useCallback(
     (name: string, query: string): { firstPosition: number } | null => {
@@ -54,25 +92,48 @@ export function useRouteSearch(
   )
 
   /**
-   * 获取匹配信息
+   * 获取匹配信息（支持中文和拼音）
    */
   const getMatchInfo = useCallback(
-    (name: string, query: string): MatchInfo | null => {
-      // 类型1: 完全匹配
+    (name: string, originalName: string, query: string): MatchInfo | null => {
+      // === 中文匹配（查询包含中文时优先） ===
+
+      // 类型1: 中文完全匹配
       if (name === query) {
         return { type: 1, position: 0 }
       }
 
-      // 类型2: 连续部分匹配
+      // 类型2: 中文连续匹配
       const continuousIndex = name.indexOf(query)
       if (continuousIndex !== -1) {
         return { type: 2, position: continuousIndex }
       }
 
-      // 类型3: 非连续匹配
-      const discontinuousMatch = findDiscontinuousMatch(name, query)
-      if (discontinuousMatch) {
-        return { type: 3, position: discontinuousMatch.firstPosition }
+      // === 拼音匹配（查询为纯字母时） ===
+      if (isPureAlpha(query) && containsChinese(originalName)) {
+        const matchedIndices = pinyinMatch(originalName, query)
+
+        if (matchedIndices && matchedIndices.length > 0) {
+          const firstPosition = matchedIndices[0]
+
+          // 类型3: 拼音全拼匹配（所有字符都匹配上）
+          if (isFullPinyinMatch(originalName, matchedIndices)) {
+            return { type: 3, position: firstPosition, matchedIndices }
+          }
+
+          // 类型4: 拼音部分匹配（首字母或混合）
+          return { type: 4, position: firstPosition, matchedIndices }
+        }
+      }
+
+      // === 降级匹配 ===
+
+      // 类型5: 中文非连续匹配（仅对中文查询）
+      if (containsChinese(query)) {
+        const discontinuousMatch = findDiscontinuousMatch(name, query)
+        if (discontinuousMatch) {
+          return { type: 5, position: discontinuousMatch.firstPosition }
+        }
       }
 
       return null
@@ -81,7 +142,7 @@ export function useRouteSearch(
   )
 
   /**
-   * 搜索结果（三级优先级排序）
+   * 搜索结果（五级优先级排序）
    */
   const searchResults = useMemo((): Route[] => {
     if (!searchQuery || searchQuery.trim() === '') {
@@ -95,7 +156,7 @@ export function useRouteSearch(
       if (!route.name) return
 
       const nameLower = route.name.toLowerCase()
-      const matchInfo = getMatchInfo(nameLower, queryLower)
+      const matchInfo = getMatchInfo(nameLower, route.name, queryLower)
 
       if (matchInfo) {
         matchedRoutes.push({
@@ -107,7 +168,7 @@ export function useRouteSearch(
 
     // 按优先级排序
     matchedRoutes.sort((a, b) => {
-      // 优先级1: 匹配类型（完全 > 连续 > 非连续）
+      // 优先级1: 匹配类型（数字越小优先级越高）
       if (a.matchInfo.type !== b.matchInfo.type) {
         return a.matchInfo.type - b.matchInfo.type
       }
