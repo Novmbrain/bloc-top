@@ -31,6 +31,7 @@ export interface ApproachPath {
 export interface Crag {
   id: string
   name: string
+  cityId: string              // 所属城市 ID (如 'luoyuan', 'xiamen')
   location: string
   developmentTime: string
   description: string

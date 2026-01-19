@@ -4,6 +4,7 @@ export const crags: Crag[] = [
   {
     id: 'yuan-tong-si',
     name: '圆通寺',
+    cityId: 'luoyuan',
     location: '福建省福州市罗源县管柄村',
     developmentTime: '2019年4月',
     description:
@@ -14,6 +15,7 @@ export const crags: Crag[] = [
   {
     id: 'ba-jing-cun',
     name: '八井村',
+    cityId: 'luoyuan',
     location: '福建省福州市罗源县八井村',
     developmentTime: '2019年6月',
     description:

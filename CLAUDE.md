@@ -108,13 +108,16 @@ src/
 │   ├── amap-container.tsx # 高德地图容器组件
 │   ├── weather-strip.tsx  # 首页天气条 (攀岩适宜度)
 │   ├── weather-badge.tsx  # 卡片天气角标 (温度+图标)
-│   └── weather-card.tsx   # 详情页天气卡 (完整信息+预报)
+│   ├── weather-card.tsx   # 详情页天气卡 (完整信息+预报)
+│   ├── city-selector.tsx  # 城市选择器 (标题下拉菜单)
+│   └── empty-city.tsx     # 城市无数据空状态
 ├── data/
 │   ├── crags.ts           # 岩场数据 (静态备份)
 │   └── routes.ts          # 线路数据 (静态备份)
 ├── types/index.ts         # TypeScript 类型定义
 ├── hooks/                 # 自定义 Hooks
-│   └── use-route-search.ts # 线路搜索 Hook (首页搜索用)
+│   ├── use-route-search.ts # 线路搜索 Hook (首页搜索用)
+│   └── use-city-selection.ts # 城市选择 Hook (localStorage + IP 定位)
 ├── test/                  # 测试工具
 │   ├── setup.tsx          # Vitest 全局设置 (mocks)
 │   └── utils.tsx          # 测试辅助函数
@@ -128,6 +131,7 @@ src/
     ├── beta-constants.ts   # Beta 平台配置 (小红书, 抖音等)
     ├── weather-constants.ts # 天气配置 (图标, 适宜度阈值)
     ├── weather-utils.ts   # 天气工具 (攀岩适宜度评估)
+    ├── city-config.ts     # 城市配置 (ID, 名称, 坐标, adcode)
     ├── mongodb.ts         # MongoDB 连接层
     ├── db/index.ts        # 数据访问层 (CRUD)
     └── themes/            # 主题系统
@@ -169,6 +173,7 @@ interface ApproachPath {
 interface Crag {
   id: string              // 'yuan-tong-si', 'ba-jing-cun'
   name: string            // 岩场名称
+  cityId: string          // 所属城市 ID ('luoyuan', 'xiamen')
   location: string        // 地址
   developmentTime: string // 开发时间
   description: string     // 描述
@@ -176,6 +181,17 @@ interface Crag {
   coverImages?: string[]  // 封面图片
   coordinates?: Coordinates     // 岩场坐标 (高德地图)
   approachPaths?: ApproachPath[] // 接近路径 (KML导入)
+}
+
+// 城市配置类型
+type CityId = 'luoyuan' | 'xiamen'
+
+interface CityConfig {
+  id: CityId
+  name: string              // 显示名称
+  adcode: string            // 高德 adcode
+  coordinates: Coordinates  // 中心坐标
+  available: boolean        // 是否有数据可用
 }
 
 interface Route {
@@ -445,6 +461,7 @@ import AMapContainer from '@/components/amap-container'
 | `GET` | `/api/beta?routeId=123` | 获取线路的 Beta 视频列表 |
 | `POST` | `/api/beta` | 提交 Beta 视频 (Rate Limited) |
 | `GET` | `/api/weather?lng=119&lat=26` | 获取天气数据 (含攀岩适宜度, 1h缓存) |
+| `GET` | `/api/geo` | IP 定位 → 推断城市 (首次访问智能选择) |
 
 > 岩场/线路数据通过 Server Components 直接从 MongoDB 获取，无需 API 路由
 
