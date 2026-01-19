@@ -1,60 +1,26 @@
 'use client'
 
 import { useTheme } from 'next-themes'
-import { Sun, Moon, Monitor, Check } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Sun, Moon, Monitor } from 'lucide-react'
+import { useEffect, useState, useRef } from 'react'
 import type { ThemeMode } from '@/lib/themes'
 
 // 主题模式配置
 const themeModes: {
   mode: ThemeMode
   label: string
-  description: string
   icon: typeof Sun
-  preview: {
-    primary: string
-    surface: string
-    surfaceVariant: string
-  }
 }[] = [
-  {
-    mode: 'light',
-    label: '日间',
-    description: '明亮清爽，适合白天',
-    icon: Sun,
-    preview: {
-      primary: '#7C3AED',
-      surface: '#FAFAFA',
-      surfaceVariant: '#F3F0F7',
-    },
-  },
-  {
-    mode: 'dark',
-    label: '暗夜',
-    description: 'Dracula 配色，护眼舒适',
-    icon: Moon,
-    preview: {
-      primary: '#BD93F9',
-      surface: '#282A36',
-      surfaceVariant: '#44475A',
-    },
-  },
-  {
-    mode: 'system',
-    label: '自动',
-    description: '跟随系统设置',
-    icon: Monitor,
-    preview: {
-      primary: '#7C3AED',
-      surface: '#F5F5F5',
-      surfaceVariant: '#E8E8E8',
-    },
-  },
+  { mode: 'light', label: '日间', icon: Sun },
+  { mode: 'dark', label: '暗夜', icon: Moon },
+  { mode: 'system', label: '自动', icon: Monitor },
 ]
 
 export function ThemeSwitcher() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
 
   // 确保客户端渲染（Next.js SSR hydration 标准模式）
   useEffect(() => {
@@ -62,122 +28,110 @@ export function ThemeSwitcher() {
     setMounted(true)
   }, [])
 
+  // 计算滑块位置
+  useEffect(() => {
+    if (!mounted || !containerRef.current) return
+
+    const activeIndex = themeModes.findIndex((t) => t.mode === theme)
+    if (activeIndex === -1) return
+
+    const buttons = containerRef.current.querySelectorAll('button')
+    const activeButton = buttons[activeIndex] as HTMLButtonElement
+
+    if (activeButton) {
+      setIndicatorStyle({
+        left: activeButton.offsetLeft,
+        width: activeButton.offsetWidth,
+      })
+    }
+  }, [theme, mounted])
+
   if (!mounted) {
-    // 服务端渲染时的骨架占位
+    // 骨架占位
     return (
-      <div className="space-y-3">
-        {themeModes.map((t) => (
-          <div
-            key={t.mode}
-            className="h-20 rounded-xl animate-pulse"
-            style={{ backgroundColor: 'var(--theme-surface-variant)' }}
-          />
-        ))}
-      </div>
+      <div
+        className="h-12 rounded-xl animate-pulse"
+        style={{ backgroundColor: 'var(--theme-surface-variant)' }}
+      />
     )
   }
 
+  // 自动模式时显示当前实际主题的指示
+  const isSystemMode = theme === 'system'
+  const actualThemeLabel = resolvedTheme === 'dark' ? '暗夜' : '日间'
+
   return (
-    <div className="space-y-3">
-      {themeModes.map((t) => {
-        const isSelected = theme === t.mode
-        const Icon = t.icon
+    <div className="space-y-2">
+      {/* Segmented Control */}
+      <div
+        ref={containerRef}
+        className="relative flex p-1 rounded-xl"
+        style={{
+          backgroundColor: 'var(--theme-surface-variant)',
+        }}
+        role="tablist"
+        aria-label="主题模式选择"
+      >
+        {/* 滑动背景指示器 */}
+        <div
+          className="absolute top-1 bottom-1 rounded-lg transition-all duration-300 ease-out"
+          style={{
+            left: indicatorStyle.left,
+            width: indicatorStyle.width,
+            backgroundColor: 'var(--theme-surface)',
+            boxShadow: 'var(--theme-shadow-sm)',
+            // Apple 风格弹性曲线
+            transitionTimingFunction: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
+          }}
+        />
 
-        // 对于自动模式，显示当前实际应用的主题
-        const isSystemMode = t.mode === 'system'
-        const actualTheme = isSystemMode && isSelected ? resolvedTheme : null
+        {/* 选项按钮 */}
+        {themeModes.map((t) => {
+          const isSelected = theme === t.mode
+          const Icon = t.icon
 
-        return (
-          <button
-            key={t.mode}
-            onClick={() => setTheme(t.mode)}
-            className="w-full p-3 flex items-center gap-3 transition-all active:scale-[0.98]"
-            style={{
-              backgroundColor: 'var(--theme-surface)',
-              borderRadius: 'var(--theme-radius-xl)',
-              boxShadow: isSelected ? 'var(--theme-shadow-md)' : 'var(--theme-shadow-sm)',
-              border: isSelected
-                ? '2px solid var(--theme-primary)'
-                : '2px solid transparent',
-              transition: 'var(--theme-transition)',
-            }}
-          >
-            {/* 主题预览色块 */}
-            <div
-              className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden relative"
+          return (
+            <button
+              key={t.mode}
+              onClick={() => setTheme(t.mode)}
+              className="relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg transition-colors duration-200"
               style={{
-                backgroundColor: t.preview.surface,
-                border: `1px solid ${t.preview.surfaceVariant}`,
+                color: isSelected
+                  ? 'var(--theme-primary)'
+                  : 'var(--theme-on-surface-variant)',
               }}
+              role="tab"
+              aria-selected={isSelected}
+              aria-controls={`theme-panel-${t.mode}`}
             >
-              {/* 自动模式显示日夜分割效果 */}
-              {isSystemMode ? (
-                <div className="relative w-full h-full flex">
-                  <div
-                    className="w-1/2 h-full flex items-center justify-center"
-                    style={{ backgroundColor: themeModes[0].preview.surface }}
-                  >
-                    <Sun className="w-3 h-3" style={{ color: themeModes[0].preview.primary }} />
-                  </div>
-                  <div
-                    className="w-1/2 h-full flex items-center justify-center"
-                    style={{ backgroundColor: themeModes[1].preview.surface }}
-                  >
-                    <Moon className="w-3 h-3" style={{ color: themeModes[1].preview.primary }} />
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: t.preview.primary }}
-                >
-                  <Icon className="w-4 h-4 text-white" />
-                </div>
-              )}
-            </div>
-
-            {/* 主题信息 */}
-            <div className="flex-1 text-left">
-              <div className="flex items-center gap-2">
-                <p
-                  className="font-semibold"
-                  style={{ color: 'var(--theme-on-surface)' }}
-                >
-                  {t.label}
-                </p>
-                {/* 自动模式时显示当前实际主题 */}
-                {actualTheme && (
-                  <span
-                    className="text-xs px-1.5 py-0.5 rounded"
-                    style={{
-                      backgroundColor: 'var(--theme-primary-container)',
-                      color: 'var(--theme-on-primary-container)',
-                    }}
-                  >
-                    当前: {actualTheme === 'dark' ? '暗夜' : '日间'}
-                  </span>
-                )}
-              </div>
-              <p
-                className="text-xs mt-0.5"
-                style={{ color: 'var(--theme-on-surface-variant)' }}
+              <Icon
+                className="w-4 h-4 transition-transform duration-200"
+                style={{
+                  transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                }}
+              />
+              <span
+                className="text-sm transition-all duration-200"
+                style={{
+                  fontWeight: isSelected ? 600 : 400,
+                }}
               >
-                {t.description}
-              </p>
-            </div>
+                {t.label}
+              </span>
+            </button>
+          )
+        })}
+      </div>
 
-            {/* 选中标识 */}
-            {isSelected && (
-              <div
-                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: 'var(--theme-primary)' }}
-              >
-                <Check className="w-4 h-4" style={{ color: 'var(--theme-on-primary)' }} />
-              </div>
-            )}
-          </button>
-        )
-      })}
+      {/* 自动模式提示 */}
+      {isSystemMode && (
+        <p
+          className="text-xs text-center animate-fade-in"
+          style={{ color: 'var(--theme-on-surface-variant)' }}
+        >
+          当前跟随系统：{actualThemeLabel}
+        </p>
+      )}
     </div>
   )
 }
