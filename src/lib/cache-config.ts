@@ -19,6 +19,7 @@ export const SECONDS = {
   DAY: 60 * 60 * 24,
   WEEK: 60 * 60 * 24 * 7,
   MONTH: 60 * 60 * 24 * 30,
+  YEAR: 60 * 60 * 24 * 365,
 } as const
 
 /** 毫秒级时间单位 - 用于 API 内存缓存、setTimeout 等 */
@@ -62,12 +63,12 @@ export const ISR_REVALIDATE = {
  * 使用场景: Serwist ExpirationPlugin
  */
 export const SW_CACHE = {
-  /** COS 图片缓存配置 */
-  COS_IMAGES: {
+  /** R2 图片缓存配置 */
+  R2_IMAGES: {
     /** 最大缓存条目数 */
     maxEntries: 200,
-    /** 缓存过期时间 (秒) */
-    maxAgeSeconds: 30 * SECONDS.DAY, // 30 天
+    /** 缓存过期时间 (秒) - 有版本号可随时刷新，设置为 1 年 */
+    maxAgeSeconds: SECONDS.YEAR, // 1 年 (31536000 秒)
   },
 } as const
 
@@ -80,8 +81,8 @@ export const SW_CACHE = {
  * 使用场景: next.config.ts images.minimumCacheTTL
  */
 export const IMAGE_CACHE = {
-  /** 远程图片最小缓存时间 */
-  MINIMUM_TTL: SECONDS.MONTH, // 1 个月
+  /** 远程图片最小缓存时间 - 有版本号可随时刷新，设置为 1 年 */
+  MINIMUM_TTL: SECONDS.YEAR, // 1 年 (31536000 秒)
 } as const
 
 // ==================== API 内存缓存配置 ====================

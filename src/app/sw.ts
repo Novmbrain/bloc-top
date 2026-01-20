@@ -18,8 +18,8 @@ const r2ImageCache: RuntimeCaching = {
     cacheName: "r2-images",
     plugins: [
       new ExpirationPlugin({
-        maxEntries: SW_CACHE.COS_IMAGES.maxEntries,
-        maxAgeSeconds: SW_CACHE.COS_IMAGES.maxAgeSeconds,
+        maxEntries: SW_CACHE.R2_IMAGES.maxEntries,
+        maxAgeSeconds: SW_CACHE.R2_IMAGES.maxAgeSeconds,
         purgeOnQuotaError: true,
       }),
     ],
