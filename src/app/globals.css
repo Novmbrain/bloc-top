@@ -349,10 +349,12 @@
  */
 .desktop-center-full {
   /* 桌面端：居中并限制为容器宽度 */
+  /* 使用 margin: auto 而非 transform，避免与组件动画的 transform 冲突 */
   @media (min-width: 768px) {
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%);
+    left: 0 !important;
+    right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     max-width: var(--app-shell-width);
     width: 100%;
   }
