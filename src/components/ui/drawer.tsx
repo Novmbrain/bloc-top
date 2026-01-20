@@ -196,7 +196,7 @@ export function Drawer({
       {/* 抽屉主体 */}
       <div
         ref={drawerRef}
-        className={`absolute bottom-0 left-0 right-0 overflow-hidden flex flex-col ${
+        className={`absolute bottom-0 left-0 right-0 desktop-center-full overflow-hidden flex flex-col ${
           isClosing ? '' : 'animate-drawer-in'
         }`}
         style={{

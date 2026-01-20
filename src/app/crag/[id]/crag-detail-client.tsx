@@ -223,7 +223,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
 
       {/* 底部操作按钮 */}
       <div
-        className="fixed bottom-0 left-0 right-0 p-4"
+        className="fixed bottom-0 left-0 right-0 desktop-center-padded p-4"
         style={{ background: `linear-gradient(to top, var(--theme-surface), transparent)` }}
       >
         <Button
