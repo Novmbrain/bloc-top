@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "topo-image-1305178596.cos.ap-guangzhou.myqcloud.com",
+        hostname: "img.bouldering.top",
       },
     ],
     formats: ["image/avif", "image/webp"],
@@ -51,7 +51,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com https://restapi.amap.com https://*.amap.com https://*.is.autonavi.com",
+              "connect-src 'self' https://img.bouldering.top https://restapi.amap.com https://*.amap.com https://*.is.autonavi.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

@@ -464,8 +464,8 @@ import AMapContainer from '@/components/amap-container'
 
 - Service Worker: `src/app/sw.ts` (Serwist)
 - Manifest: `public/manifest.json`
-- COS 图片缓存 30 天，最多 200 张
-- 图片域名: `topo-image-1305178596.cos.ap-guangzhou.myqcloud.com`
+- R2 图片缓存 30 天，最多 200 张
+- 图片域名: `img.bouldering.top` (Cloudflare R2)
 
 ## API Routes
 

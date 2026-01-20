@@ -11,11 +11,11 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
-// COS 图片缓存策略 - 优先使用缓存
-const cosImageCache: RuntimeCaching = {
-  matcher: ({ url }) => url.hostname === "topo-image-1305178596.cos.ap-guangzhou.myqcloud.com",
+// R2 图片缓存策略 - 优先使用缓存
+const r2ImageCache: RuntimeCaching = {
+  matcher: ({ url }) => url.hostname === "img.bouldering.top",
   handler: new CacheFirst({
-    cacheName: "cos-images",
+    cacheName: "r2-images",
     plugins: [
       new ExpirationPlugin({
         maxEntries: SW_CACHE.COS_IMAGES.maxEntries,
@@ -31,7 +31,7 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: [cosImageCache, ...defaultCache],
+  runtimeCaching: [r2ImageCache, ...defaultCache],
 });
 
 serwist.addEventListeners();

@@ -12,8 +12,8 @@ import { ImageViewer } from '@/components/ui/image-viewer'
 const AUTHOR = {
   name: '傅文杰',
   bio: '爱攀岩的程序猿 🧗‍♂️',
-  avatarUrl: 'https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com/avatar.jpg',
-  donateUrl: 'https://topo-image-1305178596.cos.ap-guangzhou.myqcloud.com/donate.png',
+  avatarUrl: 'https://img.bouldering.top/avatar.jpg',
+  donateUrl: 'https://img.bouldering.top/donate.png',
   wechat: 'Novmbrain',
   xiaohongshu: 'WindOfBretagne',
 }

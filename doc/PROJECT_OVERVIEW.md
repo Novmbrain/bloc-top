@@ -470,7 +470,7 @@ images: {
   remotePatterns: [
     {
       protocol: "https",
-      hostname: "topo-image-1305178596.cos.ap-guangzhou.myqcloud.com"
+      hostname: "img.bouldering.top"
     }
   ],
   formats: ["image/avif", "image/webp"]  // 现代格式
@@ -480,7 +480,7 @@ images: {
 ### 9.3 缓存策略
 
 - **HTML/JS/CSS**: defaultCache (Serwist)
-- **COS 图片**: CacheFirst 30 天，最多 200 张
+- **R2 图片**: CacheFirst 30 天，最多 200 张
 - **浏览器缓存**: 由 CDN 配置 (public 资源)
 
 ---
