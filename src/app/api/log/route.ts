@@ -1,5 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
+import { checkRateLimit } from '@/lib/rate-limit'
+
+// Rate Limiting 配置：每 IP 每分钟最多 20 次
+const LOG_RATE_LIMIT = { maxRequests: 20, windowMs: 60000 }
+
+/**
+ * 获取客户端 IP 地址
+ */
+function getClientIp(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for')
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
+  }
+  const realIp = request.headers.get('x-real-ip')
+  if (realIp) {
+    return realIp.trim()
+  }
+  return '127.0.0.1'
+}
 
 /**
  * 客户端日志上报请求体
@@ -37,6 +56,24 @@ function isValidLogLevel(level: unknown): level is 'info' | 'warn' | 'error' {
  * - 添加 [Client] 前缀以区分来源
  */
 export async function POST(request: NextRequest) {
+  // Rate Limiting 检查（防止日志洪水攻击）
+  const clientIp = getClientIp(request)
+  const rateCheck = checkRateLimit(`log:${clientIp}`, LOG_RATE_LIMIT)
+
+  if (!rateCheck.allowed) {
+    // 被限流时静默返回成功，避免触发客户端重试
+    return NextResponse.json(
+      { success: true, throttled: true },
+      {
+        status: 200,
+        headers: {
+          'X-RateLimit-Remaining': '0',
+          'Retry-After': String(rateCheck.retryAfter),
+        },
+      }
+    )
+  }
+
   try {
     // 解析请求体
     const body: ClientLogPayload = await request.json()
