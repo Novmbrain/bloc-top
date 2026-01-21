@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Image from 'next/image'
-import { Palette, Heart, Copy, Check, User, Send } from 'lucide-react'
+import { Palette, Heart, Copy, Check, User, Send, Users } from 'lucide-react'
 import { AppTabbar } from '@/components/app-tabbar'
 import { ThemeSwitcher } from '@/components/theme-switcher'
 import { Drawer } from '@/components/ui/drawer'
@@ -37,6 +37,25 @@ export default function ProfilePage() {
   const [feedbackContent, setFeedbackContent] = useState('')
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+
+  // 访问统计状态
+  const [totalVisits, setTotalVisits] = useState<number | null>(null)
+
+  // 获取访问统计
+  useEffect(() => {
+    async function fetchVisitStats() {
+      try {
+        const response = await fetch('/api/visit')
+        if (response.ok) {
+          const data = await response.json()
+          setTotalVisits(data.total)
+        }
+      } catch {
+        // 静默失败，不影响页面显示
+      }
+    }
+    fetchVisitStats()
+  }, [])
 
   // 打开图片查看器
   const openViewer = useCallback((src: string, alt: string) => {
@@ -146,6 +165,33 @@ export default function ProfilePage() {
               </div>
             </button>
           </div>
+
+          {/* 岩友访问统计 */}
+          {totalVisits !== null && totalVisits > 0 && (
+            <div
+              className="mb-6 p-4 flex items-center gap-4"
+              style={{
+                backgroundColor: 'var(--theme-surface)',
+                borderRadius: 'var(--theme-radius-xl)',
+                boxShadow: 'var(--theme-shadow-sm)',
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-success) 15%, var(--theme-surface))' }}
+              >
+                <Users className="w-5 h-5" style={{ color: 'var(--theme-success)' }} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                  已有
+                </p>
+                <p className="text-xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
+                  {totalVisits.toLocaleString()} <span className="text-sm font-normal" style={{ color: 'var(--theme-on-surface-variant)' }}>位岩友访问</span>
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* 版本信息 */}
           <div className="mt-8 text-center">

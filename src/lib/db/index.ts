@@ -1,6 +1,6 @@
 import { getDatabase } from '@/lib/mongodb'
 import { createModuleLogger } from '@/lib/logger'
-import type { Crag, Route, Feedback } from '@/types'
+import type { Crag, Route, Feedback, VisitStats } from '@/types'
 import type { WithId, Document } from 'mongodb'
 
 // 创建数据库模块专用 logger
@@ -218,6 +218,95 @@ export async function createFeedback(content: string): Promise<Feedback> {
   } catch (error) {
     log.error('Failed to create feedback', error, {
       action: 'createFeedback',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+
+// ============ Visit 相关操作 ============
+
+const VISIT_STATS_ID = 'visit_stats'
+
+/**
+ * 记录一次访问
+ * 使用 $inc 原子操作更新省份计数和总数
+ *
+ * @param province 省份名称 (如 "福建省", "广东省")
+ */
+export async function recordVisit(province: string): Promise<void> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+
+    // 使用 upsert + $inc 实现原子更新
+    await db.collection('visits').updateOne(
+      { _id: VISIT_STATS_ID as unknown as Document['_id'] },
+      {
+        $inc: {
+          [`provinces.${province}`]: 1,
+          total: 1,
+        },
+        $set: {
+          lastUpdated: new Date(),
+        },
+      },
+      { upsert: true }
+    )
+
+    log.info(`Visit recorded: ${province}`, {
+      action: 'recordVisit',
+      duration: Date.now() - start,
+      metadata: { province },
+    })
+  } catch (error) {
+    log.error('Failed to record visit', error, {
+      action: 'recordVisit',
+      duration: Date.now() - start,
+      metadata: { province },
+    })
+    throw error
+  }
+}
+
+/**
+ * 获取访问统计数据
+ */
+export async function getVisitStats(): Promise<VisitStats> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const doc = await db.collection('visits').findOne({
+      _id: VISIT_STATS_ID as unknown as Document['_id'],
+    })
+
+    if (!doc) {
+      log.debug('No visit stats found, returning empty', {
+        action: 'getVisitStats',
+        duration: Date.now() - start,
+      })
+      return {
+        provinces: {},
+        total: 0,
+        lastUpdated: new Date(),
+      }
+    }
+
+    log.debug(`Fetched visit stats: ${doc.total} total visits`, {
+      action: 'getVisitStats',
+      duration: Date.now() - start,
+    })
+
+    return {
+      provinces: doc.provinces || {},
+      total: doc.total || 0,
+      lastUpdated: doc.lastUpdated || new Date(),
+    }
+  } catch (error) {
+    log.error('Failed to fetch visit stats', error, {
+      action: 'getVisitStats',
       duration: Date.now() - start,
     })
     throw error

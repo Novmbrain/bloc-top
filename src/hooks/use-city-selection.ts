@@ -13,6 +13,7 @@ import {
 
 const STORAGE_KEY = 'selected-city'
 const FIRST_VISIT_KEY = 'city-first-visit'
+const VISIT_RECORDED_KEY = 'visit-recorded'
 
 // ==================== 类型 ====================
 
@@ -81,6 +82,13 @@ export function useCitySelection(): UseCitySelectionReturn {
             // 智能检测到的城市也存入 localStorage
             localStorage.setItem(STORAGE_KEY, data.cityId)
           }
+
+          // 4. 记录访问（仅首次，避免重复计数）
+          const visitRecorded = localStorage.getItem(VISIT_RECORDED_KEY)
+          if (!visitRecorded && data.province) {
+            recordVisit(data.province)
+            localStorage.setItem(VISIT_RECORDED_KEY, 'true')
+          }
         }
       } catch (error) {
         console.warn('[useCitySelection] IP detection failed:', error)
@@ -117,5 +125,22 @@ export function useCitySelection(): UseCitySelectionReturn {
     isLoading,
     isFirstVisit,
     dismissFirstVisitHint,
+  }
+}
+
+// ==================== 辅助函数 ====================
+
+/**
+ * 记录用户访问（静默失败）
+ */
+async function recordVisit(province: string): Promise<void> {
+  try {
+    await fetch('/api/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ province }),
+    })
+  } catch {
+    // 静默失败，不影响主流程
   }
 }

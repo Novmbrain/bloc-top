@@ -165,3 +165,15 @@ export interface Feedback {
   content: string             // 留言内容
   createdAt: Date             // 创建时间
 }
+
+// ==================== 访问统计类型 ====================
+
+/**
+ * 访问统计数据
+ * 按省份记录中国地区用户的访问数量
+ */
+export interface VisitStats {
+  provinces: Record<string, number>  // 省份 -> 访问次数
+  total: number                      // 总访问次数
+  lastUpdated: Date                  // 最后更新时间
+}
