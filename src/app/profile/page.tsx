@@ -184,10 +184,10 @@ export default function ProfilePage() {
               </div>
               <div className="flex-1">
                 <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  已有
+                  累计
                 </p>
                 <p className="text-xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
-                  {totalVisits.toLocaleString()} <span className="text-sm font-normal" style={{ color: 'var(--theme-on-surface-variant)' }}>位岩友访问</span>
+                  {totalVisits.toLocaleString()} <span className="text-sm font-normal" style={{ color: 'var(--theme-on-surface-variant)' }}>次访问</span>
                 </p>
               </div>
             </div>

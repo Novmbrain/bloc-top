@@ -57,43 +57,50 @@ export function useCitySelection(): UseCitySelectionReturn {
   // 初始化：读取 localStorage 或智能检测
   useEffect(() => {
     async function init() {
-      // 1. 检查 localStorage
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored && isValidCityId(stored)) {
-        setCityId(stored)
-        setIsLoading(false)
-        return
+      const storedCity = localStorage.getItem(STORAGE_KEY)
+      const visitRecorded = localStorage.getItem(VISIT_RECORDED_KEY)
+      const visited = localStorage.getItem(FIRST_VISIT_KEY)
+
+      // 1. 判断是否需要调用 geo API
+      //    - 需要记录访问（visitRecorded 不存在）
+      //    - 或需要检测城市（storedCity 不存在）
+      const needGeoCall = !visitRecorded || !storedCity
+
+      let geoData: { cityId?: string; province?: string } | null = null
+
+      if (needGeoCall) {
+        try {
+          const response = await fetch('/api/geo')
+          if (response.ok) {
+            geoData = await response.json()
+          }
+        } catch (error) {
+          console.warn('[useCitySelection] IP detection failed:', error)
+        }
       }
 
-      // 2. 首次访问，标记并进行智能检测
-      const visited = localStorage.getItem(FIRST_VISIT_KEY)
+      // 2. 处理访问记录（独立于城市选择）
+      if (!visitRecorded && geoData?.province) {
+        recordVisit(geoData.province)
+        localStorage.setItem(VISIT_RECORDED_KEY, 'true')
+      }
+
+      // 3. 处理首次访问标记（用于显示切换提示）
       if (!visited) {
         setIsFirstVisit(true)
         localStorage.setItem(FIRST_VISIT_KEY, 'true')
       }
 
-      // 3. 调用 IP 定位 API
-      try {
-        const response = await fetch('/api/geo')
-        if (response.ok) {
-          const data = await response.json()
-          if (data.cityId && isValidCityId(data.cityId)) {
-            setCityId(data.cityId)
-            // 智能检测到的城市也存入 localStorage
-            localStorage.setItem(STORAGE_KEY, data.cityId)
-          }
-
-          // 4. 记录访问（仅首次，避免重复计数）
-          const visitRecorded = localStorage.getItem(VISIT_RECORDED_KEY)
-          if (!visitRecorded && data.province) {
-            recordVisit(data.province)
-            localStorage.setItem(VISIT_RECORDED_KEY, 'true')
-          }
-        }
-      } catch (error) {
-        console.warn('[useCitySelection] IP detection failed:', error)
-        // 失败时使用默认值，已在 state 初始化
+      // 4. 处理城市选择
+      if (storedCity && isValidCityId(storedCity)) {
+        // 已有存储的城市，直接使用
+        setCityId(storedCity)
+      } else if (geoData?.cityId && isValidCityId(geoData.cityId)) {
+        // 使用 geo API 检测到的城市
+        setCityId(geoData.cityId)
+        localStorage.setItem(STORAGE_KEY, geoData.cityId)
       }
+      // 否则使用默认城市（已在 state 初始化）
 
       setIsLoading(false)
     }
