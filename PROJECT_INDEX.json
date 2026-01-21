@@ -1,15 +1,15 @@
 {
-  "name": "罗源野抱 TOPO",
-  "description": "福州罗源攀岩线路分享 PWA 应用（野外抱石攀岩指南）",
-  "generated": "2026-01-18",
+  "name": "escalade-pwa",
+  "displayName": "罗源野抱 TOPO",
   "version": "0.1.0",
+  "generated": "2026-01-21",
   "techStack": {
-    "framework": "Next.js 16.1.2 (App Router + ISR)",
-    "database": "MongoDB Atlas",
-    "styling": "Tailwind CSS v4 + shadcn/ui",
+    "framework": "Next.js 16.1.2",
+    "runtime": "React 19.2.3",
+    "database": "MongoDB 7.0.0",
+    "styling": "Tailwind CSS 4.x",
     "pwa": "Serwist 9.5.0",
-    "icons": "lucide-react",
-    "map": "@amap/amap-jsapi-loader 1.0.1"
+    "testing": "Vitest + Playwright"
   },
   "entryPoints": {
     "home": "src/app/page.tsx",
@@ -17,142 +17,90 @@
     "cragDetail": "src/app/crag/[id]/page.tsx",
     "routeDetail": "src/app/route/[id]/page.tsx",
     "serviceWorker": "src/app/sw.ts",
-    "dataAccess": "src/lib/db/index.ts",
-    "weatherApi": "src/app/api/weather/route.ts",
-    "betaApi": "src/app/api/beta/route.ts"
+    "layout": "src/app/layout.tsx"
+  },
+  "apiRoutes": {
+    "beta": "src/app/api/beta/route.ts",
+    "weather": "src/app/api/weather/route.ts",
+    "geo": "src/app/api/geo/route.ts",
+    "log": "src/app/api/log/route.ts",
+    "feedback": "src/app/api/feedback/route.ts"
   },
   "coreModules": {
-    "db": {
+    "database": {
       "path": "src/lib/db/index.ts",
       "exports": ["getAllCrags", "getCragById", "getAllRoutes", "getRouteById", "getRoutesByCragId"]
     },
-    "filterConstants": {
-      "path": "src/lib/filter-constants.ts",
-      "exports": ["V_GRADES", "GRADE_GROUPS", "FILTER_PARAMS", "SortDirection", "getGradesByValue", "getGradesByValues"]
+    "themes": {
+      "path": "src/lib/themes/",
+      "exports": ["themes", "getTheme", "ThemeId"]
     },
-    "weatherConstants": {
-      "path": "src/lib/weather-constants.ts",
-      "exports": ["WEATHER_ICONS", "WEATHER_CACHE_TTL", "LUOYUAN_DEFAULT_COORDS", "SUITABILITY_CONFIG"]
+    "logger": {
+      "server": "src/lib/logger.ts",
+      "client": "src/lib/client-logger.ts"
     },
-    "weatherUtils": {
-      "path": "src/lib/weather-utils.ts",
-      "exports": ["evaluateClimbingCondition", "getWeatherIcon"]
+    "weather": {
+      "utils": "src/lib/weather-utils.ts",
+      "constants": "src/lib/weather-constants.ts"
     },
-    "types": {
-      "path": "src/types/index.ts",
-      "exports": ["Crag", "Route", "Coordinates", "WeatherData", "ClimbingCondition"]
+    "cache": {
+      "path": "src/lib/cache-config.ts",
+      "exports": ["ISR_REVALIDATE", "SW_CACHE", "API_CACHE", "HTTP_CACHE"]
     },
-    "mongodb": {
-      "path": "src/lib/mongodb.ts",
-      "exports": ["getDatabase"]
-    },
-    "tokens": {
-      "path": "src/lib/tokens.ts",
-      "exports": ["getGradeColor"]
+    "city": {
+      "path": "src/lib/city-config.ts",
+      "exports": ["CITIES", "CityId", "CityConfig"]
     }
   },
   "components": {
-    "ui": ["button", "card", "skeleton", "drawer", "image-viewer"],
-    "weather": ["weather-strip", "weather-badge", "weather-card"],
-    "map": ["amap-container"],
-    "custom": [
-      "filter-chip",
-      "grade-range-selector",
-      "crag-card",
-      "app-tabbar",
-      "floating-search",
-      "search-overlay",
-      "install-prompt",
-      "sw-update-prompt",
-      "offline-indicator",
-      "crag-card-skeleton",
-      "route-card-skeleton",
-      "beta-list-drawer",
-      "beta-submit-drawer",
-      "route-detail-drawer"
-    ]
-  },
-  "routes": {
-    "/": { "page": "首页 - 岩场列表", "component": "page.tsx + home-client.tsx" },
-    "/crag/[id]": { "page": "岩场详情", "params": ["id"] },
-    "/route": { "page": "线路列表", "params": ["crag", "grade", "q", "sort"] },
-    "/route/[id]": { "page": "线路详情", "params": ["id"] },
-    "/profile": { "page": "用户页面" }
-  },
-  "apiRoutes": {
-    "/api/weather": {
-      "method": "GET",
-      "params": ["lng", "lat", "forecast"],
-      "description": "获取天气数据和攀岩适宜度"
+    "ui": {
+      "drawer": "src/components/ui/drawer.tsx",
+      "imageViewer": "src/components/ui/image-viewer.tsx",
+      "button": "src/components/ui/button.tsx",
+      "card": "src/components/ui/card.tsx",
+      "skeleton": "src/components/ui/skeleton.tsx"
     },
-    "/api/beta": {
-      "methods": ["GET", "POST"],
-      "description": "Beta 视频 CRUD"
+    "business": {
+      "cragCard": "src/components/crag-card.tsx",
+      "weatherCard": "src/components/weather-card.tsx",
+      "amapContainer": "src/components/amap-container.tsx",
+      "filterDrawer": "src/components/filter-drawer.tsx",
+      "searchOverlay": "src/components/search-overlay.tsx",
+      "appTabbar": "src/components/app-tabbar.tsx"
     }
   },
-  "dataTypes": {
-    "Crag": {
-      "id": "string",
-      "name": "string",
-      "location": "string",
-      "developmentTime": "string",
-      "description": "string",
-      "approach": "string",
-      "coverImages": "string[]?",
-      "coordinates": "Coordinates?"
-    },
-    "Route": {
-      "id": "number",
-      "name": "string",
-      "grade": "string (V0-V13 或 ?)",
-      "cragId": "string",
-      "area": "string",
-      "setter": "string?",
-      "FA": "string?",
-      "description": "string?",
-      "image": "string?",
-      "betaLinks": "BetaLink[]?"
-    },
-    "WeatherData": {
-      "adcode": "string",
-      "city": "string",
-      "live": "WeatherLive",
-      "forecasts": "WeatherForecast[]?",
-      "climbing": "ClimbingCondition",
-      "updatedAt": "string (ISO 8601)"
-    }
+  "hooks": {
+    "useRouteSearch": "src/hooks/use-route-search.ts",
+    "useCitySelection": "src/hooks/use-city-selection.ts"
   },
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --webpack",
-    "start": "next start",
-    "lint": "eslint",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "db:seed": "npx tsx scripts/seed.ts development",
-    "db:seed:prod": "npx tsx scripts/seed.ts production"
+    "seed": "scripts/seed.ts",
+    "migrate": "scripts/migrate-add-cityid.ts",
+    "backup": "scripts/backup-to-db.ts"
   },
-  "designSystem": {
-    "themes": ["minimal (默认)", "outdoor"],
-    "cssVariables": ["--theme-primary", "--theme-surface", "--theme-on-surface", "--theme-radius-*", "--theme-shadow-*"],
-    "animations": ["animate-fade-in-up", "animate-scale-in", "skeleton-shimmer", "scrollbar-hide"]
-  },
-  "environmentVariables": {
-    "MONGODB_URI": "MongoDB 连接字符串 (必需)",
-    "MONGODB_DB_NAME": "数据库名称 (dev/prod)",
-    "NEXT_PUBLIC_AMAP_KEY": "高德地图 API Key (地图 + 天气)"
+  "tests": {
+    "unitTests": 19,
+    "componentTests": 1,
+    "coverage": "34%",
+    "testedModules": [
+      "lib/grade-utils", "lib/tokens", "lib/filter-constants",
+      "lib/beta-constants", "lib/rate-limit", "lib/crag-theme",
+      "lib/themes", "lib/utils", "lib/pinyin-utils",
+      "lib/weather-utils", "lib/city-config",
+      "hooks/use-route-search", "hooks/use-city-selection",
+      "components/filter-chip", "components/grade-range-selector",
+      "components/drawer", "components/crag-card",
+      "components/search-overlay", "components/theme-switcher"
+    ]
   },
   "documentation": {
     "aiGuide": "CLAUDE.md",
-    "techOverview": "doc/PROJECT_OVERVIEW.md",
-    "index": "PROJECT_INDEX.md"
+    "projectOverview": "doc/PROJECT_OVERVIEW.md",
+    "readme": "README.md"
   },
-  "stats": {
-    "sourceFiles": 64,
-    "testFiles": 13,
-    "linesOfCode": 9900,
-    "components": 27,
-    "apiEndpoints": 2
+  "gitWorkflow": {
+    "branchNaming": "feature/issue-{N}-{desc}",
+    "prKeywords": ["Closes #{N}", "Fixes #{N}"],
+    "ciChecks": ["ESLint", "TypeScript", "Vitest", "Playwright"]
   }
 }
