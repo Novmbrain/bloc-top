@@ -36,6 +36,30 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 })
 
+// Mock sessionStorage (用于单会话访问去重)
+const sessionStorageMock = (() => {
+  let store: Record<string, string> = {}
+  return {
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key]
+    }),
+    clear: vi.fn(() => {
+      store = {}
+    }),
+    get _store() {
+      return store
+    },
+  }
+})()
+
+Object.defineProperty(window, 'sessionStorage', {
+  value: sessionStorageMock,
+})
+
 // Mock fetch
 const mockFetch = vi.fn()
 global.fetch = mockFetch
@@ -44,6 +68,7 @@ describe('useCitySelection', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorageMock.clear()
+    sessionStorageMock.clear()
     // 默认 fetch 返回罗源
     mockFetch.mockResolvedValue({
       ok: true,
@@ -67,8 +92,8 @@ describe('useCitySelection', () => {
 
       expect(result.current.cityId).toBe('xiamen')
       expect(result.current.city.name).toBe('厦门')
-      // 有存储时不调用 API
-      expect(mockFetch).not.toHaveBeenCalled()
+      // 即使有存储的城市，也会调用 /api/geo 获取省份信息用于访问记录
+      expect(mockFetch).toHaveBeenCalledWith('/api/geo')
     })
 
     it('localStorage 中的无效城市 ID 被忽略', async () => {
@@ -307,7 +332,8 @@ describe('useCitySelection', () => {
 
       expect(result.current.cityId).toBe('xiamen')
       expect(result.current.isFirstVisit).toBe(false)
-      expect(mockFetch).not.toHaveBeenCalled()
+      // 即使是老用户，也会调用 /api/geo 获取省份信息用于访问记录
+      expect(mockFetch).toHaveBeenCalledWith('/api/geo')
     })
 
     it('用户手动切换城市后再次访问', async () => {
@@ -331,6 +357,72 @@ describe('useCitySelection', () => {
 
       expect(result.current.cityId).toBe('luoyuan')
       expect(localStorageMock._store['selected-city']).toBe('luoyuan')
+    })
+  })
+
+  describe('访问记录', () => {
+    it('首次访问时记录访问', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ cityId: 'luoyuan', province: '福建省' }),
+      })
+
+      renderHook(() => useCitySelection())
+
+      await waitFor(() => {
+        // 等待 /api/visit 被调用
+        expect(mockFetch).toHaveBeenCalledWith('/api/visit', expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        }))
+      })
+
+      // 检查 sessionStorage 标记已设置
+      expect(sessionStorageMock.setItem).toHaveBeenCalledWith(
+        'session-visit-recorded',
+        'true'
+      )
+    })
+
+    it('同一会话内多次渲染不重复记录', async () => {
+      // 模拟已经在本会话中记录过
+      sessionStorageMock.setItem('session-visit-recorded', 'true')
+
+      renderHook(() => useCitySelection())
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith('/api/geo')
+      })
+
+      // /api/visit 不应被调用
+      expect(mockFetch).not.toHaveBeenCalledWith('/api/visit', expect.anything())
+    })
+
+    it('访问记录包含省份信息', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ cityId: 'luoyuan', province: '福建省' }),
+      })
+
+      renderHook(() => useCitySelection())
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith('/api/visit', expect.objectContaining({
+          body: JSON.stringify({ province: '福建省' }),
+        }))
+      })
+    })
+
+    it('geo API 失败时仍然记录访问（无省份）', async () => {
+      mockFetch.mockRejectedValue(new Error('Network error'))
+
+      renderHook(() => useCitySelection())
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith('/api/visit', expect.objectContaining({
+          body: JSON.stringify({ province: undefined }),
+        }))
+      })
     })
   })
 })
