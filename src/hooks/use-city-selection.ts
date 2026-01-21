@@ -13,7 +13,6 @@ import {
 
 const STORAGE_KEY = 'selected-city'
 const FIRST_VISIT_KEY = 'city-first-visit'
-const VISIT_RECORDED_KEY = 'visit-recorded'
 
 // ==================== 类型 ====================
 
@@ -58,32 +57,22 @@ export function useCitySelection(): UseCitySelectionReturn {
   useEffect(() => {
     async function init() {
       const storedCity = localStorage.getItem(STORAGE_KEY)
-      const visitRecorded = localStorage.getItem(VISIT_RECORDED_KEY)
       const visited = localStorage.getItem(FIRST_VISIT_KEY)
 
-      // 1. 判断是否需要调用 geo API
-      //    - 需要记录访问（visitRecorded 不存在）
-      //    - 或需要检测城市（storedCity 不存在）
-      const needGeoCall = !visitRecorded || !storedCity
-
+      // 1. 调用 geo API（用于访问记录和城市检测）
       let geoData: { cityId?: string; province?: string } | null = null
-
-      if (needGeoCall) {
-        try {
-          const response = await fetch('/api/geo')
-          if (response.ok) {
-            geoData = await response.json()
-          }
-        } catch (error) {
-          console.warn('[useCitySelection] IP detection failed:', error)
+      try {
+        const response = await fetch('/api/geo')
+        if (response.ok) {
+          geoData = await response.json()
         }
+      } catch (error) {
+        console.warn('[useCitySelection] IP detection failed:', error)
       }
 
-      // 2. 处理访问记录（独立于城市选择）
-      if (!visitRecorded && geoData?.province) {
-        recordVisit(geoData.province)
-        localStorage.setItem(VISIT_RECORDED_KEY, 'true')
-      }
+      // 2. 记录访问（每次打开都记录，不去重）
+      //    有省份则记录省份，无省份（海外/失败）记录为「海外」
+      recordVisit(geoData?.province)
 
       // 3. 处理首次访问标记（用于显示切换提示）
       if (!visited) {
@@ -100,7 +89,6 @@ export function useCitySelection(): UseCitySelectionReturn {
         setCityId(geoData.cityId)
         localStorage.setItem(STORAGE_KEY, geoData.cityId)
       }
-      // 否则使用默认城市（已在 state 初始化）
 
       setIsLoading(false)
     }
@@ -138,16 +126,17 @@ export function useCitySelection(): UseCitySelectionReturn {
 // ==================== 辅助函数 ====================
 
 /**
- * 记录用户访问（静默失败）
+ * 记录用户访问（静默失败，不阻塞主流程）
+ * 每次打开 App 都会调用，不去重
+ *
+ * @param province 省份名称，海外用户传 undefined
  */
-async function recordVisit(province: string): Promise<void> {
-  try {
-    await fetch('/api/visit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ province }),
-    })
-  } catch {
+function recordVisit(province?: string): void {
+  fetch('/api/visit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ province }),
+  }).catch(() => {
     // 静默失败，不影响主流程
-  }
+  })
 }

@@ -170,10 +170,11 @@ export interface Feedback {
 
 /**
  * 访问统计数据
- * 按省份记录中国地区用户的访问数量
+ * 按省份记录 App 打开次数（不去重，每次打开都计数）
+ * 海外用户统一记录到「海外」
  */
 export interface VisitStats {
-  provinces: Record<string, number>  // 省份 -> 访问次数
-  total: number                      // 总访问次数
+  provinces: Record<string, number>  // 省份 -> 访问次数（包含「海外」）
+  total: number                      // App 打开总次数
   lastUpdated: Date                  // 最后更新时间
 }

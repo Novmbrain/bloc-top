@@ -229,10 +229,11 @@ export async function createFeedback(content: string): Promise<Feedback> {
 const VISIT_STATS_ID = 'visit_stats'
 
 /**
- * 记录一次访问
+ * 记录一次 App 打开
  * 使用 $inc 原子操作更新省份计数和总数
+ * 不去重，每次打开都会计数
  *
- * @param province 省份名称 (如 "福建省", "广东省")
+ * @param province 省份名称（如「福建省」、「海外」）
  */
 export async function recordVisit(province: string): Promise<void> {
   const start = Date.now()
@@ -248,9 +249,7 @@ export async function recordVisit(province: string): Promise<void> {
           [`provinces.${province}`]: 1,
           total: 1,
         },
-        $set: {
-          lastUpdated: new Date(),
-        },
+        $set: { lastUpdated: new Date() },
       },
       { upsert: true }
     )

@@ -8,26 +8,25 @@ const log = createModuleLogger('Visit')
 /**
  * POST /api/visit
  *
- * 记录用户访问
- * Body: { province: string }
+ * 记录一次 App 打开（不去重，每次都计数）
+ * Body: { province?: string }
  *
- * 省份为空或非中国地区时，使用 "其他" 作为 key
+ * - 有省份：记录该省份
+ * - 无省份/海外：记录为「海外」
  */
 export async function POST(request: NextRequest) {
   const start = Date.now()
 
   try {
-    const body = await request.json()
-    const { province } = body
+    const body = await request.json().catch(() => ({}))
+    const { province } = body as { province?: string }
 
-    // 省份校验：为空时使用 "其他"
-    const normalizedProvince = province && typeof province === 'string' && province.trim()
-      ? province.trim()
-      : '其他'
+    // 省份为空（海外用户或 geo 失败）记录为「海外」
+    const normalizedProvince = province?.trim() || '海外'
 
     await recordVisit(normalizedProvince)
 
-    log.info('Visit recorded successfully', {
+    log.info('Visit recorded', {
       action: 'POST /api/visit',
       duration: Date.now() - start,
       metadata: { province: normalizedProvince },
