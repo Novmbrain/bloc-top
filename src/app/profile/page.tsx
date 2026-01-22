@@ -7,6 +7,8 @@ import { AppTabbar } from '@/components/app-tabbar'
 import { ThemeSwitcher } from '@/components/theme-switcher'
 import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
+// 访问统计缓存 key
+const VISITS_CACHE_KEY = 'total_visits_cache'
 
 // 作者信息常量
 const AUTHOR = {
@@ -43,15 +45,23 @@ export default function ProfilePage() {
 
   // 获取访问统计
   useEffect(() => {
+    // 先显示缓存数据
+    const cached = localStorage.getItem(VISITS_CACHE_KEY)
+    if (cached) {
+      setTotalVisits(parseInt(cached, 10))
+    }
+
+    // 然后请求最新数据
     async function fetchVisitStats() {
       try {
         const response = await fetch('/api/visit')
         if (response.ok) {
           const data = await response.json()
           setTotalVisits(data.total)
+          localStorage.setItem(VISITS_CACHE_KEY, String(data.total))
         }
       } catch {
-        // 静默失败，不影响页面显示
+        // 静默失败，保留缓存数据显示
       }
     }
     fetchVisitStats()
@@ -166,32 +176,40 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {/* 岩友访问统计 */}
-          {totalVisits !== null && totalVisits > 0 && (
+          {/* 岩友访问统计 - 始终显示，使用缓存数据 */}
+          <div
+            className="mb-6 p-4 flex items-center gap-4"
+            style={{
+              backgroundColor: 'var(--theme-surface)',
+              borderRadius: 'var(--theme-radius-xl)',
+              boxShadow: 'var(--theme-shadow-sm)',
+            }}
+          >
             <div
-              className="mb-6 p-4 flex items-center gap-4"
-              style={{
-                backgroundColor: 'var(--theme-surface)',
-                borderRadius: 'var(--theme-radius-xl)',
-                boxShadow: 'var(--theme-shadow-sm)',
-              }}
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--theme-success) 15%, var(--theme-surface))' }}
             >
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-success) 15%, var(--theme-surface))' }}
-              >
-                <Users className="w-5 h-5" style={{ color: 'var(--theme-success)' }} />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  累计
-                </p>
-                <p className="text-xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
-                  {totalVisits.toLocaleString()} <span className="text-sm font-normal" style={{ color: 'var(--theme-on-surface-variant)' }}>次访问</span>
-                </p>
-              </div>
+              <Users className="w-5 h-5" style={{ color: 'var(--theme-success)' }} />
             </div>
-          )}
+            <div className="flex-1">
+              <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                累计
+              </p>
+              <p className="text-xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
+                {totalVisits !== null ? (
+                  <>
+                    {totalVisits.toLocaleString()}
+                    <span className="text-sm font-normal ml-1" style={{ color: 'var(--theme-on-surface-variant)' }}>次访问</span>
+                  </>
+                ) : (
+                  <span
+                    className="inline-block w-16 h-6 rounded skeleton-shimmer"
+                    style={{ backgroundColor: 'var(--theme-surface-variant)' }}
+                  />
+                )}
+              </p>
+            </div>
+          </div>
 
           {/* 版本信息 */}
           <div className="mt-8 text-center">

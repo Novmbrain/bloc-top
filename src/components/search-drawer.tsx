@@ -6,6 +6,7 @@ import { Search, X, ChevronRight, ArrowRight } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
 import { getGradeColor } from '@/lib/tokens'
+import { SEARCH_PLACEHOLDER } from '@/lib/filter-constants'
 import type { Route, Crag } from '@/types'
 
 interface SearchDrawerProps {
@@ -81,7 +82,7 @@ export function SearchDrawer({
             <input
               ref={inputRef}
               type="text"
-              placeholder="搜索线路，支持拼音如 yts"
+              placeholder={SEARCH_PLACEHOLDER}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full h-11 pl-10 pr-10 text-sm focus:outline-none"

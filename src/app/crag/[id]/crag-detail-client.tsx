@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { FileText, Car, ChevronLeft, Map } from 'lucide-react'
@@ -23,12 +23,74 @@ interface CragDetailClientProps {
   routes: Route[]
 }
 
+// 轮播配置
+const AUTOPLAY_INTERVAL = 4000 // 自动轮播间隔 (ms)
+const SWIPE_THRESHOLD = 50 // 滑动触发阈值 (px)
+
 export default function CragDetailClient({ crag, routes }: CragDetailClientProps) {
   const router = useRouter()
   const [currentIndex, setCurrentIndex] = useState(0)
 
   // 生成封面图 URL
   const images = [1, 2].map((n) => getCragCoverUrl(crag.id, n))
+
+  // 触摸滑动状态
+  const touchStartX = useRef(0)
+  const touchEndX = useRef(0)
+  const isUserInteracting = useRef(false)
+
+  // 切换到下一张
+  const goToNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % images.length)
+  }, [images.length])
+
+  // 切换到上一张
+  const goToPrev = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length)
+  }, [images.length])
+
+  // 自动轮播
+  useEffect(() => {
+    if (images.length <= 1) return
+
+    const interval = setInterval(() => {
+      // 用户交互时暂停自动轮播
+      if (!isUserInteracting.current) {
+        goToNext()
+      }
+    }, AUTOPLAY_INTERVAL)
+
+    return () => clearInterval(interval)
+  }, [images.length, goToNext])
+
+  // 触摸事件处理
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    isUserInteracting.current = true
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current
+
+    if (Math.abs(diff) > SWIPE_THRESHOLD) {
+      if (diff > 0) {
+        // 向左滑 → 下一张
+        goToNext()
+      } else {
+        // 向右滑 → 上一张
+        goToPrev()
+      }
+    }
+
+    // 延迟恢复自动轮播，避免立即切换
+    setTimeout(() => {
+      isUserInteracting.current = false
+    }, 1000)
+  }
 
   // 计算难度范围
   const grades = routes
@@ -65,10 +127,15 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
           <ChevronLeft className="w-6 h-6 text-white" />
         </button>
 
-        {/* 图片轮播 */}
-        <div className="relative h-48 overflow-hidden">
+        {/* 图片轮播 - 支持触摸滑动 */}
+        <div
+          className="relative h-48 overflow-hidden touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div
-            className="flex transition-transform duration-300"
+            className="flex transition-transform duration-300 ease-out"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
             {images.map((src, idx) => (
@@ -80,6 +147,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
                   priority={idx === 0}
                   sizes="100vw"
                   className="object-cover"
+                  draggable={false}
                 />
               </div>
             ))}

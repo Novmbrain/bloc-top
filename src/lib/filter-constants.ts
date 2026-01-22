@@ -58,3 +58,9 @@ export type SortDirection = 'asc' | 'desc'
  * 默认排序方向（从简单到难）
  */
 export const DEFAULT_SORT_DIRECTION: SortDirection = 'asc'
+
+/**
+ * 搜索框 placeholder
+ * 示例拼音 ywct = 岩壁餐厅（圆通寺岩场热门线路）
+ */
+export const SEARCH_PLACEHOLDER = '搜索线路，支持拼音如 ywct'
