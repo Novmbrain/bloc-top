@@ -148,7 +148,24 @@
     "later": "Later"
   },
   "OfflineIndicator": {
-    "message": "You are offline"
+    "message": "You are offline",
+    "cragsAvailable": "{count, plural, =1 {# crag available} other {# crags available}}"
+  },
+  "Offline": {
+    "download": "Download Offline",
+    "downloading": "Downloading",
+    "downloaded": "Downloaded",
+    "delete": "Delete Offline Data",
+    "available": "Available Offline",
+    "unavailable": "Download Required",
+    "offlineMode": "Offline Mode",
+    "cragsAvailable": "{count, plural, =1 {# crag available} other {# crags available}}",
+    "progress": "{current}/{total}",
+    "failed": "Download Failed",
+    "retry": "Retry",
+    "confirmDelete": "Delete offline data for {name}?",
+    "deleteSuccess": "Offline data deleted",
+    "notSupported": "Your browser does not support offline features"
   },
   "InstallCard": {
     "title": "Add to Home Screen",

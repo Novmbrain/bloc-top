@@ -113,3 +113,19 @@ export const HTTP_CACHE = {
   /** Beta 列表 API 响应 max-age */
   BETA_MAX_AGE: SECONDS.DAY, // 1 天
 } as const
+
+// ==================== 离线缓存配置 ====================
+
+/**
+ * 离线功能缓存配置
+ *
+ * 使用场景: 岩场离线下载功能
+ */
+export const OFFLINE_CACHE = {
+  /** 离线图片缓存名称 */
+  CACHE_NAME: 'offline-crag-images',
+  /** 最大缓存条目数 (估计每个岩场约 25 张图) */
+  MAX_ENTRIES: 500,
+  /** 缓存过期时间 (秒) - 离线内容长期有效 */
+  MAX_AGE_SECONDS: SECONDS.YEAR,
+} as const

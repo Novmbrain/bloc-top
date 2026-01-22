@@ -41,13 +41,14 @@ describe('WeatherBadge', () => {
   })
 
   describe('样式', () => {
-    it('应该有正确的定位类', () => {
+    it('应该有正确的布局类', () => {
       const { container } = render(<WeatherBadge temperature={25} weather="晴" />)
 
       const badge = container.firstChild as HTMLElement
-      expect(badge).toHaveClass('absolute')
-      expect(badge).toHaveClass('top-3')
-      expect(badge).toHaveClass('right-3')
+      // WeatherBadge 不再自带定位，由父容器控制
+      expect(badge).toHaveClass('flex')
+      expect(badge).toHaveClass('items-center')
+      expect(badge).toHaveClass('gap-1')
     })
 
     it('应该有毛玻璃背景', () => {

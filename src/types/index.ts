@@ -178,3 +178,32 @@ export interface VisitStats {
   total: number                      // App 打开总次数
   lastUpdated: Date                  // 最后更新时间
 }
+
+// ==================== 离线下载类型 ====================
+
+/**
+ * 下载进度状态
+ */
+export type DownloadStatus = 'idle' | 'downloading' | 'completed' | 'failed'
+
+/**
+ * 下载进度信息
+ */
+export interface DownloadProgress {
+  cragId: string
+  status: DownloadStatus
+  totalImages: number
+  downloadedImages: number
+  error?: string
+}
+
+/**
+ * 已下载岩场的元数据 (用于列表展示)
+ */
+export interface OfflineCragMeta {
+  cragId: string
+  cragName: string
+  routeCount: number
+  downloadedAt: string
+  imageCount: number
+}

@@ -4,6 +4,8 @@ import { getMessages, setRequestLocale, getTranslations } from 'next-intl/server
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import { ThemeProvider } from '@/components/theme-provider'
+import { ToastProvider } from '@/components/ui/toast'
+import { OfflineDownloadProvider } from '@/components/offline-download-provider'
 import OfflineIndicator from '@/components/offline-indicator'
 import SWUpdatePrompt from '@/components/sw-update-prompt'
 import { LocaleDetector } from '@/components/locale-detector'
@@ -78,26 +80,30 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <NextIntlClientProvider messages={messages}>
       <ThemeProvider>
-        {/* 桌面端外层背景 - 移动端不可见 */}
-        <div
-          className="min-h-screen"
-          style={{ backgroundColor: 'var(--theme-desktop-bg)' }}
-        >
-          {/* 居中容器 - 移动端全宽，桌面端固定宽度居中 + 阴影 */}
+        <ToastProvider>
+          <OfflineDownloadProvider>
+          {/* 桌面端外层背景 - 移动端不可见 */}
           <div
-            id="app-shell"
-            className="relative mx-auto w-full min-h-screen md:shadow-2xl"
-            style={{
-              maxWidth: 'var(--app-shell-width)',
-              backgroundColor: 'var(--theme-surface)',
-            }}
+            className="min-h-screen"
+            style={{ backgroundColor: 'var(--theme-desktop-bg)' }}
           >
-            <LocaleDetector />
-            <OfflineIndicator />
-            {children}
-            <SWUpdatePrompt />
+            {/* 居中容器 - 移动端全宽，桌面端固定宽度居中 + 阴影 */}
+            <div
+              id="app-shell"
+              className="relative mx-auto w-full min-h-screen md:shadow-2xl"
+              style={{
+                maxWidth: 'var(--app-shell-width)',
+                backgroundColor: 'var(--theme-surface)',
+              }}
+            >
+              <LocaleDetector />
+              <OfflineIndicator />
+              {children}
+              <SWUpdatePrompt />
+            </div>
           </div>
-        </div>
+          </OfflineDownloadProvider>
+        </ToastProvider>
       </ThemeProvider>
     </NextIntlClientProvider>
   )

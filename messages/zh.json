@@ -148,7 +148,24 @@
     "later": "稍后"
   },
   "OfflineIndicator": {
-    "message": "当前处于离线模式"
+    "message": "当前处于离线模式",
+    "cragsAvailable": "{count} 个岩场可用"
+  },
+  "Offline": {
+    "download": "下载离线包",
+    "downloading": "下载中",
+    "downloaded": "已下载",
+    "delete": "删除离线包",
+    "available": "离线可用",
+    "unavailable": "需下载",
+    "offlineMode": "离线模式",
+    "cragsAvailable": "{count} 个岩场可用",
+    "progress": "{current}/{total}",
+    "failed": "下载失败",
+    "retry": "重试",
+    "confirmDelete": "确定删除 {name} 的离线数据？",
+    "deleteSuccess": "已删除离线数据",
+    "notSupported": "您的浏览器不支持离线功能"
   },
   "InstallCard": {
     "title": "添加到主屏幕",

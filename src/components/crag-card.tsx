@@ -8,17 +8,23 @@ import { getCragTheme } from '@/lib/crag-theme'
 import { getGradeColor } from '@/lib/tokens'
 import { compareGrades } from '@/lib/grade-utils'
 import { WeatherBadge } from '@/components/weather-badge'
+import { DownloadButton } from '@/components/download-button'
+import { useOfflineDownloadContextSafe } from '@/components/offline-download-provider'
 
 interface CragCardProps {
   crag: Crag
   routes: Route[]
   index?: number
   weather?: WeatherData | null
+  showDownload?: boolean  // 是否显示下载按钮
 }
 
-export function CragCard({ crag, routes = [], index = 0, weather }: CragCardProps) {
+export function CragCard({ crag, routes = [], index = 0, weather, showDownload = true }: CragCardProps) {
   const routeCount = routes.length
   const theme = getCragTheme(crag.id)
+
+  // 获取离线下载 Context (可能为 null)
+  const offlineDownload = useOfflineDownloadContextSafe()
 
   // 计算难度范围
   const grades = routes
@@ -42,13 +48,28 @@ export function CragCard({ crag, routes = [], index = 0, weather }: CragCardProp
     >
       {/* 背景层 - 图片或渐变 */}
       <div className="relative h-44 overflow-hidden">
-        {/* 天气角标 */}
-        {weather && (
-          <WeatherBadge
-            temperature={weather.live.temperature}
-            weather={weather.live.weather}
-          />
-        )}
+        {/* 顶部工具栏 (右上角) - 天气 + 下载按钮 */}
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+          {/* 下载按钮 */}
+          {showDownload && offlineDownload && offlineDownload.isSupported && (
+            <DownloadButton
+              crag={crag}
+              routes={routes}
+              isDownloaded={offlineDownload.isDownloaded(crag.id)}
+              progress={offlineDownload.downloadProgress}
+              onDownload={offlineDownload.downloadCrag}
+              onDelete={offlineDownload.deleteCrag}
+            />
+          )}
+
+          {/* 天气角标 */}
+          {weather && (
+            <WeatherBadge
+              temperature={weather.live.temperature}
+              weather={weather.live.weather}
+            />
+          )}
+        </div>
 
         {hasCoverImage ? (
           // 有封面图时显示图片
