@@ -28,8 +28,9 @@ src/
 │   ├── layout.tsx            # 根布局 (字体)
 │   ├── sw.ts                 # Service Worker (Serwist)
 │   └── not-found.tsx         # 404 页面
-├── components/               # React 组件 (30个)
-│   ├── ui/                   # shadcn/ui 基础组件
+├── components/               # React 组件 (31个)
+│   ├── ui/                   # shadcn/ui + 自定义基础组件
+│   │   └── segmented-control.tsx # iOS风格分段控制器 ✨NEW
 │   ├── app-tabbar.tsx        # 底部导航栏
 │   ├── crag-card.tsx         # 岩场卡片
 │   ├── locale-switcher.tsx   # 语言切换器 ✨NEW
@@ -97,6 +98,11 @@ public/                       # 静态资源 (PWA icons, manifest)
 - **Exports**: `routing`, `Link`, `useRouter`, `usePathname`
 - **Purpose**: next-intl 国际化 (zh/en)
 
+### SegmentedControl ✨NEW
+- **Path**: `src/components/ui/segmented-control.tsx`
+- **Exports**: `SegmentedControl`, `SegmentOption`
+- **Purpose**: iOS风格分段选择器，滑动动画，支持图标
+
 ### Weather Utils
 - **Path**: `src/lib/weather-utils.ts`
 - **Exports**: `getClimbingSuitability`, `WEATHER_ICONS`
@@ -114,12 +120,14 @@ public/                       # 静态资源 (PWA icons, manifest)
 | 组件 | 路径 | 用途 |
 |------|------|------|
 | `Drawer` | `components/ui/drawer.tsx` | 通用抽屉 (手势关闭) |
+| `SegmentedControl` | `components/ui/segmented-control.tsx` | iOS风格分段选择器 ✨NEW |
 | `ImageViewer` | `components/ui/image-viewer.tsx` | 全屏图片 (双指缩放) |
 | `AMapContainer` | `components/amap-container.tsx` | 高德地图容器 |
 | `CragCard` | `components/crag-card.tsx` | 岩场列表卡片 |
 | `AppTabbar` | `components/app-tabbar.tsx` | 底部导航栏 (i18n) |
-| `LocaleSwitcher` | `components/locale-switcher.tsx` | 语言切换器 ✨NEW |
-| `ThemeSwitcher` | `components/theme-switcher.tsx` | 主题切换 |
+| `LocaleSwitcher` | `components/locale-switcher.tsx` | 语言切换器 (3种变体) |
+| `LocaleSegmented` | `components/locale-switcher.tsx` | 分段式语言切换 ✨NEW |
+| `ThemeSwitcher` | `components/theme-switcher.tsx` | 分段式主题切换 (重构) |
 
 ---
 

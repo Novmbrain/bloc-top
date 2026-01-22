@@ -2,7 +2,7 @@
   "name": "escalade-pwa",
   "displayName": "罗源野抱 TOPO",
   "version": "0.1.0",
-  "generated": "2026-01-21",
+  "generated": "2026-01-22",
   "techStack": {
     "framework": "Next.js 16.1.2",
     "runtime": "React 19.2.3",
@@ -12,10 +12,10 @@
     "testing": "Vitest + Playwright"
   },
   "entryPoints": {
-    "home": "src/app/page.tsx",
-    "routeList": "src/app/route/page.tsx",
-    "cragDetail": "src/app/crag/[id]/page.tsx",
-    "routeDetail": "src/app/route/[id]/page.tsx",
+    "home": "src/app/[locale]/page.tsx",
+    "routeList": "src/app/[locale]/route/page.tsx",
+    "cragDetail": "src/app/[locale]/crag/[id]/page.tsx",
+    "routeDetail": "src/app/[locale]/route/[id]/page.tsx",
     "serviceWorker": "src/app/sw.ts",
     "layout": "src/app/layout.tsx"
   },
@@ -55,6 +55,7 @@
   "components": {
     "ui": {
       "drawer": "src/components/ui/drawer.tsx",
+      "segmentedControl": "src/components/ui/segmented-control.tsx",
       "imageViewer": "src/components/ui/image-viewer.tsx",
       "button": "src/components/ui/button.tsx",
       "card": "src/components/ui/card.tsx",
@@ -66,12 +67,25 @@
       "amapContainer": "src/components/amap-container.tsx",
       "filterDrawer": "src/components/filter-drawer.tsx",
       "searchOverlay": "src/components/search-overlay.tsx",
-      "appTabbar": "src/components/app-tabbar.tsx"
+      "appTabbar": "src/components/app-tabbar.tsx",
+      "themeSwitcher": "src/components/theme-switcher.tsx",
+      "localeSwitcher": "src/components/locale-switcher.tsx"
+    }
+  },
+  "i18n": {
+    "routing": "src/i18n/routing.ts",
+    "request": "src/i18n/request.ts",
+    "navigation": "src/i18n/navigation.ts",
+    "middleware": "src/middleware.ts",
+    "messages": {
+      "zh": "messages/zh.json",
+      "en": "messages/en.json"
     }
   },
   "hooks": {
     "useRouteSearch": "src/hooks/use-route-search.ts",
-    "useCitySelection": "src/hooks/use-city-selection.ts"
+    "useCitySelection": "src/hooks/use-city-selection.ts",
+    "useDelayedLoading": "src/hooks/use-delayed-loading.ts"
   },
   "scripts": {
     "seed": "scripts/seed.ts",
@@ -79,15 +93,16 @@
     "backup": "scripts/backup-to-db.ts"
   },
   "tests": {
-    "unitTests": 19,
+    "unitTests": 20,
     "componentTests": 1,
+    "totalTests": 304,
     "coverage": "34%",
     "testedModules": [
       "lib/grade-utils", "lib/tokens", "lib/filter-constants",
       "lib/beta-constants", "lib/rate-limit", "lib/crag-theme",
       "lib/themes", "lib/utils", "lib/pinyin-utils",
       "lib/weather-utils", "lib/city-config",
-      "hooks/use-route-search", "hooks/use-city-selection",
+      "hooks/use-route-search", "hooks/use-city-selection", "hooks/use-delayed-loading",
       "components/filter-chip", "components/grade-range-selector",
       "components/drawer", "components/crag-card",
       "components/search-overlay", "components/theme-switcher"

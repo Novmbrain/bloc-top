@@ -157,6 +157,7 @@
   },
   "LocaleSwitcher": {
     "switchLanguage": "Switch Language",
+    "languageSelector": "Language Selection",
     "zh": "中文",
     "en": "English"
   },

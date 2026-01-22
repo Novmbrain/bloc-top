@@ -4,9 +4,11 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useRouter, usePathname } from '@/i18n/navigation'
 import { Globe } from 'lucide-react'
 import { routing, type Locale } from '@/i18n/routing'
+import { useMemo } from 'react'
+import { SegmentedControl, type SegmentOption } from '@/components/ui/segmented-control'
 
 /**
- * 语言切换器组件
+ * 语言切换器组件 - 简单按钮版本
  *
  * 显示当前语言，点击切换到另一种语言
  * 切换时保持当前页面路径不变
@@ -42,9 +44,54 @@ export function LocaleSwitcher() {
 }
 
 /**
+ * 语言切换器 - 分段控制器版本
+ *
+ * 使用 SegmentedControl 实现语言切换，
+ * 与主题切换器保持一致的视觉风格和交互体验。
+ */
+interface LocaleSegmentedProps {
+  className?: string
+}
+
+export function LocaleSegmented({ className }: LocaleSegmentedProps) {
+  const t = useTranslations('LocaleSwitcher')
+  const locale = useLocale() as Locale
+  const router = useRouter()
+  const pathname = usePathname()
+
+  // 语言选项配置
+  const localeOptions: SegmentOption<Locale>[] = useMemo(() =>
+    routing.locales.map((loc) => ({
+      value: loc,
+      label: t(loc),
+      icon: loc === 'zh' ? (
+        <span className="text-xs font-bold">中</span>
+      ) : (
+        <span className="text-xs font-bold">En</span>
+      ),
+    })),
+    [t]
+  )
+
+  const handleChange = (newLocale: Locale) => {
+    router.replace(pathname, { locale: newLocale })
+  }
+
+  return (
+    <SegmentedControl
+      options={localeOptions}
+      value={locale}
+      onChange={handleChange}
+      ariaLabel={t('languageSelector')}
+      className={className}
+    />
+  )
+}
+
+/**
  * 语言选择器 - 下拉菜单版本
  *
- * 适用于设置页面，显示所有可用语言
+ * 适用于需要紧凑布局的场景
  */
 interface LocaleSelectProps {
   className?: string

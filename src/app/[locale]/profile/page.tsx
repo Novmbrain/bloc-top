@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { Palette, Heart, Copy, Check, User, Send, Users, Globe } from 'lucide-react'
 import { AppTabbar } from '@/components/app-tabbar'
 import { ThemeSwitcher } from '@/components/theme-switcher'
-import { LocaleSelect } from '@/components/locale-switcher'
+import { LocaleSegmented } from '@/components/locale-switcher'
 import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
 // 访问统计缓存 key
@@ -160,7 +160,7 @@ export default function ProfilePage() {
                 {t('language')}
               </span>
             </div>
-            <LocaleSelect />
+            <LocaleSegmented />
           </div>
 
           {/* 关于作者按钮 */}

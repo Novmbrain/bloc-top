@@ -111,26 +111,19 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             ))}
           </div>
 
-          {/* 指示器 - 显示当前图片位置 */}
+          {/* 底部圆点指示器 */}
           {images.length > 1 && (
-            <div className="absolute right-4 bottom-4 bg-black/50 px-2 py-1 rounded-full">
-              <span className="text-white text-xs">
-                {currentIndex + 1}/{images.length}
-              </span>
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              {images.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    idx === currentIndex ? 'bg-white' : 'bg-white/50'
+                  }`}
+                />
+              ))}
             </div>
           )}
-
-          {/* 底部圆点指示器 */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-            {images.map((_, idx) => (
-              <div
-                key={idx}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  idx === currentIndex ? 'bg-white' : 'bg-white/50'
-                }`}
-              />
-            ))}
-          </div>
         </div>
       </div>
 
