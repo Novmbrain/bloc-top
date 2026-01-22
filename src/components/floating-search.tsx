@@ -1,6 +1,7 @@
 'use client'
 
 import { Search } from 'lucide-react'
+import { SEARCH_PLACEHOLDER } from '@/lib/filter-constants'
 
 interface FloatingSearchProps {
   onClick: () => void
@@ -9,7 +10,7 @@ interface FloatingSearchProps {
 
 export function FloatingSearch({
   onClick,
-  placeholder = '搜索线路，支持拼音如 yts',
+  placeholder = SEARCH_PLACEHOLDER,
 }: FloatingSearchProps) {
   return (
     <div className="fixed bottom-20 left-4 right-4 desktop-center-padded z-40">

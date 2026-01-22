@@ -4,7 +4,7 @@ import { useMemo, useCallback, useState, useTransition, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, ChevronRight, X, ArrowUp, ArrowDown } from 'lucide-react'
 import { getGradeColor } from '@/lib/tokens'
-import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, type SortDirection } from '@/lib/filter-constants'
+import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, SEARCH_PLACEHOLDER, type SortDirection } from '@/lib/filter-constants'
 import { compareGrades } from '@/lib/grade-utils'
 import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
 import { GradeRangeSelector } from '@/components/grade-range-selector'
@@ -172,7 +172,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
             />
             <input
               type="text"
-              placeholder="搜索线路，支持拼音如 yts"
+              placeholder={SEARCH_PLACEHOLDER}
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full h-10 pl-10 pr-10 text-sm focus:outline-none"

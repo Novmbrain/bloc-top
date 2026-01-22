@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SearchOverlay } from './search-overlay'
+import { SEARCH_PLACEHOLDER } from '@/lib/filter-constants'
 import type { Route } from '@/types'
 
 // Mock next/navigation
@@ -46,12 +47,12 @@ describe('SearchOverlay', () => {
   describe('显示状态', () => {
     it('isOpen=false 时不渲染', () => {
       render(<SearchOverlay {...defaultProps} isOpen={false} />)
-      expect(screen.queryByPlaceholderText('搜索线路，支持拼音如 yts')).not.toBeInTheDocument()
+      expect(screen.queryByPlaceholderText(SEARCH_PLACEHOLDER)).not.toBeInTheDocument()
     })
 
     it('isOpen=true 时渲染', () => {
       render(<SearchOverlay {...defaultProps} />)
-      expect(screen.getByPlaceholderText('搜索线路，支持拼音如 yts')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText(SEARCH_PLACEHOLDER)).toBeInTheDocument()
     })
   })
 
@@ -115,7 +116,7 @@ describe('SearchOverlay', () => {
       const onSearchChange = vi.fn()
       render(<SearchOverlay {...defaultProps} onSearchChange={onSearchChange} />)
 
-      const input = screen.getByPlaceholderText('搜索线路，支持拼音如 yts')
+      const input = screen.getByPlaceholderText(SEARCH_PLACEHOLDER)
       await userEvent.type(input, '猴')
 
       expect(onSearchChange).toHaveBeenCalledWith('猴')
