@@ -1,9 +1,22 @@
+'use client'
+
+import { useDelayedLoading } from '@/hooks/use-delayed-loading'
+
 /**
  * 全局加载状态骨架屏
  * 作为 Next.js App Router 的默认 loading 状态
  * 使用与主题一致的骨架屏样式
+ *
+ * 使用 useDelayedLoading 延迟 100ms 后才显示骨架屏
+ * 避免快速加载时的闪烁
  */
 export default function Loading() {
+  // 延迟 100ms 后才显示骨架屏，避免快速加载时的闪烁
+  const showSkeleton = useDelayedLoading(true, 100)
+
+  // 100ms 内加载完成则不显示骨架屏
+  if (!showSkeleton) return null
+
   return (
     <div
       className="flex flex-col h-screen overflow-hidden px-4"

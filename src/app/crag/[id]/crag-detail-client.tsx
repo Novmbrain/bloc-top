@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { FileText, Car, ChevronLeft, Map } from 'lucide-react'
@@ -23,74 +23,29 @@ interface CragDetailClientProps {
   routes: Route[]
 }
 
-// 轮播配置
-const AUTOPLAY_INTERVAL = 4000 // 自动轮播间隔 (ms)
-const SWIPE_THRESHOLD = 50 // 滑动触发阈值 (px)
-
 export default function CragDetailClient({ crag, routes }: CragDetailClientProps) {
   const router = useRouter()
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
 
   // 生成封面图 URL
   const images = [1, 2].map((n) => getCragCoverUrl(crag.id, n))
 
-  // 触摸滑动状态
-  const touchStartX = useRef(0)
-  const touchEndX = useRef(0)
-  const isUserInteracting = useRef(false)
-
-  // 切换到下一张
-  const goToNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % images.length)
-  }, [images.length])
-
-  // 切换到上一张
-  const goToPrev = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length)
-  }, [images.length])
-
-  // 自动轮播
+  // 监听滚动位置更新当前索引
   useEffect(() => {
-    if (images.length <= 1) return
+    const container = scrollContainerRef.current
+    if (!container) return
 
-    const interval = setInterval(() => {
-      // 用户交互时暂停自动轮播
-      if (!isUserInteracting.current) {
-        goToNext()
-      }
-    }, AUTOPLAY_INTERVAL)
-
-    return () => clearInterval(interval)
-  }, [images.length, goToNext])
-
-  // 触摸事件处理
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-    isUserInteracting.current = true
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX
-  }
-
-  const handleTouchEnd = () => {
-    const diff = touchStartX.current - touchEndX.current
-
-    if (Math.abs(diff) > SWIPE_THRESHOLD) {
-      if (diff > 0) {
-        // 向左滑 → 下一张
-        goToNext()
-      } else {
-        // 向右滑 → 上一张
-        goToPrev()
-      }
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft
+      const itemWidth = container.offsetWidth
+      const newIndex = Math.round(scrollLeft / itemWidth)
+      setCurrentIndex(newIndex)
     }
 
-    // 延迟恢复自动轮播，避免立即切换
-    setTimeout(() => {
-      isUserInteracting.current = false
-    }, 1000)
-  }
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // 计算难度范围
   const grades = routes
@@ -127,19 +82,22 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
           <ChevronLeft className="w-6 h-6 text-white" />
         </button>
 
-        {/* 图片轮播 - 支持触摸滑动 */}
+        {/* 图片滑动查看 - 使用原生滚动 + CSS Scroll Snap */}
         <div
-          className="relative h-48 overflow-hidden touch-pan-y"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          ref={scrollContainerRef}
+          className="relative h-48 overflow-x-auto scrollbar-hide"
+          style={{
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+          }}
         >
-          <div
-            className="flex transition-transform duration-300 ease-out"
-            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-          >
+          <div className="flex h-full">
             {images.map((src, idx) => (
-              <div key={idx} className="w-full flex-shrink-0 h-48 relative">
+              <div
+                key={idx}
+                className="w-full flex-shrink-0 h-48 relative"
+                style={{ scrollSnapAlign: 'start' }}
+              >
                 <Image
                   src={src}
                   alt={`${crag.name} ${idx + 1}`}
@@ -153,7 +111,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             ))}
           </div>
 
-          {/* 指示器 */}
+          {/* 指示器 - 显示当前图片位置 */}
           {images.length > 1 && (
             <div className="absolute right-4 bottom-4 bg-black/50 px-2 py-1 rounded-full">
               <span className="text-white text-xs">
@@ -162,24 +120,17 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             </div>
           )}
 
-          {/* 切换按钮 */}
+          {/* 底部圆点指示器 */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
             {images.map((_, idx) => (
-              <button
+              <div
                 key={idx}
-                onClick={() => setCurrentIndex(idx)}
                 className={`w-2 h-2 rounded-full transition-colors ${
                   idx === currentIndex ? 'bg-white' : 'bg-white/50'
                 }`}
               />
             ))}
           </div>
-
-          {/* Beta 视频按钮 - 暂时隐藏 */}
-          {/* <button className="absolute left-1/2 bottom-12 -translate-x-1/2 flex items-center gap-2 bg-black/65 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-            <Play className="w-4 h-4 text-white" />
-            <span className="text-white text-sm font-medium">岩场介绍视频</span>
-          </button> */}
         </div>
       </div>
 

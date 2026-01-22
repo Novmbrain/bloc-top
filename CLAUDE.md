@@ -114,7 +114,8 @@ src/
 ├── types/index.ts         # TypeScript 类型定义
 ├── hooks/                 # 自定义 Hooks
 │   ├── use-route-search.ts # 线路搜索 Hook (首页搜索用)
-│   └── use-city-selection.ts # 城市选择 Hook (localStorage + IP 定位)
+│   ├── use-city-selection.ts # 城市选择 Hook (localStorage + IP 定位)
+│   └── use-delayed-loading.ts # 延迟加载 Hook (避免骨架屏闪烁)
 ├── test/                  # 测试工具
 │   ├── setup.tsx          # Vitest 全局设置 (mocks)
 │   └── utils.tsx          # 测试辅助函数

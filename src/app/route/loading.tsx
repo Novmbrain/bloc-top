@@ -1,11 +1,23 @@
+'use client'
+
 import { RouteCardSkeleton } from '@/components/route-card-skeleton'
+import { useDelayedLoading } from '@/hooks/use-delayed-loading'
 
 /**
  * 线路列表页面的加载骨架屏
  * 仅在页面首次加载或硬刷新时显示
  * URL 参数变化（筛选/排序）不会触发此 loading 状态
+ *
+ * 使用 useDelayedLoading 延迟 100ms 后才显示骨架屏
+ * 避免快速加载时的闪烁
  */
 export default function RouteListLoading() {
+  // 延迟 100ms 后才显示骨架屏，避免快速加载时的闪烁
+  const showSkeleton = useDelayedLoading(true, 100)
+
+  // 100ms 内加载完成则不显示骨架屏
+  if (!showSkeleton) return null
+
   return (
     <div
       className="flex flex-col h-screen overflow-hidden"
