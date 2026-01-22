@@ -12,6 +12,7 @@ const mockCities: CityConfig[] = [
   {
     id: 'luoyuan' as CityId,
     name: '罗源',
+    shortName: '罗源',
     adcode: '350123',
     coordinates: { lng: 119.5495, lat: 26.4893 },
     available: true,
@@ -19,6 +20,7 @@ const mockCities: CityConfig[] = [
   {
     id: 'xiamen' as CityId,
     name: '厦门',
+    shortName: '厦门',
     adcode: '350200',
     coordinates: { lng: 118.0894, lat: 24.4798 },
     available: false,

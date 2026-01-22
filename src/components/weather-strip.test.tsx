@@ -9,9 +9,10 @@ import type { WeatherData } from '@/types'
 
 // Mock 天气数据
 const mockWeatherData: WeatherData = {
+  adcode: '350123',
+  city: '罗源县',
+  updatedAt: '2024-01-15T10:00:00.000Z',
   live: {
-    province: '福建',
-    city: '罗源县',
     weather: '晴',
     temperature: 25,
     humidity: 60,
@@ -23,6 +24,7 @@ const mockWeatherData: WeatherData = {
     level: 'excellent',
     label: '极佳',
     description: '温湿度适宜，岩面干燥',
+    factors: ['温度适宜', '湿度低'],
   },
   forecasts: [],
 }
