@@ -1,0 +1,157 @@
+{
+  "Common": {
+    "loading": "加载中...",
+    "error": "出错了",
+    "retry": "重试",
+    "back": "返回",
+    "search": "搜索",
+    "filter": "筛选",
+    "all": "全部",
+    "cancel": "取消",
+    "confirm": "确认",
+    "more": "更多",
+    "close": "关闭"
+  },
+  "Navigation": {
+    "home": "首页",
+    "routes": "线路",
+    "settings": "设置"
+  },
+  "HomePage": {
+    "moreComingSoon": "更多岩场正在向你爬来，请耐心等待"
+  },
+  "CragCard": {
+    "routes": "{count} 条线路",
+    "gradeRange": "难度"
+  },
+  "CragDetail": {
+    "approach": "前往方式",
+    "weather": "天气",
+    "map": "岩场地图",
+    "description": "岩场介绍",
+    "exploreRoutes": "开始探索线路",
+    "mapHint": "点击导航按钮可跳转高德地图"
+  },
+  "RouteList": {
+    "title": "线路列表",
+    "searchPlaceholder": "搜索线路名称...",
+    "noResults": "未找到匹配的线路",
+    "tryOtherKeyword": "尝试其他关键词",
+    "sortBy": "排序",
+    "gradeFilter": "难度筛选",
+    "cragFilter": "岩场筛选",
+    "resultsCount": "{count} 条线路",
+    "sortDefault": "默认",
+    "sortGradeAsc": "难度升序",
+    "sortGradeDesc": "难度降序",
+    "gradeRange": "难度范围"
+  },
+  "RouteDetail": {
+    "grade": "难度",
+    "area": "区域",
+    "setter": "定线者",
+    "firstAscent": "首攀",
+    "description": "线路描述",
+    "beta": "Beta 视频",
+    "noBeta": "暂无 Beta 视频",
+    "submitBeta": "贡献 Beta",
+    "viewRoute": "查看线路"
+  },
+  "Weather": {
+    "title": "天气",
+    "good": "适宜攀岩",
+    "moderate": "一般",
+    "poor": "不适宜",
+    "temperature": "温度",
+    "humidity": "湿度",
+    "wind": "风力",
+    "forecast": "天气预报",
+    "today": "今天",
+    "tomorrow": "明天"
+  },
+  "Search": {
+    "placeholder": "搜索线路名称...",
+    "recentSearches": "最近搜索",
+    "clearRecent": "清除",
+    "noResults": "未找到匹配的线路",
+    "tryOtherKeyword": "尝试其他关键词",
+    "resultsCount": "找到 {count} 条线路"
+  },
+  "CitySelector": {
+    "selectCity": "选择城市",
+    "currentCity": "当前城市",
+    "dataAvailable": "数据可用",
+    "comingSoon": "敬请期待",
+    "firstVisitHint": "点击切换城市"
+  },
+  "EmptyCity": {
+    "title": "{city}岩场数据录入中",
+    "description": "我们正在收集{city}地区的攀岩线路信息，敬请期待！",
+    "contributeTitle": "想要贡献数据？",
+    "contributeDescription": "如果你了解{city}的攀岩线路，欢迎联系我们提供信息～"
+  },
+  "InstallPrompt": {
+    "title": "安装应用",
+    "description": "添加到主屏幕，随时查看线路",
+    "install": "安装",
+    "dismiss": "暂不"
+  },
+  "UpdatePrompt": {
+    "title": "发现新版本",
+    "description": "点击更新获取最新内容",
+    "update": "立即更新",
+    "later": "稍后"
+  },
+  "OfflineIndicator": {
+    "message": "当前处于离线状态"
+  },
+  "LocaleSwitcher": {
+    "switchLanguage": "切换语言",
+    "zh": "中文",
+    "en": "English"
+  },
+  "Grade": {
+    "unknown": "未知难度",
+    "beginner": "入门级",
+    "elementary": "初级",
+    "intermediate": "中级",
+    "advanced": "高级",
+    "professional": "专业级",
+    "elite": "精英级",
+    "none": "暂无"
+  },
+  "Beta": {
+    "title": "Beta 视频",
+    "platform": "平台",
+    "author": "作者",
+    "height": "身高",
+    "reach": "臂长",
+    "submit": "贡献 Beta",
+    "submitHint": "分享你的攀爬视频"
+  },
+  "Profile": {
+    "title": "设置",
+    "appearance": "外观设置",
+    "theme": "主题",
+    "themeLight": "日间模式",
+    "themeDark": "暗夜模式",
+    "themeSystem": "跟随系统",
+    "language": "语言",
+    "author": "幕后黑手 🤫",
+    "authorHint": "有建议？来找我",
+    "totalVisits": "累计",
+    "visits": "次访问",
+    "version": "罗源野抱 TOPO v1.0.0",
+    "wechat": "微信",
+    "xiaohongshu": "小红书",
+    "feedbackPlaceholder": "有什么想说的？",
+    "feedbackThanks": "感谢你的留言 💚",
+    "donate": "给小傅买杯咖啡 ☕️",
+    "avatarAlt": "作者头像",
+    "donateAlt": "赞赏码"
+  },
+  "Metadata": {
+    "title": "罗源野抱 TOPO",
+    "description": "福州罗源攀岩线路分享 - 野外抱石攀岩指南"
+  }
+}

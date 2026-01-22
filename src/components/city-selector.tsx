@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { ChevronDown, Check, MapPin } from 'lucide-react'
 import type { CityConfig, CityId } from '@/lib/city-config'
 
@@ -36,6 +37,7 @@ export function CitySelector({
   showHint = false,
   onDismissHint,
 }: CitySelectorProps) {
+  const t = useTranslations('CitySelector')
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -95,7 +97,7 @@ export function CitySelector({
           style={{ color: 'var(--theme-on-surface-variant)' }}
         >
           <MapPin className="w-3 h-3" />
-          点击切换城市
+          {t('firstVisitHint')}
         </p>
       )}
 
@@ -137,7 +139,7 @@ export function CitySelector({
                       borderRadius: 'var(--theme-radius-sm)',
                     }}
                   >
-                    即将上线
+                    {t('comingSoon')}
                   </span>
                 )}
               </span>

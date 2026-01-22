@@ -1,16 +1,18 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { Link, usePathname } from '@/i18n/navigation'
 import { Home, Mountain, Settings } from 'lucide-react'
 
+// 导航项配置 - label 使用翻译键
 const TAB_ITEMS = [
-  { name: 'home', path: '/', icon: Home, label: '首页' },
-  { name: 'routes', path: '/route', icon: Mountain, label: '线路' },
-  { name: 'settings', path: '/profile', icon: Settings, label: '设置' },
-]
+  { name: 'home', path: '/', icon: Home, labelKey: 'home' },
+  { name: 'routes', path: '/route', icon: Mountain, labelKey: 'routes' },
+  { name: 'settings', path: '/profile', icon: Settings, labelKey: 'settings' },
+] as const
 
 export function AppTabbar() {
+  const t = useTranslations('Navigation')
   const pathname = usePathname()
 
   const isActive = (path: string) => {
@@ -67,7 +69,7 @@ export function AppTabbar() {
                   }`}
                 style={{ color: active ? 'var(--theme-primary)' : 'var(--theme-on-surface-variant)' }}
               >
-                {tab.label}
+                {t(tab.labelKey)}
               </span>
             </Link>
           )

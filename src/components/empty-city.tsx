@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { MapPin, Construction } from 'lucide-react'
 import type { CityConfig } from '@/lib/city-config'
 
@@ -13,6 +14,8 @@ interface EmptyCityProps {
  * 当用户选择了一个尚无数据的城市时显示
  */
 export function EmptyCity({ city }: EmptyCityProps) {
+  const t = useTranslations('EmptyCity')
+
   return (
     <div
       className="flex flex-col items-center justify-center py-16 px-6 text-center"
@@ -36,14 +39,12 @@ export function EmptyCity({ city }: EmptyCityProps) {
         className="text-xl font-bold mb-2"
         style={{ color: 'var(--theme-on-surface)' }}
       >
-        {city.name}岩场数据录入中
+        {t('title', { city: city.name })}
       </h2>
 
       {/* 描述 */}
       <p className="text-sm mb-6 max-w-[280px]">
-        我们正在收集{city.name}地区的攀岩线路信息，
-        <br />
-        敬请期待！
+        {t('description', { city: city.name })}
       </p>
 
       {/* 提示卡片 */}
@@ -63,11 +64,10 @@ export function EmptyCity({ city }: EmptyCityProps) {
             className="text-sm font-medium mb-1"
             style={{ color: 'var(--theme-on-surface)' }}
           >
-            想要贡献数据？
+            {t('contributeTitle')}
           </p>
           <p className="text-xs">
-            如果你了解{city.name}的攀岩线路，
-            欢迎联系我们提供信息～
+            {t('contributeDescription', { city: city.name })}
           </p>
         </div>
       </div>

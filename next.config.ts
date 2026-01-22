@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 import withSerwistInit from "@serwist/next";
+import createNextIntlPlugin from "next-intl/plugin";
 import { IMAGE_CACHE } from "./src/lib/cache-config";
+
+// next-intl 插件 - 指向 i18n 配置文件
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -63,6 +67,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-// 开发环境：直接导出配置（使用 Turbopack，无 webpack 配置）
-// 生产环境：用 withSerwist 包装（启用 Service Worker，需要 webpack）
-export default isDev ? nextConfig : withSerwist(nextConfig);
+// 开发环境：仅用 next-intl 包装（使用 Turbopack，无 webpack 配置）
+// 生产环境：用 next-intl + Serwist 包装（启用 Service Worker，需要 webpack）
+export default isDev
+  ? withNextIntl(nextConfig)
+  : withNextIntl(withSerwist(nextConfig));

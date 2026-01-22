@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { CragCard } from '@/components/crag-card'
 import { FloatingSearch } from '@/components/floating-search'
 import { SearchDrawer } from '@/components/search-drawer'
@@ -19,6 +20,7 @@ interface HomePageClientProps {
 }
 
 export default function HomePageClient({ crags, allRoutes }: HomePageClientProps) {
+  const t = useTranslations('HomePage')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [weather, setWeather] = useState<WeatherData | null>(null)
 
@@ -125,7 +127,7 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
             {/* 底部提示 */}
             <div className="text-center py-4">
               <span className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                更多岩场正在向你爬来，请耐心等待
+                {t('moreComingSoon')}
               </span>
             </div>
           </>

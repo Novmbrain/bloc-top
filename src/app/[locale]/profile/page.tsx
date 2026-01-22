@@ -2,9 +2,11 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import Image from 'next/image'
-import { Palette, Heart, Copy, Check, User, Send, Users } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { Palette, Heart, Copy, Check, User, Send, Users, Globe } from 'lucide-react'
 import { AppTabbar } from '@/components/app-tabbar'
 import { ThemeSwitcher } from '@/components/theme-switcher'
+import { LocaleSelect } from '@/components/locale-switcher'
 import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
 // 访问统计缓存 key
@@ -21,6 +23,8 @@ const AUTHOR = {
 }
 
 export default function ProfilePage() {
+  const t = useTranslations('Profile')
+
   // 作者抽屉状态
   const [authorDrawerOpen, setAuthorDrawerOpen] = useState(false)
 
@@ -131,7 +135,7 @@ export default function ProfilePage() {
         {/* 头部 */}
         <header className="pt-12 px-4 pb-6">
           <h1 className="text-2xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
-            设置
+            {t('title')}
           </h1>
         </header>
 
@@ -142,10 +146,21 @@ export default function ProfilePage() {
             <div className="flex items-center gap-2 mb-3">
               <Palette className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
               <span className="text-sm font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-                外观设置
+                {t('appearance')}
               </span>
             </div>
             <ThemeSwitcher />
+          </div>
+
+          {/* 语言设置区块 */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Globe className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
+              <span className="text-sm font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
+                {t('language')}
+              </span>
+            </div>
+            <LocaleSelect />
           </div>
 
           {/* 关于作者按钮 */}
@@ -167,10 +182,10 @@ export default function ProfilePage() {
               </div>
               <div className="flex-1 text-left">
                 <p className="text-base font-medium" style={{ color: 'var(--theme-on-surface)' }}>
-                  幕后黑手 🤫
+                  {t('author')}
                 </p>
                 <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  有建议？来找我
+                  {t('authorHint')}
                 </p>
               </div>
             </button>
@@ -193,13 +208,13 @@ export default function ProfilePage() {
             </div>
             <div className="flex-1">
               <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                累计
+                {t('totalVisits')}
               </p>
               <p className="text-xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
                 {totalVisits !== null ? (
                   <>
                     {totalVisits.toLocaleString()}
-                    <span className="text-sm font-normal ml-1" style={{ color: 'var(--theme-on-surface-variant)' }}>次访问</span>
+                    <span className="text-sm font-normal ml-1" style={{ color: 'var(--theme-on-surface-variant)' }}>{t('visits')}</span>
                   </>
                 ) : (
                   <span
@@ -214,7 +229,7 @@ export default function ProfilePage() {
           {/* 版本信息 */}
           <div className="mt-8 text-center">
             <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-              罗源野抱 TOPO v1.0.0
+              {t('version')}
             </p>
           </div>
         </main>
@@ -234,7 +249,7 @@ export default function ProfilePage() {
           {/* 作者头像和信息 */}
           <div className="flex flex-col items-center mb-6">
             <button
-              onClick={() => openViewer(AUTHOR.avatarUrl, '作者头像')}
+              onClick={() => openViewer(AUTHOR.avatarUrl, t('avatarAlt'))}
               className="relative w-24 h-24 rounded-2xl overflow-hidden mb-4 transition-transform active:scale-95"
               style={{
                 boxShadow: 'var(--theme-shadow-md)',
@@ -245,7 +260,7 @@ export default function ProfilePage() {
               )}
               <Image
                 src={AUTHOR.avatarUrl}
-                alt="作者头像"
+                alt={t('avatarAlt')}
                 fill
                 className={`object-cover transition-opacity duration-300 ${avatarLoaded ? 'opacity-100' : 'opacity-0'}`}
                 onLoad={() => setAvatarLoaded(true)}
@@ -287,7 +302,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex-1 text-left">
                 <p className="text-sm font-medium" style={{ color: 'var(--theme-on-surface)' }}>
-                  微信
+                  {t('wechat')}
                 </p>
                 <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
                   {AUTHOR.wechat}
@@ -319,7 +334,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex-1 text-left">
                 <p className="text-sm font-medium" style={{ color: 'var(--theme-on-surface)' }}>
-                  小红书
+                  {t('xiaohongshu')}
                 </p>
                 <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
                   {AUTHOR.xiaohongshu}
@@ -339,7 +354,7 @@ export default function ProfilePage() {
               <textarea
                 value={feedbackContent}
                 onChange={(e) => setFeedbackContent(e.target.value)}
-                placeholder="有什么想说的？"
+                placeholder={t('feedbackPlaceholder')}
                 maxLength={500}
                 rows={3}
                 className="w-full p-3 pr-12 text-sm resize-none outline-none"
@@ -366,14 +381,14 @@ export default function ProfilePage() {
             </div>
             {feedbackSubmitted && (
               <p className="text-xs mt-1 text-center" style={{ color: 'var(--theme-success)' }}>
-                感谢你的留言 💚
+                {t('feedbackThanks')}
               </p>
             )}
           </div>
 
           {/* 赞赏按钮 */}
           <button
-            onClick={() => openViewer(AUTHOR.donateUrl, '赞赏码')}
+            onClick={() => openViewer(AUTHOR.donateUrl, t('donateAlt'))}
             className="w-full flex items-center justify-center gap-2 p-4 transition-all active:scale-[0.98]"
             style={{
               background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%)',
@@ -383,7 +398,7 @@ export default function ProfilePage() {
             }}
           >
             <Heart className="w-5 h-5" fill="white" />
-            <span className="font-medium">给小傅买杯咖啡 ☕️</span>
+            <span className="font-medium">{t('donate')}</span>
           </button>
         </div>
       </Drawer>

@@ -1,0 +1,157 @@
+{
+  "Common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "back": "Back",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "more": "More",
+    "close": "Close"
+  },
+  "Navigation": {
+    "home": "Home",
+    "routes": "Routes",
+    "settings": "Settings"
+  },
+  "HomePage": {
+    "moreComingSoon": "More crags are on the way, please stay tuned"
+  },
+  "CragCard": {
+    "routes": "{count, plural, =1 {# route} other {# routes}}",
+    "gradeRange": "Grade"
+  },
+  "CragDetail": {
+    "approach": "Getting There",
+    "weather": "Weather",
+    "map": "Crag Map",
+    "description": "Description",
+    "exploreRoutes": "Explore Routes",
+    "mapHint": "Tap navigation to open in Amap"
+  },
+  "RouteList": {
+    "title": "Route List",
+    "searchPlaceholder": "Search routes...",
+    "noResults": "No routes found",
+    "tryOtherKeyword": "Try a different keyword",
+    "sortBy": "Sort by",
+    "gradeFilter": "Grade Filter",
+    "cragFilter": "Crag Filter",
+    "resultsCount": "{count, plural, =1 {# route} other {# routes}}",
+    "sortDefault": "Default",
+    "sortGradeAsc": "Grade (Easy first)",
+    "sortGradeDesc": "Grade (Hard first)",
+    "gradeRange": "Grade Range"
+  },
+  "RouteDetail": {
+    "grade": "Grade",
+    "area": "Area",
+    "setter": "Setter",
+    "firstAscent": "First Ascent",
+    "description": "Description",
+    "beta": "Beta Videos",
+    "noBeta": "No beta videos yet",
+    "submitBeta": "Submit Beta",
+    "viewRoute": "View Route"
+  },
+  "Weather": {
+    "title": "Weather",
+    "good": "Good for climbing",
+    "moderate": "Moderate",
+    "poor": "Not recommended",
+    "temperature": "Temperature",
+    "humidity": "Humidity",
+    "wind": "Wind",
+    "forecast": "Forecast",
+    "today": "Today",
+    "tomorrow": "Tomorrow"
+  },
+  "Search": {
+    "placeholder": "Search routes...",
+    "recentSearches": "Recent Searches",
+    "clearRecent": "Clear",
+    "noResults": "No routes found",
+    "tryOtherKeyword": "Try a different keyword",
+    "resultsCount": "{count, plural, =1 {# route found} other {# routes found}}"
+  },
+  "CitySelector": {
+    "selectCity": "Select City",
+    "currentCity": "Current City",
+    "dataAvailable": "Available",
+    "comingSoon": "Coming Soon",
+    "firstVisitHint": "Tap to switch city"
+  },
+  "EmptyCity": {
+    "title": "Data for {city} coming soon",
+    "description": "We are collecting climbing routes for {city}. Stay tuned!",
+    "contributeTitle": "Want to contribute?",
+    "contributeDescription": "If you know routes in {city}, contact us to share info!"
+  },
+  "InstallPrompt": {
+    "title": "Install App",
+    "description": "Add to home screen for quick access",
+    "install": "Install",
+    "dismiss": "Later"
+  },
+  "UpdatePrompt": {
+    "title": "Update Available",
+    "description": "A new version is available",
+    "update": "Update Now",
+    "later": "Later"
+  },
+  "OfflineIndicator": {
+    "message": "You are offline"
+  },
+  "LocaleSwitcher": {
+    "switchLanguage": "Switch Language",
+    "zh": "中文",
+    "en": "English"
+  },
+  "Grade": {
+    "unknown": "Unknown",
+    "beginner": "Beginner",
+    "elementary": "Elementary",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "professional": "Professional",
+    "elite": "Elite",
+    "none": "N/A"
+  },
+  "Beta": {
+    "title": "Beta Videos",
+    "platform": "Platform",
+    "author": "Author",
+    "height": "Height",
+    "reach": "Reach",
+    "submit": "Submit Beta",
+    "submitHint": "Share your climbing video"
+  },
+  "Profile": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeLight": "Light Mode",
+    "themeDark": "Dark Mode",
+    "themeSystem": "System",
+    "language": "Language",
+    "author": "The Developer 🤫",
+    "authorHint": "Got suggestions? Find me",
+    "totalVisits": "Total",
+    "visits": "visits",
+    "version": "Luoyuan Bouldering TOPO v1.0.0",
+    "wechat": "WeChat",
+    "xiaohongshu": "Xiaohongshu",
+    "feedbackPlaceholder": "Anything to say?",
+    "feedbackThanks": "Thanks for your feedback 💚",
+    "donate": "Buy me a coffee ☕️",
+    "avatarAlt": "Author avatar",
+    "donateAlt": "Donate QR code"
+  },
+  "Metadata": {
+    "title": "Luoyuan Bouldering TOPO",
+    "description": "Bouldering guide for Luoyuan, Fuzhou - Outdoor climbing routes"
+  }
+}
