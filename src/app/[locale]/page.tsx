@@ -1,12 +1,20 @@
-import { Suspense } from 'react'
 import { getAllCrags, getAllRoutes } from '@/lib/db'
-import { CragCardSkeleton } from '@/components/crag-card-skeleton'
 import HomePageClient from './home-client'
 
 // ISR: 每月重新验证 - 配置见 @/lib/cache-config.ts
 export const revalidate = 2592000 // 30 天 (秒)
 
-async function HomePageContent() {
+/**
+ * 首页 - 岩场列表
+ *
+ * 注意：这里故意不使用 Suspense 包裹 HomePageClient
+ * 因为 ISR 缓存确保数据获取几乎是即时的，
+ * 如果使用 Suspense，每次导航都会短暂触发 fallback，导致骨架屏闪烁。
+ *
+ * loading.tsx 仅用于首次加载（冷启动）时的路由级加载状态。
+ * 后续导航将直接从 ISR 缓存返回完整 HTML，无需骨架屏。
+ */
+export default async function HomePage() {
   // 并行获取所有数据
   const [crags, allRoutes] = await Promise.all([
     getAllCrags(),
@@ -14,45 +22,4 @@ async function HomePageContent() {
   ])
 
   return <HomePageClient crags={crags} allRoutes={allRoutes} />
-}
-
-export default async function HomePage() {
-  return (
-    <Suspense
-      fallback={
-        <div
-          className="flex flex-col h-screen overflow-hidden px-4"
-          style={{
-            backgroundColor: 'var(--theme-surface)',
-            transition: 'var(--theme-transition)',
-          }}
-        >
-          {/* 头部骨架 */}
-          <header className="pt-12 pb-3">
-            <div className="flex items-start justify-between">
-              <div className="flex flex-col">
-                {/* 标题骨架 */}
-                <div
-                  className="h-10 w-20 rounded-lg mb-1"
-                  style={{ backgroundColor: 'var(--theme-surface-variant)' }}
-                />
-                {/* 下划线骨架 */}
-                <div
-                  className="w-16 h-0.5 mt-1 mb-3"
-                  style={{ backgroundColor: 'var(--theme-surface-variant)' }}
-                />
-              </div>
-            </div>
-          </header>
-
-          {/* 岩场卡片骨架 */}
-          <main className="flex-1 overflow-y-auto pb-36">
-            <CragCardSkeleton count={3} />
-          </main>
-        </div>
-      }
-    >
-      <HomePageContent />
-    </Suspense>
-  )
 }
