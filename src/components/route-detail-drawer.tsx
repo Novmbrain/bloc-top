@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { MapPin, User, Wrench, Video, ImageIcon } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
@@ -24,6 +25,8 @@ export function RouteDetailDrawer({
   route,
   crag,
 }: RouteDetailDrawerProps) {
+  const t = useTranslations('RouteDetail')
+  const tBeta = useTranslations('Beta')
   const [imageViewerOpen, setImageViewerOpen] = useState(false)
   const [betaListOpen, setBetaListOpen] = useState(false)
   const [betaSubmitOpen, setBetaSubmitOpen] = useState(false)
@@ -90,7 +93,7 @@ export function RouteDetailDrawer({
                   className="text-sm"
                   style={{ color: 'var(--theme-on-surface-variant)' }}
                 >
-                  暂无 TOPO 图片
+                  {t('noTopo')}
                 </span>
                 {/* 难度标签（无图片时） */}
                 <div
@@ -108,7 +111,7 @@ export function RouteDetailDrawer({
               <button
                 onClick={() => setImageViewerOpen(true)}
                 className="relative w-full h-full group"
-                aria-label="点击放大图片"
+                aria-label={t('clickToEnlarge')}
               >
                 {/* 加载中骨架屏 */}
                 {imageLoading && (
@@ -145,7 +148,7 @@ export function RouteDetailDrawer({
                     style={{ borderRadius: 'var(--theme-radius-md)' }}
                   >
                     <ImageIcon className="w-3.5 h-3.5 text-white" />
-                    <span className="text-white text-xs">点击放大</span>
+                    <span className="text-white text-xs">{t('tapToZoom')}</span>
                   </div>
                 )}
               </button>
@@ -214,7 +217,7 @@ export function RouteDetailDrawer({
                       className="text-xs block"
                       style={{ color: 'var(--theme-on-surface-variant)' }}
                     >
-                      FA (首攀)
+                      {t('faLabel')}
                     </span>
                     <span
                       className="text-sm font-medium"
@@ -236,7 +239,7 @@ export function RouteDetailDrawer({
                       className="text-xs block"
                       style={{ color: 'var(--theme-on-surface-variant)' }}
                     >
-                      定线者
+                      {t('setter')}
                     </span>
                     <span
                       className="text-sm font-medium"
@@ -257,7 +260,7 @@ export function RouteDetailDrawer({
                 className="text-sm font-semibold mb-2"
                 style={{ color: 'var(--theme-on-surface)' }}
               >
-                描述
+                {t('descriptionLabel')}
               </h3>
               <p
                 className="text-sm leading-relaxed"
@@ -298,13 +301,13 @@ export function RouteDetailDrawer({
                   className="text-sm font-medium block"
                   style={{ color: 'var(--theme-on-surface)' }}
                 >
-                  Beta 视频
+                  {tBeta('title')}
                 </span>
                 <span
                   className="text-xs"
                   style={{ color: 'var(--theme-on-surface-variant)' }}
                 >
-                  {betaCount > 0 ? `${betaCount} 个视频` : '暂无视频'}
+                  {betaCount > 0 ? tBeta('videoCount', { count: betaCount }) : tBeta('noVideo')}
                 </span>
               </div>
             </div>

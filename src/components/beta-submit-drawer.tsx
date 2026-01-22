@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Link2, Ruler, ArrowUpFromLine, Check, AlertCircle } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { detectPlatformFromUrl, isXiaohongshuUrl, extractUrlFromText, BETA_PLATFORMS } from '@/lib/beta-constants'
@@ -20,6 +21,8 @@ export function BetaSubmitDrawer({
   routeName,
   onSuccess,
 }: BetaSubmitDrawerProps) {
+  const t = useTranslations('Beta')
+  const tApiError = useTranslations('APIError')
   const [url, setUrl] = useState('')
   const [height, setHeight] = useState('')
   const [reach, setReach] = useState('')
@@ -79,13 +82,13 @@ export function BetaSubmitDrawer({
   // 提交表单
   const handleSubmit = async () => {
     if (!isValidUrl(url)) {
-      setError('请输入有效的链接地址')
+      setError(t('invalidUrl'))
       return
     }
 
     // 验证是否为小红书链接
     if (!isXiaohongshuUrl(url)) {
-      setError('目前仅支持小红书链接')
+      setError(t('onlyXiaohongshu'))
       return
     }
 
@@ -106,7 +109,10 @@ export function BetaSubmitDrawer({
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || '提交失败')
+        // API 返回错误码，使用翻译器获取本地化消息
+        const errorCode = data.code || data.error
+        const translatedError = errorCode ? tApiError(errorCode) : t('submitError')
+        throw new Error(translatedError)
       }
 
       setSuccess(true)
@@ -115,7 +121,7 @@ export function BetaSubmitDrawer({
         onSuccess?.()
       }, 1500)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '提交失败，请重试')
+      setError(err instanceof Error ? err.message : t('submitError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -126,7 +132,7 @@ export function BetaSubmitDrawer({
       isOpen={isOpen}
       onClose={handleClose}
       height="half"
-      title={`分享 ${routeName} 的 Beta`}
+      title={t('shareTitle', { name: routeName })}
       showCloseButton
     >
       <div className="px-4 pb-4 space-y-4">
@@ -141,7 +147,7 @@ export function BetaSubmitDrawer({
             }}
           >
             <Check className="w-5 h-5" style={{ color: 'var(--theme-success)' }} />
-            <span style={{ color: 'var(--theme-success)' }}>Beta 分享成功！</span>
+            <span style={{ color: 'var(--theme-success)' }}>{t('submitSuccess')}</span>
           </div>
         )}
 
@@ -166,7 +172,7 @@ export function BetaSubmitDrawer({
             className="text-sm font-medium mb-2 block"
             style={{ color: 'var(--theme-on-surface)' }}
           >
-            视频链接 <span style={{ color: 'var(--theme-error)' }}>*</span>
+            {t('urlLabel')} <span style={{ color: 'var(--theme-error)' }}>{t('urlRequired')}</span>
           </label>
           <div className="relative">
             <Link2
@@ -177,7 +183,7 @@ export function BetaSubmitDrawer({
               type="text"
               value={url}
               onChange={(e) => handleUrlChange(e.target.value)}
-              placeholder="直接粘贴小红书分享内容..."
+              placeholder={t('urlPlaceholder')}
               className="w-full pl-10 pr-4 py-3 text-sm outline-none"
               style={{
                 backgroundColor: 'var(--theme-surface-variant)',
@@ -197,7 +203,7 @@ export function BetaSubmitDrawer({
                 className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: platformInfo.color }}
               />
-              已识别为 {platformInfo.name} 链接
+              {t('urlDetected', { platform: platformInfo.name })}
             </div>
           )}
         </div>
@@ -208,7 +214,7 @@ export function BetaSubmitDrawer({
             className="text-sm font-medium mb-2 block"
             style={{ color: 'var(--theme-on-surface)' }}
           >
-            身体数据 <span className="text-xs font-normal" style={{ color: 'var(--theme-on-surface-variant)' }}>(选填)</span>
+            {t('bodyDataLabel')} <span className="text-xs font-normal" style={{ color: 'var(--theme-on-surface-variant)' }}>{t('bodyDataOptional')}</span>
           </label>
           <div className="flex gap-3">
             {/* 身高 */}
@@ -221,7 +227,7 @@ export function BetaSubmitDrawer({
                 type="number"
                 value={height}
                 onChange={(e) => setHeight(e.target.value)}
-                placeholder="身高"
+                placeholder={t('heightPlaceholder')}
                 className="w-full pl-9 pr-10 py-3 text-sm outline-none"
                 style={{
                   backgroundColor: 'var(--theme-surface-variant)',
@@ -249,7 +255,7 @@ export function BetaSubmitDrawer({
                 type="number"
                 value={reach}
                 onChange={(e) => setReach(e.target.value)}
-                placeholder="臂长"
+                placeholder={t('reachPlaceholder')}
                 className="w-full pl-9 pr-10 py-3 text-sm outline-none"
                 style={{
                   backgroundColor: 'var(--theme-surface-variant)',
@@ -272,7 +278,7 @@ export function BetaSubmitDrawer({
             className="text-xs mt-2"
             style={{ color: 'var(--theme-on-surface-variant)' }}
           >
-            提供身体数据可以帮助其他攀登者参考 Beta 的适用性
+            {t('bodyDataHint')}
           </p>
         </div>
 
@@ -287,7 +293,7 @@ export function BetaSubmitDrawer({
             borderRadius: 'var(--theme-radius-xl)',
           }}
         >
-          {isSubmitting ? '提交中...' : success ? '已提交' : '分享 Beta'}
+          {isSubmitting ? t('submitting') : success ? t('submitted') : t('submit')}
         </button>
       </div>
     </Drawer>

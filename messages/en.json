@@ -10,7 +10,14 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "more": "More",
-    "close": "Close"
+    "close": "Close",
+    "clear": "Clear",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "none": "N/A",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "copyLink": "Copy link"
   },
   "Navigation": {
     "home": "Home",
@@ -30,7 +37,11 @@
     "map": "Crag Map",
     "description": "Description",
     "exploreRoutes": "Explore Routes",
-    "mapHint": "Tap navigation to open in Amap"
+    "mapHint": "Tap navigation to open in Amap",
+    "mapLoading": "Loading map...",
+    "mapReset": "Reset view",
+    "mapNavigate": "Navigate",
+    "mapFullscreen": "Fullscreen"
   },
   "RouteList": {
     "title": "Route List",
@@ -44,18 +55,41 @@
     "sortDefault": "Default",
     "sortGradeAsc": "Grade (Easy first)",
     "sortGradeDesc": "Grade (Hard first)",
-    "gradeRange": "Grade Range"
+    "gradeRange": "Grade Range",
+    "allRoutes": "All Routes",
+    "allGrades": "All Grades",
+    "selectedGrades": "{count, plural, =1 {# grade selected} other {# grades selected}}",
+    "gradeHint": "Tap to toggle, drag to select range",
+    "filterTitle": "Filter Routes",
+    "cragLabel": "Crag",
+    "gradeMultiSelect": "Grade (multi-select)",
+    "applyFilter": "Apply Filter",
+    "sortAsc": "Easy→Hard",
+    "sortDesc": "Hard→Easy",
+    "sortAscHint": "Currently: Easy to Hard, tap to reverse",
+    "sortDescHint": "Currently: Hard to Easy, tap to reverse",
+    "totalCount": "{count, plural, =1 {# route total} other {# routes total}}"
   },
   "RouteDetail": {
     "grade": "Grade",
     "area": "Area",
     "setter": "Setter",
+    "setterPrefix": "Set by",
     "firstAscent": "First Ascent",
+    "faLabel": "FA (First Ascent)",
     "description": "Description",
+    "descriptionLabel": "Description",
+    "routeDescription": "Route Description",
     "beta": "Beta Videos",
     "noBeta": "No beta videos yet",
     "submitBeta": "Submit Beta",
-    "viewRoute": "View Route"
+    "viewRoute": "View Route",
+    "noTopo": "No TOPO image",
+    "clickToEnlarge": "Click to enlarge",
+    "tapToZoom": "Tap to zoom",
+    "imageLoadFailed": "Image failed to load",
+    "comments": "Comments",
+    "commentsComingSoon": "Comments coming soon..."
   },
   "Weather": {
     "title": "Weather",
@@ -64,10 +98,15 @@
     "poor": "Not recommended",
     "temperature": "Temperature",
     "humidity": "Humidity",
+    "humidityValue": "Humidity {value}%",
     "wind": "Wind",
+    "windValue": "{direction} {power}",
     "forecast": "Forecast",
     "today": "Today",
-    "tomorrow": "Tomorrow"
+    "tomorrow": "Tomorrow",
+    "liveWeather": "Live Weather",
+    "futureWeather": "Forecast",
+    "climbingLabel": "{level} for climbing"
   },
   "Search": {
     "placeholder": "Search routes...",
@@ -75,7 +114,13 @@
     "clearRecent": "Clear",
     "noResults": "No routes found",
     "tryOtherKeyword": "Try a different keyword",
-    "resultsCount": "{count, plural, =1 {# route found} other {# routes found}}"
+    "resultsCount": "{count, plural, =1 {# route found} other {# routes found}}",
+    "resultsTitle": "Search Results ({count})",
+    "allRoutes": "All Routes",
+    "foundRoutes": "{count, plural, =1 {Found # route} other {Found # routes}}",
+    "viewAll": "View all {count} results",
+    "browseAll": "Browse all routes",
+    "inputHint": "Enter route name to search"
   },
   "CitySelector": {
     "selectCity": "Select City",
@@ -98,12 +143,17 @@
   },
   "UpdatePrompt": {
     "title": "Update Available",
-    "description": "A new version is available",
-    "update": "Update Now",
+    "description": "Refresh to get the latest content",
+    "update": "Refresh Now",
     "later": "Later"
   },
   "OfflineIndicator": {
     "message": "You are offline"
+  },
+  "InstallCard": {
+    "title": "Add to Home Screen",
+    "description": "For a better experience",
+    "install": "Install"
   },
   "LocaleSwitcher": {
     "switchLanguage": "Switch Language",
@@ -127,15 +177,46 @@
     "height": "Height",
     "reach": "Reach",
     "submit": "Submit Beta",
-    "submitHint": "Share your climbing video"
+    "submitHint": "Share your climbing video",
+    "drawerTitle": "Beta for {name}",
+    "shareButton": "Share Beta Video",
+    "noBeta": "No beta videos yet",
+    "beFirst": "Be the first to share a beta!",
+    "refreshed": "Refreshed",
+    "fromCache": "From cache",
+    "videoCount": "{count, plural, =1 {# video} other {# videos}}",
+    "noVideo": "No videos",
+    "platformVideo": "{platform} video",
+    "copyLink": "Copy link",
+    "shareTitle": "Share Beta for {name}",
+    "submitSuccess": "Beta shared successfully!",
+    "submitting": "Submitting...",
+    "submitted": "Submitted",
+    "urlLabel": "Video Link",
+    "urlRequired": "*",
+    "urlPlaceholder": "Paste Xiaohongshu share content...",
+    "urlDetected": "Detected as {platform} link",
+    "bodyDataLabel": "Body Data",
+    "bodyDataOptional": "(optional)",
+    "heightPlaceholder": "Height",
+    "reachPlaceholder": "Reach",
+    "bodyDataHint": "Body data helps others gauge beta applicability",
+    "invalidUrl": "Please enter a valid link",
+    "onlyXiaohongshu": "Only Xiaohongshu links are supported",
+    "submitError": "Failed to submit, please retry"
   },
   "Profile": {
     "title": "Settings",
     "appearance": "Appearance",
     "theme": "Theme",
-    "themeLight": "Light Mode",
-    "themeDark": "Dark Mode",
-    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "Auto",
+    "themeLightFull": "Light Mode",
+    "themeDarkFull": "Dark Mode",
+    "themeSystemFull": "Follow System",
+    "themeSelector": "Theme mode selector",
+    "followingSystem": "Following system: {theme}",
     "language": "Language",
     "author": "The Developer 🤫",
     "authorHint": "Got suggestions? Find me",
@@ -153,5 +234,37 @@
   "Metadata": {
     "title": "Luoyuan Bouldering TOPO",
     "description": "Bouldering guide for Luoyuan, Fuzhou - Outdoor climbing routes"
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "description": "The app encountered a problem. Please try refreshing or go back home.",
+    "retry": "Retry",
+    "backToHome": "Back to Home",
+    "routeLoadFailed": "Route failed to load",
+    "routeLoadFailedDesc": "Unable to load route info. Please check your connection and retry.",
+    "backToRoutes": "Back to Routes",
+    "cragLoadFailed": "Crag failed to load",
+    "cragLoadFailedDesc": "Unable to load crag info. Please check your connection and retry.",
+    "backToCrags": "Back to Crags",
+    "notFoundTitle": "Page not found",
+    "notFoundDesc": "Sorry, the page you're looking for doesn't exist or has been removed.",
+    "browseRoutes": "Browse Routes",
+    "routeNotFound": "Route not found",
+    "cragNotFound": "Crag not found"
+  },
+  "APIError": {
+    "SERVER_ERROR": "Server error, please try again later",
+    "RATE_LIMITED": "Too many requests, please try again later",
+    "MISSING_ROUTE_ID": "Missing route ID",
+    "MISSING_FIELDS": "Missing required fields",
+    "INVALID_URL": "Cannot recognize a valid link",
+    "ONLY_XIAOHONGSHU": "Only Xiaohongshu links are supported",
+    "INVALID_HEIGHT": "Height should be between 100-250 cm",
+    "INVALID_REACH": "Reach should be between 100-250 cm",
+    "CANNOT_PARSE_NOTE": "Cannot parse Xiaohongshu note link",
+    "ROUTE_NOT_FOUND": "Route not found",
+    "DUPLICATE_BETA": "This video has already been shared!",
+    "UPDATE_FAILED": "Update failed, please retry",
+    "UNKNOWN": "An unknown error occurred"
   }
 }

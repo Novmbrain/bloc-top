@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
 import { V_GRADES } from '@/lib/filter-constants'
 import { getGradeColor } from '@/lib/tokens'
@@ -23,6 +24,8 @@ export function GradeRangeSelector({
   onChange,
   className,
 }: GradeRangeSelectorProps) {
+  const t = useTranslations('RouteList')
+  const tCommon = useTranslations('Common')
   const containerRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState<number | null>(null)
@@ -193,7 +196,7 @@ export function GradeRangeSelector({
       return `${V_GRADES[min]} - ${V_GRADES[max]}`
     }
 
-    if (displayedSelection.length === 0) return '全部难度'
+    if (displayedSelection.length === 0) return t('allGrades')
     if (displayedSelection.length === 1) return displayedSelection[0]
 
     // 检查是否是连续选择
@@ -202,7 +205,7 @@ export function GradeRangeSelector({
       .filter(i => i >= 0)
       .sort((a, b) => a - b)
 
-    if (indices.length === 0) return '全部难度'
+    if (indices.length === 0) return t('allGrades')
 
     // 检查是否连续
     const isContiguous = indices.every((val, i) =>
@@ -217,7 +220,7 @@ export function GradeRangeSelector({
       return `${V_GRADES[min]} - ${V_GRADES[max]}`
     } else {
       // 不连续，显示 "已选 3 个难度"
-      return `已选 ${displayedSelection.length} 个难度`
+      return t('selectedGrades', { count: displayedSelection.length })
     }
   }
 
@@ -241,7 +244,7 @@ export function GradeRangeSelector({
             }}
           >
             <X className="w-3 h-3" />
-            清除
+            {tCommon('clear')}
           </button>
         )}
       </div>
@@ -287,7 +290,7 @@ export function GradeRangeSelector({
         className="text-xs mt-2 text-center"
         style={{ color: 'var(--theme-on-surface-variant)' }}
       >
-        点击切换单个难度，拖动选择范围
+        {t('gradeHint')}
       </p>
     </div>
   )

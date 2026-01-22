@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { ExternalLink, BookHeart, Ruler, ArrowUpFromLine, Plus, Copy, Check, RefreshCw } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { BETA_PLATFORMS } from '@/lib/beta-constants'
@@ -28,6 +29,8 @@ export function BetaListDrawer({
   routeId,
   onAddBeta,
 }: BetaListDrawerProps) {
+  const t = useTranslations('Beta')
+  const tCommon = useTranslations('Common')
   // 手动刷新获取的数据（优先于 props 数据）
   const [refreshedLinks, setRefreshedLinks] = useState<BetaLink[] | null>(null)
   const [refreshing, setRefreshing] = useState(false)
@@ -111,7 +114,7 @@ export function BetaListDrawer({
       isOpen={isOpen}
       onClose={onClose}
       height="half"
-      title={`${routeName} 的 Beta`}
+      title={t('drawerTitle', { name: routeName })}
       showCloseButton
     >
       <div className="px-4 pb-4">
@@ -128,7 +131,7 @@ export function BetaListDrawer({
             }}
           >
             <Plus className="w-5 h-5" />
-            <span className="text-sm font-medium">分享 Beta 视频</span>
+            <span className="text-sm font-medium">{t('shareButton')}</span>
           </button>
         )}
 
@@ -147,13 +150,13 @@ export function BetaListDrawer({
               className="text-base font-medium mb-1"
               style={{ color: 'var(--theme-on-surface)' }}
             >
-              暂无 Beta 视频
+              {t('noBeta')}
             </p>
             <p
               className="text-sm"
               style={{ color: 'var(--theme-on-surface-variant)' }}
             >
-              成为第一个分享攻略的人吧！
+              {t('beFirst')}
             </p>
           </div>
         ) : (
@@ -164,8 +167,8 @@ export function BetaListDrawer({
                 className="text-xs"
                 style={{ color: 'var(--theme-on-surface-variant)' }}
               >
-                {refreshedLinks ? '已刷新' : '来自缓存'}
-                {betaLinks.length > 0 && ` · ${betaLinks.length} 个视频`}
+                {refreshedLinks ? t('refreshed') : t('fromCache')}
+                {betaLinks.length > 0 && ` · ${t('videoCount', { count: betaLinks.length })}`}
               </span>
               <button
                 onClick={handleRefresh}
@@ -178,7 +181,7 @@ export function BetaListDrawer({
                 }}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                {refreshing ? '刷新中...' : '刷新'}
+                {refreshing ? tCommon('refreshing') : tCommon('refresh')}
               </button>
             </div>
 
@@ -213,7 +216,7 @@ export function BetaListDrawer({
                       className="text-sm font-medium block truncate"
                       style={{ color: 'var(--theme-on-surface)' }}
                     >
-                      {beta.title || `${platform.name}视频`}
+                      {beta.title || t('platformVideo', { platform: platform.name })}
                     </span>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span
@@ -254,7 +257,7 @@ export function BetaListDrawer({
                         ? 'var(--theme-success, #22c55e)'
                         : 'var(--theme-surface-variant)',
                     }}
-                    title="复制链接"
+                    title={tCommon('copyLink')}
                   >
                     {copiedId === beta.id ? (
                       <Check className="w-5 h-5 text-white" />

@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { RefreshCw, X } from 'lucide-react'
 
 export default function SWUpdatePrompt() {
+  const t = useTranslations('UpdatePrompt')
+  const tCommon = useTranslations('Common')
   const [showPrompt, setShowPrompt] = useState(false)
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null)
 
@@ -74,12 +77,12 @@ export default function SWUpdatePrompt() {
           <RefreshCw className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium">发现新版本</p>
+          <p className="font-medium">{t('title')}</p>
           <p
             className="text-sm mt-0.5"
             style={{ opacity: 0.8 }}
           >
-            刷新以获取最新内容
+            {t('description')}
           </p>
         </div>
         <button
@@ -88,7 +91,7 @@ export default function SWUpdatePrompt() {
           style={{ backgroundColor: 'transparent' }}
           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--theme-on-primary) 10%, transparent)'}
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          aria-label="关闭"
+          aria-label={tCommon('close')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -103,7 +106,7 @@ export default function SWUpdatePrompt() {
             borderRadius: 'var(--theme-radius-lg)',
           }}
         >
-          立即刷新
+          {t('update')}
         </button>
         <button
           onClick={handleDismiss}
@@ -113,7 +116,7 @@ export default function SWUpdatePrompt() {
             borderRadius: 'var(--theme-radius-lg)',
           }}
         >
-          稍后
+          {t('later')}
         </button>
       </div>
     </div>

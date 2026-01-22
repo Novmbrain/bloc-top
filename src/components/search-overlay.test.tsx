@@ -1,20 +1,24 @@
 /**
  * SearchOverlay 组件测试
  * 测试搜索功能的核心交互
+ *
+ * 注意：由于组件使用 next-intl，测试中 mock 会返回翻译键而非实际文本
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SearchOverlay } from './search-overlay'
-import { SEARCH_PLACEHOLDER } from '@/lib/filter-constants'
 import type { Route } from '@/types'
 
-// Mock next/navigation
+// Mock @/i18n/navigation (组件使用的国际化导航)
 const mockPush = vi.fn()
-vi.mock('next/navigation', () => ({
+vi.mock('@/i18n/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
   }),
+  Link: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
 }))
 
 // 测试数据
@@ -47,19 +51,22 @@ describe('SearchOverlay', () => {
   describe('显示状态', () => {
     it('isOpen=false 时不渲染', () => {
       render(<SearchOverlay {...defaultProps} isOpen={false} />)
-      expect(screen.queryByPlaceholderText(SEARCH_PLACEHOLDER)).not.toBeInTheDocument()
+      // 使用翻译键匹配
+      expect(screen.queryByPlaceholderText('placeholder')).not.toBeInTheDocument()
     })
 
     it('isOpen=true 时渲染', () => {
       render(<SearchOverlay {...defaultProps} />)
-      expect(screen.getByPlaceholderText(SEARCH_PLACEHOLDER)).toBeInTheDocument()
+      // 使用翻译键匹配
+      expect(screen.getByPlaceholderText('placeholder')).toBeInTheDocument()
     })
   })
 
   describe('无搜索词时显示全部线路', () => {
     it('显示"全部线路"标题', () => {
       render(<SearchOverlay {...defaultProps} />)
-      expect(screen.getByText('全部线路')).toBeInTheDocument()
+      // 使用翻译键匹配
+      expect(screen.getByText('allRoutes')).toBeInTheDocument()
     })
 
     it('显示所有线路', () => {
@@ -80,7 +87,8 @@ describe('SearchOverlay', () => {
           results={mockSearchResults}
         />
       )
-      expect(screen.getByText('搜索结果 (2)')).toBeInTheDocument()
+      // 使用翻译键匹配（参数会被替换）
+      expect(screen.getByText(/resultsTitle/i)).toBeInTheDocument()
     })
 
     it('只显示匹配的线路', () => {
@@ -107,7 +115,8 @@ describe('SearchOverlay', () => {
           results={[]}
         />
       )
-      expect(screen.getByText('没有找到匹配的线路')).toBeInTheDocument()
+      // 使用翻译键匹配
+      expect(screen.getByText('noResults')).toBeInTheDocument()
     })
   })
 
@@ -116,7 +125,8 @@ describe('SearchOverlay', () => {
       const onSearchChange = vi.fn()
       render(<SearchOverlay {...defaultProps} onSearchChange={onSearchChange} />)
 
-      const input = screen.getByPlaceholderText(SEARCH_PLACEHOLDER)
+      // 使用翻译键匹配
+      const input = screen.getByPlaceholderText('placeholder')
       await userEvent.type(input, '猴')
 
       expect(onSearchChange).toHaveBeenCalledWith('猴')
@@ -126,7 +136,8 @@ describe('SearchOverlay', () => {
       const onClose = vi.fn()
       render(<SearchOverlay {...defaultProps} onClose={onClose} />)
 
-      await userEvent.click(screen.getByText('取消'))
+      // 使用翻译键匹配
+      await userEvent.click(screen.getByText('cancel'))
       expect(onClose).toHaveBeenCalled()
     })
 

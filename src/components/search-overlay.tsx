@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { useRouter } from '@/i18n/navigation'
 import { Search, X, ChevronRight } from 'lucide-react'
 import type { Route } from '@/types'
 import { getGradeColor } from '@/lib/tokens'
-import { SEARCH_PLACEHOLDER } from '@/lib/filter-constants'
 
 interface SearchOverlayProps {
   isOpen: boolean
@@ -24,6 +24,8 @@ export function SearchOverlay({
   results,
   allRoutes,
 }: SearchOverlayProps) {
+  const t = useTranslations('Search')
+  const tCommon = useTranslations('Common')
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -47,7 +49,7 @@ export function SearchOverlay({
 
   // 显示的线路：有搜索词时显示结果，否则显示全部
   const displayRoutes = searchQuery.trim() ? results : allRoutes
-  const title = searchQuery.trim() ? `搜索结果 (${results.length})` : '全部线路'
+  const title = searchQuery.trim() ? t('resultsTitle', { count: results.length }) : t('allRoutes')
 
   const handleRouteClick = (route: Route) => {
     onClose()
@@ -81,7 +83,7 @@ export function SearchOverlay({
             <input
               ref={inputRef}
               type="text"
-              placeholder={SEARCH_PLACEHOLDER}
+              placeholder={t('placeholder')}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full h-10 pl-10 pr-10 text-sm focus:outline-none"
@@ -106,7 +108,7 @@ export function SearchOverlay({
             className="text-sm font-medium"
             style={{ color: 'var(--theme-primary)' }}
           >
-            取消
+            {tCommon('cancel')}
           </button>
         </div>
       </div>
@@ -163,7 +165,7 @@ export function SearchOverlay({
         {displayRoutes.length === 0 && (
           <div className="text-center py-12">
             <p style={{ color: 'var(--theme-on-surface-variant)' }}>
-              没有找到匹配的线路
+              {t('noResults')}
             </p>
           </div>
         )}

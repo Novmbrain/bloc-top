@@ -1,26 +1,24 @@
 'use client'
 
 import { useTheme } from 'next-themes'
+import { useTranslations } from 'next-intl'
 import { Sun, Moon, Monitor } from 'lucide-react'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import type { ThemeMode } from '@/lib/themes'
 
-// 主题模式配置
-const themeModes: {
-  mode: ThemeMode
-  label: string
-  icon: typeof Sun
-}[] = [
-  { mode: 'light', label: '日间', icon: Sun },
-  { mode: 'dark', label: '暗夜', icon: Moon },
-  { mode: 'system', label: '自动', icon: Monitor },
-]
-
 export function ThemeSwitcher() {
+  const t = useTranslations('Profile')
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
+
+  // 主题模式配置（使用翻译）
+  const themeModes = useMemo(() => [
+    { mode: 'light' as ThemeMode, label: t('themeLight'), icon: Sun },
+    { mode: 'dark' as ThemeMode, label: t('themeDark'), icon: Moon },
+    { mode: 'system' as ThemeMode, label: t('themeSystem'), icon: Monitor },
+  ], [t])
 
   // 确保客户端渲染（Next.js SSR hydration 标准模式）
   useEffect(() => {
@@ -44,7 +42,7 @@ export function ThemeSwitcher() {
         width: activeButton.offsetWidth,
       })
     }
-  }, [theme, mounted])
+  }, [theme, mounted, themeModes])
 
   if (!mounted) {
     // 骨架占位
@@ -58,7 +56,7 @@ export function ThemeSwitcher() {
 
   // 自动模式时显示当前实际主题的指示
   const isSystemMode = theme === 'system'
-  const actualThemeLabel = resolvedTheme === 'dark' ? '暗夜' : '日间'
+  const actualThemeLabel = resolvedTheme === 'dark' ? t('themeDark') : t('themeLight')
 
   return (
     <div className="space-y-2">
@@ -70,7 +68,7 @@ export function ThemeSwitcher() {
           backgroundColor: 'var(--theme-surface-variant)',
         }}
         role="tablist"
-        aria-label="主题模式选择"
+        aria-label={t('themeSelector')}
       >
         {/* 滑动背景指示器 */}
         <div
@@ -129,7 +127,7 @@ export function ThemeSwitcher() {
           className="text-xs text-center animate-fade-in"
           style={{ color: 'var(--theme-on-surface-variant)' }}
         >
-          当前跟随系统：{actualThemeLabel}
+          {t('followingSystem', { theme: actualThemeLabel })}
         </p>
       )}
     </div>

@@ -2,9 +2,10 @@
 
 import { useMemo, useCallback, useState, useTransition, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Search, ChevronRight, X, ArrowUp, ArrowDown } from 'lucide-react'
 import { getGradeColor } from '@/lib/tokens'
-import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, SEARCH_PLACEHOLDER, type SortDirection } from '@/lib/filter-constants'
+import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, type SortDirection } from '@/lib/filter-constants'
 import { compareGrades } from '@/lib/grade-utils'
 import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
 import { GradeRangeSelector } from '@/components/grade-range-selector'
@@ -18,6 +19,9 @@ interface RouteListClientProps {
 }
 
 export default function RouteListClient({ routes, crags }: RouteListClientProps) {
+  const t = useTranslations('RouteList')
+  const tCommon = useTranslations('Common')
+  const tSearch = useTranslations('Search')
   const router = useRouter()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
@@ -101,10 +105,10 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
 
   // 获取当前选中岩场名称
   const currentCragName = useMemo(() => {
-    if (!selectedCrag) return '全部线路'
+    if (!selectedCrag) return t('allRoutes')
     const crag = crags.find((c) => c.id === selectedCrag)
-    return crag?.name || '全部线路'
-  }, [selectedCrag, crags])
+    return crag?.name || t('allRoutes')
+  }, [selectedCrag, crags, t])
 
   // 获取选中线路对应的岩场
   const selectedCragData = useMemo(() => {
@@ -172,7 +176,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
             />
             <input
               type="text"
-              placeholder={SEARCH_PLACEHOLDER}
+              placeholder={tSearch('placeholder')}
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full h-10 pl-10 pr-10 text-sm focus:outline-none"
@@ -196,7 +200,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
           {/* 岩场筛选（第一行） */}
           <FilterChipGroup className="mb-2">
             <FilterChip
-              label="全部"
+              label={tCommon('all')}
               selected={!selectedCrag}
               onClick={() => updateSearchParams(FILTER_PARAMS.CRAG, null)}
             />
@@ -222,7 +226,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         <main className="flex-1 overflow-y-auto px-4 pb-28">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-              共 {filteredRoutes.length} 条线路
+              {t('totalCount', { count: filteredRoutes.length })}
             </p>
             {/* 排序切换按钮 */}
             <button
@@ -233,17 +237,17 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
                 backgroundColor: 'var(--theme-surface-variant)',
                 borderRadius: 'var(--theme-radius-full)',
               }}
-              aria-label={sortDirection === 'asc' ? '当前：从简单到难，点击反转' : '当前：从难到简单，点击反转'}
+              aria-label={sortDirection === 'asc' ? t('sortAscHint') : t('sortDescHint')}
             >
               {sortDirection === 'asc' ? (
                 <>
                   <ArrowUp className="w-3 h-3" />
-                  <span>简单→难</span>
+                  <span>{t('sortAsc')}</span>
                 </>
               ) : (
                 <>
                   <ArrowDown className="w-3 h-3" />
-                  <span>难→简单</span>
+                  <span>{t('sortDesc')}</span>
                 </>
               )}
             </button>
@@ -303,7 +307,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
           {filteredRoutes.length === 0 && (
             <div className="text-center py-12">
               <p style={{ color: 'var(--theme-on-surface-variant)' }}>
-                没有找到匹配的线路
+                {t('noResults')}
               </p>
             </div>
           )}

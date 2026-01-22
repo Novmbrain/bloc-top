@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { useRouter } from '@/i18n/navigation'
 import { Search, X, ChevronRight, ArrowRight } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
 import { getGradeColor } from '@/lib/tokens'
-import { SEARCH_PLACEHOLDER } from '@/lib/filter-constants'
 import type { Route, Crag } from '@/types'
 
 interface SearchDrawerProps {
@@ -28,6 +28,7 @@ export function SearchDrawer({
   results,
   crags,
 }: SearchDrawerProps) {
+  const t = useTranslations('Search')
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -82,7 +83,7 @@ export function SearchDrawer({
             <input
               ref={inputRef}
               type="text"
-              placeholder={SEARCH_PLACEHOLDER}
+              placeholder={t('placeholder')}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full h-11 pl-10 pr-10 text-sm focus:outline-none"
@@ -110,7 +111,7 @@ export function SearchDrawer({
                 className="text-xs mb-3"
                 style={{ color: 'var(--theme-on-surface-variant)' }}
               >
-                找到 {results.length} 条线路
+                {t('foundRoutes', { count: results.length })}
               </p>
 
               {displayResults.length > 0 ? (
@@ -175,7 +176,7 @@ export function SearchDrawer({
                       }}
                     >
                       <span className="text-sm font-medium">
-                        查看全部 {results.length} 条结果
+                        {t('viewAll', { count: results.length })}
                       </span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
@@ -184,7 +185,7 @@ export function SearchDrawer({
               ) : (
                 <div className="text-center py-8">
                   <p style={{ color: 'var(--theme-on-surface-variant)' }}>
-                    没有找到匹配的线路
+                    {t('noResults')}
                   </p>
                 </div>
               )}
@@ -196,7 +197,7 @@ export function SearchDrawer({
                 className="text-sm mb-4"
                 style={{ color: 'var(--theme-on-surface-variant)' }}
               >
-                输入线路名称开始搜索
+                {t('inputHint')}
               </p>
               <button
                 onClick={handleGoToRoutes}
@@ -207,7 +208,7 @@ export function SearchDrawer({
                   borderRadius: 'var(--theme-radius-full)',
                 }}
               >
-                浏览全部线路
+                {t('browseAll')}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

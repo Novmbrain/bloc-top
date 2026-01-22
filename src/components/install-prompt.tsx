@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Download } from 'lucide-react'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -9,6 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function InstallPrompt() {
+  const t = useTranslations('InstallCard')
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isVisible, setIsVisible] = useState(false)
 
@@ -57,10 +59,10 @@ export function InstallPrompt() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-medium" style={{ color: 'var(--theme-on-surface)' }}>
-            添加到主屏幕
+            {t('title')}
           </p>
           <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
-            获得更好的使用体验
+            {t('description')}
           </p>
         </div>
         <button
@@ -72,7 +74,7 @@ export function InstallPrompt() {
             borderRadius: 'var(--theme-radius-lg)',
           }}
         >
-          安装
+          {t('install')}
         </button>
       </div>
     </div>

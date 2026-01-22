@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, RotateCcw, Home } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { clientLogger } from "@/lib/client-logger";
 
 export default function Error({
@@ -12,6 +13,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("Error");
   useEffect(() => {
     // 上报到服务端（Vercel 可见）
     clientLogger.error("Unhandled application error", error, {
@@ -30,10 +32,10 @@ export default function Error({
 
         <div className="space-y-2">
           <h1 className="text-xl font-semibold text-[var(--theme-on-surface)]">
-            出错了
+            {t("title")}
           </h1>
           <p className="text-sm text-[var(--theme-on-surface-variant)] max-w-xs mx-auto">
-            应用程序遇到了一个问题，请尝试刷新页面或返回首页
+            {t("description")}
           </p>
         </div>
 
@@ -43,7 +45,7 @@ export default function Error({
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[var(--theme-primary)] text-[var(--theme-on-primary)] font-medium transition-transform active:scale-[0.98]"
           >
             <RotateCcw className="w-4 h-4" />
-            重试
+            {t("retry")}
           </button>
 
           <Link
@@ -51,7 +53,7 @@ export default function Error({
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-[var(--theme-outline)] text-[var(--theme-on-surface)] font-medium transition-transform active:scale-[0.98]"
           >
             <Home className="w-4 h-4" />
-            返回首页
+            {t("backToHome")}
           </Link>
         </div>
       </div>

@@ -5,6 +5,8 @@
  * - 拖动范围选择
  * - 清除选择
  * - 显示状态
+ *
+ * 注意：由于组件使用 next-intl，测试中 mock 会返回翻译键而非实际文本
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@/test/utils'
@@ -42,7 +44,8 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(screen.getByText('全部难度')).toBeInTheDocument()
+      // 使用翻译键匹配
+      expect(screen.getByText('allGrades')).toBeInTheDocument()
     })
 
     it('单个选择时应显示难度名称', () => {
@@ -75,7 +78,8 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(screen.getByText('已选 3 个难度')).toBeInTheDocument()
+      // 使用翻译键匹配（参数会被替换）
+      expect(screen.getByText(/selectedGrades/i)).toBeInTheDocument()
     })
 
     it('有选择时应显示清除按钮', () => {
@@ -86,7 +90,8 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(screen.getByText('清除')).toBeInTheDocument()
+      // 使用翻译键匹配
+      expect(screen.getByText('clear')).toBeInTheDocument()
     })
 
     it('无选择时不应显示清除按钮', () => {
@@ -97,7 +102,7 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(screen.queryByText('清除')).not.toBeInTheDocument()
+      expect(screen.queryByText('clear')).not.toBeInTheDocument()
     })
   })
 
@@ -176,7 +181,8 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      const clearButton = screen.getByText('清除')
+      // 使用翻译键匹配
+      const clearButton = screen.getByText('clear')
       fireEvent.click(clearButton)
 
       expect(mockOnChange).toHaveBeenCalledWith([])
@@ -192,7 +198,8 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(screen.getByText('点击切换单个难度，拖动选择范围')).toBeInTheDocument()
+      // 使用翻译键匹配
+      expect(screen.getByText('gradeHint')).toBeInTheDocument()
     })
   })
 

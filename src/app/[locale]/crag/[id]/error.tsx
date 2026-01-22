@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Mountain, RotateCcw, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { clientLogger } from "@/lib/client-logger";
 
 export default function CragError({
@@ -12,6 +13,7 @@ export default function CragError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("Error");
   useEffect(() => {
     // 上报到服务端（Vercel 可见）
     clientLogger.error("Crag page error", error, {
@@ -30,10 +32,10 @@ export default function CragError({
 
         <div className="space-y-2">
           <h1 className="text-xl font-semibold text-[var(--theme-on-surface)]">
-            岩场加载失败
+            {t("cragLoadFailed")}
           </h1>
           <p className="text-sm text-[var(--theme-on-surface-variant)] max-w-xs mx-auto">
-            无法加载岩场信息，请检查网络连接后重试
+            {t("cragLoadFailedDesc")}
           </p>
         </div>
 
@@ -43,7 +45,7 @@ export default function CragError({
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[var(--theme-primary)] text-[var(--theme-on-primary)] font-medium transition-transform active:scale-[0.98]"
           >
             <RotateCcw className="w-4 h-4" />
-            重试
+            {t("retry")}
           </button>
 
           <Link
@@ -51,7 +53,7 @@ export default function CragError({
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-[var(--theme-outline)] text-[var(--theme-on-surface)] font-medium transition-transform active:scale-[0.98]"
           >
             <ArrowLeft className="w-4 h-4" />
-            返回岩场列表
+            {t("backToCrags")}
           </Link>
         </div>
       </div>

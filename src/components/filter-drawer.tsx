@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { RotateCcw } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
@@ -24,6 +25,9 @@ export function FilterDrawer({
   selectedGrades: initialGrades,
   onApply,
 }: FilterDrawerProps) {
+  const t = useTranslations('RouteList')
+  const tCommon = useTranslations('Common')
+
   // 本地状态（在抽屉内编辑，点击应用才提交）
   const [localCrag, setLocalCrag] = useState(initialCrag)
   const [localGrades, setLocalGrades] = useState<string[]>(initialGrades)
@@ -71,7 +75,7 @@ export function FilterDrawer({
   }, [localCrag, localGrades, onApply, onClose])
 
   return (
-    <Drawer isOpen={isOpen} onClose={onClose} height="half" title="筛选线路">
+    <Drawer isOpen={isOpen} onClose={onClose} height="half" title={t('filterTitle')}>
       <div className="px-4 pb-4 flex flex-col h-full">
         <div className="flex-1 overflow-y-auto">
           {/* 岩场筛选 */}
@@ -80,11 +84,11 @@ export function FilterDrawer({
               className="text-sm font-semibold mb-3"
               style={{ color: 'var(--theme-on-surface)' }}
             >
-              岩场
+              {t('cragLabel')}
             </h3>
             <FilterChipGroup>
               <FilterChip
-                label="全部"
+                label={tCommon('all')}
                 selected={localCrag === ''}
                 onClick={() => setLocalCrag('')}
               />
@@ -105,7 +109,7 @@ export function FilterDrawer({
               className="text-sm font-semibold mb-3"
               style={{ color: 'var(--theme-on-surface)' }}
             >
-              难度（可多选）
+              {t('gradeMultiSelect')}
             </h3>
             <FilterChipGroup>
               {GRADE_GROUPS.map((group) => (
@@ -142,7 +146,7 @@ export function FilterDrawer({
             }}
           >
             <RotateCcw className="w-4 h-4" />
-            <span>清除</span>
+            <span>{tCommon('clear')}</span>
           </button>
           <button
             onClick={handleApply}
@@ -153,7 +157,7 @@ export function FilterDrawer({
               borderRadius: 'var(--theme-radius-lg)',
             }}
           >
-            应用筛选
+            {t('applyFilter')}
           </button>
         </div>
       </div>

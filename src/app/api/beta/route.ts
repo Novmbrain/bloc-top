@@ -4,6 +4,7 @@ import { detectPlatformFromUrl, isXiaohongshuUrl, extractXiaohongshuNoteId, extr
 import { checkRateLimit, BETA_RATE_LIMIT_CONFIG } from '@/lib/rate-limit'
 import { HTTP_CACHE } from '@/lib/cache-config'
 import { createModuleLogger } from '@/lib/logger'
+import { API_ERROR_CODES, createErrorResponse } from '@/lib/api-error-codes'
 import type { Document } from 'mongodb'
 
 // 创建 API 模块专用 logger
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
       })
       return NextResponse.json(
         {
-          error: '请求过于频繁，请稍后再试',
+          ...createErrorResponse(API_ERROR_CODES.RATE_LIMITED),
           retryAfter: rateLimitResult.retryAfter,
         },
         {
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
     // 验证必填字段
     if (!routeId || !rawUrl) {
       return NextResponse.json(
-        { error: '缺少必填字段: routeId 和 url' },
+        createErrorResponse(API_ERROR_CODES.MISSING_FIELDS),
         { status: 400 }
       )
     }
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
       new URL(url)
     } catch {
       return NextResponse.json(
-        { error: '无法识别有效的链接，请检查粘贴内容' },
+        createErrorResponse(API_ERROR_CODES.INVALID_URL),
         { status: 400 }
       )
     }
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
     // 验证是否为小红书链接
     if (!isXiaohongshuUrl(url)) {
       return NextResponse.json(
-        { error: '目前仅支持小红书链接' },
+        createErrorResponse(API_ERROR_CODES.ONLY_XIAOHONGSHU),
         { status: 400 }
       )
     }
@@ -148,13 +149,13 @@ export async function POST(request: NextRequest) {
     // 验证身体数据范围（如果提供）
     if (climberHeight !== undefined && (climberHeight < 100 || climberHeight > 250)) {
       return NextResponse.json(
-        { error: '身高应在 100-250 cm 之间' },
+        createErrorResponse(API_ERROR_CODES.INVALID_HEIGHT),
         { status: 400 }
       )
     }
     if (climberReach !== undefined && (climberReach < 100 || climberReach > 250)) {
       return NextResponse.json(
-        { error: '臂长应在 100-250 cm 之间' },
+        createErrorResponse(API_ERROR_CODES.INVALID_REACH),
         { status: 400 }
       )
     }
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
 
     if (!noteId) {
       return NextResponse.json(
-        { error: '无法识别小红书笔记链接，请确保链接正确' },
+        createErrorResponse(API_ERROR_CODES.CANNOT_PARSE_NOTE),
         { status: 400 }
       )
     }
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
 
     if (!route) {
       return NextResponse.json(
-        { error: '线路不存在' },
+        createErrorResponse(API_ERROR_CODES.ROUTE_NOT_FOUND),
         { status: 404 }
       )
     }
@@ -203,10 +204,7 @@ export async function POST(request: NextRequest) {
         metadata: { routeId, noteId, ip: clientIp },
       })
       return NextResponse.json(
-        {
-          error: '该视频已被分享过啦～',
-          code: 'DUPLICATE_BETA',
-        },
+        createErrorResponse(API_ERROR_CODES.DUPLICATE_BETA),
         { status: 409 } // 409 Conflict
       )
     }
@@ -241,7 +239,7 @@ export async function POST(request: NextRequest) {
         metadata: { routeId, betaId },
       })
       return NextResponse.json(
-        { error: '更新失败' },
+        createErrorResponse(API_ERROR_CODES.UPDATE_FAILED),
         { status: 500 }
       )
     }
@@ -256,7 +254,6 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         beta: newBeta,
-        message: 'Beta 分享成功'
       },
       {
         status: 201,
@@ -273,7 +270,7 @@ export async function POST(request: NextRequest) {
       metadata: { ip: clientIp },
     })
     return NextResponse.json(
-      { error: '服务器错误' },
+      createErrorResponse(API_ERROR_CODES.SERVER_ERROR),
       { status: 500 }
     )
   }
@@ -292,7 +289,7 @@ export async function GET(request: NextRequest) {
 
     if (!routeId) {
       return NextResponse.json(
-        { error: '缺少 routeId 参数' },
+        createErrorResponse(API_ERROR_CODES.MISSING_ROUTE_ID),
         { status: 400 }
       )
     }
@@ -306,7 +303,7 @@ export async function GET(request: NextRequest) {
 
     if (!route) {
       return NextResponse.json(
-        { error: '线路不存在' },
+        createErrorResponse(API_ERROR_CODES.ROUTE_NOT_FOUND),
         { status: 404 }
       )
     }
@@ -334,7 +331,7 @@ export async function GET(request: NextRequest) {
       duration: Date.now() - start,
     })
     return NextResponse.json(
-      { error: '服务器错误' },
+      createErrorResponse(API_ERROR_CODES.SERVER_ERROR),
       { status: 500 }
     )
   }

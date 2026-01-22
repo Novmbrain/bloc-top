@@ -1,6 +1,7 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
+import { useTranslations } from 'next-intl'
 import { WifiOff } from 'lucide-react'
 
 function subscribe(callback: () => void) {
@@ -21,6 +22,7 @@ function getServerSnapshot() {
 }
 
 export default function OfflineIndicator() {
+  const t = useTranslations('OfflineIndicator')
   const isOffline = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   if (!isOffline) return null
@@ -35,7 +37,7 @@ export default function OfflineIndicator() {
       }}
     >
       <WifiOff className="w-4 h-4" />
-      <span className="text-sm font-medium">当前处于离线模式</span>
+      <span className="text-sm font-medium">{t('message')}</span>
     </div>
   )
 }

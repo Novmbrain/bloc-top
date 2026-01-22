@@ -63,3 +63,42 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 })
+
+// Mock next-intl (国际化)
+// 使用稳定的函数引用，避免因每次渲染返回新函数导致的无限循环
+const stableTranslationFn = (key: string, params?: Record<string, unknown>) => {
+  if (params) {
+    // 简单的参数替换
+    let result = key
+    Object.entries(params).forEach(([k, v]) => {
+      result = result.replace(`{${k}}`, String(v))
+    })
+    return result
+  }
+  return key
+}
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => stableTranslationFn,
+  useLocale: () => 'zh',
+}))
+
+// Mock @/i18n/navigation (国际化导航)
+// 这是项目中使用的国际化导航封装
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => '/',
+  redirect: vi.fn(),
+  permanentRedirect: vi.fn(),
+  getPathname: vi.fn(),
+}))

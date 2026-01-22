@@ -10,7 +10,14 @@
     "cancel": "取消",
     "confirm": "确认",
     "more": "更多",
-    "close": "关闭"
+    "close": "关闭",
+    "clear": "清除",
+    "refresh": "刷新",
+    "refreshing": "刷新中...",
+    "none": "暂无",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "copyLink": "复制链接"
   },
   "Navigation": {
     "home": "首页",
@@ -30,12 +37,16 @@
     "map": "岩场地图",
     "description": "岩场介绍",
     "exploreRoutes": "开始探索线路",
-    "mapHint": "点击导航按钮可跳转高德地图"
+    "mapHint": "点击导航按钮可跳转高德地图",
+    "mapLoading": "地图加载中...",
+    "mapReset": "重置视图",
+    "mapNavigate": "导航前往",
+    "mapFullscreen": "全屏查看"
   },
   "RouteList": {
     "title": "线路列表",
     "searchPlaceholder": "搜索线路名称...",
-    "noResults": "未找到匹配的线路",
+    "noResults": "没有找到匹配的线路",
     "tryOtherKeyword": "尝试其他关键词",
     "sortBy": "排序",
     "gradeFilter": "难度筛选",
@@ -44,18 +55,41 @@
     "sortDefault": "默认",
     "sortGradeAsc": "难度升序",
     "sortGradeDesc": "难度降序",
-    "gradeRange": "难度范围"
+    "gradeRange": "难度范围",
+    "allRoutes": "全部线路",
+    "allGrades": "全部难度",
+    "selectedGrades": "已选 {count} 个难度",
+    "gradeHint": "点击切换单个难度，拖动选择范围",
+    "filterTitle": "筛选线路",
+    "cragLabel": "岩场",
+    "gradeMultiSelect": "难度（可多选）",
+    "applyFilter": "应用筛选",
+    "sortAsc": "简单→难",
+    "sortDesc": "难→简单",
+    "sortAscHint": "当前：从简单到难，点击反转",
+    "sortDescHint": "当前：从难到简单，点击反转",
+    "totalCount": "共 {count} 条线路"
   },
   "RouteDetail": {
     "grade": "难度",
     "area": "区域",
     "setter": "定线者",
+    "setterPrefix": "定线",
     "firstAscent": "首攀",
+    "faLabel": "FA (首攀)",
     "description": "线路描述",
+    "descriptionLabel": "描述",
+    "routeDescription": "线路说明",
     "beta": "Beta 视频",
     "noBeta": "暂无 Beta 视频",
     "submitBeta": "贡献 Beta",
-    "viewRoute": "查看线路"
+    "viewRoute": "查看线路",
+    "noTopo": "暂无 TOPO 图片",
+    "clickToEnlarge": "点击放大图片",
+    "tapToZoom": "点击放大",
+    "imageLoadFailed": "图片加载失败",
+    "comments": "评论",
+    "commentsComingSoon": "评论功能开发中..."
   },
   "Weather": {
     "title": "天气",
@@ -64,18 +98,29 @@
     "poor": "不适宜",
     "temperature": "温度",
     "humidity": "湿度",
+    "humidityValue": "湿度 {value}%",
     "wind": "风力",
+    "windValue": "{direction}风 {power}级",
     "forecast": "天气预报",
     "today": "今天",
-    "tomorrow": "明天"
+    "tomorrow": "明天",
+    "liveWeather": "实时天气",
+    "futureWeather": "未来天气",
+    "climbingLabel": "{level}攀岩"
   },
   "Search": {
     "placeholder": "搜索线路名称...",
     "recentSearches": "最近搜索",
     "clearRecent": "清除",
-    "noResults": "未找到匹配的线路",
+    "noResults": "没有找到匹配的线路",
     "tryOtherKeyword": "尝试其他关键词",
-    "resultsCount": "找到 {count} 条线路"
+    "resultsCount": "找到 {count} 条线路",
+    "resultsTitle": "搜索结果 ({count})",
+    "allRoutes": "全部线路",
+    "foundRoutes": "找到 {count} 条线路",
+    "viewAll": "查看全部 {count} 条结果",
+    "browseAll": "浏览全部线路",
+    "inputHint": "输入线路名称开始搜索"
   },
   "CitySelector": {
     "selectCity": "选择城市",
@@ -98,12 +143,17 @@
   },
   "UpdatePrompt": {
     "title": "发现新版本",
-    "description": "点击更新获取最新内容",
-    "update": "立即更新",
+    "description": "刷新以获取最新内容",
+    "update": "立即刷新",
     "later": "稍后"
   },
   "OfflineIndicator": {
-    "message": "当前处于离线状态"
+    "message": "当前处于离线模式"
+  },
+  "InstallCard": {
+    "title": "添加到主屏幕",
+    "description": "获得更好的使用体验",
+    "install": "安装"
   },
   "LocaleSwitcher": {
     "switchLanguage": "切换语言",
@@ -127,15 +177,46 @@
     "height": "身高",
     "reach": "臂长",
     "submit": "贡献 Beta",
-    "submitHint": "分享你的攀爬视频"
+    "submitHint": "分享你的攀爬视频",
+    "drawerTitle": "{name} 的 Beta",
+    "shareButton": "分享 Beta 视频",
+    "noBeta": "暂无 Beta 视频",
+    "beFirst": "成为第一个分享攻略的人吧！",
+    "refreshed": "已刷新",
+    "fromCache": "来自缓存",
+    "videoCount": "{count} 个视频",
+    "noVideo": "暂无视频",
+    "platformVideo": "{platform}视频",
+    "copyLink": "复制链接",
+    "shareTitle": "分享 {name} 的 Beta",
+    "submitSuccess": "Beta 分享成功！",
+    "submitting": "提交中...",
+    "submitted": "已提交",
+    "urlLabel": "视频链接",
+    "urlRequired": "*",
+    "urlPlaceholder": "直接粘贴小红书分享内容...",
+    "urlDetected": "已识别为 {platform} 链接",
+    "bodyDataLabel": "身体数据",
+    "bodyDataOptional": "(选填)",
+    "heightPlaceholder": "身高",
+    "reachPlaceholder": "臂长",
+    "bodyDataHint": "提供身体数据可以帮助其他攀登者参考 Beta 的适用性",
+    "invalidUrl": "请输入有效的链接地址",
+    "onlyXiaohongshu": "目前仅支持小红书链接",
+    "submitError": "提交失败，请重试"
   },
   "Profile": {
     "title": "设置",
     "appearance": "外观设置",
     "theme": "主题",
-    "themeLight": "日间模式",
-    "themeDark": "暗夜模式",
-    "themeSystem": "跟随系统",
+    "themeLight": "日间",
+    "themeDark": "暗夜",
+    "themeSystem": "自动",
+    "themeLightFull": "日间模式",
+    "themeDarkFull": "暗夜模式",
+    "themeSystemFull": "跟随系统",
+    "themeSelector": "主题模式选择",
+    "followingSystem": "当前跟随系统：{theme}",
     "language": "语言",
     "author": "幕后黑手 🤫",
     "authorHint": "有建议？来找我",
@@ -153,5 +234,37 @@
   "Metadata": {
     "title": "罗源野抱 TOPO",
     "description": "福州罗源攀岩线路分享 - 野外抱石攀岩指南"
+  },
+  "Error": {
+    "title": "出错了",
+    "description": "应用程序遇到了一个问题，请尝试刷新页面或返回首页",
+    "retry": "重试",
+    "backToHome": "返回首页",
+    "routeLoadFailed": "线路加载失败",
+    "routeLoadFailedDesc": "无法加载线路信息，请检查网络连接后重试",
+    "backToRoutes": "返回线路列表",
+    "cragLoadFailed": "岩场加载失败",
+    "cragLoadFailedDesc": "无法加载岩场信息，请检查网络连接后重试",
+    "backToCrags": "返回岩场列表",
+    "notFoundTitle": "页面未找到",
+    "notFoundDesc": "抱歉，你要找的页面不存在或已被移除",
+    "browseRoutes": "浏览线路",
+    "routeNotFound": "线路不存在",
+    "cragNotFound": "岩场不存在"
+  },
+  "APIError": {
+    "SERVER_ERROR": "服务器错误，请稍后重试",
+    "RATE_LIMITED": "请求过于频繁，请稍后再试",
+    "MISSING_ROUTE_ID": "缺少线路 ID",
+    "MISSING_FIELDS": "缺少必填字段",
+    "INVALID_URL": "无法识别有效的链接",
+    "ONLY_XIAOHONGSHU": "目前仅支持小红书链接",
+    "INVALID_HEIGHT": "身高应在 100-250 cm 之间",
+    "INVALID_REACH": "臂长应在 100-250 cm 之间",
+    "CANNOT_PARSE_NOTE": "无法识别小红书笔记链接",
+    "ROUTE_NOT_FOUND": "线路不存在",
+    "DUPLICATE_BETA": "该视频已被分享过啦～",
+    "UPDATE_FAILED": "更新失败，请重试",
+    "UNKNOWN": "发生未知错误"
   }
 }
