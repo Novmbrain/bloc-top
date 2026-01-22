@@ -176,7 +176,8 @@
     "switchLanguage": "切换语言",
     "languageSelector": "语言选择",
     "zh": "中文",
-    "en": "English"
+    "en": "English",
+    "fr": "Français"
   },
   "Grade": {
     "unknown": "未知难度",

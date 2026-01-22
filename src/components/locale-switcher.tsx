@@ -7,6 +7,13 @@ import { useMemo } from 'react'
 import { SegmentedControl, type SegmentOption } from '@/components/ui/segmented-control'
 import { useLocalePreference } from '@/hooks/use-locale-preference'
 
+// 语言选项配置 - 使用国旗 emoji 作为图标
+const localeFlags: Record<Locale, { flag: string; label: string }> = {
+  zh: { flag: '🇨🇳', label: '中文' },
+  en: { flag: '🇬🇧', label: 'English' },
+  fr: { flag: '🇫🇷', label: 'Français' },
+}
+
 /**
  * 语言切换器组件 - 简单按钮版本
  *
@@ -18,9 +25,11 @@ export function LocaleSwitcher() {
   const { locale, switchLocale } = useLocalePreference()
 
   const handleSwitch = () => {
-    // 切换到另一种语言
-    const nextLocale = locale === 'zh' ? 'en' : 'zh'
-    switchLocale(nextLocale)
+    // 循环切换语言: zh -> en -> fr -> zh
+    const localeOrder: Locale[] = ['zh', 'en', 'fr']
+    const currentIndex = localeOrder.indexOf(locale)
+    const nextIndex = (currentIndex + 1) % localeOrder.length
+    switchLocale(localeOrder[nextIndex])
   }
 
   return (
@@ -35,7 +44,12 @@ export function LocaleSwitcher() {
     >
       <Globe className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
       <span className="text-sm font-medium">
-        {locale === 'zh' ? t('en') : t('zh')}
+        {(() => {
+          const localeOrder: Locale[] = ['zh', 'en', 'fr']
+          const currentIndex = localeOrder.indexOf(locale)
+          const nextLocale = localeOrder[(currentIndex + 1) % localeOrder.length]
+          return t(nextLocale)
+        })()}
       </span>
     </button>
   )
@@ -56,15 +70,14 @@ export function LocaleSegmented({ className }: LocaleSegmentedProps) {
   const t = useTranslations('LocaleSwitcher')
   const { locale, switchLocale } = useLocalePreference()
 
-  // 语言选项配置 - 使用国旗 emoji 作为图标
   const localeOptions: SegmentOption<Locale>[] = useMemo(() =>
     routing.locales.map((loc) => ({
       value: loc,
       label: t(loc),
-      icon: loc === 'zh' ? (
-        <span className="text-base" role="img" aria-label="中文">🇨🇳</span>
-      ) : (
-        <span className="text-base" role="img" aria-label="English">🇬🇧</span>
+      icon: (
+        <span className="text-base" role="img" aria-label={localeFlags[loc].label}>
+          {localeFlags[loc].flag}
+        </span>
       ),
     })),
     [t]

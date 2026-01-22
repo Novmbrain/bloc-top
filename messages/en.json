@@ -176,7 +176,8 @@
     "switchLanguage": "Switch Language",
     "languageSelector": "Language Selection",
     "zh": "中文",
-    "en": "English"
+    "en": "English",
+    "fr": "Français"
   },
   "Grade": {
     "unknown": "Unknown",
