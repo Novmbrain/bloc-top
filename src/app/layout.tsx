@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import { getLocale } from 'next-intl/server'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 // Plus Jakarta Sans - 现代几何感字体，比 Geist 更有特色
@@ -69,6 +70,7 @@ export default async function RootLayout({
         className={`${jakartaSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   )
