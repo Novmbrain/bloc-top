@@ -2,7 +2,7 @@
  * 岩场主题选择测试
  */
 import { describe, it, expect } from 'vitest'
-import { getCragTheme, type CragTheme } from './crag-theme'
+import { getCragTheme } from './crag-theme'
 
 describe('getCragTheme', () => {
   describe('预设主题', () => {
