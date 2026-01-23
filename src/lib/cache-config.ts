@@ -129,3 +129,39 @@ export const OFFLINE_CACHE = {
   /** 缓存过期时间 (秒) - 离线内容长期有效 */
   MAX_AGE_SECONDS: SECONDS.YEAR,
 } as const
+
+// ==================== Service Worker 缓存策略配置 ====================
+
+/**
+ * HTML 页面缓存配置
+ *
+ * 使用场景: Service Worker NetworkFirst 策略
+ * 策略: 优先网络请求，超时后回退缓存
+ */
+export const HTML_CACHE = {
+  /** 缓存名称 */
+  CACHE_NAME: 'html-pages',
+  /** 最大缓存条目数 */
+  MAX_ENTRIES: 50,
+  /** 缓存过期时间 (秒) - 7 天 */
+  MAX_AGE_SECONDS: SECONDS.WEEK,
+  /** 网络超时时间 (秒) - 超时后回退缓存 */
+  NETWORK_TIMEOUT: 5,
+} as const
+
+/**
+ * API 数据缓存配置 (Service Worker 层)
+ *
+ * 使用场景: Service Worker NetworkFirst 策略
+ * 注意: 与 API_CACHE 不同，这是 SW 运行时缓存配置
+ */
+export const SW_API_CACHE = {
+  /** 缓存名称 */
+  CACHE_NAME: 'api-data',
+  /** 最大缓存条目数 */
+  MAX_ENTRIES: 100,
+  /** 缓存过期时间 (秒) - 1 天 */
+  MAX_AGE_SECONDS: SECONDS.DAY,
+  /** 网络超时时间 (秒) */
+  NETWORK_TIMEOUT: 3,
+} as const

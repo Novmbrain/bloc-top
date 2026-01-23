@@ -7,11 +7,13 @@
  * 1. 显示当前离线状态
  * 2. 显示已下载的岩场数量
  * 3. 点击可展开查看已下载岩场列表
+ * 4. 支持点击岩场跳转到离线详情页
  */
 
 import { useState, useMemo, useSyncExternalStore } from 'react'
-import { useTranslations } from 'next-intl'
-import { WifiOff, ChevronDown, ChevronUp, Check } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
+import { WifiOff, ChevronDown, ChevronUp, ChevronRight, Mountain } from 'lucide-react'
 import { useOfflineDownloadContextSafe } from '@/components/offline-download-provider'
 
 // 网络状态订阅
@@ -34,11 +36,18 @@ function getServerSnapshot() {
 
 export default function OfflineIndicator() {
   const t = useTranslations('OfflineIndicator')
+  const locale = useLocale()
+  const router = useRouter()
   const isOffline = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
   const [isExpanded, setIsExpanded] = useState(false)
 
   // 获取离线下载 Context (可能为 null)
   const offlineDownload = useOfflineDownloadContextSafe()
+
+  // 点击岩场跳转到离线详情页
+  const handleCragClick = (cragId: string) => {
+    router.push(`/${locale}/offline/crag/${cragId}`)
+  }
 
   // 已下载岩场数量
   const offlineCragCount = useMemo(() => {
@@ -87,17 +96,21 @@ export default function OfflineIndicator() {
       {isExpanded && offlineCragCount > 0 && offlineDownload && (
         <div
           className="px-4 pb-3 border-t border-white/20"
-          style={{ maxHeight: '200px', overflowY: 'auto' }}
+          style={{ maxHeight: '250px', overflowY: 'auto' }}
         >
-          <div className="flex flex-wrap gap-2 mt-2">
+          <p className="text-xs opacity-70 mt-2 mb-2">{t('tapToView')}</p>
+          <div className="space-y-2">
             {offlineDownload.offlineCrags.map((crag) => (
-              <div
+              <button
                 key={crag.cragId}
-                className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-white/20"
+                onClick={() => handleCragClick(crag.cragId)}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-white/20 hover:bg-white/30 transition-colors text-left"
               >
-                <Check className="w-3 h-3" />
-                <span>{crag.cragName}</span>
-              </div>
+                <Mountain className="w-4 h-4 flex-shrink-0" />
+                <span className="flex-1 truncate">{crag.cragName}</span>
+                <span className="text-xs opacity-70">{crag.routeCount} {t('routes')}</span>
+                <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-70" />
+              </button>
             ))}
           </div>
         </div>
