@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { execSync } from "child_process";
 import withSerwistInit from "@serwist/next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { IMAGE_CACHE } from "./src/lib/cache-config";
@@ -8,10 +9,27 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const isDev = process.env.NODE_ENV !== "production";
 
+// 获取 git revision 作为缓存版本号
+function getGitRevision(): string {
+  try {
+    return execSync("git rev-parse --short HEAD").toString().trim();
+  } catch {
+    // 如果无法获取 git revision，使用时间戳作为 fallback
+    return Date.now().toString();
+  }
+}
+
+const revision = getGitRevision();
+
 const withSerwist = withSerwistInit({
   swSrc: "src/app/sw.ts",
   swDest: "public/sw.js",
   disable: isDev,
+  // 预缓存离线页面，确保离线时可访问
+  additionalPrecacheEntries: [
+    { url: "/zh/offline", revision },
+    { url: "/en/offline", revision },
+  ],
 });
 
 const nextConfig: NextConfig = {

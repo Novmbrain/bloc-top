@@ -149,7 +149,9 @@
   },
   "OfflineIndicator": {
     "message": "当前处于离线模式",
-    "cragsAvailable": "{count} 个岩场可用"
+    "cragsAvailable": "{count} 个岩场可用",
+    "tapToView": "点击查看离线内容",
+    "routes": "条线路"
   },
   "Offline": {
     "download": "下载离线包",
@@ -166,6 +168,36 @@
     "confirmDelete": "确定删除 {name} 的离线数据？",
     "deleteSuccess": "已删除离线数据",
     "notSupported": "您的浏览器不支持离线功能"
+  },
+  "OfflinePage": {
+    "title": "离线内容",
+    "description": "浏览已下载的岩场数据",
+    "offline": "当前处于离线模式",
+    "backOnline": "网络已恢复",
+    "downloadedCrags": "已下载 {count} 个岩场",
+    "routeCount": "{count} 条线路",
+    "noDownloads": "暂无离线内容",
+    "downloadHint": "在有网络时，前往岩场详情页下载离线包",
+    "goHome": "返回首页",
+    "retry": "重新连接"
+  },
+  "OfflineCragDetail": {
+    "offlineViewing": "离线浏览",
+    "offlineData": "离线数据",
+    "routes": "条线路",
+    "noGrade": "暂无",
+    "notDownloaded": "岩场未下载",
+    "notDownloadedDesc": "该岩场尚未下载离线数据，请在有网络时下载",
+    "backToOffline": "返回离线内容",
+    "weatherUnavailable": "天气信息离线不可用"
+  },
+  "OfflineRouteDetail": {
+    "offlineViewing": "离线浏览",
+    "offlineData": "离线数据",
+    "notDownloaded": "线路未下载",
+    "notDownloadedDesc": "该线路所属岩场尚未下载离线数据",
+    "backToOffline": "返回离线内容",
+    "betaUnavailable": "Beta 视频离线不可用"
   },
   "InstallCard": {
     "title": "添加到主屏幕",

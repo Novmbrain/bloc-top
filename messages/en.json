@@ -149,7 +149,9 @@
   },
   "OfflineIndicator": {
     "message": "You are offline",
-    "cragsAvailable": "{count, plural, =1 {# crag available} other {# crags available}}"
+    "cragsAvailable": "{count, plural, =1 {# crag available} other {# crags available}}",
+    "tapToView": "Tap to view offline content",
+    "routes": "routes"
   },
   "Offline": {
     "download": "Download Offline",
@@ -166,6 +168,36 @@
     "confirmDelete": "Delete offline data for {name}?",
     "deleteSuccess": "Offline data deleted",
     "notSupported": "Your browser does not support offline features"
+  },
+  "OfflinePage": {
+    "title": "Offline Content",
+    "description": "Browse downloaded crag data",
+    "offline": "You are offline",
+    "backOnline": "Back online",
+    "downloadedCrags": "{count, plural, =1 {# crag downloaded} other {# crags downloaded}}",
+    "routeCount": "{count, plural, =1 {# route} other {# routes}}",
+    "noDownloads": "No offline content",
+    "downloadHint": "Download offline data from crag detail pages when online",
+    "goHome": "Go Home",
+    "retry": "Try Again"
+  },
+  "OfflineCragDetail": {
+    "offlineViewing": "Offline viewing",
+    "offlineData": "Offline data",
+    "routes": "routes",
+    "noGrade": "N/A",
+    "notDownloaded": "Crag not downloaded",
+    "notDownloadedDesc": "This crag has not been downloaded for offline use",
+    "backToOffline": "Back to Offline",
+    "weatherUnavailable": "Weather unavailable offline"
+  },
+  "OfflineRouteDetail": {
+    "offlineViewing": "Offline viewing",
+    "offlineData": "Offline data",
+    "notDownloaded": "Route not downloaded",
+    "notDownloadedDesc": "The crag containing this route has not been downloaded",
+    "backToOffline": "Back to Offline",
+    "betaUnavailable": "Beta videos unavailable offline"
   },
   "InstallCard": {
     "title": "Add to Home Screen",
