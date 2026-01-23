@@ -93,7 +93,8 @@ describe('WeatherStrip', () => {
       render(<WeatherStrip />)
 
       await waitFor(() => {
-        expect(screen.getByText('极佳')).toBeInTheDocument()
+        // Mock useTranslations 返回翻译键，所以匹配 'excellent' 而不是 '极佳'
+        expect(screen.getByText('excellent')).toBeInTheDocument()
       })
     })
 

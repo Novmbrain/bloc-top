@@ -146,7 +146,8 @@ describe('WeatherCard', () => {
       render(<WeatherCard />)
 
       await waitFor(() => {
-        expect(screen.getByText('湿度 60%')).toBeInTheDocument()
+        // Mock useTranslations 使用参数替换: humidityValue -> "humidityValue" with {value: 60}
+        expect(screen.getByText('humidityValue')).toBeInTheDocument()
       })
     })
 
@@ -154,7 +155,8 @@ describe('WeatherCard', () => {
       render(<WeatherCard />)
 
       await waitFor(() => {
-        expect(screen.getByText('东南风 3级')).toBeInTheDocument()
+        // Mock useTranslations: windValue with {direction: 东南, power: 3}
+        expect(screen.getByText('windValue')).toBeInTheDocument()
       })
     })
 
@@ -162,7 +164,8 @@ describe('WeatherCard', () => {
       render(<WeatherCard />)
 
       await waitFor(() => {
-        expect(screen.getByText('极佳攀岩')).toBeInTheDocument()
+        // Mock useTranslations: climbingLabel with {level: excellent}
+        expect(screen.getByText('climbingLabel')).toBeInTheDocument()
       })
     })
 
@@ -170,7 +173,8 @@ describe('WeatherCard', () => {
       render(<WeatherCard />)
 
       await waitFor(() => {
-        expect(screen.getByText('温湿度适宜，岩面干燥')).toBeInTheDocument()
+        // Mock useTranslations: excellentDesc
+        expect(screen.getByText('excellentDesc')).toBeInTheDocument()
       })
     })
 
@@ -178,7 +182,8 @@ describe('WeatherCard', () => {
       render(<WeatherCard />)
 
       await waitFor(() => {
-        expect(screen.getByText('实时天气')).toBeInTheDocument()
+        // Mock useTranslations: liveWeather
+        expect(screen.getByText('liveWeather')).toBeInTheDocument()
       })
     })
   })
@@ -195,7 +200,8 @@ describe('WeatherCard', () => {
       render(<WeatherCard />)
 
       await waitFor(() => {
-        expect(screen.getByText('未来天气')).toBeInTheDocument()
+        // Mock useTranslations: futureWeather
+        expect(screen.getByText('futureWeather')).toBeInTheDocument()
       })
 
       // 检查温度范围
@@ -221,7 +227,8 @@ describe('WeatherCard', () => {
         expect(screen.getByText('25°')).toBeInTheDocument()
       })
 
-      expect(screen.queryByText('未来天气')).not.toBeInTheDocument()
+      // Mock useTranslations: futureWeather
+      expect(screen.queryByText('futureWeather')).not.toBeInTheDocument()
     })
   })
 

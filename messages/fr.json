@@ -106,7 +106,20 @@
     "tomorrow": "Demain",
     "liveWeather": "Météo en direct",
     "futureWeather": "Prévisions",
-    "climbingLabel": "{level} pour grimper"
+    "climbingLabel": "{level} pour grimper",
+    "excellent": "Excellent",
+    "fair": "Moyen",
+    "excellentDesc": "Conditions parfaites - roche sèche, température idéale !",
+    "goodDesc": "Beau temps pour grimper",
+    "fairDesc": "Conditions moyennes, grimpez avec prudence",
+    "poorDesc": "Non recommandé - choisissez un autre jour",
+    "sunday": "Dim",
+    "monday": "Lun",
+    "tuesday": "Mar",
+    "wednesday": "Mer",
+    "thursday": "Jeu",
+    "friday": "Ven",
+    "saturday": "Sam"
   },
   "Search": {
     "placeholder": "Rechercher des voies...",

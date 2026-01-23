@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Cloud, Droplets, Wind, ThermometerSun } from 'lucide-react'
 import type { WeatherData, Coordinates } from '@/types'
 import { getWeatherIcon, SUITABILITY_CONFIG } from '@/lib/weather-constants'
-import { formatWeekday, isToday, getSuitabilityIcon } from '@/lib/weather-utils'
+import { getSuitabilityIcon, isToday } from '@/lib/weather-utils'
 
 interface WeatherCardProps {
   coordinates?: Coordinates
@@ -16,6 +17,7 @@ interface WeatherCardProps {
  * 显示完整天气信息，包含实况、适宜度评估和 3 日预报
  */
 export function WeatherCard({ coordinates, delay = 0 }: WeatherCardProps) {
+  const t = useTranslations('Weather')
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -108,7 +110,7 @@ export function WeatherCard({ coordinates, delay = 0 }: WeatherCardProps) {
           className="text-base font-semibold"
           style={{ color: 'var(--theme-on-surface)' }}
         >
-          实时天气
+          {t('liveWeather')}
         </span>
       </div>
 
@@ -146,14 +148,14 @@ export function WeatherCard({ coordinates, delay = 0 }: WeatherCardProps) {
               style={{ color: 'var(--theme-on-surface-variant)' }}
             >
               <Droplets className="w-3 h-3" />
-              <span>湿度 {live.humidity}%</span>
+              <span>{t('humidityValue', { value: live.humidity })}</span>
             </div>
             <div
               className="flex items-center gap-1 text-xs"
               style={{ color: 'var(--theme-on-surface-variant)' }}
             >
               <Wind className="w-3 h-3" />
-              <span>{live.windDirection}风 {live.windPower}级</span>
+              <span>{t('windValue', { direction: live.windDirection, power: live.windPower })}</span>
             </div>
           </div>
         </div>
@@ -169,13 +171,13 @@ export function WeatherCard({ coordinates, delay = 0 }: WeatherCardProps) {
               className="text-sm font-medium"
               style={{ color: suitabilityConfig.color }}
             >
-              {climbing.label}攀岩
+              {t('climbingLabel', { level: t(climbing.level) })}
             </span>
             <span
               className="text-xs ml-2"
               style={{ color: 'var(--theme-on-surface-variant)' }}
             >
-              {climbing.description}
+              {t(`${climbing.level}Desc`)}
             </span>
           </div>
         </div>
@@ -188,7 +190,7 @@ export function WeatherCard({ coordinates, delay = 0 }: WeatherCardProps) {
             className="text-xs font-medium mb-2"
             style={{ color: 'var(--theme-on-surface-variant)' }}
           >
-            未来天气
+            {t('futureWeather')}
           </div>
           <div className="grid grid-cols-3 gap-2">
             {forecasts.slice(0, 3).map((forecast, index) => (
@@ -196,6 +198,7 @@ export function WeatherCard({ coordinates, delay = 0 }: WeatherCardProps) {
                 key={forecast.date}
                 forecast={forecast}
                 isFirst={index === 0}
+                t={t}
               />
             ))}
           </div>
@@ -215,10 +218,17 @@ interface ForecastItemProps {
     nightTemp: number
   }
   isFirst: boolean
+  t: ReturnType<typeof useTranslations<'Weather'>>
 }
 
-function ForecastItem({ forecast }: ForecastItemProps) {
-  const dayLabel = isToday(forecast.date) ? '今天' : formatWeekday(forecast.week)
+// 星期数字到翻译键的映射 (高德 API: 1=周一, 7=周日)
+const WEEKDAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
+
+function ForecastItem({ forecast, t }: ForecastItemProps) {
+  // 将高德 API 的 week (1-7) 转换为翻译键
+  const weekIndex = parseInt(forecast.week, 10)
+  const weekdayKey = weekIndex === 7 ? WEEKDAY_KEYS[0] : WEEKDAY_KEYS[weekIndex]
+  const dayLabel = isToday(forecast.date) ? t('today') : t(weekdayKey)
 
   return (
     <div

@@ -106,7 +106,20 @@
     "tomorrow": "Tomorrow",
     "liveWeather": "Live Weather",
     "futureWeather": "Forecast",
-    "climbingLabel": "{level} for climbing"
+    "climbingLabel": "{level} for climbing",
+    "excellent": "Excellent",
+    "fair": "Fair",
+    "excellentDesc": "Perfect conditions - dry rock, ideal temperature!",
+    "goodDesc": "Good weather for climbing",
+    "fairDesc": "Average conditions, climb with caution",
+    "poorDesc": "Not recommended - consider another day",
+    "sunday": "Sun",
+    "monday": "Mon",
+    "tuesday": "Tue",
+    "wednesday": "Wed",
+    "thursday": "Thu",
+    "friday": "Fri",
+    "saturday": "Sat"
   },
   "Search": {
     "placeholder": "Search routes...",
