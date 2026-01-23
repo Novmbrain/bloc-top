@@ -2,6 +2,7 @@
  * 离线页面测试
  * 测试 AppTabbar 显示和岩场卡片点击行为
  */
+/* eslint-disable @next/next/no-html-link-for-pages */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
