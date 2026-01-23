@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { WifiOff, CloudDownload, RefreshCw, Mountain, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AppTabbar } from '@/components/app-tabbar'
 import { getAllOfflineCrags, type OfflineCragData } from '@/lib/offline-storage'
 
 export default function OfflinePage() {
@@ -133,7 +134,7 @@ export default function OfflinePage() {
             {offlineCrags.map((cragData) => (
               <button
                 key={cragData.cragId}
-                onClick={() => router.push(`/${locale}/offline/crag/${cragData.cragId}`)}
+                onClick={() => router.push(`/${locale}/route?crag=${cragData.cragId}`)}
                 className="w-full p-4 flex items-center gap-3 text-left"
                 style={{
                   backgroundColor: 'var(--theme-surface)',
@@ -198,8 +199,8 @@ export default function OfflinePage() {
         )}
       </main>
 
-      {/* 底部操作区 */}
-      <div className="p-4 space-y-3">
+      {/* 底部操作区 - 为 Tabbar 留出空间 */}
+      <div className="p-4 pb-20 space-y-3">
         {isOnline && (
           <Button
             onClick={goHome}
@@ -227,6 +228,9 @@ export default function OfflinePage() {
           {t('retry')}
         </Button>
       </div>
+
+      {/* 底部导航栏 */}
+      <AppTabbar />
     </div>
   )
 }
