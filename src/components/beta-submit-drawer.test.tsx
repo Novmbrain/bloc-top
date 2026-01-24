@@ -9,6 +9,23 @@ import { BetaSubmitDrawer } from './beta-submit-drawer'
 // Mock fetch
 const mockFetch = vi.fn()
 
+// 模拟 localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {}
+  return {
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key]
+    }),
+    clear: vi.fn(() => {
+      store = {}
+    }),
+  }
+})()
+
 describe('BetaSubmitDrawer', () => {
   const defaultProps = {
     isOpen: true,
@@ -20,7 +37,12 @@ describe('BetaSubmitDrawer', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorageMock.clear()
     global.fetch = mockFetch
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      writable: true,
+    })
   })
 
   afterEach(() => {
@@ -259,6 +281,138 @@ describe('BetaSubmitDrawer', () => {
       render(<BetaSubmitDrawer {...defaultProps} isOpen={false} />)
 
       expect(screen.queryByText('urlLabel')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('身体数据缓存', () => {
+    it('有缓存数据时表单应预填充身高和臂长', () => {
+      // 设置缓存数据
+      localStorageMock.setItem(
+        'climber-body-data',
+        JSON.stringify({ height: '175', reach: '180' })
+      )
+
+      render(<BetaSubmitDrawer {...defaultProps} />)
+
+      const heightInput = screen.getByPlaceholderText('heightPlaceholder') as HTMLInputElement
+      const reachInput = screen.getByPlaceholderText('reachPlaceholder') as HTMLInputElement
+
+      expect(heightInput.value).toBe('175')
+      expect(reachInput.value).toBe('180')
+    })
+
+    it('无缓存数据时表单字段应为空', () => {
+      render(<BetaSubmitDrawer {...defaultProps} />)
+
+      const heightInput = screen.getByPlaceholderText('heightPlaceholder') as HTMLInputElement
+      const reachInput = screen.getByPlaceholderText('reachPlaceholder') as HTMLInputElement
+
+      expect(heightInput.value).toBe('')
+      expect(reachInput.value).toBe('')
+    })
+
+    it('提交成功后应将身高和臂长存入缓存', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      })
+
+      render(<BetaSubmitDrawer {...defaultProps} />)
+
+      // 填写表单
+      fireEvent.change(screen.getByPlaceholderText('urlPlaceholder'), {
+        target: { value: 'https://xhslink.com/abc123' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('heightPlaceholder'), {
+        target: { value: '175' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('reachPlaceholder'), {
+        target: { value: '180' },
+      })
+
+      fireEvent.click(screen.getByText('submit'))
+
+      await waitFor(() => {
+        expect(screen.getByText('submitSuccess')).toBeInTheDocument()
+      })
+
+      // 验证缓存数据
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'climber-body-data',
+        JSON.stringify({ height: '175', reach: '180' })
+      )
+    })
+
+    it('提交失败时不应更新缓存', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ code: 'DUPLICATE_BETA' }),
+      })
+
+      render(<BetaSubmitDrawer {...defaultProps} />)
+
+      // 填写表单
+      fireEvent.change(screen.getByPlaceholderText('urlPlaceholder'), {
+        target: { value: 'https://xhslink.com/abc123' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('heightPlaceholder'), {
+        target: { value: '175' },
+      })
+
+      fireEvent.click(screen.getByText('submit'))
+
+      await waitFor(() => {
+        expect(screen.getByText('DUPLICATE_BETA')).toBeInTheDocument()
+      })
+
+      // 不应该调用 setItem 保存身体数据
+      // 注意：初始化时可能会调用，所以检查最后一次调用
+      const setItemCalls = localStorageMock.setItem.mock.calls.filter(
+        (call: string[]) => call[0] === 'climber-body-data'
+      )
+      expect(setItemCalls.length).toBe(0)
+    })
+
+    it('只填写身高提交成功后应保存身高并保留旧臂长', async () => {
+      // 设置旧缓存
+      localStorageMock.setItem(
+        'climber-body-data',
+        JSON.stringify({ height: '170', reach: '175' })
+      )
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      })
+
+      render(<BetaSubmitDrawer {...defaultProps} />)
+
+      // 只修改身高，清空臂长
+      fireEvent.change(screen.getByPlaceholderText('urlPlaceholder'), {
+        target: { value: 'https://xhslink.com/abc123' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('heightPlaceholder'), {
+        target: { value: '180' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('reachPlaceholder'), {
+        target: { value: '' },
+      })
+
+      fireEvent.click(screen.getByText('submit'))
+
+      await waitFor(() => {
+        expect(screen.getByText('submitSuccess')).toBeInTheDocument()
+      })
+
+      // 验证：身高更新，臂长保留旧值
+      const lastSetItemCall = localStorageMock.setItem.mock.calls
+        .filter((call: string[]) => call[0] === 'climber-body-data')
+        .pop()
+
+      expect(lastSetItemCall).toBeDefined()
+      const savedData = JSON.parse(lastSetItemCall![1])
+      expect(savedData.height).toBe('180')
+      expect(savedData.reach).toBe('175') // 保留旧值
     })
   })
 })

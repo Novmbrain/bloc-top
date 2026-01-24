@@ -7,6 +7,7 @@ import { Search, ChevronRight, X, ArrowUp, ArrowDown } from 'lucide-react'
 import { getGradeColor } from '@/lib/tokens'
 import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, type SortDirection } from '@/lib/filter-constants'
 import { compareGrades } from '@/lib/grade-utils'
+import { matchRouteByQuery } from '@/hooks/use-route-search'
 import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
 import { GradeRangeSelector } from '@/components/grade-range-selector'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
@@ -131,15 +132,9 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
       result = result.filter((r) => allGrades.includes(r.grade))
     }
 
-    // 搜索筛选
+    // 搜索筛选（支持拼音，复用与首页相同的匹配逻辑）
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      result = result.filter(
-        (r) =>
-          r.name.toLowerCase().includes(query) ||
-          r.grade.toLowerCase().includes(query) ||
-          r.area?.toLowerCase().includes(query)
-      )
+      result = result.filter((r) => matchRouteByQuery(r, searchQuery) !== null)
     }
 
     // 按难度排序
