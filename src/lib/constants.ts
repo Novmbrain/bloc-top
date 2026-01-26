@@ -17,10 +17,19 @@ const IMAGE_BASE_URL = 'https://img.bouldering.top'
 export const IMAGE_VERSION = '1'
 
 /**
- * 生成线路 TOPO 图片 URL (带版本号)
+ * 生成线路 TOPO 图片 URL
+ *
+ * @param cragId - 岩场 ID
+ * @param routeName - 线路名称
+ * @param timestamp - 可选时间戳，用于刚上传后强制刷新缓存
  */
-export function getRouteTopoUrl(cragId: string, routeName: string): string {
-  return `${IMAGE_BASE_URL}/${cragId}/${encodeURIComponent(routeName)}.jpg?v=${IMAGE_VERSION}`
+export function getRouteTopoUrl(
+  cragId: string,
+  routeName: string,
+  timestamp?: number
+): string {
+  const version = timestamp ? `t=${timestamp}` : `v=${IMAGE_VERSION}`
+  return `${IMAGE_BASE_URL}/${cragId}/${encodeURIComponent(routeName)}.jpg?${version}`
 }
 
 /**

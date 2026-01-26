@@ -42,6 +42,19 @@ describe('constants', () => {
       const url = getRouteTopoUrl('crag', 'route with spaces')
       expect(url).toContain('route%20with%20spaces')
     })
+
+    it('应该支持时间戳参数用于缓存刷新', () => {
+      const timestamp = 1705981200123
+      const url = getRouteTopoUrl('yuan-tong-si', '月光', timestamp)
+      expect(url).toContain(`?t=${timestamp}`)
+      expect(url).not.toContain('?v=')
+    })
+
+    it('不带时间戳时应使用静态版本号', () => {
+      const url = getRouteTopoUrl('yuan-tong-si', '月光')
+      expect(url).toContain(`?v=${IMAGE_VERSION}`)
+      expect(url).not.toContain('?t=')
+    })
   })
 
   describe('getCragCoverUrl', () => {

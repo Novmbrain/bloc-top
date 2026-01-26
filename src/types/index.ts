@@ -1,3 +1,15 @@
+// ==================== Topo 编辑器类型 ====================
+
+/**
+ * Topo 线路上的点 (归一化坐标 0-1)
+ */
+export interface TopoPoint {
+  x: number  // 0-1 归一化 X 坐标
+  y: number  // 0-1 归一化 Y 坐标
+}
+
+// ==================== 核心数据类型 ====================
+
 // 线路数据类型
 export interface Route {
   id: number
@@ -10,6 +22,7 @@ export interface Route {
   description?: string
   image?: string
   betaLinks?: BetaLink[] // Beta 视频链接
+  topoLine?: TopoPoint[] // Topo 线路标注 (归一化坐标)
 }
 
 // 岩场坐标类型
@@ -206,4 +219,23 @@ export interface OfflineCragMeta {
   routeCount: number
   downloadedAt: string
   imageCount: number
+}
+
+/**
+ * Topo 线路数据 (用于编辑器)
+ */
+export interface TopoRoute {
+  id: string
+  name: string
+  grade: string
+  color: string
+  line: TopoPoint[]
+}
+
+/**
+ * 完整的 Topo 数据 (图片 + 线路)
+ */
+export interface TopoData {
+  imageUrl: string       // base64 或 URL
+  routes: TopoRoute[]
 }
