@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { MapPin, User, Wrench, Video, ImageIcon } from 'lucide-react'
@@ -8,8 +8,10 @@ import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
 import { BetaListDrawer } from '@/components/beta-list-drawer'
 import { BetaSubmitDrawer } from '@/components/beta-submit-drawer'
+import { TopoLineOverlay, type TopoLineOverlayRef } from '@/components/topo-line-overlay'
 import { getGradeColor } from '@/lib/tokens'
 import { getRouteTopoUrl } from '@/lib/constants'
+import { TOPO_ANIMATION_CONFIG } from '@/lib/topo-constants'
 import type { Route, Crag, BetaLink } from '@/types'
 
 interface RouteDetailDrawerProps {
@@ -36,15 +38,44 @@ export function RouteDetailDrawer({
   // 本地 Beta 数据状态，用于绕过 ISR 缓存实现即时更新
   const [localBetaLinks, setLocalBetaLinks] = useState<BetaLink[] | null>(null)
 
+  // Topo 线路 overlay refs (用于触发动画)
+  const drawerOverlayRef = useRef<TopoLineOverlayRef>(null)
+  const fullscreenOverlayRef = useRef<TopoLineOverlayRef>(null)
+
+  // 抽屉内动画是否已播放
+  const [drawerAnimated, setDrawerAnimated] = useState(false)
+
   // 当线路变化时重置状态
   useEffect(() => {
     if (route) {
       setImageLoading(true)
       setImageError(false)
-      setLocalBetaLinks(null) // 重置本地 Beta 数据
+      setLocalBetaLinks(null)
+      setDrawerAnimated(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅依赖 route.id 变化
   }, [route?.id])
+
+  // 抽屉打开 + 图片加载完成时触发动画
+  useEffect(() => {
+    if (isOpen && !imageLoading && !drawerAnimated && route?.topoLine) {
+      const timer = setTimeout(() => {
+        drawerOverlayRef.current?.replay()
+        setDrawerAnimated(true)
+      }, TOPO_ANIMATION_CONFIG.autoPlayDelayDrawer)
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen, imageLoading, drawerAnimated, route?.topoLine])
+
+  // 全屏查看器打开时触发动画
+  useEffect(() => {
+    if (imageViewerOpen && route?.topoLine) {
+      const timer = setTimeout(() => {
+        fullscreenOverlayRef.current?.replay()
+      }, TOPO_ANIMATION_CONFIG.autoPlayDelayFullscreen)
+      return () => clearTimeout(timer)
+    }
+  }, [imageViewerOpen, route?.topoLine])
 
   // 从 API 获取最新 Beta 数据
   const fetchLatestBetas = useCallback(async () => {
@@ -60,12 +91,20 @@ export function RouteDetailDrawer({
     }
   }, [route])
 
+  // 线路颜色 (基于难度等级)
+  const routeColor = useMemo(
+    () => route ? getGradeColor(route.grade) : '#888888',
+    [route]
+  )
+
+  // 是否有 Topo 线路数据
+  const hasTopoLine = route?.topoLine && route.topoLine.length >= 2
+
   if (!route) return null
 
   // 使用本地数据（如果有）或 props 数据
   const betaLinks = localBetaLinks ?? route.betaLinks ?? []
   const betaCount = betaLinks.length
-  // 自动拼接 COS URL，无需依赖 route.image 字段
   const topoImageUrl = getRouteTopoUrl(route.cragId, route.name)
 
   return (
@@ -131,6 +170,17 @@ export function RouteDetailDrawer({
                     setImageError(true)
                   }}
                 />
+
+                {/* Topo 线路叠加层 */}
+                {hasTopoLine && !imageLoading && (
+                  <TopoLineOverlay
+                    ref={drawerOverlayRef}
+                    points={route.topoLine!}
+                    color={routeColor}
+                    animated
+                                      />
+                )}
+
                 {/* 难度标签 */}
                 <div
                   className="absolute top-3 right-3 px-3 py-1.5"
@@ -141,6 +191,7 @@ export function RouteDetailDrawer({
                 >
                   <span className="text-white text-sm font-bold">{route.grade}</span>
                 </div>
+
                 {/* 放大提示（图片加载完成后显示） */}
                 {!imageLoading && (
                   <div
@@ -326,14 +377,24 @@ export function RouteDetailDrawer({
         </div>
       </Drawer>
 
-      {/* 图片查看器 */}
+      {/* 图片查看器（带 Topo 线路叠加） */}
       {!imageError && (
         <ImageViewer
           isOpen={imageViewerOpen}
           onClose={() => setImageViewerOpen(false)}
           src={topoImageUrl}
           alt={route.name}
-        />
+        >
+          {/* Topo 线路叠加层 */}
+          {hasTopoLine && (
+            <TopoLineOverlay
+              ref={fullscreenOverlayRef}
+              points={route.topoLine!}
+              color={routeColor}
+              animated
+                          />
+          )}
+        </ImageViewer>
       )}
 
       {/* Beta 列表抽屉 */}
@@ -356,7 +417,6 @@ export function RouteDetailDrawer({
         routeId={route.id}
         routeName={route.name}
         onSuccess={() => {
-          // 提交成功后刷新 Beta 数据
           fetchLatestBetas()
         }}
       />

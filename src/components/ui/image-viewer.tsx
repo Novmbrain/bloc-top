@@ -16,6 +16,8 @@ interface ImageViewerProps {
   onClose: () => void
   src: string
   alt?: string
+  /** 可选的叠加层内容（如 Topo 线路 SVG），会随图片一起缩放 */
+  children?: React.ReactNode
 }
 
 // 缩放控制按钮组件
@@ -68,7 +70,7 @@ function ZoomControls() {
   )
 }
 
-export function ImageViewer({ isOpen, onClose, src, alt = '' }: ImageViewerProps) {
+export function ImageViewer({ isOpen, onClose, src, alt = '', children }: ImageViewerProps) {
   const transformRef = useRef<ReactZoomPanPinchRef>(null)
   const startYRef = useRef<number>(0)
   const scaleRef = useRef<number>(1)
@@ -194,6 +196,8 @@ export function ImageViewer({ isOpen, onClose, src, alt = '' }: ImageViewerProps
                   priority
                   draggable={false}
                 />
+                {/* 叠加层内容（如 Topo 线路 SVG） */}
+                {children}
               </div>
           </TransformComponent>
         </>
