@@ -12,7 +12,8 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
+import { AppTabbar } from '@/components/app-tabbar'
 import type { Route, Crag, TopoPoint } from '@/types'
 import { bezierCurve, scalePoints, normalizePoint } from '@/lib/topo-utils'
 import { getGradeColor } from '@/lib/tokens'
@@ -418,12 +419,12 @@ export default function TopoEditorPage() {
       {/* 头部导航 */}
       <div className="max-w-4xl mx-auto mb-6">
         <Link
-          href="/zh/demo"
+          href="/"
           className="inline-flex items-center gap-2 mb-4 text-sm"
           style={{ color: 'var(--theme-primary)' }}
         >
           <ArrowLeft className="w-4 h-4" />
-          返回 Demo
+          返回首页
         </Link>
         <h1
           className="text-2xl font-bold mb-2"
@@ -1192,6 +1193,9 @@ export default function TopoEditorPage() {
           </div>
         </div>
       )}
+
+      {/* 底部导航栏 */}
+      <AppTabbar />
     </div>
   )
 }
