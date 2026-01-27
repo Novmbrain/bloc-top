@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname, useRouter } from '@/i18n/navigation'
 import { Home, Mountain, Settings } from 'lucide-react'
@@ -15,6 +15,7 @@ const TAB_ITEMS = [
 // 隐藏入口配置
 const SECRET_TAP_COUNT = 6        // 需要点击的次数
 const SECRET_TAP_TIMEOUT = 2000   // 时间窗口 (ms)
+const SECRET_STORAGE_KEY = '_secret_tap'
 
 export function AppTabbar() {
   const t = useTranslations('Navigation')
@@ -22,24 +23,42 @@ export function AppTabbar() {
   const router = useRouter()
 
   // 隐藏入口：连续点击"线路"按钮 6 次打开编辑器
-  const tapCountRef = useRef(0)
-  const lastTapTimeRef = useRef(0)
-
-  const handleSecretTap = useCallback(() => {
+  // 使用 sessionStorage 持久化计数（因为 Link 点击会导致组件重新挂载）
+  const handleSecretTap = useCallback((e: React.MouseEvent) => {
     const now = Date.now()
 
-    // 如果距离上次点击超过时间窗口，重置计数
-    if (now - lastTapTimeRef.current > SECRET_TAP_TIMEOUT) {
-      tapCountRef.current = 0
+    // 从 sessionStorage 读取状态
+    let tapCount = 0
+    let lastTapTime = 0
+    try {
+      const stored = sessionStorage.getItem(SECRET_STORAGE_KEY)
+      if (stored) {
+        const data = JSON.parse(stored)
+        tapCount = data.count || 0
+        lastTapTime = data.time || 0
+      }
+    } catch {
+      // 忽略解析错误
     }
 
-    lastTapTimeRef.current = now
-    tapCountRef.current += 1
+    // 如果距离上次点击超过时间窗口，重置计数
+    if (now - lastTapTime > SECRET_TAP_TIMEOUT) {
+      tapCount = 0
+    }
+
+    tapCount += 1
 
     // 达到目标次数，跳转到编辑器
-    if (tapCountRef.current >= SECRET_TAP_COUNT) {
-      tapCountRef.current = 0
+    if (tapCount >= SECRET_TAP_COUNT) {
+      e.preventDefault() // 阻止 Link 默认导航
+      sessionStorage.removeItem(SECRET_STORAGE_KEY)
       router.push('/demo/editor')
+    } else {
+      // 保存状态到 sessionStorage
+      sessionStorage.setItem(SECRET_STORAGE_KEY, JSON.stringify({
+        count: tapCount,
+        time: now,
+      }))
     }
   }, [router])
 
