@@ -106,7 +106,20 @@
     "tomorrow": "Tomorrow",
     "liveWeather": "Live Weather",
     "futureWeather": "Forecast",
-    "climbingLabel": "{level} for climbing"
+    "climbingLabel": "{level} for climbing",
+    "excellent": "Excellent",
+    "fair": "Fair",
+    "excellentDesc": "Perfect conditions - dry rock, ideal temperature!",
+    "goodDesc": "Good weather for climbing",
+    "fairDesc": "Average conditions, climb with caution",
+    "poorDesc": "Not recommended - consider another day",
+    "sunday": "Sun",
+    "monday": "Mon",
+    "tuesday": "Tue",
+    "wednesday": "Wed",
+    "thursday": "Thu",
+    "friday": "Fri",
+    "saturday": "Sat"
   },
   "Search": {
     "placeholder": "Search routes...",
@@ -149,7 +162,9 @@
   },
   "OfflineIndicator": {
     "message": "You are offline",
-    "cragsAvailable": "{count, plural, =1 {# crag available} other {# crags available}}"
+    "cragsAvailable": "{count, plural, =1 {# crag available} other {# crags available}}",
+    "tapToView": "Tap to view offline content",
+    "routes": "routes"
   },
   "Offline": {
     "download": "Download Offline",
@@ -167,16 +182,69 @@
     "deleteSuccess": "Offline data deleted",
     "notSupported": "Your browser does not support offline features"
   },
+  "OfflinePage": {
+    "title": "Offline Content",
+    "description": "Browse downloaded crag data",
+    "offline": "You are offline",
+    "backOnline": "Back online",
+    "downloadedCrags": "{count, plural, =1 {# crag downloaded} other {# crags downloaded}}",
+    "routeCount": "{count, plural, =1 {# route} other {# routes}}",
+    "noDownloads": "No offline content",
+    "downloadHint": "Download offline data from crag detail pages when online",
+    "goHome": "Go Home",
+    "retry": "Try Again"
+  },
+  "OfflineCragDetail": {
+    "offlineViewing": "Offline viewing",
+    "offlineData": "Offline data",
+    "routes": "routes",
+    "noGrade": "N/A",
+    "notDownloaded": "Crag not downloaded",
+    "notDownloadedDesc": "This crag has not been downloaded for offline use",
+    "backToOffline": "Back to Offline",
+    "weatherUnavailable": "Weather unavailable offline"
+  },
+  "OfflineRouteDetail": {
+    "offlineViewing": "Offline viewing",
+    "offlineData": "Offline data",
+    "notDownloaded": "Route not downloaded",
+    "notDownloadedDesc": "The crag containing this route has not been downloaded",
+    "backToOffline": "Back to Offline",
+    "betaUnavailable": "Beta videos unavailable offline"
+  },
+  "OfflineCache": {
+    "title": "Offline Cache",
+    "cragsDownloaded": "{count, plural, =1 {# crag downloaded} other {# crags downloaded}}",
+    "routesAvailable": "{count, plural, =1 {# route available offline} other {# routes available offline}}",
+    "noDownloads": "No offline data",
+    "downloadHint": "Download from crag detail pages",
+    "manageTitle": "Manage Offline Data",
+    "emptyTitle": "No Offline Data",
+    "emptyDescription": "When online, go to a crag detail page and tap \"Download Offline\" to save it for offline use",
+    "cragInfo": "{routes, plural, =1 {# route} other {# routes}} · {images, plural, =1 {# image} other {# images}}",
+    "delete": "Delete",
+    "confirmDelete": "Delete offline data for {name}? You'll need to re-download it.",
+    "deleteHint": "After deletion, this crag won't be available offline. You can re-download it anytime."
+  },
   "InstallCard": {
     "title": "Add to Home Screen",
     "description": "For a better experience",
-    "install": "Install"
+    "install": "Install",
+    "dismiss": "Close",
+    "iosDescription": "Add to home screen for quick access",
+    "showHowTo": "Show me how",
+    "iosStep1": "Tap the Share button",
+    "iosStep2": "Select \"Add to Home Screen\"",
+    "hideTutorial": "Hide",
+    "iosNotSafariTitle": "Please open in Safari",
+    "iosNotSafariDescription": "iOS only supports installing apps via Safari browser"
   },
   "LocaleSwitcher": {
     "switchLanguage": "Switch Language",
     "languageSelector": "Language Selection",
     "zh": "中文",
-    "en": "English"
+    "en": "English",
+    "fr": "Français"
   },
   "Grade": {
     "unknown": "Unknown",

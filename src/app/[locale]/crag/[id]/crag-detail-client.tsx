@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import Image from 'next/image'
 import { FileText, Car, ChevronLeft, Map } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ interface CragDetailClientProps {
 }
 
 export default function CragDetailClient({ crag, routes }: CragDetailClientProps) {
+  const t = useTranslations('CragDetail')
   const router = useRouter()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -248,7 +250,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             boxShadow: 'var(--theme-shadow-lg)',
           }}
         >
-          开始探索线路
+          {t('exploreRoutes')}
         </Button>
       </div>
     </div>

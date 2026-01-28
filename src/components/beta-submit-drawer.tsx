@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link2, Ruler, ArrowUpFromLine, Check, AlertCircle } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { detectPlatformFromUrl, isXiaohongshuUrl, extractUrlFromText, BETA_PLATFORMS } from '@/lib/beta-constants'
+import { useClimberBodyData } from '@/hooks/use-climber-body-data'
 
 interface BetaSubmitDrawerProps {
   isOpen: boolean
@@ -23,12 +24,21 @@ export function BetaSubmitDrawer({
 }: BetaSubmitDrawerProps) {
   const t = useTranslations('Beta')
   const tApiError = useTranslations('APIError')
+  const { bodyData, updateBodyData } = useClimberBodyData()
   const [url, setUrl] = useState('')
   const [height, setHeight] = useState('')
   const [reach, setReach] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  // 抽屉打开时，用缓存的身体数据预填充表单
+  useEffect(() => {
+    if (isOpen) {
+      setHeight(bodyData.height)
+      setReach(bodyData.reach)
+    }
+  }, [isOpen, bodyData.height, bodyData.reach])
 
   // 检测平台
   const detectedPlatform = url ? detectPlatformFromUrl(url) : null
@@ -116,6 +126,8 @@ export function BetaSubmitDrawer({
       }
 
       setSuccess(true)
+      // 提交成功后缓存身高和臂长数据
+      updateBodyData({ height, reach })
       setTimeout(() => {
         handleClose()
         onSuccess?.()

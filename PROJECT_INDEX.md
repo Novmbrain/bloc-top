@@ -2,7 +2,8 @@
 
 > 福州罗源攀岩线路分享 PWA 应用（野外抱石攀岩指南）
 
-Generated: 2026-01-22
+Generated: 2026-01-27
+Lines of Code: ~24,000 | Test Files: 41
 
 ---
 
@@ -10,147 +11,77 @@ Generated: 2026-01-22
 
 ```
 src/
-├── app/                      # Next.js App Router
-│   ├── [locale]/             # 国际化路由 (zh/en)
-│   │   ├── page.tsx          # 首页 - 岩场列表
-│   │   ├── layout.tsx        # 国际化布局
-│   │   ├── crag/[id]/        # 岩场详情页
-│   │   ├── route/            # 线路列表页
-│   │   ├── route/[id]/       # 线路详情页
-│   │   └── profile/          # 设置页
-│   ├── api/                  # API Routes (6 个端点)
-│   │   ├── beta/             # Beta 视频 CRUD
-│   │   ├── weather/          # 天气数据 (高德API)
-│   │   ├── geo/              # IP 地理定位
-│   │   ├── visit/            # 访问统计
-│   │   ├── feedback/         # 用户反馈
-│   │   └── log/              # 客户端日志上报
-│   ├── layout.tsx            # 根布局 (字体)
-│   ├── sw.ts                 # Service Worker (Serwist)
-│   └── not-found.tsx         # 404 页面
-├── components/               # React 组件 (31个)
-│   ├── ui/                   # shadcn/ui + 自定义基础组件
-│   │   └── segmented-control.tsx # iOS风格分段控制器 ✨NEW
-│   ├── app-tabbar.tsx        # 底部导航栏
-│   ├── crag-card.tsx         # 岩场卡片
-│   ├── locale-switcher.tsx   # 语言切换器 ✨NEW
-│   ├── weather-*.tsx         # 天气组件系列
+├── app/                          # Next.js App Router (16.1.2)
+│   ├── [locale]/                 # 国际化路由 (zh/en/fr)
+│   │   ├── page.tsx              # 首页 - 岩场列表
+│   │   ├── home-client.tsx       # 首页客户端组件 (过滤、搜索)
+│   │   ├── layout.tsx            # 国际化布局
+│   │   ├── crag/[id]/            # 岩场详情页
+│   │   ├── route/                # 线路列表页
+│   │   ├── profile/              # 设置页面
+│   │   ├── offline/              # 离线模式页面
+│   │   └── demo/editor/          # Topo 编辑器 (隐藏入口)
+│   ├── api/                      # API Routes (12 个端点)
+│   │   ├── beta/                 # Beta 视频 CRUD
+│   │   ├── weather/              # 天气数据 (高德API)
+│   │   ├── geo/                  # IP 地理定位
+│   │   ├── crags/                # 岩场列表
+│   │   │   └── [id]/routes       # 岩场线路列表
+│   │   ├── routes/[id]/          # 线路 CRUD + topoLine
+│   │   ├── upload/               # R2 图片上传
+│   │   └── revalidate/           # ISR 重新验证
+│   ├── sw.ts                     # Service Worker (Serwist)
+│   └── globals.css               # 全局样式 + CSS 变量
+│
+├── components/                   # React Components
+│   ├── ui/                       # 基础 UI 组件
+│   │   ├── drawer.tsx            # 通用抽屉 (手势关闭)
+│   │   ├── image-viewer.tsx      # 全屏图片 (双指缩放 + 叠加层)
+│   │   ├── toast.tsx             # Toast 通知
+│   │   └── ...
+│   ├── app-tabbar.tsx            # 底部导航栏 (含隐藏入口)
+│   ├── topo-line-overlay.tsx     # Topo 线路 SVG 叠加层 ✨
+│   ├── route-detail-drawer.tsx   # 线路详情抽屉 (Topo 动画)
+│   ├── weather-*.tsx             # 天气组件系列
+│   ├── filter-*.tsx              # 筛选组件系列
+│   ├── offline-*.tsx             # 离线组件系列
 │   └── ...
-├── hooks/                    # 自定义 Hooks (4个)
-│   ├── use-city-selection.ts # 城市选择 (localStorage)
-│   ├── use-route-search.ts   # 线路搜索 (拼音支持)
-│   └── use-delayed-loading.ts# 延迟加载 (防骨架屏闪烁)
-├── i18n/                     # 国际化配置 (next-intl) ✨NEW
-│   ├── routing.ts            # 路由配置
-│   ├── request.ts            # 服务端配置
-│   └── navigation.ts         # 导航工具
-├── lib/                      # 工具库
-│   ├── db/index.ts           # 数据访问层
-│   ├── mongodb.ts            # MongoDB 连接
-│   ├── grade-utils.ts        # 难度等级工具
-│   ├── weather-utils.ts      # 天气适宜度评估
-│   ├── city-config.ts        # 城市配置
-│   ├── cache-config.ts       # 缓存 TTL 配置
-│   ├── rate-limit.ts         # API 限流
-│   ├── logger.ts             # 服务端日志
-│   └── themes/               # 主题系统 (Dracula)
-├── types/index.ts            # TypeScript 类型
-├── middleware.ts             # 语言检测中间件 ✨NEW
-└── test/                     # 测试工具
-
-messages/                     # 翻译文件 ✨NEW
-├── zh.json                   # 中文
-└── en.json                   # English
-
-scripts/                      # 数据库脚本 (7个)
-doc/                          # 项目文档
-public/                       # 静态资源 (PWA icons, manifest)
+│
+├── hooks/                        # 自定义 Hooks
+│   ├── use-route-search.ts       # 线路搜索 (拼音支持)
+│   ├── use-city-selection.ts     # 城市选择
+│   ├── use-offline-*.ts          # 离线功能
+│   └── ...
+│
+├── lib/                          # 工具库
+│   ├── db/index.ts               # MongoDB CRUD 操作
+│   ├── mongodb.ts                # 数据库连接
+│   ├── topo-utils.ts             # 贝塞尔曲线、坐标转换
+│   ├── topo-constants.ts         # Topo 样式/动画配置 ✨
+│   ├── constants.ts              # 图片 URL 常量
+│   ├── tokens.ts                 # 设计令牌 (难度颜色)
+│   ├── themes/                   # 主题系统 (Dracula)
+│   └── ...
+│
+├── types/index.ts                # TypeScript 类型
+└── i18n/                         # 国际化配置
 ```
 
 ---
 
 ## 🚀 Entry Points
 
-| 入口 | 路径 | 说明 |
+| 页面 | 路径 | 说明 |
 |------|------|------|
-| 开发服务器 | `npm run dev` | Turbopack 开发模式 |
-| 生产构建 | `npm run build` | Webpack 构建 |
-| 数据库迁移 | `npm run db:seed` | 开发环境数据迁移 |
-| 单元测试 | `npm run test:run` | Vitest 运行 (304+ tests) |
-| 组件测试 | `npm run test:ct` | Playwright 浏览器测试 |
+| 首页 | `src/app/[locale]/page.tsx` | 岩场列表、过滤、搜索 |
+| 岩场详情 | `src/app/[locale]/crag/[id]/page.tsx` | 地图、线路列表 |
+| 线路列表 | `src/app/[locale]/route/page.tsx` | 全部线路搜索 |
+| 设置 | `src/app/[locale]/profile/page.tsx` | 用户设置 |
+| 离线 | `src/app/[locale]/offline/page.tsx` | 已下载岩场 |
+| **Topo 编辑器** | `src/app/[locale]/demo/editor/page.tsx` | 线路标注 (隐藏入口) |
 
----
-
-## 📦 Core Modules
-
-### Database Layer
-- **Path**: `src/lib/db/index.ts`
-- **Exports**: `getAllCrags`, `getCragById`, `getAllRoutes`, `getRouteById`, `getRoutesByCragId`
-- **Purpose**: MongoDB CRUD 操作 + 日志记录
-
-### Theme System
-- **Path**: `src/lib/themes/`
-- **Exports**: `themes`, `getTheme`, `ThemeId`
-- **Purpose**: 双主题系统 (light/dark Dracula)
-
-### i18n System ✨NEW
-- **Path**: `src/i18n/`
-- **Exports**: `routing`, `Link`, `useRouter`, `usePathname`
-- **Purpose**: next-intl 国际化 (zh/en)
-
-### SegmentedControl ✨NEW
-- **Path**: `src/components/ui/segmented-control.tsx`
-- **Exports**: `SegmentedControl`, `SegmentOption`
-- **Purpose**: iOS风格分段选择器，滑动动画，支持图标
-
-### Weather Utils
-- **Path**: `src/lib/weather-utils.ts`
-- **Exports**: `getClimbingSuitability`, `WEATHER_ICONS`
-- **Purpose**: 天气数据处理 + 攀岩适宜度评估
-
-### City Config
-- **Path**: `src/lib/city-config.ts`
-- **Exports**: `CITIES`, `CityId`, `CityConfig`
-- **Purpose**: 多城市配置 (罗源, 厦门)
-
----
-
-## 🎨 Key Components
-
-| 组件 | 路径 | 用途 |
-|------|------|------|
-| `Drawer` | `components/ui/drawer.tsx` | 通用抽屉 (手势关闭) |
-| `SegmentedControl` | `components/ui/segmented-control.tsx` | iOS风格分段选择器 ✨NEW |
-| `ImageViewer` | `components/ui/image-viewer.tsx` | 全屏图片 (双指缩放) |
-| `AMapContainer` | `components/amap-container.tsx` | 高德地图容器 |
-| `CragCard` | `components/crag-card.tsx` | 岩场列表卡片 |
-| `AppTabbar` | `components/app-tabbar.tsx` | 底部导航栏 (i18n) |
-| `LocaleSwitcher` | `components/locale-switcher.tsx` | 语言切换器 (3种变体) |
-| `LocaleSegmented` | `components/locale-switcher.tsx` | 分段式语言切换 ✨NEW |
-| `ThemeSwitcher` | `components/theme-switcher.tsx` | 分段式主题切换 (重构) |
-
----
-
-## 🌍 Internationalization ✨NEW
-
-| 配置 | 路径 | 说明 |
-|------|------|------|
-| 路由 | `src/i18n/routing.ts` | 支持语言: zh, en |
-| 请求 | `src/i18n/request.ts` | 消息加载 |
-| 导航 | `src/i18n/navigation.ts` | Link, useRouter |
-| 中间件 | `src/middleware.ts` | 语言检测 |
-
-### URL 结构
-- `/zh/` - 中文 (默认)
-- `/en/` - English
-
-### 翻译命名空间
-```
-Common, Navigation, HomePage, CragCard, CragDetail,
-RouteList, RouteDetail, Weather, Search, CitySelector,
-EmptyCity, InstallPrompt, UpdatePrompt, LocaleSwitcher,
-Grade, Beta, Profile, Metadata
-```
+### 🔐 隐藏入口
+**Topo 编辑器**：在任意页面 **2秒内连续点击 Tabbar "线路"按钮 6 次** 即可进入
 
 ---
 
@@ -158,125 +89,140 @@ Grade, Beta, Profile, Metadata
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| `GET` | `/api/beta?routeId=N` | 获取线路 Beta 视频列表 |
-| `POST` | `/api/beta` | 提交 Beta 视频 (Rate Limited) |
-| `GET` | `/api/weather?lng=X&lat=Y` | 获取天气数据 (1h 缓存) |
-| `GET` | `/api/geo` | IP 定位推断城市 |
-| `GET` | `/api/visit` | 访问统计 |
-| `POST` | `/api/log` | 客户端错误上报 |
-| `POST` | `/api/feedback` | 用户反馈提交 |
+| `GET` | `/api/crags` | 岩场列表 |
+| `GET` | `/api/crags/[id]/routes` | 岩场线路列表 |
+| `GET/PATCH` | `/api/routes/[id]` | 线路详情 + topoLine |
+| `GET/POST` | `/api/beta` | Beta 视频 CRUD |
+| `POST` | `/api/upload` | R2 图片上传 |
+| `GET` | `/api/weather` | 天气 + 攀岩适宜度 |
+| `GET` | `/api/geo` | IP 定位 |
+| `POST` | `/api/revalidate` | ISR 重新验证 |
 
 ---
 
-## 🧪 Test Coverage
+## 📦 Core Modules
 
-- **单元测试**: 20 个文件 (`*.test.ts/tsx`)
-- **组件测试**: 1 个文件 (`*.ct.tsx`)
-- **总测试数**: 304+
+### Topo 线路系统 ✨
+| 文件 | 功能 |
+|------|------|
+| `components/topo-line-overlay.tsx` | SVG 线路叠加层 (贝塞尔曲线、画线动画、起点点击重播) |
+| `lib/topo-utils.ts` | `bezierCurve()`, `scalePoints()`, `normalizePoint()` |
+| `lib/topo-constants.ts` | 尺寸、线条样式、控制点、动画配置 |
+
+### Database (`src/lib/db/index.ts`)
+- `getAllCrags()`, `getCragById(id)`
+- `getRouteById(id)`, `getRoutesByCragId(cragId)`
+- `updateRoute(id, updates)` - 支持 topoLine 更新
+
+### Offline Storage (`src/lib/offline-storage.ts`)
+- IndexedDB 存储
+- `downloadCrag()`, `getCachedCrags()`, `clearCache()`
+
+---
+
+## 🎨 Key Components
+
+### UI Base
+| 组件 | 功能 |
+|------|------|
+| `Drawer` | 通用抽屉 (手势下滑关闭、ESC 关闭) |
+| `ImageViewer` | 全屏图片查看器 (双指缩放、支持 children 叠加层) |
+| `Toast` | 通知组件 |
+
+### Business
+| 组件 | 功能 |
+|------|------|
+| `TopoLineOverlay` | Topo 线路 SVG (动画、ref 暴露 replay 方法) |
+| `RouteDetailDrawer` | 线路详情 (Topo 动画、点击放大) |
+| `AppTabbar` | 底部导航 (含隐藏编辑器入口) |
+| `CragCard` | 岩场卡片 |
+| `WeatherStrip/Badge/Card` | 天气组件系列 |
+| `FilterDrawer/Chip` | 筛选组件 |
+| `BetaListDrawer/SubmitDrawer` | Beta 视频 |
+
+---
+
+## 🪝 Custom Hooks
+
+| Hook | 功能 |
+|------|------|
+| `useRouteSearch` | 线路搜索 (拼音支持) |
+| `useCitySelection` | 城市选择 (localStorage + IP) |
+| `useOfflineMode` | 离线模式检测 |
+| `useOfflineDownload` | 离线下载管理 |
+| `useClimberBodyData` | 身体数据缓存 |
+
+---
+
+## 🧪 Testing
+
+- **框架**: Vitest + Playwright CT
+- **测试文件**: 41 个
 - **覆盖率**: ~34%
-- **测试框架**: Vitest + Testing Library + Playwright
 
-### 已测试模块
-```
-lib/: grade-utils, tokens, filter-constants, beta-constants,
-      rate-limit, crag-theme, themes, utils, pinyin-utils,
-      weather-utils, city-config
-hooks/: use-route-search, use-city-selection, use-delayed-loading
-components/: filter-chip, grade-range-selector, drawer,
-             crag-card, search-overlay, theme-switcher
+```bash
+npm run test          # Vitest watch
+npm run test:run      # 单次运行
+npm run test:coverage # 覆盖率报告
+npm run test:ct       # Playwright 组件测试
 ```
 
 ---
 
-## 🔗 Key Dependencies
+## 🔧 Tech Stack
 
-| 依赖 | 版本 | 用途 |
+| 类别 | 技术 | 版本 |
 |------|------|------|
-| `next` | 16.1.2 | React 框架 (App Router) |
-| `next-intl` | 4.7.0 | 国际化 ✨NEW |
-| `react` | 19.2.3 | UI 库 |
-| `mongodb` | 7.0.0 | 数据库驱动 |
-| `@serwist/next` | 9.5.0 | PWA Service Worker |
-| `next-themes` | 0.4.6 | 主题切换 |
-| `@amap/amap-jsapi-loader` | 1.0.1 | 高德地图 |
-| `lucide-react` | 0.562.0 | 图标库 |
-| `pinyin-pro` | 3.28.0 | 拼音搜索 |
-| `tailwindcss` | 4.x | CSS 框架 |
-
----
-
-## 🎯 Core Data Types
-
-```typescript
-interface Crag {
-  id: string           // 'yuan-tong-si'
-  name: string         // 岩场名称
-  cityId: string       // 所属城市
-  coordinates?: Coordinates
-  approachPaths?: ApproachPath[]
-}
-
-interface Route {
-  id: number
-  name: string
-  grade: string        // V0-V13 或 "？"
-  cragId: string
-  betaLinks?: BetaLink[]
-}
-
-interface WeatherData {
-  live: WeatherLive
-  forecasts?: WeatherForecast[]
-  climbing: ClimbingCondition  // 攀岩适宜度
-}
-```
+| Framework | Next.js (App Router) | 16.1.2 |
+| Runtime | React | 19.2.3 |
+| Database | MongoDB Atlas | 7.0.0 |
+| i18n | next-intl | 4.7.0 |
+| Styling | Tailwind CSS | 4.x |
+| PWA | Serwist | 9.5.0 |
+| Map | 高德地图 | 1.4.15 |
+| Image Zoom | react-zoom-pan-pinch | 3.7.0 |
+| Testing | Vitest + Playwright | latest |
 
 ---
 
 ## 📝 Quick Start
 
 ```bash
-# 1. Node 版本
-nvm use  # >= 20.9.0
-
-# 2. 安装依赖
+nvm use                    # Node 20.9+
 npm install
-
-# 3. 配置环境变量
-cp .env.example .env.local
-# 填入 MONGODB_URI 和 NEXT_PUBLIC_AMAP_KEY
-
-# 4. 启动开发服务器
-npm run dev
-
-# 5. 运行测试
-npm run test:run
-npm run lint
+cp .env.example .env.local # 配置 MONGODB_URI + NEXT_PUBLIC_AMAP_KEY
+npm run dev                # http://localhost:3000
+npm run test               # 运行测试
 ```
 
 ---
 
-## 🔄 Git Workflow
+## 🔑 Key Dependencies
 
-```
-Issue → Feature Branch → PR → CI → Merge
-```
-
-- **分支命名**: `feature/issue-{N}-{desc}`
-- **PR 关键词**: `Closes #{N}` 自动关闭 Issue
-- **CI 检查**: ESLint, TypeScript, Vitest, Playwright
+| Package | 用途 |
+|---------|------|
+| mongodb | 数据库驱动 |
+| @serwist/next | PWA Service Worker |
+| next-intl | 国际化 |
+| react-zoom-pan-pinch | 图片缩放 |
+| @amap/amap-jsapi-loader | 高德地图 |
+| pinyin-pro | 拼音搜索 |
+| lucide-react | 图标 |
+| @aws-sdk/client-s3 | R2 图片上传 |
 
 ---
 
-## 📚 Documentation
+## 📊 Project Stats
 
-| 文件 | 内容 |
+| 指标 | 数值 |
 |------|------|
-| `CLAUDE.md` | AI 开发指南 (代码规范) |
-| `doc/PROJECT_OVERVIEW.md` | 项目架构详解 |
-| `doc/i18n-implementation-plan.md` | 国际化方案 ✨NEW |
-| `README.md` | 快速开始 |
+| 源代码行数 | ~24,000 |
+| 测试文件 | 41 个 |
+| 组件 | ~50 个 |
+| API 路由 | 12 个 |
+| 支持语言 | 3 种 (zh/en/fr) |
+| 覆盖率 | ~34% |
 
 ---
 
-**Token Efficiency**: ~3KB (vs 58KB full read = 94% reduction)
+**Token Efficiency**: ~4KB index vs ~60KB full codebase (94% reduction)

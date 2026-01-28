@@ -187,6 +187,56 @@ export async function getRoutesByCragId(cragId: string): Promise<Route[]> {
   }
 }
 
+/**
+ * 更新线路信息
+ * 支持部分更新，只更新传入的字段
+ */
+export async function updateRoute(
+  id: number,
+  updates: Partial<Omit<Route, 'id'>>
+): Promise<Route | null> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+
+    // 添加更新时间戳
+    const updateData = {
+      ...updates,
+      updatedAt: new Date(),
+    }
+
+    const result = await db.collection('routes').findOneAndUpdate(
+      { _id: id as unknown as Document['_id'] },
+      { $set: updateData },
+      { returnDocument: 'after' }
+    )
+
+    if (!result) {
+      log.info(`Route not found for update: ${id}`, {
+        action: 'updateRoute',
+        duration: Date.now() - start,
+      })
+      return null
+    }
+
+    log.info(`Updated route: ${id}`, {
+      action: 'updateRoute',
+      duration: Date.now() - start,
+      metadata: { routeId: id, fields: Object.keys(updates) },
+    })
+
+    return toRoute(result)
+  } catch (error) {
+    log.error(`Failed to update route: ${id}`, error, {
+      action: 'updateRoute',
+      duration: Date.now() - start,
+      metadata: { routeId: id },
+    })
+    throw error
+  }
+}
+
 // ============ Feedback 相关操作 ============
 
 /**

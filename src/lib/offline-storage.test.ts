@@ -16,6 +16,7 @@ import {
   collectImageUrls,
   generateVersion,
   closeDB,
+  getOfflineRouteById,
   META_STORAGE_KEY,
   type OfflineCragData,
 } from './offline-storage'
@@ -242,6 +243,72 @@ describe('offline-storage', () => {
     it('should handle empty routes array', () => {
       const urls = collectImageUrls(mockCrag, [])
       expect(urls.length).toBe(2) // Only cover images
+    })
+  })
+
+  // ==================== getOfflineRouteById 测试 ====================
+
+  describe('getOfflineRouteById', () => {
+    it('should find route in downloaded crag data', async () => {
+      await saveCragOffline(mockOfflineData)
+
+      const result = await getOfflineRouteById(1)
+
+      expect(result).not.toBeNull()
+      expect(result?.route.id).toBe(1)
+      expect(result?.route.name).toBe('线路1')
+      expect(result?.crag.id).toBe('test-crag')
+    })
+
+    it('should return null for non-existent route', async () => {
+      await saveCragOffline(mockOfflineData)
+
+      const result = await getOfflineRouteById(999)
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null when no offline data exists', async () => {
+      // 确保数据库是空的 - 删除可能存在的数据
+      const existingCrags = await getAllOfflineCrags()
+      for (const crag of existingCrags) {
+        await deleteCragOffline(crag.cragId)
+      }
+
+      const result = await getOfflineRouteById(1)
+
+      expect(result).toBeNull()
+    })
+
+    it('should find route across multiple crags', async () => {
+      // 保存第一个岩场
+      await saveCragOffline(mockOfflineData)
+
+      // 保存第二个岩场，包含不同的线路
+      const secondCragData: OfflineCragData = {
+        cragId: 'test-crag-2',
+        crag: { ...mockCrag, id: 'test-crag-2', name: '测试岩场2' },
+        routes: [
+          {
+            id: 100,
+            name: '线路100',
+            grade: 'V4',
+            cragId: 'test-crag-2',
+            area: '区域C',
+          },
+        ],
+        downloadedAt: '2024-01-02T00:00:00.000Z',
+        version: 'test-crag-2-2024-01-02',
+        imageCount: 1,
+      }
+      await saveCragOffline(secondCragData)
+
+      // 查找第二个岩场的线路
+      const result = await getOfflineRouteById(100)
+
+      expect(result).not.toBeNull()
+      expect(result?.route.name).toBe('线路100')
+      expect(result?.crag.name).toBe('测试岩场2')
     })
   })
 

@@ -376,3 +376,23 @@ export function generateVersion(cragId: string): string {
 export function closeDB(): void {
   dbPromise = null
 }
+
+/**
+ * 根据线路 ID 查找离线线路数据
+ * 遍历所有已下载的岩场来查找对应线路
+ */
+export async function getOfflineRouteById(routeId: number): Promise<{
+  route: Route
+  crag: Crag
+} | null> {
+  const crags = await getAllOfflineCrags()
+
+  for (const cragData of crags) {
+    const route = cragData.routes.find((r) => r.id === routeId)
+    if (route) {
+      return { route, crag: cragData.crag }
+    }
+  }
+
+  return null
+}

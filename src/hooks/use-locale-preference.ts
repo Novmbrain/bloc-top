@@ -23,7 +23,7 @@ const LOCALE_DETECTED_KEY = 'locale-detected'
 function getCachedLocale(): Locale | null {
   if (typeof window === 'undefined') return null
   const cached = localStorage.getItem(LOCALE_CACHE_KEY)
-  if (cached === 'zh' || cached === 'en') {
+  if (cached === 'zh' || cached === 'en' || cached === 'fr') {
     return cached
   }
   return null

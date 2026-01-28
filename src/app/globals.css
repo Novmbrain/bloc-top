@@ -340,6 +340,20 @@
   animation: fade-in 0.2s ease-out forwards;
 }
 
+/* 微妙脉冲动画 - 用于状态指示 */
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
 /* ==================== 桌面端适配工具类 ==================== */
 
 /**

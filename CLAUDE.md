@@ -477,6 +477,10 @@ import AMapContainer from '@/components/amap-container'
 | `GET` | `/api/weather?lng=119&lat=26` | 获取天气数据 (含攀岩适宜度, 1h缓存) |
 | `GET` | `/api/geo` | IP 定位 → 推断城市 (首次访问智能选择) |
 | `POST` | `/api/log` | 客户端错误上报 (Vercel 日志可见) |
+| `GET` | `/api/crags` | 获取所有岩场列表 |
+| `GET` | `/api/crags/[id]/routes` | 获取指定岩场的线路列表 |
+| `GET/PATCH` | `/api/routes/[id]` | 获取/更新单条线路 (含 topoLine) |
+| `POST` | `/api/upload` | 上传 Topo 图片到 R2 (FormData: file, cragId, routeName) |
 
 > 岩场/线路数据通过 Server Components 直接从 MongoDB 获取，无需 API 路由
 

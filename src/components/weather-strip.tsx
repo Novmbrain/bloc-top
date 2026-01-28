@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Droplets } from 'lucide-react'
 import type { WeatherData } from '@/types'
 import { getWeatherIcon, SUITABILITY_CONFIG } from '@/lib/weather-constants'
@@ -12,6 +13,7 @@ interface WeatherStripProps {
 }
 
 export function WeatherStrip({ lng, lat }: WeatherStripProps) {
+  const t = useTranslations('Weather')
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -108,7 +110,7 @@ export function WeatherStrip({ lng, lat }: WeatherStripProps) {
             className="text-sm font-medium"
             style={{ color: suitabilityConfig.color }}
           >
-            {suitabilityConfig.label}
+            {t(climbing.level)}
           </span>
           <span
             className="text-sm"

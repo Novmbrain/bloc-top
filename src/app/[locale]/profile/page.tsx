@@ -7,6 +7,7 @@ import { Palette, Heart, Copy, Check, User, Send, Users, Globe } from 'lucide-re
 import { AppTabbar } from '@/components/app-tabbar'
 import { ThemeSwitcher } from '@/components/theme-switcher'
 import { LocaleSegmented } from '@/components/locale-switcher'
+import { OfflineCacheSection } from '@/components/offline-cache-manager'
 import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
 // 访问统计缓存 key
@@ -162,6 +163,9 @@ export default function ProfilePage() {
             </div>
             <LocaleSegmented />
           </div>
+
+          {/* 离线缓存管理区块 */}
+          <OfflineCacheSection />
 
           {/* 关于作者按钮 */}
           <div className="mb-6">
