@@ -785,11 +785,10 @@ export default function TopoEditorPage() {
                 placeholder="搜索线路（支持拼音首字母）..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-10 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2"
+                className="w-full pl-12 pr-10 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                 style={{
                   backgroundColor: 'var(--theme-surface-variant)',
                   color: 'var(--theme-on-surface)',
-                  ringColor: 'var(--theme-primary)',
                 }}
               />
               {searchQuery && (
@@ -1241,11 +1240,10 @@ export default function TopoEditorPage() {
                     onChange={(e) =>
                       setEditedRoute((prev) => ({ ...prev, name: e.target.value }))
                     }
-                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                     style={{
                       backgroundColor: 'var(--theme-surface)',
                       color: 'var(--theme-on-surface)',
-                      ringColor: 'var(--theme-primary)',
                     }}
                   />
                 </div>
@@ -1262,11 +1260,10 @@ export default function TopoEditorPage() {
                     onChange={(e) =>
                       setEditedRoute((prev) => ({ ...prev, grade: e.target.value }))
                     }
-                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                     style={{
                       backgroundColor: 'var(--theme-surface)',
                       color: 'var(--theme-on-surface)',
-                      ringColor: 'var(--theme-primary)',
                     }}
                   >
                     {GRADE_OPTIONS.map((g) => (
@@ -1290,11 +1287,10 @@ export default function TopoEditorPage() {
                     onChange={(e) =>
                       setEditedRoute((prev) => ({ ...prev, area: e.target.value }))
                     }
-                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                     style={{
                       backgroundColor: 'var(--theme-surface)',
                       color: 'var(--theme-on-surface)',
-                      ringColor: 'var(--theme-primary)',
                     }}
                   />
                 </div>
@@ -1312,11 +1308,10 @@ export default function TopoEditorPage() {
                     onChange={(e) =>
                       setEditedRoute((prev) => ({ ...prev, FA: e.target.value }))
                     }
-                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                     style={{
                       backgroundColor: 'var(--theme-surface)',
                       color: 'var(--theme-on-surface)',
-                      ringColor: 'var(--theme-primary)',
                     }}
                   />
                 </div>
@@ -1334,11 +1329,10 @@ export default function TopoEditorPage() {
                     onChange={(e) =>
                       setEditedRoute((prev) => ({ ...prev, setter: e.target.value }))
                     }
-                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                     style={{
                       backgroundColor: 'var(--theme-surface)',
                       color: 'var(--theme-on-surface)',
-                      ringColor: 'var(--theme-primary)',
                     }}
                   />
                 </div>
@@ -1359,11 +1353,10 @@ export default function TopoEditorPage() {
                       }))
                     }
                     rows={3}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm resize-none outline-none transition-all duration-200 focus:ring-2"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm resize-none outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                     style={{
                       backgroundColor: 'var(--theme-surface)',
                       color: 'var(--theme-on-surface)',
-                      ringColor: 'var(--theme-primary)',
                     }}
                   />
                 </div>
