@@ -229,7 +229,15 @@
   "InstallCard": {
     "title": "添加到主屏幕",
     "description": "获得更好的使用体验",
-    "install": "安装"
+    "install": "安装",
+    "dismiss": "关闭",
+    "iosDescription": "将应用添加到主屏幕，随时快速访问",
+    "showHowTo": "查看安装方法",
+    "iosStep1": "点击底部分享按钮",
+    "iosStep2": "选择「添加到主屏幕」",
+    "hideTutorial": "收起",
+    "iosNotSafariTitle": "请使用 Safari 打开",
+    "iosNotSafariDescription": "iOS 仅支持通过 Safari 浏览器安装应用到主屏幕"
   },
   "LocaleSwitcher": {
     "switchLanguage": "切换语言",

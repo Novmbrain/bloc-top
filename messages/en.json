@@ -229,7 +229,15 @@
   "InstallCard": {
     "title": "Add to Home Screen",
     "description": "For a better experience",
-    "install": "Install"
+    "install": "Install",
+    "dismiss": "Close",
+    "iosDescription": "Add to home screen for quick access",
+    "showHowTo": "Show me how",
+    "iosStep1": "Tap the Share button",
+    "iosStep2": "Select \"Add to Home Screen\"",
+    "hideTutorial": "Hide",
+    "iosNotSafariTitle": "Please open in Safari",
+    "iosNotSafariDescription": "iOS only supports installing apps via Safari browser"
   },
   "LocaleSwitcher": {
     "switchLanguage": "Switch Language",

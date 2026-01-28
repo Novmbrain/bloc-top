@@ -197,7 +197,15 @@
   "InstallCard": {
     "title": "Ajouter à l'écran d'accueil",
     "description": "Pour une meilleure expérience",
-    "install": "Installer"
+    "install": "Installer",
+    "dismiss": "Fermer",
+    "iosDescription": "Ajoutez à l'écran d'accueil pour un accès rapide",
+    "showHowTo": "Comment faire",
+    "iosStep1": "Appuyez sur le bouton Partager",
+    "iosStep2": "Sélectionnez « Sur l'écran d'accueil »",
+    "hideTutorial": "Masquer",
+    "iosNotSafariTitle": "Veuillez ouvrir dans Safari",
+    "iosNotSafariDescription": "iOS ne permet l'installation d'applications que via le navigateur Safari"
   },
   "LocaleSwitcher": {
     "switchLanguage": "Changer de langue",
