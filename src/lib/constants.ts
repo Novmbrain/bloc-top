@@ -1,3 +1,5 @@
+import type { Route } from '@/types'
+
 /**
  * Cloudflare R2 图片存储配置
  */
@@ -37,4 +39,36 @@ export function getRouteTopoUrl(
  */
 export function getCragCoverUrl(cragId: string, index: number): string {
   return `${IMAGE_BASE_URL}/CragSurface/${cragId}/${index}.jpg?v=${IMAGE_VERSION}`
+}
+
+/**
+ * 生成岩面 Topo 图片 URL（新策略）
+ * 同一 faceId 的线路共享同一张图片
+ *
+ * @param cragId - 岩场 ID
+ * @param faceId - 岩面 ID
+ * @param timestamp - 可选时间戳，用于刚上传后强制刷新缓存
+ */
+export function getFaceTopoUrl(
+  cragId: string,
+  faceId: string,
+  timestamp?: number
+): string {
+  const version = timestamp ? `t=${timestamp}` : `v=${IMAGE_VERSION}`
+  return `${IMAGE_BASE_URL}/${cragId}/faces/${encodeURIComponent(faceId)}.jpg?${version}`
+}
+
+/**
+ * 智能获取 Topo 图片 URL（兼容新旧数据）
+ * - 有 faceId: 使用岩面图片路径
+ * - 无 faceId: 回退到线路名称图片路径
+ *
+ * @param route - 线路数据
+ * @param timestamp - 可选时间戳
+ */
+export function getTopoImageUrl(route: Route, timestamp?: number): string {
+  if (route.faceId) {
+    return getFaceTopoUrl(route.cragId, route.faceId, timestamp)
+  }
+  return getRouteTopoUrl(route.cragId, route.name, timestamp)
 }

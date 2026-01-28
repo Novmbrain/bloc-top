@@ -44,3 +44,27 @@ export const TOPO_ANIMATION_CONFIG = {
   /** 全屏模式自动播放延迟 (ms) */
   autoPlayDelayFullscreen: 500,
 } as const
+
+// 多线路叠加配置（岩面共享模式）
+export const TOPO_MULTI_LINE_CONFIG = {
+  /** 未选中线路透明度 */
+  inactiveOpacity: 0.4,
+  /** 未选中线路颜色 */
+  inactiveColor: '#888888',
+  /** 未选中线路宽度 */
+  inactiveStrokeWidth: 3,
+  /** 未选中线路外层描边宽度 */
+  inactiveOutlineWidth: 5,
+  /** 未选中起点标记半径 */
+  inactiveMarkerRadius: 6,
+
+  /** 选中线路起点标记半径 (略大于普通起点) */
+  selectedMarkerRadius: 10,
+
+  /** 切换动画：淡出时间 (ms) */
+  fadeOutDuration: 50,
+  /** 切换动画：淡入时间 (ms) */
+  fadeInDuration: 50,
+  /** 切换动画：画线动画延迟 (ms) */
+  drawAnimationDelay: 100,
+} as const

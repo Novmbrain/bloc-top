@@ -9,8 +9,9 @@ import { ImageViewer } from '@/components/ui/image-viewer'
 import { BetaListDrawer } from '@/components/beta-list-drawer'
 import { BetaSubmitDrawer } from '@/components/beta-submit-drawer'
 import { TopoLineOverlay, type TopoLineOverlayRef } from '@/components/topo-line-overlay'
+import { MultiTopoLineOverlay, type MultiTopoLineOverlayRef, type MultiTopoRoute } from '@/components/multi-topo-line-overlay'
 import { getGradeColor } from '@/lib/tokens'
-import { getRouteTopoUrl } from '@/lib/constants'
+import { getTopoImageUrl } from '@/lib/constants'
 import { TOPO_ANIMATION_CONFIG } from '@/lib/topo-constants'
 import type { Route, Crag, BetaLink } from '@/types'
 
@@ -18,14 +19,20 @@ interface RouteDetailDrawerProps {
   isOpen: boolean
   onClose: () => void
   route: Route | null
+  /** 同一岩面的其他线路（用于多线路叠加显示） */
+  siblingRoutes?: Route[]
   crag?: Crag | null
+  /** 线路切换回调 */
+  onRouteChange?: (route: Route) => void
 }
 
 export function RouteDetailDrawer({
   isOpen,
   onClose,
   route,
+  siblingRoutes,
   crag,
+  onRouteChange,
 }: RouteDetailDrawerProps) {
   const t = useTranslations('RouteDetail')
   const tBeta = useTranslations('Beta')
@@ -41,9 +48,36 @@ export function RouteDetailDrawer({
   // Topo 线路 overlay refs (用于触发动画)
   const drawerOverlayRef = useRef<TopoLineOverlayRef>(null)
   const fullscreenOverlayRef = useRef<TopoLineOverlayRef>(null)
+  const multiOverlayRef = useRef<MultiTopoLineOverlayRef>(null)
+  const multiFullscreenOverlayRef = useRef<MultiTopoLineOverlayRef>(null)
 
   // 抽屉内动画是否已播放
   const [drawerAnimated, setDrawerAnimated] = useState(false)
+
+  // 线路颜色 (基于难度等级)
+  const routeColor = useMemo(
+    () => route ? getGradeColor(route.grade) : '#888888',
+    [route]
+  )
+
+  // 是否有 Topo 线路数据
+  const hasTopoLine = route?.topoLine && route.topoLine.length >= 2
+
+  // 过滤出有效的同岩面线路（有 topoLine 数据的）
+  const validSiblingRoutes = useMemo((): MultiTopoRoute[] => {
+    if (!siblingRoutes || siblingRoutes.length <= 1) return []
+    return siblingRoutes
+      .filter(r => r.topoLine && r.topoLine.length >= 2)
+      .map(r => ({
+        id: r.id,
+        name: r.name,
+        grade: r.grade,
+        topoLine: r.topoLine!,
+      }))
+  }, [siblingRoutes])
+
+  // 是否使用多线路模式
+  const useMultiLineMode = validSiblingRoutes.length > 1 && hasTopoLine
 
   // 当线路变化时重置状态
   useEffect(() => {
@@ -56,26 +90,30 @@ export function RouteDetailDrawer({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅依赖 route.id 变化
   }, [route?.id])
 
-  // 抽屉打开 + 图片加载完成时触发动画
+  // 抽屉打开 + 图片加载完成时触发动画（单线路模式）
   useEffect(() => {
-    if (isOpen && !imageLoading && !drawerAnimated && route?.topoLine) {
+    if (isOpen && !imageLoading && !drawerAnimated && route?.topoLine && !useMultiLineMode) {
       const timer = setTimeout(() => {
         drawerOverlayRef.current?.replay()
         setDrawerAnimated(true)
       }, TOPO_ANIMATION_CONFIG.autoPlayDelayDrawer)
       return () => clearTimeout(timer)
     }
-  }, [isOpen, imageLoading, drawerAnimated, route?.topoLine])
+  }, [isOpen, imageLoading, drawerAnimated, route?.topoLine, useMultiLineMode])
 
   // 全屏查看器打开时触发动画
   useEffect(() => {
     if (imageViewerOpen && route?.topoLine) {
       const timer = setTimeout(() => {
-        fullscreenOverlayRef.current?.replay()
+        if (useMultiLineMode) {
+          multiFullscreenOverlayRef.current?.replay()
+        } else {
+          fullscreenOverlayRef.current?.replay()
+        }
       }, TOPO_ANIMATION_CONFIG.autoPlayDelayFullscreen)
       return () => clearTimeout(timer)
     }
-  }, [imageViewerOpen, route?.topoLine])
+  }, [imageViewerOpen, route?.topoLine, useMultiLineMode])
 
   // 从 API 获取最新 Beta 数据
   const fetchLatestBetas = useCallback(async () => {
@@ -91,21 +129,20 @@ export function RouteDetailDrawer({
     }
   }, [route])
 
-  // 线路颜色 (基于难度等级)
-  const routeColor = useMemo(
-    () => route ? getGradeColor(route.grade) : '#888888',
-    [route]
-  )
-
-  // 是否有 Topo 线路数据
-  const hasTopoLine = route?.topoLine && route.topoLine.length >= 2
+  // 处理线路切换
+  const handleRouteSelect = useCallback((routeId: number) => {
+    const newRoute = siblingRoutes?.find(r => r.id === routeId)
+    if (newRoute && onRouteChange) {
+      onRouteChange(newRoute)
+    }
+  }, [siblingRoutes, onRouteChange])
 
   if (!route) return null
 
   // 使用本地数据（如果有）或 props 数据
   const betaLinks = localBetaLinks ?? route.betaLinks ?? []
   const betaCount = betaLinks.length
-  const topoImageUrl = getRouteTopoUrl(route.cragId, route.name)
+  const topoImageUrl = getTopoImageUrl(route)
 
   return (
     <>
@@ -173,12 +210,21 @@ export function RouteDetailDrawer({
 
                 {/* Topo 线路叠加层 */}
                 {hasTopoLine && !imageLoading && (
-                  <TopoLineOverlay
-                    ref={drawerOverlayRef}
-                    points={route.topoLine!}
-                    color={routeColor}
-                    animated
-                                      />
+                  useMultiLineMode ? (
+                    <MultiTopoLineOverlay
+                      ref={multiOverlayRef}
+                      routes={validSiblingRoutes}
+                      selectedRouteId={route.id}
+                      onRouteSelect={handleRouteSelect}
+                    />
+                  ) : (
+                    <TopoLineOverlay
+                      ref={drawerOverlayRef}
+                      points={route.topoLine!}
+                      color={routeColor}
+                      animated
+                    />
+                  )
                 )}
 
                 {/* 难度标签 */}
@@ -387,13 +433,23 @@ export function RouteDetailDrawer({
         >
           {/* Topo 线路叠加层 - 全屏模式使用 contain 匹配图片 object-contain */}
           {hasTopoLine && (
-            <TopoLineOverlay
-              ref={fullscreenOverlayRef}
-              points={route.topoLine!}
-              color={routeColor}
-              animated
-              objectFit="contain"
-            />
+            useMultiLineMode ? (
+              <MultiTopoLineOverlay
+                ref={multiFullscreenOverlayRef}
+                routes={validSiblingRoutes}
+                selectedRouteId={route.id}
+                onRouteSelect={handleRouteSelect}
+                objectFit="contain"
+              />
+            ) : (
+              <TopoLineOverlay
+                ref={fullscreenOverlayRef}
+                points={route.topoLine!}
+                color={routeColor}
+                animated
+                objectFit="contain"
+              />
+            )
           )}
         </ImageViewer>
       )}

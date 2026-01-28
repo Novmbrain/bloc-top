@@ -98,7 +98,9 @@ src/
 │   ├── app-tabbar.tsx     # 底部导航栏 (毛玻璃效果)
 │   ├── filter-chip.tsx    # 筛选芯片组件 (单选/多选)
 │   ├── filter-drawer.tsx  # 筛选面板抽屉
-│   ├── route-detail-drawer.tsx  # 线路详情抽屉
+│   ├── route-detail-drawer.tsx  # 线路详情抽屉 (支持多线路切换)
+│   ├── topo-line-overlay.tsx    # Topo 线路 SVG 叠加层 (单线路)
+│   ├── multi-topo-line-overlay.tsx # Topo 多线路叠加层 (岩面共享模式)
 │   ├── beta-list-drawer.tsx     # Beta 视频列表抽屉
 │   ├── floating-search.tsx # 浮动搜索按钮
 │   ├── search-overlay.tsx # 搜索覆盖层
@@ -200,11 +202,13 @@ interface Route {
   grade: string           // V0-V13 或 "？" (Hueco V-Scale 难度等级)
   cragId: string          // 关联岩场
   area: string            // 区域
+  faceId?: string         // 岩面 ID，同一 faceId 的线路共享图片
   setter?: string
   FA?: string             // 首攀者
   description?: string
   image?: string
   betaLinks?: BetaLink[]  // Beta 视频链接
+  topoLine?: TopoPoint[]  // Topo 线路标注 (归一化坐标)
 }
 
 // Beta 视频链接（目前仅支持小红书）

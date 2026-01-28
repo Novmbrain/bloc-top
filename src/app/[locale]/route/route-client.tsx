@@ -117,6 +117,31 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
     return crags.find((c) => c.id === selectedRoute.cragId) || null
   }, [selectedRoute, crags])
 
+  // 获取同岩面的线路（用于多线路叠加显示）
+  const siblingRoutes = useMemo(() => {
+    if (!selectedRoute) return []
+
+    // 优先使用 faceId 匹配
+    if (selectedRoute.faceId) {
+      return routes.filter(r =>
+        r.faceId === selectedRoute.faceId &&
+        r.topoLine && r.topoLine.length >= 2
+      )
+    }
+
+    // 回退到 area + cragId 匹配（向后兼容）
+    return routes.filter(r =>
+      r.cragId === selectedRoute.cragId &&
+      r.area === selectedRoute.area &&
+      r.topoLine && r.topoLine.length >= 2
+    )
+  }, [routes, selectedRoute])
+
+  // 处理线路切换
+  const handleRouteChange = useCallback((route: Route) => {
+    setSelectedRoute(route)
+  }, [])
+
   // 筛选逻辑
   const filteredRoutes = useMemo(() => {
     let result = routes
@@ -314,7 +339,9 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         isOpen={isDetailDrawerOpen}
         onClose={() => setIsDetailDrawerOpen(false)}
         route={selectedRoute}
+        siblingRoutes={siblingRoutes}
         crag={selectedCragData}
+        onRouteChange={handleRouteChange}
       />
 
       {/* 底部导航栏 */}

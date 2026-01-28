@@ -25,7 +25,7 @@ import { AppTabbar } from '@/components/app-tabbar'
 import type { Route, Crag, TopoPoint } from '@/types'
 import { bezierCurve, scalePoints, normalizePoint } from '@/lib/topo-utils'
 import { getGradeColor } from '@/lib/tokens'
-import { getRouteTopoUrl } from '@/lib/constants'
+import { getTopoImageUrl } from '@/lib/constants'
 import { useToast } from '@/components/ui/toast'
 import { matchRouteByQuery } from '@/hooks/use-route-search'
 
@@ -260,6 +260,10 @@ export default function TopoEditorPage() {
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
+  // ============ 岩面管理状态 ============
+  const [faceIdMode, setFaceIdMode] = useState<'none' | 'existing' | 'new'>('none')
+  const [newFaceId, setNewFaceId] = useState('')
+
   // ============ 保存状态 ============
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -340,12 +344,21 @@ export default function TopoEditorPage() {
       setUploadedFile(null)
       setShowEditorPanel(true)
 
+      // 初始化 faceId 状态
+      if (selectedRoute.faceId) {
+        setFaceIdMode('existing')
+        setNewFaceId(selectedRoute.faceId)
+      } else {
+        setFaceIdMode('none')
+        setNewFaceId('')
+      }
+
       if (justSavedRef.current) {
         justSavedRef.current = false
         return
       }
 
-      const cloudTopoUrl = getRouteTopoUrl(selectedRoute.cragId, selectedRoute.name)
+      const cloudTopoUrl = getTopoImageUrl(selectedRoute)
       setImageUrl(cloudTopoUrl)
       setIsImageLoading(true)
       setImageLoadError(false)
@@ -394,6 +407,20 @@ export default function TopoEditorPage() {
       unmarked: routes.length - marked.length,
       progress: routes.length > 0 ? (marked.length / routes.length) * 100 : 0,
     }
+  }, [routes])
+
+  // ============ 已有岩面列表 ============
+  const existingFaceIds = useMemo(() => {
+    const map = new Map<string, { count: number; routeNames: string[] }>()
+    routes.forEach(r => {
+      if (r.faceId) {
+        const entry = map.get(r.faceId) || { count: 0, routeNames: [] }
+        entry.count++
+        entry.routeNames.push(r.name)
+        map.set(r.faceId, entry)
+      }
+    })
+    return map
   }, [routes])
 
   // ============ 图片处理 ============
@@ -485,7 +512,11 @@ export default function TopoEditorPage() {
         const formData = new FormData()
         formData.append('file', uploadedFile)
         formData.append('cragId', selectedRoute.cragId)
-        formData.append('routeName', editedRoute.name || selectedRoute.name)
+        if (faceIdMode !== 'none' && newFaceId) {
+          formData.append('faceId', newFaceId)
+        } else {
+          formData.append('routeName', editedRoute.name || selectedRoute.name)
+        }
 
         const uploadRes = await fetch('/api/upload', {
           method: 'POST',
@@ -508,6 +539,7 @@ export default function TopoEditorPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...editedRoute,
+          faceId: (faceIdMode !== 'none' && newFaceId) ? newFaceId : null,
           topoLine: topoLine.length >= 2 ? topoLine : null,
         }),
       })
@@ -546,7 +578,7 @@ export default function TopoEditorPage() {
       setIsSaving(false)
       setIsUploading(false)
     }
-  }, [selectedRoute, editedRoute, topoLine, imageUrl, uploadedFile, showToast])
+  }, [selectedRoute, editedRoute, topoLine, imageUrl, uploadedFile, faceIdMode, newFaceId, showToast])
 
   const handleSave = useCallback(async () => {
     if (!selectedRoute) return
@@ -558,7 +590,11 @@ export default function TopoEditorPage() {
       try {
         const checkFormData = new FormData()
         checkFormData.append('cragId', selectedRoute.cragId)
-        checkFormData.append('routeName', editedRoute.name || selectedRoute.name)
+        if (faceIdMode !== 'none' && newFaceId) {
+          checkFormData.append('faceId', newFaceId)
+        } else {
+          checkFormData.append('routeName', editedRoute.name || selectedRoute.name)
+        }
         checkFormData.append('checkOnly', 'true')
 
         const checkRes = await fetch('/api/upload', {
@@ -1207,6 +1243,131 @@ export default function TopoEditorPage() {
                       换图
                     </button>
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* 岩面分配 */}
+            <div
+              className="p-4"
+              style={{
+                backgroundColor: 'var(--theme-surface-variant)',
+                borderRadius: 'var(--theme-radius-xl)',
+              }}
+            >
+              <h3
+                className="font-semibold mb-3"
+                style={{ color: 'var(--theme-on-surface)' }}
+              >
+                岩面分配
+              </h3>
+              <p
+                className="text-xs mb-3"
+                style={{ color: 'var(--theme-on-surface-variant)' }}
+              >
+                同一岩面的线路共享图片，实现多线路叠加显示
+              </p>
+
+              {/* 模式选择 */}
+              <div className="flex gap-2 mb-3">
+                {([
+                  { key: 'none' as const, label: '无岩面' },
+                  { key: 'existing' as const, label: '选择已有' },
+                  { key: 'new' as const, label: '新建岩面' },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.key}
+                    onClick={() => {
+                      setFaceIdMode(opt.key)
+                      if (opt.key === 'none') setNewFaceId('')
+                    }}
+                    className="flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-200 active:scale-95"
+                    style={{
+                      backgroundColor:
+                        faceIdMode === opt.key
+                          ? 'var(--theme-primary)'
+                          : 'var(--theme-surface)',
+                      color:
+                        faceIdMode === opt.key
+                          ? 'var(--theme-on-primary)'
+                          : 'var(--theme-on-surface)',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* 选择已有岩面 */}
+              {faceIdMode === 'existing' && (
+                <div>
+                  {existingFaceIds.size === 0 ? (
+                    <p
+                      className="text-sm py-2"
+                      style={{ color: 'var(--theme-on-surface-variant)' }}
+                    >
+                      该岩场暂无已有岩面，请选择「新建岩面」
+                    </p>
+                  ) : (
+                    <select
+                      value={newFaceId}
+                      onChange={(e) => setNewFaceId(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                      style={{
+                        backgroundColor: 'var(--theme-surface)',
+                        color: 'var(--theme-on-surface)',
+                      }}
+                    >
+                      <option value="">选择岩面...</option>
+                      {Array.from(existingFaceIds.entries()).map(([fid, info]) => (
+                        <option key={fid} value={fid}>
+                          {fid} ({info.count} 条线路: {info.routeNames.slice(0, 3).join(', ')}{info.routeNames.length > 3 ? '...' : ''})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
+              {/* 新建岩面 */}
+              {faceIdMode === 'new' && (
+                <div>
+                  <input
+                    type="text"
+                    placeholder="输入岩面 ID（如 main-wall-1）"
+                    value={newFaceId}
+                    onChange={(e) =>
+                      setNewFaceId(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+                    }
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                    style={{
+                      backgroundColor: 'var(--theme-surface)',
+                      color: 'var(--theme-on-surface)',
+                    }}
+                  />
+                  {newFaceId && existingFaceIds.has(newFaceId) && (
+                    <p
+                      className="text-xs mt-1.5"
+                      style={{ color: 'var(--theme-warning)' }}
+                    >
+                      该 ID 已存在，将加入现有岩面组
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* 岩面缩略图预览 */}
+              {faceIdMode !== 'none' && newFaceId && !uploadedFile && (
+                <div className="mt-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://img.bouldering.top/${selectedRoute.cragId}/faces/${encodeURIComponent(newFaceId)}.jpg`}
+                    alt={`岩面 ${newFaceId}`}
+                    className="w-full max-h-32 object-cover rounded-lg"
+                    style={{ border: '1px solid var(--theme-outline-variant)' }}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    onLoad={(e) => { (e.target as HTMLImageElement).style.display = '' }}
+                  />
                 </div>
               )}
             </div>
