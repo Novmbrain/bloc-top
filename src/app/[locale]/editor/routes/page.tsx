@@ -184,9 +184,10 @@ export default function RouteAnnotationPage() {
       return
     }
 
-    // 图片来源：face 图片
-    if (selectedRoute.faceId) {
-      const url = getFaceTopoUrl(selectedRoute.cragId, selectedRoute.faceId)
+    // 图片来源：优先使用当前选中的 faceId，其次用线路自身的 faceId
+    const faceId = selectedFaceId || selectedRoute.faceId
+    if (faceId) {
+      const url = getFaceTopoUrl(selectedRoute.cragId, faceId)
       setImageUrl(url)
       setIsImageLoading(true)
       setImageLoadError(false)
