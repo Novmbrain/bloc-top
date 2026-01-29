@@ -47,6 +47,10 @@ export default function RouteAnnotationPage() {
     isLoadingCrags, isLoadingRoutes, stats,
   } = useCragRoutes()
 
+  // ============ R2 上已有的 face 列表 ============
+  const [r2Faces, setR2Faces] = useState<string[]>([])
+  const [isLoadingFaces, setIsLoadingFaces] = useState(false)
+
   // ============ 选择状态 ============
   const [selectedFaceId, setSelectedFaceId] = useState<string | null>(null)
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
@@ -77,6 +81,24 @@ export default function RouteAnnotationPage() {
 
   // ============ Toast ============
   const { showToast } = useToast()
+
+  // ============ 从 R2 加载岩面列表 ============
+  useEffect(() => {
+    if (!selectedCragId) {
+      setR2Faces([])
+      return
+    }
+    let cancelled = false
+    setIsLoadingFaces(true)
+    fetch(`/api/faces?cragId=${encodeURIComponent(selectedCragId)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!cancelled && data.success) setR2Faces(data.faces)
+      })
+      .catch(() => { /* 静默失败，回退到仅 route 派生 */ })
+      .finally(() => { if (!cancelled) setIsLoadingFaces(false) })
+    return () => { cancelled = true }
+  }, [selectedCragId])
 
   // ============ 桌面端突破 app-shell 宽度限制 ============
   useEffect(() => {
@@ -109,8 +131,21 @@ export default function RouteAnnotationPage() {
       entry.routes.push(r)
       map.set(r.faceId, entry)
     })
+    // 合并 R2 上已有但未被任何 route 引用的 face
+    if (selectedCragId) {
+      r2Faces.forEach(faceId => {
+        if (!map.has(faceId)) {
+          map.set(faceId, {
+            faceId,
+            area: '',
+            routes: [],
+            imageUrl: getFaceTopoUrl(selectedCragId, faceId),
+          })
+        }
+      })
+    }
     return Array.from(map.values())
-  }, [routes])
+  }, [routes, r2Faces, selectedCragId])
 
   const selectedFaceGroup = useMemo(
     () => faceGroups.find(f => f.faceId === selectedFaceId) || null,
@@ -289,7 +324,7 @@ export default function RouteAnnotationPage() {
               选择岩面
             </label>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {isLoadingRoutes ? (
+              {isLoadingRoutes || isLoadingFaces ? (
                 <div className="flex items-center justify-center py-4" style={{ color: 'var(--theme-on-surface-variant)' }}>
                   <Loader2 className="w-5 h-5 animate-spin" />
                 </div>
