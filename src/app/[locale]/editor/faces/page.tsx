@@ -38,6 +38,10 @@ export default function FaceManagementPage() {
     isLoadingCrags, isLoadingRoutes, stats,
   } = useCragRoutes()
 
+  // ============ R2 上已有的 face 列表 ============
+  const [r2Faces, setR2Faces] = useState<string[]>([])
+  const [isLoadingFaces, setIsLoadingFaces] = useState(false)
+
   // ============ 选择状态 ============
   const [selectedArea, setSelectedArea] = useState<string | null>(null)
   const [selectedFace, setSelectedFace] = useState<FaceGroup | null>(null)
@@ -60,6 +64,24 @@ export default function FaceManagementPage() {
 
   // ============ Toast ============
   const { showToast } = useToast()
+
+  // ============ 从 R2 加载岩面列表 ============
+  useEffect(() => {
+    if (!selectedCragId) {
+      setR2Faces([])
+      return
+    }
+    let cancelled = false
+    setIsLoadingFaces(true)
+    fetch(`/api/faces?cragId=${encodeURIComponent(selectedCragId)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!cancelled && data.success) setR2Faces(data.faces)
+      })
+      .catch(() => { /* 静默失败，回退到仅 route 派生 */ })
+      .finally(() => { if (!cancelled) setIsLoadingFaces(false) })
+    return () => { cancelled = true }
+  }, [selectedCragId])
 
   // ============ 桌面端突破 app-shell 宽度限制 ============
   useEffect(() => {
@@ -85,6 +107,7 @@ export default function FaceManagementPage() {
 
   const faceGroups = useMemo(() => {
     const map = new Map<string, FaceGroup>()
+    // 从 routes 派生已关联的 face
     routes.forEach(r => {
       if (!r.faceId) return
       const entry = map.get(r.faceId) || {
@@ -96,10 +119,23 @@ export default function FaceManagementPage() {
       entry.routes.push(r)
       map.set(r.faceId, entry)
     })
+    // 合并 R2 上已有但未被任何 route 引用的 face
+    if (selectedCragId) {
+      r2Faces.forEach(faceId => {
+        if (!map.has(faceId)) {
+          map.set(faceId, {
+            faceId,
+            area: '',
+            routes: [],
+            imageUrl: getFaceTopoUrl(selectedCragId, faceId),
+          })
+        }
+      })
+    }
     let result = Array.from(map.values())
     if (selectedArea) result = result.filter(f => f.area === selectedArea)
     return result
-  }, [routes, selectedArea])
+  }, [routes, r2Faces, selectedCragId, selectedArea])
 
   // 切换岩场时重置选择
   const handleSelectCrag = useCallback((id: string) => {
@@ -167,6 +203,16 @@ export default function FaceManagementPage() {
       setPreviewUrl(null)
 
       if (isCreating) {
+        // 将新上传的 faceId 加入 R2 列表使其立即可见
+        const area = newArea === '__custom__' ? customArea : newArea
+        setR2Faces(prev => prev.includes(faceId) ? prev : [...prev, faceId])
+        const newFace: FaceGroup = {
+          faceId,
+          area: area || '',
+          routes: [],
+          imageUrl: data.url,
+        }
+        setSelectedFace(newFace)
         setIsCreating(false)
         setNewFaceId('')
         setNewArea('')
@@ -249,7 +295,7 @@ export default function FaceManagementPage() {
 
           {/* 岩面列表 */}
           <div className="flex-1 overflow-y-auto min-h-0 space-y-2">
-            {isLoadingRoutes ? (
+            {isLoadingRoutes || isLoadingFaces ? (
               <div className="flex flex-col items-center justify-center py-12" style={{ color: 'var(--theme-on-surface-variant)' }}>
                 <Loader2 className="w-8 h-8 animate-spin mb-3" />
                 <span>加载中...</span>
