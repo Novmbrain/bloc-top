@@ -14,7 +14,6 @@ import {
   Maximize,
   Trash2,
   AlertCircle,
-  Layers,
 } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
@@ -39,7 +38,7 @@ interface FaceGroup {
 
 /**
  * 线路标注页面
- * 选 crag → 选 face → 选线路 → 画 topoLine
+ * 选 crag → 选 area → 选线路 → 自动匹配 face → 画 topoLine
  */
 export default function RouteAnnotationPage() {
   const {
@@ -52,6 +51,7 @@ export default function RouteAnnotationPage() {
   const [isLoadingFaces, setIsLoadingFaces] = useState(false)
 
   // ============ 选择状态 ============
+  const [selectedArea, setSelectedArea] = useState<string | null>(null)
   const [selectedFaceId, setSelectedFaceId] = useState<string | null>(null)
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
 
@@ -118,10 +118,17 @@ export default function RouteAnnotationPage() {
   }, [])
 
   // ============ 派生数据 ============
-  const faceGroups = useMemo(() => {
+  // 提取所有 area
+  const areas = useMemo(() => {
+    return [...new Set(routes.map(r => r.area).filter(Boolean))].sort()
+  }, [routes])
+
+  // 按 area 筛选的 face 列表（右栏 face 选择器用）
+  const areaFaceGroups = useMemo(() => {
     const map = new Map<string, FaceGroup>()
     routes.forEach(r => {
       if (!r.faceId) return
+      if (selectedArea && r.area !== selectedArea) return
       const entry = map.get(r.faceId) || {
         faceId: r.faceId,
         area: r.area,
@@ -131,8 +138,8 @@ export default function RouteAnnotationPage() {
       entry.routes.push(r)
       map.set(r.faceId, entry)
     })
-    // 合并 R2 上已有但未被任何 route 引用的 face
-    if (selectedCragId) {
+    // 合并 R2 上已有但未被任何 route 引用的 face（仅无 area 筛选时）
+    if (selectedCragId && !selectedArea) {
       r2Faces.forEach(faceId => {
         if (!map.has(faceId)) {
           map.set(faceId, {
@@ -145,22 +152,17 @@ export default function RouteAnnotationPage() {
       })
     }
     return Array.from(map.values())
-  }, [routes, r2Faces, selectedCragId])
+  }, [routes, r2Faces, selectedCragId, selectedArea])
 
-  const selectedFaceGroup = useMemo(
-    () => faceGroups.find(f => f.faceId === selectedFaceId) || null,
-    [faceGroups, selectedFaceId]
-  )
-
-  // 只显示选中 face 下的线路
-  const faceRoutes = useMemo(() => {
-    if (!selectedFaceId) return []
-    return routes.filter(r => r.faceId === selectedFaceId)
-  }, [routes, selectedFaceId])
+  // 按 area 筛选的线路
+  const areaRoutes = useMemo(() => {
+    if (!selectedArea) return routes
+    return routes.filter(r => r.area === selectedArea)
+  }, [routes, selectedArea])
 
   // 筛选后的线路列表
   const filteredRoutes = useMemo(() => {
-    let result = faceRoutes
+    let result = areaRoutes
 
     if (searchQuery) {
       const query = searchQuery.trim().toLowerCase()
@@ -179,22 +181,23 @@ export default function RouteAnnotationPage() {
     }
 
     return result
-  }, [faceRoutes, searchQuery, filterMode])
+  }, [areaRoutes, searchQuery, filterMode])
 
-  // Face 内的统计
-  const faceStats = useMemo(() => {
-    const marked = faceRoutes.filter((r) => r.topoLine && r.topoLine.length >= 2)
+  // Area 内的统计
+  const areaStats = useMemo(() => {
+    const marked = areaRoutes.filter((r) => r.topoLine && r.topoLine.length >= 2)
     return {
-      total: faceRoutes.length,
+      total: areaRoutes.length,
       marked: marked.length,
-      unmarked: faceRoutes.length - marked.length,
+      unmarked: areaRoutes.length - marked.length,
     }
-  }, [faceRoutes])
+  }, [areaRoutes])
 
   // ============ 切换岩场 ============
   const handleSelectCrag = useCallback((id: string) => {
     setSelectedCragId(id)
     setSelectedRoute(null)
+    setSelectedArea(null)
     setSelectedFaceId(null)
     setShowEditorPanel(false)
   }, [setSelectedCragId])
@@ -219,10 +222,12 @@ export default function RouteAnnotationPage() {
       return
     }
 
-    // 图片来源：优先使用当前选中的 faceId，其次用线路自身的 faceId
-    const faceId = selectedFaceId || selectedRoute.faceId
-    if (faceId) {
-      const url = getFaceTopoUrl(selectedRoute.cragId, faceId)
+    // 自动匹配 faceId：线路有 faceId → 自动选中；无则清空让用户手动选
+    const autoFaceId = selectedRoute.faceId || null
+    setSelectedFaceId(autoFaceId)
+
+    if (autoFaceId) {
+      const url = getFaceTopoUrl(selectedRoute.cragId, autoFaceId)
       setImageUrl(url)
       setIsImageLoading(true)
       setImageLoadError(false)
@@ -264,6 +269,7 @@ export default function RouteAnnotationPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...editedRoute,
+          faceId: selectedFaceId,
           topoLine: topoLine.length >= 2 ? topoLine : null,
         }),
       })
@@ -286,7 +292,7 @@ export default function RouteAnnotationPage() {
     } finally {
       setIsSaving(false)
     }
-  }, [selectedRoute, editedRoute, topoLine, setRoutes, showToast])
+  }, [selectedRoute, editedRoute, topoLine, selectedFaceId, setRoutes, showToast])
 
   // ============ SVG 计算 ============
   const routeColor = useMemo(
@@ -318,131 +324,108 @@ export default function RouteAnnotationPage() {
 
       {selectedCragId && (
         <>
-          {/* Face 选择器 */}
+          {/* Area 芯片选择器 */}
           <div className="mb-3">
             <label className="block text-xs font-medium mb-1.5 px-1" style={{ color: 'var(--theme-on-surface-variant)' }}>
-              选择岩面
+              选择区域
             </label>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {isLoadingRoutes || isLoadingFaces ? (
-                <div className="flex items-center justify-center py-4" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                </div>
-              ) : faceGroups.length === 0 ? (
-                <div className="text-center py-4" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  <p className="text-sm">暂无岩面数据</p>
-                  <Link href="/editor/faces" className="text-sm font-medium mt-1 inline-block" style={{ color: 'var(--theme-primary)' }}>
-                    去岩面管理页面创建 →
-                  </Link>
-                </div>
-              ) : (
-                faceGroups.map(face => (
-                  <button
-                    key={face.faceId}
-                    onClick={() => {
-                      setSelectedFaceId(face.faceId)
-                      setSelectedRoute(null)
-                      setShowEditorPanel(false)
-                    }}
-                    className={`w-full text-left p-2.5 transition-all duration-200 active:scale-[0.98] ${selectedFaceId === face.faceId ? 'ring-2' : ''}`}
-                    style={{
-                      backgroundColor: selectedFaceId === face.faceId
-                        ? 'color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface))'
-                        : 'var(--theme-surface)',
-                      borderRadius: 'var(--theme-radius-lg)',
-                      boxShadow: 'var(--theme-shadow-sm)',
-                      // @ts-expect-error -- CSS custom properties
-                      '--tw-ring-color': 'var(--theme-primary)',
-                    }}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-12 h-9 rounded-md overflow-hidden flex-shrink-0" style={{ backgroundColor: 'var(--theme-surface-variant)' }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={face.imageUrl}
-                          alt={face.faceId}
-                          className="w-full h-full object-cover"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-medium text-sm block truncate" style={{ color: 'var(--theme-on-surface)' }}>{face.faceId}</span>
-                        <span className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>{face.area} · {face.routes.length} 条</span>
-                      </div>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
+            {isLoadingRoutes ? (
+              <div className="flex items-center justify-center py-4" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                <Loader2 className="w-5 h-5 animate-spin" />
+              </div>
+            ) : (
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+                <button
+                  onClick={() => { setSelectedArea(null); setSelectedRoute(null); setShowEditorPanel(false) }}
+                  className="px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm"
+                  style={{
+                    backgroundColor: selectedArea === null ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+                    color: selectedArea === null ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
+                  }}
+                >
+                  全部 ({routes.length})
+                </button>
+                {areas.map(area => {
+                  const count = routes.filter(r => r.area === area).length
+                  return (
+                    <button
+                      key={area}
+                      onClick={() => { setSelectedArea(area); setSelectedRoute(null); setShowEditorPanel(false) }}
+                      className="px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm"
+                      style={{
+                        backgroundColor: selectedArea === area ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+                        color: selectedArea === area ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
+                      }}
+                    >
+                      {area} ({count})
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
-          {/* 搜索和筛选 (选中 face 后显示) */}
-          {selectedFaceId && (
-            <>
-              <div className="relative mb-3">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />
-                <input
-                  type="text"
-                  placeholder="搜索线路..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-10 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
-                  style={{ backgroundColor: 'var(--theme-surface-variant)', color: 'var(--theme-on-surface)' }}
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full" style={{ backgroundColor: 'var(--theme-outline)' }}>
-                    <X className="w-4 h-4" style={{ color: 'var(--theme-on-surface)' }} />
-                  </button>
-                )}
-              </div>
+          {/* 搜索和筛选 */}
+          <div className="relative mb-3">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />
+            <input
+              type="text"
+              placeholder="搜索线路..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-10 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+              style={{ backgroundColor: 'var(--theme-surface-variant)', color: 'var(--theme-on-surface)' }}
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full" style={{ backgroundColor: 'var(--theme-outline)' }}>
+                <X className="w-4 h-4" style={{ color: 'var(--theme-on-surface)' }} />
+              </button>
+            )}
+          </div>
 
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-3">
-                {[
-                  { key: 'all' as const, label: '全部', count: faceStats.total },
-                  { key: 'unmarked' as const, label: '待标注', count: faceStats.unmarked },
-                  { key: 'marked' as const, label: '已标注', count: faceStats.marked },
-                ].map((filter) => (
-                  <button
-                    key={filter.key}
-                    onClick={() => setFilterMode(filter.key)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95"
-                    style={{
-                      backgroundColor: filterMode === filter.key ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
-                      color: filterMode === filter.key ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
-                    }}
-                  >
-                    <span className="font-medium">{filter.label}</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded-full" style={{
-                      backgroundColor: filterMode === filter.key ? 'color-mix(in srgb, var(--theme-on-primary) 20%, transparent)' : 'var(--theme-outline-variant)',
-                    }}>
-                      {filter.count}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-3">
+            {[
+              { key: 'all' as const, label: '全部', count: areaStats.total },
+              { key: 'unmarked' as const, label: '待标注', count: areaStats.unmarked },
+              { key: 'marked' as const, label: '已标注', count: areaStats.marked },
+            ].map((filter) => (
+              <button
+                key={filter.key}
+                onClick={() => setFilterMode(filter.key)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95"
+                style={{
+                  backgroundColor: filterMode === filter.key ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+                  color: filterMode === filter.key ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
+                }}
+              >
+                <span className="font-medium">{filter.label}</span>
+                <span className="text-xs px-1.5 py-0.5 rounded-full" style={{
+                  backgroundColor: filterMode === filter.key ? 'color-mix(in srgb, var(--theme-on-primary) 20%, transparent)' : 'var(--theme-outline-variant)',
+                }}>
+                  {filter.count}
+                </span>
+              </button>
+            ))}
+          </div>
 
           {/* 线路列表 */}
-          {selectedFaceId && (
-            <div className="flex-1 overflow-y-auto min-h-0 space-y-2">
-              {filteredRoutes.length === 0 ? (
-                <div className="text-center py-8" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  <Search className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">未找到匹配线路</p>
-                </div>
-              ) : (
-                filteredRoutes.map((route) => (
-                  <RouteCard
-                    key={route.id}
-                    route={route}
-                    isSelected={selectedRoute?.id === route.id}
-                    onClick={() => setSelectedRoute(route)}
-                  />
-                ))
-              )}
-            </div>
-          )}
+          <div className="flex-1 overflow-y-auto min-h-0 space-y-2">
+            {filteredRoutes.length === 0 ? (
+              <div className="text-center py-8" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                <Search className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">未找到匹配线路</p>
+              </div>
+            ) : (
+              filteredRoutes.map((route) => (
+                <RouteCard
+                  key={route.id}
+                  route={route}
+                  isSelected={selectedRoute?.id === route.id}
+                  onClick={() => setSelectedRoute(route)}
+                />
+              ))
+            )}
+          </div>
         </>
       )}
     </div>
@@ -456,26 +439,8 @@ export default function RouteAnnotationPage() {
           <Mountain className="w-16 h-16 mb-4 opacity-30" />
           <p className="text-lg font-medium">选择岩场开始标注</p>
         </div>
-      ) : !selectedFaceId ? (
-        <div className="flex flex-col items-center justify-center h-full" style={{ color: 'var(--theme-on-surface-variant)' }}>
-          <Layers className="w-16 h-16 mb-4 opacity-30" />
-          <p className="text-lg font-medium mb-1">从左侧选择岩面</p>
-          <p className="text-sm">选择岩面后，该岩面的线路将显示在左侧列表</p>
-        </div>
       ) : !selectedRoute ? (
         <div className="flex flex-col items-center justify-center h-full" style={{ color: 'var(--theme-on-surface-variant)' }}>
-          {/* 展示岩面大图 */}
-          {selectedFaceGroup && (
-            <div className="w-full max-w-md mb-6" style={{ borderRadius: 'var(--theme-radius-xl)', overflow: 'hidden' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={selectedFaceGroup.imageUrl}
-                alt={selectedFaceGroup.faceId}
-                className="w-full aspect-[4/3] object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-              />
-            </div>
-          )}
           <Edit3 className="w-12 h-12 mb-3 opacity-30" />
           <p className="text-lg font-medium mb-1">选择线路开始标注</p>
           <p className="text-sm">从左侧列表选择要标注的线路</p>
@@ -504,6 +469,62 @@ export default function RouteAnnotationPage() {
             <div className="px-3 py-1.5 rounded-full text-sm font-bold text-white" style={{ backgroundColor: routeColor }}>
               {selectedRoute.grade}
             </div>
+          </div>
+
+          {/* 岩面选择器 */}
+          <div className="p-4" style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-xl)' }}>
+            <label className="block text-xs font-medium mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
+              选择岩面 {selectedFaceId && <span style={{ color: 'var(--theme-primary)' }}>· {selectedFaceId}</span>}
+            </label>
+            {isLoadingFaces ? (
+              <div className="flex items-center justify-center py-3" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                <Loader2 className="w-5 h-5 animate-spin" />
+              </div>
+            ) : areaFaceGroups.length === 0 ? (
+              <div className="text-center py-3" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                <p className="text-sm">暂无岩面数据</p>
+                <Link href="/editor/faces" className="text-sm font-medium mt-1 inline-block" style={{ color: 'var(--theme-primary)' }}>
+                  去岩面管理页面创建 →
+                </Link>
+              </div>
+            ) : (
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                {areaFaceGroups.map(face => (
+                  <button
+                    key={face.faceId}
+                    onClick={() => {
+                      setSelectedFaceId(face.faceId)
+                      const url = getFaceTopoUrl(selectedRoute.cragId, face.faceId)
+                      setImageUrl(url)
+                      setIsImageLoading(true)
+                      setImageLoadError(false)
+                    }}
+                    className={`flex-shrink-0 p-1.5 transition-all duration-200 active:scale-[0.98] ${selectedFaceId === face.faceId ? 'ring-2' : ''}`}
+                    style={{
+                      backgroundColor: selectedFaceId === face.faceId
+                        ? 'color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface))'
+                        : 'var(--theme-surface)',
+                      borderRadius: 'var(--theme-radius-lg)',
+                      // @ts-expect-error -- CSS custom properties
+                      '--tw-ring-color': 'var(--theme-primary)',
+                    }}
+                  >
+                    <div className="w-20 h-14 rounded-md overflow-hidden" style={{ backgroundColor: 'var(--theme-surface-variant)' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={face.imageUrl}
+                        alt={face.faceId}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
+                    </div>
+                    <p className="text-xs mt-1 text-center truncate w-20" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                      {face.faceId}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Topo 画布 */}
