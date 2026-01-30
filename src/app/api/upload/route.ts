@@ -89,11 +89,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 构建 R2 对象路径
+    // 构建 R2 对象路径（不编码，Cloudflare 公共 URL 会自动处理）
     // faceId 优先 → faces/ 路径；否则 → 旧路径
     const key = faceId
-      ? `${cragId}/faces/${encodeURIComponent(faceId)}.jpg`
-      : `${cragId}/${encodeURIComponent(routeName!)}.jpg`
+      ? `${cragId}/faces/${faceId}.jpg`
+      : `${cragId}/${routeName!}.jpg`
 
     // ===== 检查模式：只检查文件是否存在 =====
     if (checkOnly) {

@@ -16,7 +16,7 @@ const IMAGE_BASE_URL = 'https://img.bouldering.top'
  * - 2025年1月更新：'20250120'
  * - 下次更新：'20250215'
  */
-export const IMAGE_VERSION = '1'
+export const IMAGE_VERSION = '20260130'
 
 /**
  * 生成线路 TOPO 图片 URL

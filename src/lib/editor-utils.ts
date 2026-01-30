@@ -9,14 +9,20 @@ export const GRADE_OPTIONS = [
 ]
 
 /**
- * 预加载图片并验证可访问
+ * 预加载图片并验证可访问（带重试，应对 CDN 传播延迟）
  */
 export function preloadImage(url: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve()
-    img.onerror = () => reject(new Error('图片加载失败'))
-    img.src = url
-    setTimeout(() => resolve(), 10000)
-  })
+  const attempt = (): Promise<void> =>
+    new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => resolve()
+      img.onerror = () => reject(new Error('图片加载失败'))
+      img.src = url
+    })
+
+  return attempt().catch(() =>
+    new Promise(r => setTimeout(r, 1500)).then(() => attempt())
+  ).catch(() =>
+    new Promise(r => setTimeout(r, 3000)).then(() => attempt())
+  )
 }

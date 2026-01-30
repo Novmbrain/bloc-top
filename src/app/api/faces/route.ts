@@ -67,7 +67,13 @@ export async function GET(request: NextRequest) {
       // Key 格式: {cragId}/faces/{encodedFaceId}.jpg
       const filename = obj.Key.slice(prefix.length)
       if (!filename.endsWith('.jpg')) continue
-      const faceId = decodeURIComponent(filename.slice(0, -4))
+      // Key 可能是编码的（旧数据）或未编码的（新数据），统一尝试解码
+      let faceId: string
+      try {
+        faceId = decodeURIComponent(filename.slice(0, -4))
+      } catch {
+        faceId = filename.slice(0, -4)
+      }
       if (faceId) faces.push(faceId)
     }
 
