@@ -41,6 +41,7 @@ export function RouteDetailDrawer({
   const [betaSubmitOpen, setBetaSubmitOpen] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
   const [imageError, setImageError] = useState(false)
+  const prevImageUrlRef = useRef<string | null>(null)
 
   // 本地 Beta 数据状态，用于绕过 ISR 缓存实现即时更新
   const [localBetaLinks, setLocalBetaLinks] = useState<BetaLink[] | null>(null)
@@ -82,8 +83,14 @@ export function RouteDetailDrawer({
   // 当线路变化时重置状态
   useEffect(() => {
     if (route) {
-      setImageLoading(true)
-      setImageError(false)
+      const newImageUrl = getTopoImageUrl(route)
+      // 同岩面线路共享同一张图片，URL 不变时跳过 loading 重置
+      // 否则 onLoad 不会重新触发，imageLoading 会卡在 true
+      if (newImageUrl !== prevImageUrlRef.current) {
+        setImageLoading(true)
+        setImageError(false)
+        prevImageUrlRef.current = newImageUrl
+      }
       setLocalBetaLinks(null)
       setDrawerAnimated(false)
     }
