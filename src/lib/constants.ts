@@ -42,20 +42,22 @@ export function getCragCoverUrl(cragId: string, index: number): string {
 }
 
 /**
- * 生成岩面 Topo 图片 URL（新策略）
- * 同一 faceId 的线路共享同一张图片
+ * 生成岩面 Topo 图片 URL
+ * R2 路径: {cragId}/{area}/{faceId}.jpg
  *
  * @param cragId - 岩场 ID
+ * @param area - 区域名称
  * @param faceId - 岩面 ID
  * @param timestamp - 可选时间戳，用于刚上传后强制刷新缓存
  */
 export function getFaceTopoUrl(
   cragId: string,
+  area: string,
   faceId: string,
   timestamp?: number
 ): string {
   const version = timestamp ? `t=${timestamp}` : `v=${IMAGE_VERSION}`
-  return `${IMAGE_BASE_URL}/${cragId}/faces/${encodeURIComponent(faceId)}.jpg?${version}`
+  return `${IMAGE_BASE_URL}/${cragId}/${encodeURIComponent(area)}/${encodeURIComponent(faceId)}.jpg?${version}`
 }
 
 /**
@@ -67,8 +69,8 @@ export function getFaceTopoUrl(
  * @param timestamp - 可选时间戳
  */
 export function getTopoImageUrl(route: Route, timestamp?: number): string {
-  if (route.faceId) {
-    return getFaceTopoUrl(route.cragId, route.faceId, timestamp)
+  if (route.faceId && route.area) {
+    return getFaceTopoUrl(route.cragId, route.area, route.faceId, timestamp)
   }
   return getRouteTopoUrl(route.cragId, route.name, timestamp)
 }

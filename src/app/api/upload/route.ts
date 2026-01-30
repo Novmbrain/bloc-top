@@ -79,20 +79,20 @@ export async function POST(request: NextRequest) {
     const cragId = formData.get('cragId') as string | null
     const routeName = formData.get('routeName') as string | null
     const faceId = formData.get('faceId') as string | null
+    const area = formData.get('area') as string | null
     const checkOnly = formData.get('checkOnly') === 'true'
 
-    // 验证必需参数：需要 cragId + (routeName 或 faceId)
-    if (!cragId || (!routeName && !faceId)) {
+    // 验证必需参数：需要 cragId + (routeName 或 (faceId + area))
+    if (!cragId || (!routeName && (!faceId || !area))) {
       return NextResponse.json(
-        { success: false, error: '缺少岩场 ID 或线路名称/岩面 ID' },
+        { success: false, error: '缺少岩场 ID 或线路名称/岩面信息' },
         { status: 400 }
       )
     }
 
-    // 构建 R2 对象路径（不编码，Cloudflare 公共 URL 会自动处理）
-    // faceId 优先 → faces/ 路径；否则 → 旧路径
-    const key = faceId
-      ? `${cragId}/faces/${faceId}.jpg`
+    // 构建 R2 对象路径: {cragId}/{area}/{faceId}.jpg
+    const key = (faceId && area)
+      ? `${cragId}/${area}/${faceId}.jpg`
       : `${cragId}/${routeName!}.jpg`
 
     // ===== 检查模式：只检查文件是否存在 =====
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     log.info('Image uploaded successfully', {
       action: 'POST /api/upload',
       duration: Date.now() - start,
-      metadata: { cragId, routeName, faceId, size: file.size },
+      metadata: { cragId, routeName, faceId, area, size: file.size },
     })
 
     return NextResponse.json({

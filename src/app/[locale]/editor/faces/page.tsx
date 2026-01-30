@@ -21,6 +21,11 @@ import { useCragRoutes } from '@/hooks/use-crag-routes'
 import { CragSelector } from '@/components/editor/crag-selector'
 import { preloadImage } from '@/lib/editor-utils'
 
+interface R2FaceInfo {
+  faceId: string
+  area: string
+}
+
 interface FaceGroup {
   faceId: string
   area: string
@@ -39,7 +44,7 @@ export default function FaceManagementPage() {
   } = useCragRoutes()
 
   // ============ R2 上已有的 face 列表 ============
-  const [r2Faces, setR2Faces] = useState<string[]>([])
+  const [r2Faces, setR2Faces] = useState<R2FaceInfo[]>([])
   const [isLoadingFaces, setIsLoadingFaces] = useState(false)
 
   // ============ 选择状态 ============
@@ -79,7 +84,7 @@ export default function FaceManagementPage() {
     fetch(`/api/faces?cragId=${encodeURIComponent(selectedCragId)}`)
       .then(res => res.json())
       .then(data => {
-        if (!cancelled && data.success) setR2Faces(data.faces)
+        if (!cancelled && data.success) setR2Faces(data.faces as R2FaceInfo[])
       })
       .catch(() => { /* 静默失败，回退到仅 route 派生 */ })
       .finally(() => { if (!cancelled) setIsLoadingFaces(false) })
@@ -109,34 +114,28 @@ export default function FaceManagementPage() {
   , [routes])
 
   const faceGroups = useMemo(() => {
+    if (!selectedCragId) return []
     const map = new Map<string, FaceGroup>()
-    // 从 routes 派生已关联的 face
+
+    // 从 R2 数据构建 face 列表（每个 face 自带 area）
+    r2Faces.forEach(({ faceId, area }) => {
+      map.set(faceId, {
+        faceId,
+        area,
+        routes: [],
+        imageUrl: getFaceTopoUrl(selectedCragId, area, faceId),
+      })
+    })
+
+    // 关联 routes 到对应的 face
     routes.forEach(r => {
       if (!r.faceId) return
-      const entry = map.get(r.faceId) || {
-        faceId: r.faceId,
-        area: r.area,
-        routes: [],
-        imageUrl: getFaceTopoUrl(r.cragId, r.faceId),
-      }
-      entry.routes.push(r)
-      map.set(r.faceId, entry)
+      const entry = map.get(r.faceId)
+      if (entry) entry.routes.push(r)
     })
-    // 合并 R2 上已有但未被任何 route 引用的 face
-    if (selectedCragId) {
-      r2Faces.forEach(faceId => {
-        if (!map.has(faceId)) {
-          map.set(faceId, {
-            faceId,
-            area: '',
-            routes: [],
-            imageUrl: getFaceTopoUrl(selectedCragId, faceId),
-          })
-        }
-      })
-    }
+
     let result = Array.from(map.values())
-    if (selectedArea) result = result.filter(f => f.area === selectedArea || !f.area)
+    if (selectedArea) result = result.filter(f => f.area === selectedArea)
     return result
   }, [routes, r2Faces, selectedCragId, selectedArea])
 
@@ -189,12 +188,23 @@ export default function FaceManagementPage() {
     const faceId = isCreating ? newFaceId : selectedFace?.faceId
     if (!faceId) return
 
+    // 确定 area：新建时从表单获取；替换时从已选 face 获取
+    const uploadArea = isCreating
+      ? (newArea === '__custom__' ? customArea : newArea)
+      : selectedFace?.area
+    if (!uploadArea) {
+      showToast('请选择区域', 'error')
+      setIsUploading(false)
+      return
+    }
+
     setIsUploading(true)
     try {
       const formData = new FormData()
       formData.append('file', uploadedFile)
       formData.append('cragId', selectedCragId)
       formData.append('faceId', faceId)
+      formData.append('area', uploadArea)
 
       const res = await fetch('/api/upload', { method: 'POST', body: formData })
       const data = await res.json()
@@ -209,7 +219,7 @@ export default function FaceManagementPage() {
       if (isCreating) {
         // 将新上传的 faceId 加入 R2 列表使其立即可见
         const area = newArea === '__custom__' ? customArea : newArea
-        setR2Faces(prev => prev.includes(faceId) ? prev : [...prev, faceId])
+        setR2Faces(prev => prev.some(f => f.faceId === faceId) ? prev : [...prev, { faceId, area }])
         const newFace: FaceGroup = {
           faceId,
           area: area || '',
@@ -237,10 +247,14 @@ export default function FaceManagementPage() {
     if (!faceId) return
 
     // 检查是否已存在
+    const checkArea = isCreating
+      ? (newArea === '__custom__' ? customArea : newArea)
+      : selectedFace?.area
     try {
       const checkFormData = new FormData()
       checkFormData.append('cragId', selectedCragId)
       checkFormData.append('faceId', faceId)
+      if (checkArea) checkFormData.append('area', checkArea)
       checkFormData.append('checkOnly', 'true')
 
       const checkRes = await fetch('/api/upload', { method: 'POST', body: checkFormData })

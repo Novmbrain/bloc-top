@@ -29,12 +29,19 @@ function getS3Client(): S3Client {
   return s3Client
 }
 
+interface FaceInfo {
+  faceId: string
+  area: string
+}
+
 /**
  * GET /api/faces?cragId=xxx
  * 列出 R2 上指定岩场的所有岩面图片
  *
- * 返回: { success: true, faces: string[] }
- * faces 数组中的每个元素是 faceId（已解码）
+ * R2 路径结构: {cragId}/{area}/{faceId}.jpg
+ *
+ * 返回: { success: true, faces: FaceInfo[] }
+ * 每个 FaceInfo 包含 faceId 和 area
  */
 export async function GET(request: NextRequest) {
   const cragId = request.nextUrl.searchParams.get('cragId')
@@ -55,26 +62,37 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const prefix = `${cragId}/faces/`
+    // 列出 {cragId}/ 下所有文件，解析 area/faceId 层级
+    const prefix = `${cragId}/`
     const result = await getS3Client().send(new ListObjectsV2Command({
       Bucket: bucketName,
       Prefix: prefix,
     }))
 
-    const faces: string[] = []
+    const faces: FaceInfo[] = []
     for (const obj of result.Contents || []) {
       if (!obj.Key) continue
-      // Key 格式: {cragId}/faces/{encodedFaceId}.jpg
-      const filename = obj.Key.slice(prefix.length)
-      if (!filename.endsWith('.jpg')) continue
-      // Key 可能是编码的（旧数据）或未编码的（新数据），统一尝试解码
+      // Key 格式: {cragId}/{area}/{faceId}.jpg
+      const relativePath = obj.Key.slice(prefix.length)
+      if (!relativePath.endsWith('.jpg')) continue
+
+      const parts = relativePath.split('/')
+      // 需要至少 2 级: area/faceId.jpg
+      if (parts.length !== 2) continue
+
+      const area = parts[0]
+      // 跳过旧的 faces/ 路径和其他非 area 目录
+      if (area === 'faces') continue
+
       let faceId: string
       try {
-        faceId = decodeURIComponent(filename.slice(0, -4))
+        faceId = decodeURIComponent(parts[1].slice(0, -4))
       } catch {
-        faceId = filename.slice(0, -4)
+        faceId = parts[1].slice(0, -4)
       }
-      if (faceId) faces.push(faceId)
+      if (faceId) {
+        faces.push({ faceId, area })
+      }
     }
 
     return NextResponse.json({ success: true, faces })

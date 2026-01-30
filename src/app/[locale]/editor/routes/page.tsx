@@ -29,6 +29,11 @@ import { RouteCard } from '@/components/editor/route-card'
 import { FullscreenTopoEditor } from '@/components/editor/fullscreen-topo-editor'
 import { VIEW_WIDTH, VIEW_HEIGHT, GRADE_OPTIONS } from '@/lib/editor-utils'
 
+interface R2FaceInfo {
+  faceId: string
+  area: string
+}
+
 interface FaceGroup {
   faceId: string
   area: string
@@ -47,7 +52,7 @@ export default function RouteAnnotationPage() {
   } = useCragRoutes()
 
   // ============ R2 上已有的 face 列表 ============
-  const [r2Faces, setR2Faces] = useState<string[]>([])
+  const [r2Faces, setR2Faces] = useState<R2FaceInfo[]>([])
   const [isLoadingFaces, setIsLoadingFaces] = useState(false)
 
   // ============ 选择状态 ============
@@ -93,7 +98,7 @@ export default function RouteAnnotationPage() {
     fetch(`/api/faces?cragId=${encodeURIComponent(selectedCragId)}`)
       .then(res => res.json())
       .then(data => {
-        if (!cancelled && data.success) setR2Faces(data.faces)
+        if (!cancelled && data.success) setR2Faces(data.faces as R2FaceInfo[])
       })
       .catch(() => { /* 静默失败，回退到仅 route 派生 */ })
       .finally(() => { if (!cancelled) setIsLoadingFaces(false) })
@@ -124,34 +129,34 @@ export default function RouteAnnotationPage() {
   }, [routes])
 
   // 按 area 筛选的 face 列表（右栏 face 选择器用）
+  // 以 R2 返回的 face 数据为主（自带 area），再关联 routes
   const areaFaceGroups = useMemo(() => {
+    if (!selectedCragId) return []
     const map = new Map<string, FaceGroup>()
+
+    // 从 R2 数据构建 face 列表（每个 face 自带 area）
+    r2Faces.forEach(({ faceId, area }) => {
+      map.set(faceId, {
+        faceId,
+        area,
+        routes: [],
+        imageUrl: getFaceTopoUrl(selectedCragId, area, faceId),
+      })
+    })
+
+    // 关联 routes 到对应的 face
     routes.forEach(r => {
       if (!r.faceId) return
-      if (selectedArea && r.area !== selectedArea) return
-      const entry = map.get(r.faceId) || {
-        faceId: r.faceId,
-        area: r.area,
-        routes: [],
-        imageUrl: getFaceTopoUrl(r.cragId, r.faceId),
-      }
-      entry.routes.push(r)
-      map.set(r.faceId, entry)
+      const entry = map.get(r.faceId)
+      if (entry) entry.routes.push(r)
     })
-    // 合并 R2 上已有但未被任何 route 引用的 face（仅无 area 筛选时）
-    if (selectedCragId && !selectedArea) {
-      r2Faces.forEach(faceId => {
-        if (!map.has(faceId)) {
-          map.set(faceId, {
-            faceId,
-            area: '',
-            routes: [],
-            imageUrl: getFaceTopoUrl(selectedCragId, faceId),
-          })
-        }
-      })
+
+    let result = Array.from(map.values())
+    // 按 area 过滤
+    if (selectedArea) {
+      result = result.filter(f => f.area === selectedArea)
     }
-    return Array.from(map.values())
+    return result
   }, [routes, r2Faces, selectedCragId, selectedArea])
 
   // 按 area 筛选的线路
@@ -226,8 +231,8 @@ export default function RouteAnnotationPage() {
     const autoFaceId = selectedRoute.faceId || null
     setSelectedFaceId(autoFaceId)
 
-    if (autoFaceId) {
-      const url = getFaceTopoUrl(selectedRoute.cragId, autoFaceId)
+    if (autoFaceId && selectedRoute.area) {
+      const url = getFaceTopoUrl(selectedRoute.cragId, selectedRoute.area, autoFaceId)
       setImageUrl(url)
       setIsImageLoading(true)
       setImageLoadError(false)
@@ -492,12 +497,24 @@ export default function RouteAnnotationPage() {
                 {areaFaceGroups.map(face => (
                   <button
                     key={face.faceId}
-                    onClick={() => {
+                    onClick={async () => {
                       setSelectedFaceId(face.faceId)
-                      const url = getFaceTopoUrl(selectedRoute.cragId, face.faceId)
+                      const url = getFaceTopoUrl(selectedRoute.cragId, face.area, face.faceId)
                       setImageUrl(url)
                       setIsImageLoading(true)
                       setImageLoadError(false)
+                      // 立即绑定 faceId 到线路
+                      try {
+                        const res = await fetch(`/api/routes/${selectedRoute.id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ faceId: face.faceId }),
+                        })
+                        if (res.ok) {
+                          const data = await res.json()
+                          setRoutes(prev => prev.map(r => r.id === selectedRoute.id ? data.route : r))
+                        }
+                      } catch { /* 静默失败，保存时会再次绑定 */ }
                     }}
                     className={`flex-shrink-0 p-1.5 transition-all duration-200 active:scale-[0.98] ${selectedFaceId === face.faceId ? 'ring-2' : ''}`}
                     style={{
