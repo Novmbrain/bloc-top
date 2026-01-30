@@ -133,7 +133,7 @@ export default function FaceManagementPage() {
       })
     }
     let result = Array.from(map.values())
-    if (selectedArea) result = result.filter(f => f.area === selectedArea)
+    if (selectedArea) result = result.filter(f => f.area === selectedArea || !f.area)
     return result
   }, [routes, r2Faces, selectedCragId, selectedArea])
 
