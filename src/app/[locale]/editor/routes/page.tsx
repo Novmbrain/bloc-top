@@ -517,6 +517,8 @@ export default function RouteAnnotationPage() {
                   <button
                     key={face.faceId}
                     onClick={async () => {
+                      // 已选中的岩面不重复操作
+                      if (face.faceId === selectedFaceId) return
                       setSelectedFaceId(face.faceId)
                       const url = getFaceTopoUrl(selectedRoute.cragId, face.area, face.faceId)
                       setImageUrl(url)
