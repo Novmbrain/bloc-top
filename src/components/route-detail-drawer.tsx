@@ -178,16 +178,6 @@ export function RouteDetailDrawer({
                 >
                   {t('noTopo')}
                 </span>
-                {/* 难度标签（无图片时） */}
-                <div
-                  className="absolute top-3 right-3 px-3 py-1.5"
-                  style={{
-                    backgroundColor: getGradeColor(route.grade),
-                    borderRadius: 'var(--theme-radius-full)',
-                  }}
-                >
-                  <span className="text-white text-sm font-bold">{route.grade}</span>
-                </div>
               </div>
             ) : (
               // 正常显示图片（带 loading 状态）
@@ -234,17 +224,6 @@ export function RouteDetailDrawer({
                   )
                 )}
 
-                {/* 难度标签 */}
-                <div
-                  className="absolute top-3 right-3 px-3 py-1.5"
-                  style={{
-                    backgroundColor: getGradeColor(route.grade),
-                    borderRadius: 'var(--theme-radius-full)',
-                  }}
-                >
-                  <span className="text-white text-sm font-bold">{route.grade}</span>
-                </div>
-
                 {/* 放大提示（图片加载完成后显示） */}
                 {!imageLoading && (
                   <div
@@ -261,12 +240,24 @@ export function RouteDetailDrawer({
 
           {/* 线路信息 */}
           <div className="mb-4">
-            <h2
-              className="text-2xl font-bold mb-2"
-              style={{ color: 'var(--theme-on-surface)' }}
-            >
-              {route.name}
-            </h2>
+            <div className="flex items-center gap-2.5 mb-2">
+              {/* 难度标签 */}
+              <span
+                className="px-2.5 py-1 text-sm font-bold text-white shrink-0"
+                style={{
+                  backgroundColor: getGradeColor(route.grade),
+                  borderRadius: 'var(--theme-radius-full)',
+                }}
+              >
+                {route.grade}
+              </span>
+              <h2
+                className="text-2xl font-bold"
+                style={{ color: 'var(--theme-on-surface)' }}
+              >
+                {route.name}
+              </h2>
+            </div>
 
             {/* 位置信息 */}
             <div className="flex items-center gap-4 flex-wrap">
