@@ -233,8 +233,12 @@ export default function RouteAnnotationPage() {
 
     if (autoFaceId && selectedRoute.area) {
       const url = getFaceTopoUrl(selectedRoute.cragId, selectedRoute.area, autoFaceId)
-      setImageUrl(url)
-      setIsImageLoading(true)
+      // 仅当 URL 变化时才触发 loading，避免同岩面切换线路时 onLoad 不触发导致永久 loading
+      setImageUrl(prev => {
+        if (prev === url) return prev
+        setIsImageLoading(true)
+        return url
+      })
       setImageLoadError(false)
     } else {
       setImageUrl(null)
@@ -583,6 +587,7 @@ export default function RouteAnnotationPage() {
 
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
+                    key={imageUrl}
                     src={imageUrl}
                     alt="岩面照片"
                     className="w-full aspect-[4/3] object-cover"
