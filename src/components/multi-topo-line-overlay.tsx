@@ -63,6 +63,8 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
   ) {
     const selectedPathRef = useRef<SVGPathElement>(null)
     const [isAnimating, setIsAnimating] = useState(false)
+    // 防止同一线路动画重复播放
+    const lastAnimatedRouteId = useRef<number | null>(null)
 
     // 找到当前选中的线路
     const selectedRoute = useMemo(
@@ -125,12 +127,16 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
 
     // 暴露 replay 方法给父组件
     useImperativeHandle(ref, () => ({
-      replay: animate,
+      replay: () => {
+        lastAnimatedRouteId.current = null
+        animate()
+      },
     }), [animate])
 
-    // 选中线路变化时播放动画
+    // 选中线路变化时播放动画（防止同一线路重复触发）
     useEffect(() => {
-      if (selectedRoute) {
+      if (selectedRoute && lastAnimatedRouteId.current !== selectedRouteId) {
+        lastAnimatedRouteId.current = selectedRouteId
         const timer = setTimeout(() => {
           animate()
         }, TOPO_MULTI_LINE_CONFIG.drawAnimationDelay)
@@ -183,10 +189,10 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
                 fill="none"
                 opacity={TOPO_LINE_CONFIG.outlineOpacity}
               />
-              {/* 主线条 */}
+              {/* 主线条 - 使用线路自身颜色 */}
               <path
                 d={data.path}
-                stroke={TOPO_MULTI_LINE_CONFIG.inactiveColor}
+                stroke={getGradeColor(route.grade)}
                 strokeWidth={TOPO_MULTI_LINE_CONFIG.inactiveStrokeWidth}
                 strokeLinecap={TOPO_LINE_CONFIG.strokeLinecap}
                 strokeLinejoin={TOPO_LINE_CONFIG.strokeLinejoin}
@@ -211,7 +217,7 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
                 cx={data.start.x}
                 cy={data.start.y}
                 r={TOPO_MULTI_LINE_CONFIG.inactiveMarkerRadius}
-                fill={TOPO_MULTI_LINE_CONFIG.inactiveColor}
+                fill={getGradeColor(route.grade)}
                 stroke="white"
                 strokeWidth={1.5}
                 style={{ cursor: 'pointer', pointerEvents: 'auto' }}
