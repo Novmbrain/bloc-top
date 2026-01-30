@@ -240,8 +240,8 @@ describe('RouteDetailDrawer', () => {
 
       const gradeBadge = screen.getByText('V5')
       expect(gradeBadge).toBeInTheDocument()
-      // 检查父元素的样式
-      expect(gradeBadge.closest('div')).toHaveStyle({
+      // 难度标签现在是 span 元素，直接检查其样式
+      expect(gradeBadge).toHaveStyle({
         borderRadius: 'var(--theme-radius-full)',
       })
     })
