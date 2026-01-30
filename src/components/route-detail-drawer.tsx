@@ -108,15 +108,11 @@ export function RouteDetailDrawer({
     }
   }, [isOpen, imageLoading, drawerAnimated, route?.topoLine, useMultiLineMode])
 
-  // 全屏查看器打开时触发动画
+  // 全屏查看器打开时触发动画（仅单线路模式需要手动触发，多线路模式由组件内部 useEffect 自动处理）
   useEffect(() => {
-    if (imageViewerOpen && route?.topoLine) {
+    if (imageViewerOpen && route?.topoLine && !useMultiLineMode) {
       const timer = setTimeout(() => {
-        if (useMultiLineMode) {
-          multiFullscreenOverlayRef.current?.replay()
-        } else {
-          fullscreenOverlayRef.current?.replay()
-        }
+        fullscreenOverlayRef.current?.replay()
       }, TOPO_ANIMATION_CONFIG.autoPlayDelayFullscreen)
       return () => clearTimeout(timer)
     }
