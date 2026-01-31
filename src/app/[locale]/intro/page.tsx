@@ -1,12 +1,11 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useRouter } from '@/i18n/navigation'
-import { Map, SlidersHorizontal, Play, Heart, Mountain } from 'lucide-react'
+import { Link } from '@/i18n/navigation'
+import { ArrowLeft, Map, SlidersHorizontal, Play, Heart, Mountain } from 'lucide-react'
 
 export default function IntroPage() {
   const t = useTranslations('Intro')
-  const router = useRouter()
 
   const features = [
     { icon: <Map className="w-6 h-6" />, title: t('featureTopo'), desc: t('featureTopoDesc') },
@@ -29,8 +28,24 @@ export default function IntroPage() {
         color: 'var(--theme-on-surface)',
       }}
     >
+      {/* Back Button */}
+      <nav className="px-4 pt-4">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors"
+          style={{
+            color: 'var(--theme-primary)',
+            borderRadius: 'var(--theme-radius-lg)',
+          }}
+          aria-label={t('backToHome')}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {t('backToHome')}
+        </Link>
+      </nav>
+
       {/* Hero Section */}
-      <section className="px-6 pt-16 pb-12 text-center">
+      <section className="px-6 pt-8 pb-12 text-center animate-fade-in">
         <div
           className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6"
           style={{
@@ -56,10 +71,12 @@ export default function IntroPage() {
           {features.map((feature, i) => (
             <div
               key={i}
-              className="flex items-start gap-4 p-4"
+              className="flex items-start gap-4 p-4 animate-fade-in-up"
               style={{
                 backgroundColor: 'color-mix(in srgb, var(--theme-primary) 8%, var(--theme-surface))',
                 borderRadius: 'var(--theme-radius-xl)',
+                animationDelay: `${i * 100}ms`,
+                animationFillMode: 'backwards',
               }}
             >
               <div
@@ -90,7 +107,14 @@ export default function IntroPage() {
         <h2 className="text-lg font-bold mb-4">{t('stepsTitle')}</h2>
         <div className="space-y-4">
           {steps.map((step, i) => (
-            <div key={i} className="flex items-center gap-3">
+            <div
+              key={i}
+              className="flex items-center gap-3 animate-fade-in-up"
+              style={{
+                animationDelay: `${300 + i * 80}ms`,
+                animationFillMode: 'backwards',
+              }}
+            >
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold"
                 style={{
@@ -109,10 +133,12 @@ export default function IntroPage() {
       {/* Community Section */}
       <section className="px-6 pb-10">
         <div
-          className="p-5 text-center"
+          className="p-5 text-center animate-fade-in-up"
           style={{
             backgroundColor: 'color-mix(in srgb, var(--theme-primary) 10%, var(--theme-surface))',
             borderRadius: 'var(--theme-radius-xl)',
+            animationDelay: '600ms',
+            animationFillMode: 'backwards',
           }}
         >
           <Heart
@@ -131,9 +157,9 @@ export default function IntroPage() {
 
       {/* CTA */}
       <section className="px-6 pb-16">
-        <button
-          onClick={() => router.push('/')}
-          className="w-full py-4 text-base font-bold transition-transform active:scale-[0.98]"
+        <Link
+          href="/"
+          className="block w-full py-4 text-center text-base font-bold transition-transform active:scale-[0.98]"
           style={{
             backgroundColor: 'var(--theme-primary)',
             color: 'var(--theme-on-primary)',
@@ -142,7 +168,7 @@ export default function IntroPage() {
           }}
         >
           {t('cta')}
-        </button>
+        </Link>
       </section>
     </div>
   )

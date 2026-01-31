@@ -347,7 +347,8 @@
     "profileEntry": "App Introduction",
     "profileEntryHint": "Learn about features and how to use",
     "hintPinchZoom": "Pinch to zoom and see route details",
-    "hintSearch": "Search by route name or grade"
+    "hintSearch": "Search by route name or grade",
+    "backToHome": "Back to Home"
   },
   "Metadata": {
     "title": "Luoyuan Bouldering TOPO",

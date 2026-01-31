@@ -347,7 +347,8 @@
     "profileEntry": "App 介绍",
     "profileEntryHint": "了解功能和使用方式",
     "hintPinchZoom": "双指缩放查看线路细节",
-    "hintSearch": "支持按线路名或难度搜索"
+    "hintSearch": "支持按线路名或难度搜索",
+    "backToHome": "返回首页"
   },
   "Metadata": {
     "title": "罗源野抱 TOPO",
