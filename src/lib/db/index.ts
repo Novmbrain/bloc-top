@@ -237,6 +237,48 @@ export async function updateRoute(
   }
 }
 
+/**
+ * 创建新线路
+ * 自动生成递增 ID（取最大 _id + 1）
+ */
+export async function createRoute(
+  data: Omit<Route, 'id' | 'topoLine' | 'betaLinks' | 'image'>
+): Promise<Route> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const collection = db.collection('routes')
+
+    // 获取最大 _id
+    const lastDoc = await collection.find().sort({ _id: -1 }).limit(1).toArray()
+    const newId = lastDoc.length > 0 ? (lastDoc[0]._id as unknown as number) + 1 : 1
+
+    const doc = {
+      _id: newId as unknown as Document['_id'],
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    await collection.insertOne(doc)
+
+    log.info(`Created route: ${newId}`, {
+      action: 'createRoute',
+      duration: Date.now() - start,
+      metadata: { routeId: newId, name: data.name, cragId: data.cragId },
+    })
+
+    return { id: newId, ...data } as Route
+  } catch (error) {
+    log.error('Failed to create route', error, {
+      action: 'createRoute',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+
 // ============ Feedback 相关操作 ============
 
 /**

@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  Plus,
 } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
@@ -79,6 +80,13 @@ export default function RouteAnnotationPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
+
+  // ============ 新增线路状态 ============
+  const [isCreatingRoute, setIsCreatingRoute] = useState(false)
+  const [isSubmittingCreate, setIsSubmittingCreate] = useState(false)
+  const [newRoute, setNewRoute] = useState({
+    name: '', grade: '？', area: '', FA: '', setter: '', description: '',
+  })
 
   // ============ UI 状态 ============
   const [showEditorPanel, setShowEditorPanel] = useState(false)
@@ -318,6 +326,46 @@ export default function RouteAnnotationPage() {
     }
   }, [selectedRoute, editedRoute, topoLine, selectedFaceId, setRoutes, showToast])
 
+  // ============ 新增线路逻辑 ============
+  const handleStartCreate = useCallback(() => {
+    setIsCreatingRoute(true)
+    setSelectedRoute(null)
+    setShowEditorPanel(true)
+    setNewRoute({
+      name: '', grade: '？', area: selectedArea || '', FA: '', setter: '', description: '',
+    })
+  }, [selectedArea])
+
+  const handleSubmitCreate = useCallback(async () => {
+    if (!selectedCragId || !newRoute.name.trim() || !newRoute.area.trim()) return
+
+    setIsSubmittingCreate(true)
+    try {
+      const res = await fetch('/api/routes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newRoute, cragId: selectedCragId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '创建失败')
+
+      const created = data.route as Route
+      setRoutes(prev => [...prev, created])
+      setIsCreatingRoute(false)
+      setSelectedRoute(created)
+      showToast(`线路「${created.name}」创建成功！`, 'success', 3000)
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : '创建失败', 'error', 4000)
+    } finally {
+      setIsSubmittingCreate(false)
+    }
+  }, [selectedCragId, newRoute, setRoutes, showToast])
+
+  const handleCancelCreate = useCallback(() => {
+    setIsCreatingRoute(false)
+    setShowEditorPanel(false)
+  }, [])
+
   // ============ SVG 计算 ============
   const routeColor = useMemo(
     () => getGradeColor(editedRoute.grade || selectedRoute?.grade || '？'),
@@ -432,6 +480,21 @@ export default function RouteAnnotationPage() {
             ))}
           </div>
 
+          {/* 新增线路按钮 */}
+          <button
+            onClick={handleStartCreate}
+            className="w-full py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 mb-3 transition-all duration-200 active:scale-[0.98]"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface))',
+              color: 'var(--theme-primary)',
+              border: '1.5px dashed var(--theme-primary)',
+              borderRadius: 'var(--theme-radius-xl)',
+            }}
+          >
+            <Plus className="w-5 h-5" />
+            新增线路
+          </button>
+
           {/* 线路列表 */}
           <div className="flex-1 overflow-y-auto min-h-0 space-y-2">
             {filteredRoutes.length === 0 ? (
@@ -462,6 +525,115 @@ export default function RouteAnnotationPage() {
         <div className="flex flex-col items-center justify-center h-full" style={{ color: 'var(--theme-on-surface-variant)' }}>
           <Mountain className="w-16 h-16 mb-4 opacity-30" />
           <p className="text-lg font-medium">选择岩场开始标注</p>
+        </div>
+      ) : isCreatingRoute ? (
+        /* 新增线路表单 */
+        <div className="max-w-lg mx-auto space-y-4 animate-fade-in-up">
+          <div
+            className="flex items-center gap-3 p-4"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--theme-primary) 10%, var(--theme-surface))',
+              borderRadius: 'var(--theme-radius-xl)',
+              border: '2px solid var(--theme-primary)',
+            }}
+          >
+            <Plus className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
+            <h2 className="text-lg font-bold" style={{ color: 'var(--theme-on-surface)' }}>新增线路</h2>
+          </div>
+
+          <div className="p-4" style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-xl)' }}>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>名称 *</label>
+                <input
+                  type="text"
+                  value={newRoute.name}
+                  onChange={(e) => setNewRoute(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="线路名称"
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                  style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>难度 *</label>
+                <select
+                  value={newRoute.grade}
+                  onChange={(e) => setNewRoute(prev => ({ ...prev, grade: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                  style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                >
+                  {GRADE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>区域 *</label>
+                <input
+                  type="text"
+                  value={newRoute.area}
+                  onChange={(e) => setNewRoute(prev => ({ ...prev, area: e.target.value }))}
+                  placeholder="如：A 区"
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                  style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>首攀者 (FA)</label>
+                <input
+                  type="text"
+                  value={newRoute.FA}
+                  onChange={(e) => setNewRoute(prev => ({ ...prev, FA: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                  style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>定线者</label>
+                <input
+                  type="text"
+                  value={newRoute.setter}
+                  onChange={(e) => setNewRoute(prev => ({ ...prev, setter: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                  style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>描述</label>
+                <textarea
+                  value={newRoute.description}
+                  onChange={(e) => setNewRoute(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm resize-none outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                  style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleCancelCreate}
+              className="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
+              style={{ backgroundColor: 'var(--theme-surface-variant)', color: 'var(--theme-on-surface)' }}
+            >
+              取消
+            </button>
+            <button
+              onClick={handleSubmitCreate}
+              disabled={isSubmittingCreate || !newRoute.name.trim() || !newRoute.area.trim()}
+              className="flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
+              style={{
+                backgroundColor: 'var(--theme-primary)',
+                color: 'var(--theme-on-primary)',
+                opacity: isSubmittingCreate || !newRoute.name.trim() || !newRoute.area.trim() ? 0.6 : 1,
+              }}
+            >
+              {isSubmittingCreate ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> 创建中...</>
+              ) : (
+                <><Plus className="w-5 h-5" /> 创建线路</>
+              )}
+            </button>
+          </div>
         </div>
       ) : !selectedRoute ? (
         <div className="flex flex-col items-center justify-center h-full" style={{ color: 'var(--theme-on-surface-variant)' }}>
@@ -849,6 +1021,18 @@ export default function RouteAnnotationPage() {
         <div className="lg:hidden">
           {!showEditorPanel ? (
             leftPanel
+          ) : isCreatingRoute ? (
+            <div className="space-y-4 animate-fade-in-up">
+              <button
+                onClick={handleCancelCreate}
+                className="flex items-center gap-2 p-2 -ml-2 rounded-xl transition-all duration-200 active:scale-95"
+                style={{ color: 'var(--theme-primary)' }}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm font-medium">返回线路列表</span>
+              </button>
+              {rightPanel}
+            </div>
           ) : selectedRoute ? (
             <div className="space-y-4 animate-fade-in-up">
               <button
