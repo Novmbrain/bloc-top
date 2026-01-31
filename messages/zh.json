@@ -315,7 +315,13 @@
     "feedbackThanks": "感谢你的留言 💚",
     "donate": "给小傅买杯咖啡 ☕️",
     "avatarAlt": "作者头像",
-    "donateAlt": "赞赏码"
+    "donateAlt": "赞赏码",
+    "editorEntry": "Topo 编辑器",
+    "editorEntryHint": "需要密码访问",
+    "editorPasswordTitle": "输入编辑器密码",
+    "editorPasswordPlaceholder": "请输入密码",
+    "editorPasswordWrong": "密码错误，请重试",
+    "editorPasswordConfirm": "进入编辑器"
   },
   "Metadata": {
     "title": "罗源野抱 TOPO",

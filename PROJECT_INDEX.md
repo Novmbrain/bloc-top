@@ -1,6 +1,6 @@
 # Project Index: 罗源野抱 TOPO PWA
 
-Generated: 2026-01-30
+Generated: 2026-01-30 (updated)
 
 ## 📁 Project Structure
 
@@ -51,6 +51,7 @@ src/
 │   │   └── segmented-control.tsx    # Tab-like segmented control
 │   ├── editor/                       # Editor-specific components
 │   │   ├── fullscreen-topo-editor.tsx # SVG topo line editor
+│   │   ├── crag-selector.tsx        # Editor crag selector
 │   │   ├── progress-ring.tsx        # Circular progress indicator
 │   │   └── route-card.tsx           # Editor route card
 │   ├── crag-card.tsx                # Crag list card
@@ -136,13 +137,14 @@ scripts/
 ├── check-routes.ts                  # Route data validation
 ├── migrate-add-cityid.ts           # Add cityId migration
 ├── migrate-r2-face-keys.ts         # R2 face key migration
+├── migrate-r2-face-to-area.ts      # R2 face→area hierarchy migration
 └── init-visits.ts                   # Initialize visit counters
 ```
 
 ## 🚀 Entry Points
 
 - **App**: `src/app/[locale]/page.tsx` — Homepage (crag list, SSR + ISR)
-- **API**: `src/app/api/` — 11 API routes
+- **API**: `src/app/api/` — 12 API routes
 - **SW**: `src/app/sw.ts` — Serwist service worker
 - **Middleware**: `src/middleware.ts` — i18n locale detection
 - **DB seed**: `scripts/seed.ts` — Database migration

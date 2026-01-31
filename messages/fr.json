@@ -283,7 +283,13 @@
     "feedbackThanks": "Merci pour votre retour 💚",
     "donate": "Offrez-moi un café ☕️",
     "avatarAlt": "Avatar de l'auteur",
-    "donateAlt": "Code QR de don"
+    "donateAlt": "Code QR de don",
+    "editorEntry": "Éditeur Topo",
+    "editorEntryHint": "Mot de passe requis",
+    "editorPasswordTitle": "Entrez le mot de passe",
+    "editorPasswordPlaceholder": "Entrez le mot de passe",
+    "editorPasswordWrong": "Mot de passe incorrect, réessayez",
+    "editorPasswordConfirm": "Accéder à l'éditeur"
   },
   "Metadata": {
     "title": "Luoyuan Bouldering TOPO",
