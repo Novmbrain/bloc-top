@@ -323,6 +323,32 @@
     "editorPasswordWrong": "Wrong password, try again",
     "editorPasswordConfirm": "Enter Editor"
   },
+  "Intro": {
+    "heroTitle": "Luoyuan Bouldering TOPO",
+    "heroSubtitle": "Your outdoor bouldering guide for Luoyuan, Fuzhou",
+    "featuresTitle": "Key Features",
+    "featureTopo": "Topo Route Maps",
+    "featureTopoDesc": "Precisely marked climbing routes with fullscreen zoom",
+    "featureFilter": "Grade Filtering",
+    "featureFilterDesc": "Filter by V-grade to find routes that match your level",
+    "featureBeta": "Beta Videos",
+    "featureBetaDesc": "Watch other climbers' beta videos to learn techniques",
+    "stepsTitle": "How to Use",
+    "step1": "Browse crags and pick your destination",
+    "step2": "View route list, filter by grade",
+    "step3": "Open the topo to see route details",
+    "step4": "Share your beta video to help fellow climbers",
+    "communityTitle": "Climb Together",
+    "communityDesc": "Share your beta videos and feedback to help more climbers enjoy bouldering",
+    "cta": "Start Exploring",
+    "welcomeTitle": "Welcome to Luoyuan Bouldering 🧗",
+    "welcomeDesc": "Learn how to use this app to explore climbing routes",
+    "welcomeCta": "View Introduction",
+    "profileEntry": "App Introduction",
+    "profileEntryHint": "Learn about features and how to use",
+    "hintPinchZoom": "Pinch to zoom and see route details",
+    "hintSearch": "Search by route name or grade"
+  },
   "Metadata": {
     "title": "Luoyuan Bouldering TOPO",
     "description": "Bouldering guide for Luoyuan, Fuzhou - Outdoor climbing routes"

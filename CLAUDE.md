@@ -622,7 +622,7 @@ GitHub Actions 自动运行 (push/PR 到 main/dev):
 1. **先创建 Issue** - 使用 `gh issue create` 描述需求
 2. **创建 feature 分支** - 命名格式 `feature/issue-{N}-{short-desc}`
 3. **完成开发后创建 PR** - 使用 `Closes #{N}` 链接 Issue
-4. **等待 CI 通过后合并**
+4. **启用 auto-merge** - 创建 PR 后立即执行 `gh pr merge --auto --rebase`，CI 通过后自动合并
 
 > 不要跳过任何步骤，即使是小改动也要遵循此流程。
 
@@ -654,12 +654,10 @@ git checkout -b feature/issue-42-add-favorites
 git add . && git commit -m "feat: add user favorites"
 git push origin feature/issue-42-add-favorites
 
-# 4. 创建 PR (关联 Issue)
+# 4. 创建 PR (关联 Issue) + 启用 auto-merge
 gh pr create --base main --title "feat: add favorites" \
   --body "Closes #42"
-
-# 5. CI 通过后合并 (rebase 策略)
-gh pr merge --rebase
+gh pr merge --auto --rebase
 ```
 
 ### Branch Protection (main)
