@@ -13,6 +13,7 @@ export function WelcomeBanner() {
   return (
     <Link
       href="/intro"
+      aria-label={t('welcomeTitle')}
       className="block p-4 mb-4 transition-transform active:scale-[0.98]"
       style={{
         backgroundColor: 'color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface))',

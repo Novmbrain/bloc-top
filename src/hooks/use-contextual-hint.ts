@@ -4,26 +4,25 @@ import { useSyncExternalStore, useCallback } from 'react'
 
 const STORAGE_KEY = 'hints-dismissed'
 
-/**
- * 读取已关闭的提示集合
- */
+// 模块级缓存，避免每次 getSnapshot 都 parse JSON
+let cachedHints: Set<string> | null = null
+
 function getDismissedHints(): Set<string> {
   if (typeof window === 'undefined') return new Set()
+  if (cachedHints) return cachedHints
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return new Set()
-    return new Set(JSON.parse(raw) as string[])
+    cachedHints = raw ? new Set(JSON.parse(raw) as string[]) : new Set()
   } catch {
-    return new Set()
+    cachedHints = new Set()
   }
+  return cachedHints
 }
 
-/**
- * 保存已关闭的提示集合
- */
 function saveDismissedHints(hints: Set<string>): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...hints]))
+    cachedHints = hints
   } catch {
     // localStorage 不可用，忽略
   }
@@ -38,6 +37,7 @@ function subscribe(listener: () => void) {
   }
 }
 function emitChange() {
+  cachedHints = null // 使缓存失效
   listeners.forEach(l => l())
 }
 
