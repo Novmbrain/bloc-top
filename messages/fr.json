@@ -291,6 +291,32 @@
     "editorPasswordWrong": "Mot de passe incorrect, réessayez",
     "editorPasswordConfirm": "Accéder à l'éditeur"
   },
+  "Intro": {
+    "heroTitle": "Luoyuan Bouldering TOPO",
+    "heroSubtitle": "Votre guide de bloc en plein air pour Luoyuan, Fuzhou",
+    "featuresTitle": "Fonctionnalités clés",
+    "featureTopo": "Topos des voies",
+    "featureTopoDesc": "Voies d'escalade précisément tracées avec zoom plein écran",
+    "featureFilter": "Filtrage par cotation",
+    "featureFilterDesc": "Filtrez par cotation V pour trouver les voies adaptées à votre niveau",
+    "featureBeta": "Vidéos Beta",
+    "featureBetaDesc": "Regardez les vidéos beta d'autres grimpeurs pour apprendre les techniques",
+    "stepsTitle": "Comment utiliser",
+    "step1": "Parcourez les sites et choisissez votre destination",
+    "step2": "Consultez la liste des voies, filtrez par cotation",
+    "step3": "Ouvrez le topo pour voir les détails de la voie",
+    "step4": "Partagez votre vidéo beta pour aider d'autres grimpeurs",
+    "communityTitle": "Grimpons ensemble",
+    "communityDesc": "Partagez vos vidéos beta et vos retours pour aider plus de grimpeurs",
+    "cta": "Commencer l'exploration",
+    "welcomeTitle": "Bienvenue à Luoyuan Bouldering 🧗",
+    "welcomeDesc": "Découvrez comment utiliser cette app pour explorer les voies",
+    "welcomeCta": "Voir l'introduction",
+    "profileEntry": "Présentation de l'app",
+    "profileEntryHint": "Découvrir les fonctionnalités",
+    "hintPinchZoom": "Pincez pour zoomer et voir les détails",
+    "hintSearch": "Recherchez par nom de voie ou cotation"
+  },
   "Metadata": {
     "title": "Luoyuan Bouldering TOPO",
     "description": "Guide d'escalade pour Luoyuan, Fuzhou - Voies d'escalade en plein air"

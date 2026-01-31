@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { MapPin, User, Wrench, Video, ImageIcon } from 'lucide-react'
+import { MapPin, User, Wrench, Video, ImageIcon, ZoomIn } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
 import { BetaListDrawer } from '@/components/beta-list-drawer'
 import { BetaSubmitDrawer } from '@/components/beta-submit-drawer'
+import { ContextualHint } from '@/components/contextual-hint'
 import { TopoLineOverlay, type TopoLineOverlayRef } from '@/components/topo-line-overlay'
 import { MultiTopoLineOverlay, type MultiTopoLineOverlayRef, type MultiTopoRoute } from '@/components/multi-topo-line-overlay'
 import { getGradeColor } from '@/lib/tokens'
@@ -36,6 +37,7 @@ export function RouteDetailDrawer({
 }: RouteDetailDrawerProps) {
   const t = useTranslations('RouteDetail')
   const tBeta = useTranslations('Beta')
+  const tIntro = useTranslations('Intro')
   const [imageViewerOpen, setImageViewerOpen] = useState(false)
   const [betaListOpen, setBetaListOpen] = useState(false)
   const [betaSubmitOpen, setBetaSubmitOpen] = useState(false)
@@ -424,6 +426,15 @@ export function RouteDetailDrawer({
           onClose={() => setImageViewerOpen(false)}
           src={topoImageUrl}
           alt={route.name}
+          topSlot={
+            <div className="absolute top-12 left-4 right-4 z-10">
+              <ContextualHint
+                hintKey="topo-pinch-zoom"
+                message={tIntro('hintPinchZoom')}
+                icon={<ZoomIn className="w-3.5 h-3.5" />}
+              />
+            </div>
+          }
         >
           {/* Topo 线路叠加层 - 全屏模式使用 contain 匹配图片 object-contain */}
           {hasTopoLine && (

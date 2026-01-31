@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
-import { Search, X, ChevronRight, ArrowRight } from 'lucide-react'
+import { Search, X, ChevronRight, ArrowRight, SlidersHorizontal } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
+import { ContextualHint } from '@/components/contextual-hint'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
 import { getGradeColor } from '@/lib/tokens'
 import type { Route, Crag } from '@/types'
@@ -29,6 +30,7 @@ export function SearchDrawer({
   crags,
 }: SearchDrawerProps) {
   const t = useTranslations('Search')
+  const tIntro = useTranslations('Intro')
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -74,6 +76,15 @@ export function SearchDrawer({
     <>
       <Drawer isOpen={isOpen} onClose={onClose} height="three-quarter">
         <div className="px-4 pb-4">
+          {/* 搜索提示 */}
+          <div className="mb-3">
+            <ContextualHint
+              hintKey="search-hint"
+              message={tIntro('hintSearch')}
+              icon={<SlidersHorizontal className="w-3.5 h-3.5" />}
+            />
+          </div>
+
           {/* 搜索输入框 */}
           <div className="relative mb-4">
             <Search
