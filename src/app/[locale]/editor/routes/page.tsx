@@ -87,6 +87,8 @@ export default function RouteAnnotationPage() {
   const [newRoute, setNewRoute] = useState({
     name: '', grade: '？', area: '', FA: '', setter: '', description: '',
   })
+  const [newRouteAreaMode, setNewRouteAreaMode] = useState<'select' | 'new'>('select')
+  const [editRouteAreaMode, setEditRouteAreaMode] = useState<'select' | 'new'>('select')
 
   // ============ UI 状态 ============
   const [showEditorPanel, setShowEditorPanel] = useState(false)
@@ -243,6 +245,7 @@ export default function RouteAnnotationPage() {
       description: selectedRoute.description,
     })
     setTopoLine(selectedRoute.topoLine || [])
+    setEditRouteAreaMode(areas.includes(selectedRoute.area) ? 'select' : 'new')
     setShowEditorPanel(true)
 
     if (justSavedRef.current) {
@@ -331,9 +334,11 @@ export default function RouteAnnotationPage() {
     setIsCreatingRoute(true)
     setSelectedRoute(null)
     setShowEditorPanel(true)
+    const defaultArea = selectedArea || (areas.length > 0 ? areas[0] : '')
     setNewRoute({
-      name: '', grade: '？', area: selectedArea || '', FA: '', setter: '', description: '',
+      name: '', grade: '？', area: defaultArea, FA: '', setter: '', description: '',
     })
+    setNewRouteAreaMode(defaultArea ? 'select' : 'new')
   }, [selectedArea])
 
   const handleSubmitCreate = useCallback(async () => {
@@ -567,14 +572,52 @@ export default function RouteAnnotationPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>区域 *</label>
-                <input
-                  type="text"
-                  value={newRoute.area}
-                  onChange={(e) => setNewRoute(prev => ({ ...prev, area: e.target.value }))}
-                  placeholder="如：A 区"
-                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
-                  style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
-                />
+                {areas.length > 0 && (
+                  <div className="flex gap-1 mb-1.5">
+                    <button
+                      type="button"
+                      onClick={() => { setNewRouteAreaMode('select'); setNewRoute(prev => ({ ...prev, area: areas[0] })) }}
+                      className="px-2 py-0.5 rounded-lg text-xs font-medium transition-colors"
+                      style={{
+                        backgroundColor: newRouteAreaMode === 'select' ? 'var(--theme-primary)' : 'transparent',
+                        color: newRouteAreaMode === 'select' ? 'var(--theme-on-primary)' : 'var(--theme-on-surface-variant)',
+                      }}
+                    >
+                      选择已有
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setNewRouteAreaMode('new'); setNewRoute(prev => ({ ...prev, area: '' })) }}
+                      className="px-2 py-0.5 rounded-lg text-xs font-medium transition-colors"
+                      style={{
+                        backgroundColor: newRouteAreaMode === 'new' ? 'var(--theme-primary)' : 'transparent',
+                        color: newRouteAreaMode === 'new' ? 'var(--theme-on-primary)' : 'var(--theme-on-surface-variant)',
+                      }}
+                    >
+                      新建区域
+                    </button>
+                  </div>
+                )}
+                {newRouteAreaMode === 'select' && areas.length > 0 ? (
+                  <select
+                    value={newRoute.area}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, area: e.target.value }))}
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                    style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                  >
+                    <option value="">选择区域…</option>
+                    {areas.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={newRoute.area}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, area: e.target.value }))}
+                    placeholder="如：A 区"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                    style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>首攀者 (FA)</label>
@@ -906,13 +949,51 @@ export default function RouteAnnotationPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>区域</label>
-                <input
-                  type="text"
-                  value={editedRoute.area || ''}
-                  onChange={(e) => setEditedRoute((prev) => ({ ...prev, area: e.target.value }))}
-                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
-                  style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
-                />
+                {areas.length > 0 && (
+                  <div className="flex gap-1 mb-1.5">
+                    <button
+                      type="button"
+                      onClick={() => { setEditRouteAreaMode('select'); setEditedRoute(prev => ({ ...prev, area: editedRoute.area && areas.includes(editedRoute.area) ? editedRoute.area : areas[0] })) }}
+                      className="px-2 py-0.5 rounded-lg text-xs font-medium transition-colors"
+                      style={{
+                        backgroundColor: editRouteAreaMode === 'select' ? 'var(--theme-primary)' : 'transparent',
+                        color: editRouteAreaMode === 'select' ? 'var(--theme-on-primary)' : 'var(--theme-on-surface-variant)',
+                      }}
+                    >
+                      选择已有
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEditRouteAreaMode('new'); setEditedRoute(prev => ({ ...prev, area: '' })) }}
+                      className="px-2 py-0.5 rounded-lg text-xs font-medium transition-colors"
+                      style={{
+                        backgroundColor: editRouteAreaMode === 'new' ? 'var(--theme-primary)' : 'transparent',
+                        color: editRouteAreaMode === 'new' ? 'var(--theme-on-primary)' : 'var(--theme-on-surface-variant)',
+                      }}
+                    >
+                      新建区域
+                    </button>
+                  </div>
+                )}
+                {editRouteAreaMode === 'select' && areas.length > 0 ? (
+                  <select
+                    value={editedRoute.area || ''}
+                    onChange={(e) => setEditedRoute(prev => ({ ...prev, area: e.target.value }))}
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                    style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                  >
+                    {areas.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={editedRoute.area || ''}
+                    onChange={(e) => setEditedRoute(prev => ({ ...prev, area: e.target.value }))}
+                    placeholder="输入新区域名称"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                    style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>首攀者 (FA)</label>
