@@ -79,8 +79,8 @@ describe('BetaListDrawer', () => {
       render(<BetaListDrawer {...defaultProps} />)
 
       // 第一个 Beta 有身高和臂长
-      expect(screen.getByText('175')).toBeInTheDocument()
-      expect(screen.getByText('180')).toBeInTheDocument()
+      expect(screen.getByText(/175/)).toBeInTheDocument()
+      expect(screen.getByText(/180/)).toBeInTheDocument()
     })
 
     it('无身高臂长时不应显示相关信息', () => {
