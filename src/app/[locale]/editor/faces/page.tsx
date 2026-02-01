@@ -12,6 +12,8 @@ import {
   Plus,
   Layers,
   Trash2,
+  Pencil,
+  Check,
 } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
@@ -70,6 +72,9 @@ export default function FaceManagementPage() {
   const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [renameValue, setRenameValue] = useState('')
+  const [isSubmittingRename, setIsSubmittingRename] = useState(false)
 
   // ============ Refs ============
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -310,6 +315,56 @@ export default function FaceManagementPage() {
     }
   }, [selectedFace, selectedCragId, showToast])
 
+  // ============ 重命名岩面 ============
+  const handleRenameFace = useCallback(async () => {
+    if (!selectedFace || !selectedCragId || !renameValue) return
+    const newFaceId = renameValue.trim()
+    if (!newFaceId || newFaceId === selectedFace.faceId) {
+      setIsRenaming(false)
+      return
+    }
+    if (!/^[\u4e00-\u9fffa-z0-9-]+$/.test(newFaceId)) {
+      showToast('名称只允许中文、小写字母、数字和连字符', 'error')
+      return
+    }
+    setIsSubmittingRename(true)
+    try {
+      const res = await fetch('/api/faces', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cragId: selectedCragId,
+          area: selectedFace.area,
+          oldFaceId: selectedFace.faceId,
+          newFaceId,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '重命名失败')
+
+      // 更新本地状态
+      setR2Faces(prev => prev.map(f =>
+        f.faceId === selectedFace.faceId ? { ...f, faceId: newFaceId } : f
+      ))
+      setSelectedFace(prev => prev ? {
+        ...prev,
+        faceId: newFaceId,
+        imageUrl: getFaceTopoUrl(selectedCragId, prev.area, newFaceId),
+      } : null)
+      setIsRenaming(false)
+
+      const msg = data.routesUpdated > 0
+        ? `已重命名，${data.routesUpdated} 条线路已更新`
+        : '岩面已重命名'
+      showToast(msg, 'success', 3000)
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : '重命名失败'
+      showToast(msg, 'error', 4000)
+    } finally {
+      setIsSubmittingRename(false)
+    }
+  }, [selectedFace, selectedCragId, renameValue, showToast])
+
   // ============ 左栏：岩面列表 ============
   const leftPanel = (
     <div className="flex flex-col h-full">
@@ -367,7 +422,7 @@ export default function FaceManagementPage() {
               faceGroups.map(face => (
                 <button
                   key={face.faceId}
-                  onClick={() => { setSelectedFace(face); setIsCreating(false); setMobileShowDetail(true) }}
+                  onClick={() => { setSelectedFace(face); setIsCreating(false); setIsRenaming(false); setMobileShowDetail(true) }}
                   className={`
                     w-full text-left p-3 transition-all duration-200 active:scale-[0.98]
                     ${selectedFace?.faceId === face.faceId && !isCreating ? 'ring-2' : ''}
@@ -568,11 +623,52 @@ export default function FaceManagementPage() {
 
           {/* 岩面信息 */}
           <div className="p-4" style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-xl)' }}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-                {selectedFace.faceId}
-              </h3>
-              <span className="text-sm px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface-variant)' }}>
+            <div className="flex items-center justify-between mb-3 gap-2">
+              {isRenaming ? (
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <input
+                    type="text"
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value.toLowerCase().replace(/[^\u4e00-\u9fffa-z0-9-]/g, ''))}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleRenameFace(); if (e.key === 'Escape') setIsRenaming(false) }}
+                    autoFocus
+                    className="flex-1 min-w-0 px-3 py-1.5 rounded-lg text-sm font-semibold outline-none focus:ring-2 focus:ring-[var(--theme-primary)]"
+                    style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                    disabled={isSubmittingRename}
+                  />
+                  <button
+                    onClick={handleRenameFace}
+                    disabled={isSubmittingRename || !renameValue.trim()}
+                    className="p-1.5 rounded-lg transition-all active:scale-90"
+                    style={{ color: 'var(--theme-primary)' }}
+                  >
+                    {isSubmittingRename ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={() => setIsRenaming(false)}
+                    disabled={isSubmittingRename}
+                    className="p-1.5 rounded-lg transition-all active:scale-90"
+                    style={{ color: 'var(--theme-on-surface-variant)' }}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <h3 className="font-semibold truncate" style={{ color: 'var(--theme-on-surface)' }}>
+                    {selectedFace.faceId}
+                  </h3>
+                  <button
+                    onClick={() => { setIsRenaming(true); setRenameValue(selectedFace.faceId) }}
+                    className="p-1.5 rounded-lg transition-all active:scale-90 flex-shrink-0"
+                    style={{ color: 'var(--theme-on-surface-variant)' }}
+                    title="重命名"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+              <span className="text-sm px-3 py-1 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface-variant)' }}>
                 {selectedFace.area}
               </span>
             </div>
