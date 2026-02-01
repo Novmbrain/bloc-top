@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
-import { Search, X, ChevronRight, ArrowRight, SlidersHorizontal } from 'lucide-react'
+import { Search, X, ChevronRight, ArrowRight, SlidersHorizontal, Video, User } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { ContextualHint } from '@/components/contextual-hint'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
@@ -173,12 +173,35 @@ export function SearchDrawer({
                         >
                           {route.name}
                         </span>
-                        <span
-                          className="text-xs"
-                          style={{ color: 'var(--theme-on-surface-variant)' }}
-                        >
-                          {route.area}
-                        </span>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span
+                            className="text-xs"
+                            style={{ color: 'var(--theme-on-surface-variant)' }}
+                          >
+                            {route.area}
+                          </span>
+                          {route.FA && (
+                            <span
+                              className="inline-flex items-center gap-0.5 text-xs"
+                              style={{ color: 'var(--theme-on-surface-variant)' }}
+                            >
+                              <User className="w-3 h-3" />
+                              <span className="truncate max-w-[80px]">{route.FA}</span>
+                            </span>
+                          )}
+                          {route.betaLinks && route.betaLinks.length > 0 && (
+                            <span
+                              className="inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full"
+                              style={{
+                                backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)',
+                                color: 'var(--theme-primary)',
+                              }}
+                            >
+                              <Video className="w-3 h-3" />
+                              Beta
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* 箭头 */}
@@ -216,7 +239,7 @@ export function SearchDrawer({
             </>
           ) : (
             /* 无搜索词时的引导 */
-            <div className="text-center py-8">
+            <div className="text-center py-6">
               <p
                 className="text-sm mb-4"
                 style={{ color: 'var(--theme-on-surface-variant)' }}
@@ -225,11 +248,12 @@ export function SearchDrawer({
               </p>
               <button
                 onClick={handleGoToRoutes}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-all active:scale-95"
                 style={{
-                  backgroundColor: 'var(--theme-surface-variant)',
-                  color: 'var(--theme-on-surface)',
+                  backgroundColor: 'var(--theme-primary)',
+                  color: 'var(--theme-on-primary)',
                   borderRadius: 'var(--theme-radius-full)',
+                  boxShadow: 'var(--theme-shadow-sm)',
                 }}
               >
                 {t('browseAll')}

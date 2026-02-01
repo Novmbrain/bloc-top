@@ -8,6 +8,8 @@ import { getGradeColor } from '@/lib/tokens'
 
 // 手指微抖阈值（像素），小于此距离视为点选而非拖动
 const DRAG_THRESHOLD = 8
+// localStorage key 标记用户是否已和难度选择器交互过
+const GRADE_HINT_SEEN_KEY = 'grade-selector-hint-seen'
 
 interface GradeRangeSelectorProps {
   selectedGrades: string[]
@@ -37,6 +39,17 @@ export function GradeRangeSelector({
   const [hasMoved, setHasMoved] = useState(false)
   // 记录触摸起始位置，用于计算移动距离阈值
   const dragStartX = useRef<number | null>(null)
+
+  // 首次使用提示：脉冲动画
+  const [showPulse, setShowPulse] = useState(false)
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(GRADE_HINT_SEEN_KEY)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 合理用例：挂载时读取 localStorage 初始化状态
+        setShowPulse(true)
+      }
+    } catch { /* SSR or localStorage unavailable */ }
+  }, [])
 
   // 本地乐观状态：在 URL 更新期间保持显示新选择
   const [optimisticSelection, setOptimisticSelection] = useState<string[] | null>(null)
@@ -74,7 +87,13 @@ export function GradeRangeSelector({
     setDragEnd(index)
     setHasMoved(false)
     dragStartX.current = clientX
-  }, [getGradeIndexFromPosition])
+
+    // 首次交互后关闭脉冲动画
+    if (showPulse) {
+      setShowPulse(false)
+      try { localStorage.setItem(GRADE_HINT_SEEN_KEY, '1') } catch { /* ignore */ }
+    }
+  }, [getGradeIndexFromPosition, showPulse])
 
   // 处理拖动移动
   const handleDragMove = useCallback((clientX: number) => {
@@ -225,9 +244,12 @@ export function GradeRangeSelector({
       {/* 色谱条 */}
       <div
         ref={containerRef}
-        className="flex rounded-lg overflow-hidden cursor-pointer select-none touch-none"
+        className={`flex rounded-lg overflow-hidden cursor-pointer select-none touch-none${showPulse ? ' animate-pulse' : ''}`}
         style={{
-          boxShadow: 'var(--theme-shadow-sm)',
+          boxShadow: showPulse
+            ? '0 0 0 2px var(--theme-primary), 0 0 12px color-mix(in srgb, var(--theme-primary) 30%, transparent)'
+            : 'var(--theme-shadow-sm)',
+          transition: 'box-shadow 0.3s ease',
         }}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
@@ -259,10 +281,13 @@ export function GradeRangeSelector({
 
       {/* 提示文字 */}
       <p
-        className="text-xs mt-2 text-center"
-        style={{ color: 'var(--theme-on-surface-variant)' }}
+        className="text-xs mt-2 text-center transition-colors duration-300"
+        style={{
+          color: showPulse ? 'var(--theme-primary)' : 'var(--theme-on-surface-variant)',
+          fontWeight: showPulse ? 500 : 400,
+        }}
       >
-        {t('gradeHint')}
+        {showPulse ? '👆 ' : ''}{t('gradeHint')}
       </p>
     </div>
   )

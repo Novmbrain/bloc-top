@@ -43,7 +43,8 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
       href={`/crag/${crag.id}`}
       className="group relative block overflow-hidden rounded-2xl
                  shadow-sm hover:shadow-xl transition-all duration-300
-                 active:scale-[0.98] animate-fade-in-up"
+                 active:scale-[0.97] active:shadow-md
+                 animate-fade-in-up touch-manipulation"
       style={{ animationDelay: `${index * 80}ms` }}
     >
       {/* 背景层 - 图片或渐变 */}
