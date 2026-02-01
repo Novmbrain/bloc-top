@@ -576,7 +576,11 @@ export default function FaceManagementPage() {
                 type="text"
                 placeholder="如 主墙-1 或 main-wall-1"
                 value={newFaceId}
-                onChange={(v) => setNewFaceId(v.toLowerCase().replace(/[^\u4e00-\u9fffa-z0-9-]/g, ''))}
+                onChange={(v) => setNewFaceId(v)}
+                onBlur={(e) => {
+                  const cleaned = e.target.value.toLowerCase().replace(/[^\u4e00-\u9fffa-z0-9-]/g, '')
+                  setNewFaceId(cleaned)
+                }}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                 style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
               />
@@ -662,7 +666,11 @@ export default function FaceManagementPage() {
                   <CompositionInput
                     type="text"
                     value={renameValue}
-                    onChange={(value) => setRenameValue(value.toLowerCase().replace(/[^\u4e00-\u9fffa-z0-9-]/g, ''))}
+                    onChange={(value) => setRenameValue(value)}
+                    onBlur={(e) => {
+                      const cleaned = e.target.value.toLowerCase().replace(/[^\u4e00-\u9fffa-z0-9-]/g, '')
+                      setRenameValue(cleaned)
+                    }}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleRenameFace(); if (e.key === 'Escape') setIsRenaming(false) }}
                     autoFocus
                     className="flex-1 min-w-0 px-3 py-1.5 rounded-lg text-sm font-semibold outline-none focus:ring-2 focus:ring-[var(--theme-primary)]"

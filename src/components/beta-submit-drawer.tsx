@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link2, Ruler, MoveHorizontal, Check, AlertCircle } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
+import { CompositionInput } from '@/components/ui/composition-input'
 import { detectPlatformFromUrl, isXiaohongshuUrl, extractUrlFromText, BETA_PLATFORMS } from '@/lib/beta-constants'
 import { useClimberBodyData } from '@/hooks/use-climber-body-data'
 
@@ -191,10 +192,10 @@ export function BetaSubmitDrawer({
               className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
               style={{ color: 'var(--theme-on-surface-variant)' }}
             />
-            <input
+            <CompositionInput
               type="text"
               value={url}
-              onChange={(e) => handleUrlChange(e.target.value)}
+              onChange={handleUrlChange}
               placeholder={t('urlPlaceholder')}
               className="w-full pl-10 pr-4 py-3 text-sm outline-none"
               style={{
