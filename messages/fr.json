@@ -59,7 +59,7 @@
     "allRoutes": "Toutes les voies",
     "allGrades": "Toutes les cotations",
     "selectedGrades": "{count, plural, =1 {# cotation sélectionnée} other {# cotations sélectionnées}}",
-    "gradeHint": "Appuyez pour basculer, glissez pour sélectionner une plage",
+    "gradeHint": "Appuyez ou glissez pour sélectionner une plage",
     "filterTitle": "Filtrer les voies",
     "cragLabel": "Site",
     "gradeMultiSelect": "Cotation (multi-sélection)",
@@ -306,7 +306,7 @@
     "profileEntry": "Présentation de l'app",
     "profileEntryHint": "Découvrir les fonctionnalités",
     "hintPinchZoom": "Pincez pour zoomer et voir les détails",
-    "hintSearch": "Recherchez par nom de voie ou cotation",
+    "hintSearch": "Recherchez par nom de voie, pinyin pris en charge",
     "backToHome": "Retour à l'accueil"
   },
   "Metadata": {
