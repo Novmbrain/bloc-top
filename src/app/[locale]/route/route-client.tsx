@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useCallback, useState, useTransition, useEffect } from 'react'
+import { useMemo, useCallback, useState, useTransition, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Search, ChevronRight, X, ArrowUp, ArrowDown } from 'lucide-react'
@@ -40,6 +40,24 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
     // 等待入场动画完成后再标记
     const timer = setTimeout(() => setHasInitialRender(true), 500)
     return () => clearTimeout(timer)
+  }, [])
+
+  // 滚动折叠 header：向下滚动时隐藏难度选择器和标题，释放列表空间
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false)
+  const lastScrollTop = useRef(0)
+  const mainRef = useRef<HTMLElement>(null)
+
+  const handleScroll = useCallback(() => {
+    const el = mainRef.current
+    if (!el) return
+    const scrollTop = el.scrollTop
+    // 向下滚动超过 40px 时折叠，回到顶部附近时展开
+    if (scrollTop > 40 && scrollTop > lastScrollTop.current) {
+      setIsHeaderCollapsed(true)
+    } else if (scrollTop < 20) {
+      setIsHeaderCollapsed(false)
+    }
+    lastScrollTop.current = scrollTop
   }, [])
 
   // 从 URL 读取筛选状态
@@ -166,15 +184,23 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
           transition: 'var(--theme-transition)',
         }}
       >
-        {/* 头部 */}
+        {/* 头部 — 向下滚动时折叠标题和难度选择器 */}
         <header className="flex-shrink-0 pt-12 px-4 pb-3">
-          <div className="mb-3">
+          {/* 标题 — 折叠时隐藏 */}
+          <div
+            className="overflow-hidden transition-all duration-300 ease-in-out"
+            style={{
+              maxHeight: isHeaderCollapsed ? 0 : '3rem',
+              opacity: isHeaderCollapsed ? 0 : 1,
+              marginBottom: isHeaderCollapsed ? 0 : '0.75rem',
+            }}
+          >
             <h1 className="text-2xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
               {currentCragName}
             </h1>
           </div>
 
-          {/* 搜索框 */}
+          {/* 搜索框 — 始终可见 */}
           <div className="relative mb-3">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
@@ -203,7 +229,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
             )}
           </div>
 
-          {/* 岩场筛选（第一行） */}
+          {/* 岩场筛选（第一行） — 始终可见 */}
           <FilterChipGroup className="mb-2">
             <FilterChip
               label={tCommon('all')}
@@ -220,16 +246,24 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
             ))}
           </FilterChipGroup>
 
-          {/* 难度筛选（色谱条） */}
-          <GradeRangeSelector
-            selectedGrades={selectedGrades}
-            onChange={(grades) => updateSearchParams(FILTER_PARAMS.GRADE, grades)}
-            className="mt-3"
-          />
+          {/* 难度筛选（色谱条） — 折叠时隐藏 */}
+          <div
+            className="overflow-hidden transition-all duration-300 ease-in-out"
+            style={{
+              maxHeight: isHeaderCollapsed ? 0 : '6rem',
+              opacity: isHeaderCollapsed ? 0 : 1,
+              marginTop: isHeaderCollapsed ? 0 : '0.75rem',
+            }}
+          >
+            <GradeRangeSelector
+              selectedGrades={selectedGrades}
+              onChange={(grades) => updateSearchParams(FILTER_PARAMS.GRADE, grades)}
+            />
+          </div>
         </header>
 
         {/* 线路列表 */}
-        <main className="flex-1 overflow-y-auto px-4 pb-28">
+        <main ref={mainRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 pb-28">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
               {t('totalCount', { count: filteredRoutes.length })}
