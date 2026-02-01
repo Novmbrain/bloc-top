@@ -19,12 +19,13 @@ describe('preloadImage', () => {
   it('should resolve when image loads successfully', async () => {
     const originalImage = globalThis.Image
     globalThis.Image = vi.fn().mockImplementation(function (this: { onload: (() => void) | null; src: string }) {
-      const self = this
-      self.onload = null
-      Object.defineProperty(self, 'src', {
+      this.onload = null
+      // eslint-disable-next-line @typescript-eslint/no-this-alias -- need `this` ref in property setter closure
+      const instance = this
+      Object.defineProperty(this, 'src', {
         set() {
           // Trigger onload asynchronously
-          Promise.resolve().then(() => self.onload?.())
+          Promise.resolve().then(() => instance.onload?.())
         },
       })
     }) as unknown as typeof Image
@@ -36,11 +37,12 @@ describe('preloadImage', () => {
   it('should reject after all retries fail', async () => {
     const originalImage = globalThis.Image
     globalThis.Image = vi.fn().mockImplementation(function (this: { onerror: (() => void) | null; src: string }) {
-      const self = this
-      self.onerror = null
-      Object.defineProperty(self, 'src', {
+      this.onerror = null
+      // eslint-disable-next-line @typescript-eslint/no-this-alias -- need `this` ref in property setter closure
+      const instance = this
+      Object.defineProperty(this, 'src', {
         set() {
-          Promise.resolve().then(() => self.onerror?.())
+          Promise.resolve().then(() => instance.onerror?.())
         },
       })
     }) as unknown as typeof Image
