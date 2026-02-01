@@ -7,7 +7,6 @@ import { FloatingSearch } from '@/components/floating-search'
 import { SearchDrawer } from '@/components/search-drawer'
 import { AppTabbar } from '@/components/app-tabbar'
 import { InstallPrompt } from '@/components/install-prompt'
-import { WelcomeBanner } from '@/components/welcome-banner'
 import { WeatherStrip } from '@/components/weather-strip'
 import { CitySelector } from '@/components/city-selector'
 import { EmptyCity } from '@/components/empty-city'
@@ -107,9 +106,6 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
       <main className="flex-1 overflow-y-auto pb-36">
         {/* 天气条 - 仅在有数据时显示 */}
         {city.available && <WeatherStrip />}
-
-        {/* 欢迎横幅 - 首次访问时显示 */}
-        {city.available && <WelcomeBanner />}
 
         {/* PWA 安装提示 - 仅在有数据时显示 */}
         {city.available && <InstallPrompt />}
