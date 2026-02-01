@@ -14,7 +14,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary', 'html', 'json-summary'],
-      include: ['src/lib/**/*.ts', 'src/components/**/*.tsx'],
+      include: ['src/lib/**/*.ts', 'src/components/**/*.tsx', 'src/hooks/**/*.ts'],
       exclude: [
         'src/lib/mongodb.ts',
         'src/lib/db/**',

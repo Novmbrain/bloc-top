@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { IMAGE_VERSION, getRouteTopoUrl, getCragCoverUrl } from './constants'
+import { IMAGE_VERSION, getRouteTopoUrl, getCragCoverUrl, getFaceTopoUrl, getTopoImageUrl } from './constants'
+import type { Route } from '@/types'
 
 describe('constants', () => {
   describe('IMAGE_VERSION', () => {
@@ -84,6 +85,47 @@ describe('constants', () => {
     it('应该使用正确的基础 URL', () => {
       const url = getCragCoverUrl('crag-id', 0)
       expect(url).toMatch(/^https:\/\/img\.bouldering\.top\//)
+    })
+  })
+
+  describe('getFaceTopoUrl', () => {
+    it('should generate face URL with encoded area and faceId', () => {
+      const url = getFaceTopoUrl('crag1', '左侧区域', 'face-1')
+      expect(url).toContain(encodeURIComponent('左侧区域'))
+      expect(url).toContain('face-1.jpg')
+      expect(url).toContain(`v=${IMAGE_VERSION}`)
+    })
+
+    it('should use timestamp when provided', () => {
+      const url = getFaceTopoUrl('crag1', 'area', 'face1', 999)
+      expect(url).toContain('t=999')
+      expect(url).not.toContain('v=')
+    })
+  })
+
+  describe('getTopoImageUrl', () => {
+    it('should use face URL when faceId and area exist', () => {
+      const route = { cragId: 'c1', name: 'r1', area: 'left', faceId: 'f1' } as Route
+      const url = getTopoImageUrl(route)
+      expect(url).toContain('c1/left/f1.jpg')
+    })
+
+    it('should fall back to route URL when no faceId', () => {
+      const route = { cragId: 'c1', name: 'r1', area: 'left' } as Route
+      const url = getTopoImageUrl(route)
+      expect(url).toContain('c1/r1.jpg')
+    })
+
+    it('should fall back to route URL when no area', () => {
+      const route = { cragId: 'c1', name: 'r1', faceId: 'f1' } as Route
+      const url = getTopoImageUrl(route)
+      expect(url).toContain('c1/r1.jpg')
+    })
+
+    it('should pass timestamp through', () => {
+      const route = { cragId: 'c1', name: 'r1', area: 'a', faceId: 'f1' } as Route
+      const url = getTopoImageUrl(route, 12345)
+      expect(url).toContain('t=12345')
     })
   })
 })
