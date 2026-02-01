@@ -150,6 +150,7 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
         onSearchChange={setSearchQuery}
         results={searchResults}
         crags={filteredCrags}
+        allRoutes={filteredRoutes}
       />
 
       {/* 底部导航栏 */}

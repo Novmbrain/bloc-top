@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { Search, X, ChevronRight, ArrowRight, SlidersHorizontal } from 'lucide-react'
@@ -17,6 +17,7 @@ interface SearchDrawerProps {
   onSearchChange: (value: string) => void
   results: Route[]
   crags: Crag[]
+  allRoutes: Route[]
 }
 
 const MAX_DISPLAY_RESULTS = 8
@@ -28,6 +29,7 @@ export function SearchDrawer({
   onSearchChange,
   results,
   crags,
+  allRoutes,
 }: SearchDrawerProps) {
   const t = useTranslations('Search')
   const tIntro = useTranslations('Intro')
@@ -59,6 +61,23 @@ export function SearchDrawer({
   const selectedCrag = selectedRoute
     ? crags.find((c) => c.id === selectedRoute.cragId) || null
     : null
+
+  // 计算同一岩面的兄弟线路（与 route-client.tsx 逻辑一致）
+  const siblingRoutes = useMemo(() => {
+    if (!selectedRoute) return []
+    if (selectedRoute.faceId) {
+      return allRoutes.filter(
+        (r) => r.faceId === selectedRoute.faceId && r.topoLine && r.topoLine.length >= 2
+      )
+    }
+    return allRoutes.filter(
+      (r) =>
+        r.cragId === selectedRoute.cragId &&
+        r.area === selectedRoute.area &&
+        r.topoLine &&
+        r.topoLine.length >= 2
+    )
+  }, [allRoutes, selectedRoute])
 
   // 跳转到线路页面并带上搜索词
   const handleViewAll = () => {
@@ -232,6 +251,7 @@ export function SearchDrawer({
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
         route={selectedRoute}
+        siblingRoutes={siblingRoutes}
         crag={selectedCrag}
       />
     </>
