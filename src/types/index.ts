@@ -17,6 +17,7 @@ export interface Route {
   grade: string // V0-V13 或 "？"
   cragId: string
   area: string
+  faceId?: string // 岩面 ID，同一 faceId 的线路共享图片
   setter?: string
   FA?: string
   description?: string

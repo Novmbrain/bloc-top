@@ -1,8 +1,7 @@
 'use client'
 
-import { useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { Link, usePathname, useRouter } from '@/i18n/navigation'
+import { Link, usePathname } from '@/i18n/navigation'
 import { Home, Mountain, Settings } from 'lucide-react'
 
 // 导航项配置 - label 使用翻译键
@@ -12,55 +11,9 @@ const TAB_ITEMS = [
   { name: 'settings', path: '/profile', icon: Settings, labelKey: 'settings' },
 ] as const
 
-// 隐藏入口配置
-const SECRET_TAP_COUNT = 6        // 需要点击的次数
-const SECRET_TAP_TIMEOUT = 2000   // 时间窗口 (ms)
-const SECRET_STORAGE_KEY = '_secret_tap'
-
 export function AppTabbar() {
   const t = useTranslations('Navigation')
   const pathname = usePathname()
-  const router = useRouter()
-
-  // 隐藏入口：连续点击"线路"按钮 6 次打开编辑器
-  // 使用 sessionStorage 持久化计数（因为 Link 点击会导致组件重新挂载）
-  const handleSecretTap = useCallback((e: React.MouseEvent) => {
-    const now = Date.now()
-
-    // 从 sessionStorage 读取状态
-    let tapCount = 0
-    let lastTapTime = 0
-    try {
-      const stored = sessionStorage.getItem(SECRET_STORAGE_KEY)
-      if (stored) {
-        const data = JSON.parse(stored)
-        tapCount = data.count || 0
-        lastTapTime = data.time || 0
-      }
-    } catch {
-      // 忽略解析错误
-    }
-
-    // 如果距离上次点击超过时间窗口，重置计数
-    if (now - lastTapTime > SECRET_TAP_TIMEOUT) {
-      tapCount = 0
-    }
-
-    tapCount += 1
-
-    // 达到目标次数，跳转到编辑器
-    if (tapCount >= SECRET_TAP_COUNT) {
-      e.preventDefault() // 阻止 Link 默认导航
-      sessionStorage.removeItem(SECRET_STORAGE_KEY)
-      router.push('/demo/editor')
-    } else {
-      // 保存状态到 sessionStorage
-      sessionStorage.setItem(SECRET_STORAGE_KEY, JSON.stringify({
-        count: tapCount,
-        time: now,
-      }))
-    }
-  }, [router])
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/'
@@ -80,14 +33,12 @@ export function AppTabbar() {
         {TAB_ITEMS.map((tab) => {
           const Icon = tab.icon
           const active = isActive(tab.path)
-          const isRoutesTab = tab.name === 'routes'
 
           return (
             <Link
               key={tab.name}
               href={tab.path}
               className="relative flex flex-col items-center justify-center flex-1 h-full group active:scale-95 transition-transform"
-              onClick={isRoutesTab ? handleSecretTap : undefined}
             >
               {/* 图标容器 + 选中状态背景指示器 */}
               <div className="relative flex items-center justify-center w-16 h-8 mb-1">

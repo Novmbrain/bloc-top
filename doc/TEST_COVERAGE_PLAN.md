@@ -391,7 +391,7 @@ describe('AppTabbar', () => {
         vi.advanceTimersByTime(100) // 每次间隔 100ms
       }
 
-      expect(mockPush).toHaveBeenCalledWith('/demo/editor')
+      expect(mockPush).toHaveBeenCalledWith('/editor')
     })
 
     it('should reset count after timeout', () => {

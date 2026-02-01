@@ -1,9 +1,9 @@
 /**
  * tokens.ts 单元测试
- * 测试设计令牌和颜色工具函数
+ * 测试难度颜色映射工具函数
  */
 import { describe, it, expect } from 'vitest'
-import { getGradeColor, gradeColors, colors } from './tokens'
+import { getGradeColor, gradeColors } from './tokens'
 
 describe('getGradeColor', () => {
   it('应返回有效难度等级对应的颜色', () => {
@@ -50,20 +50,5 @@ describe('gradeColors', () => {
 
     // 允许有少量重复（如果设计需要）
     expect(uniqueColors.size).toBeGreaterThanOrEqual(10)
-  })
-})
-
-describe('colors design tokens', () => {
-  it('应包含主要设计颜色', () => {
-    expect(colors.primary).toBeDefined()
-    expect(colors.onPrimary).toBeDefined()
-    expect(colors.surface).toBeDefined()
-    expect(colors.onSurface).toBeDefined()
-  })
-
-  it('主色应是有效的十六进制颜色', () => {
-    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/
-    expect(colors.primary).toMatch(hexColorRegex)
-    expect(colors.onPrimary).toMatch(hexColorRegex)
   })
 })

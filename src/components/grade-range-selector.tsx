@@ -6,6 +6,9 @@ import { X } from 'lucide-react'
 import { V_GRADES } from '@/lib/filter-constants'
 import { getGradeColor } from '@/lib/tokens'
 
+// 手指微抖阈值（像素），小于此距离视为单击而非拖动
+const DRAG_THRESHOLD = 8
+
 interface GradeRangeSelectorProps {
   selectedGrades: string[]
   onChange: (grades: string[]) => void
@@ -32,6 +35,8 @@ export function GradeRangeSelector({
   const [dragEnd, setDragEnd] = useState<number | null>(null)
   // 追踪是否发生了实际的拖动移动（用于区分单击和拖动）
   const [hasMoved, setHasMoved] = useState(false)
+  // 记录触摸起始位置，用于计算移动距离阈值
+  const dragStartX = useRef<number | null>(null)
 
   // 本地乐观状态：在 URL 更新期间保持显示新选择
   const [optimisticSelection, setOptimisticSelection] = useState<string[] | null>(null)
@@ -88,6 +93,7 @@ export function GradeRangeSelector({
     setDragStart(index)
     setDragEnd(index)
     setHasMoved(false) // 重置移动标记
+    dragStartX.current = clientX
   }, [getGradeIndexFromPosition])
 
   // 处理拖动移动
@@ -95,8 +101,8 @@ export function GradeRangeSelector({
     if (!isDragging || dragStart === null) return
     const index = getGradeIndexFromPosition(clientX)
 
-    // 只有当移动到不同的格子时才标记为已移动
-    if (index !== dragStart) {
+    // 需要同时满足：移动到不同格子 + 超过像素阈值（防止手指微抖误判）
+    if (index !== dragStart && dragStartX.current !== null && Math.abs(clientX - dragStartX.current) >= DRAG_THRESHOLD) {
       setHasMoved(true)
     }
     setDragEnd(index)
@@ -125,6 +131,7 @@ export function GradeRangeSelector({
     setDragStart(null)
     setDragEnd(null)
     setHasMoved(false)
+    dragStartX.current = null
   }, [isDragging, dragStart, dragEnd, hasMoved, getSelectedFromRange, onChange, toggleGrade])
 
   // 鼠标事件处理

@@ -7,6 +7,7 @@ import { Search, ChevronRight, X, ArrowUp, ArrowDown } from 'lucide-react'
 import { getGradeColor } from '@/lib/tokens'
 import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, type SortDirection } from '@/lib/filter-constants'
 import { compareGrades } from '@/lib/grade-utils'
+import { getSiblingRoutes } from '@/lib/route-utils'
 import { matchRouteByQuery } from '@/hooks/use-route-search'
 import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
 import { GradeRangeSelector } from '@/components/grade-range-selector'
@@ -116,6 +117,16 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
     if (!selectedRoute) return null
     return crags.find((c) => c.id === selectedRoute.cragId) || null
   }, [selectedRoute, crags])
+
+  // 获取同岩面的线路（用于多线路叠加显示）
+  const siblingRoutes = useMemo(() => {
+    return getSiblingRoutes(selectedRoute, routes)
+  }, [routes, selectedRoute])
+
+  // 处理线路切换
+  const handleRouteChange = useCallback((route: Route) => {
+    setSelectedRoute(route)
+  }, [])
 
   // 筛选逻辑
   const filteredRoutes = useMemo(() => {
@@ -314,7 +325,9 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         isOpen={isDetailDrawerOpen}
         onClose={() => setIsDetailDrawerOpen(false)}
         route={selectedRoute}
+        siblingRoutes={siblingRoutes}
         crag={selectedCragData}
+        onRouteChange={handleRouteChange}
       />
 
       {/* 底部导航栏 */}

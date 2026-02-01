@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
-import { Search, X, ChevronRight, ArrowRight } from 'lucide-react'
+import { Search, X, ChevronRight, ArrowRight, SlidersHorizontal } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
+import { ContextualHint } from '@/components/contextual-hint'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
 import { getGradeColor } from '@/lib/tokens'
+import { getSiblingRoutes } from '@/lib/route-utils'
 import type { Route, Crag } from '@/types'
 
 interface SearchDrawerProps {
@@ -16,6 +18,7 @@ interface SearchDrawerProps {
   onSearchChange: (value: string) => void
   results: Route[]
   crags: Crag[]
+  allRoutes: Route[]
 }
 
 const MAX_DISPLAY_RESULTS = 8
@@ -27,8 +30,10 @@ export function SearchDrawer({
   onSearchChange,
   results,
   crags,
+  allRoutes,
 }: SearchDrawerProps) {
   const t = useTranslations('Search')
+  const tIntro = useTranslations('Intro')
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -58,6 +63,11 @@ export function SearchDrawer({
     ? crags.find((c) => c.id === selectedRoute.cragId) || null
     : null
 
+  const siblingRoutes = useMemo(
+    () => getSiblingRoutes(selectedRoute, allRoutes),
+    [allRoutes, selectedRoute]
+  )
+
   // 跳转到线路页面并带上搜索词
   const handleViewAll = () => {
     onClose()
@@ -74,6 +84,15 @@ export function SearchDrawer({
     <>
       <Drawer isOpen={isOpen} onClose={onClose} height="three-quarter">
         <div className="px-4 pb-4">
+          {/* 搜索提示 */}
+          <div className="mb-3">
+            <ContextualHint
+              hintKey="search-hint"
+              message={tIntro('hintSearch')}
+              icon={<SlidersHorizontal className="w-3.5 h-3.5" />}
+            />
+          </div>
+
           {/* 搜索输入框 */}
           <div className="relative mb-4">
             <Search
@@ -221,6 +240,7 @@ export function SearchDrawer({
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
         route={selectedRoute}
+        siblingRoutes={siblingRoutes}
         crag={selectedCrag}
       />
     </>

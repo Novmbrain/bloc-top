@@ -1,3 +1,5 @@
+import type { Route } from '@/types'
+
 /**
  * Cloudflare R2 图片存储配置
  */
@@ -14,7 +16,7 @@ const IMAGE_BASE_URL = 'https://img.bouldering.top'
  * - 2025年1月更新：'20250120'
  * - 下次更新：'20250215'
  */
-export const IMAGE_VERSION = '1'
+export const IMAGE_VERSION = '20260130'
 
 /**
  * 生成线路 TOPO 图片 URL
@@ -37,4 +39,38 @@ export function getRouteTopoUrl(
  */
 export function getCragCoverUrl(cragId: string, index: number): string {
   return `${IMAGE_BASE_URL}/CragSurface/${cragId}/${index}.jpg?v=${IMAGE_VERSION}`
+}
+
+/**
+ * 生成岩面 Topo 图片 URL
+ * R2 路径: {cragId}/{area}/{faceId}.jpg
+ *
+ * @param cragId - 岩场 ID
+ * @param area - 区域名称
+ * @param faceId - 岩面 ID
+ * @param timestamp - 可选时间戳，用于刚上传后强制刷新缓存
+ */
+export function getFaceTopoUrl(
+  cragId: string,
+  area: string,
+  faceId: string,
+  timestamp?: number
+): string {
+  const version = timestamp ? `t=${timestamp}` : `v=${IMAGE_VERSION}`
+  return `${IMAGE_BASE_URL}/${cragId}/${encodeURIComponent(area)}/${encodeURIComponent(faceId)}.jpg?${version}`
+}
+
+/**
+ * 智能获取 Topo 图片 URL（兼容新旧数据）
+ * - 有 faceId: 使用岩面图片路径
+ * - 无 faceId: 回退到线路名称图片路径
+ *
+ * @param route - 线路数据
+ * @param timestamp - 可选时间戳
+ */
+export function getTopoImageUrl(route: Route, timestamp?: number): string {
+  if (route.faceId && route.area) {
+    return getFaceTopoUrl(route.cragId, route.area, route.faceId, timestamp)
+  }
+  return getRouteTopoUrl(route.cragId, route.name, timestamp)
 }

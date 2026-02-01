@@ -37,7 +37,7 @@
     "offlineCrag": "src/app/[locale]/offline/crag/[id]/page.tsx",
     "offlineRoute": "src/app/[locale]/offline/route/[id]/page.tsx",
     "demo": "src/app/[locale]/demo/page.tsx",
-    "demoEditor": "src/app/[locale]/demo/editor/page.tsx",
+    "editor": "src/app/[locale]/editor/page.tsx",
     "serviceWorker": "src/app/sw.ts",
     "rootLayout": "src/app/layout.tsx",
     "localeLayout": "src/app/[locale]/layout.tsx"

@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { Palette, Heart, Copy, Check, User, Send, Users, Globe } from 'lucide-react'
+import { useRouter } from '@/i18n/navigation'
+import { Palette, Heart, Copy, Check, User, Send, Users, Globe, Lock, Mountain } from 'lucide-react'
+import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
 import { ThemeSwitcher } from '@/components/theme-switcher'
 import { LocaleSegmented } from '@/components/locale-switcher'
@@ -25,6 +27,7 @@ const AUTHOR = {
 
 export default function ProfilePage() {
   const t = useTranslations('Profile')
+  const tIntro = useTranslations('Intro')
 
   // 作者抽屉状态
   const [authorDrawerOpen, setAuthorDrawerOpen] = useState(false)
@@ -47,6 +50,13 @@ export default function ProfilePage() {
 
   // 访问统计状态
   const [totalVisits, setTotalVisits] = useState<number | null>(null)
+
+  // 编辑器入口状态
+  const router = useRouter()
+  const [editorDrawerOpen, setEditorDrawerOpen] = useState(false)
+  const [editorPassword, setEditorPassword] = useState('')
+  const [editorPasswordError, setEditorPasswordError] = useState(false)
+  const passwordInputRef = useRef<HTMLInputElement>(null)
 
   // 获取访问统计
   useEffect(() => {
@@ -124,6 +134,20 @@ export default function ProfilePage() {
     }
   }, [])
 
+  // 编辑器密码验证
+  const handleEditorPasswordSubmit = useCallback(() => {
+    if (editorPassword === '1243') {
+      setEditorDrawerOpen(false)
+      setEditorPassword('')
+      setEditorPasswordError(false)
+      router.push('/editor')
+    } else {
+      setEditorPasswordError(true)
+      setEditorPassword('')
+      passwordInputRef.current?.focus()
+    }
+  }, [editorPassword, router])
+
   return (
     <>
       <div
@@ -166,6 +190,34 @@ export default function ProfilePage() {
 
           {/* 离线缓存管理区块 */}
           <OfflineCacheSection />
+
+          {/* App 介绍按钮 */}
+          <div className="mb-6">
+            <Link
+              href="/intro"
+              className="w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
+              style={{
+                backgroundColor: 'var(--theme-surface)',
+                borderRadius: 'var(--theme-radius-xl)',
+                boxShadow: 'var(--theme-shadow-sm)',
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
+              >
+                <Mountain className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-base font-medium" style={{ color: 'var(--theme-on-surface)' }}>
+                  {tIntro('profileEntry')}
+                </p>
+                <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                  {tIntro('profileEntryHint')}
+                </p>
+              </div>
+            </Link>
+          </div>
 
           {/* 关于作者按钮 */}
           <div className="mb-6">
@@ -228,6 +280,38 @@ export default function ProfilePage() {
                 )}
               </p>
             </div>
+          </div>
+
+          {/* 编辑器入口 */}
+          <div className="mb-6">
+            <button
+              onClick={() => {
+                setEditorDrawerOpen(true)
+                setEditorPassword('')
+                setEditorPasswordError(false)
+              }}
+              className="w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
+              style={{
+                backgroundColor: 'var(--theme-surface)',
+                borderRadius: 'var(--theme-radius-xl)',
+                boxShadow: 'var(--theme-shadow-sm)',
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
+              >
+                <Lock className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-base font-medium" style={{ color: 'var(--theme-on-surface)' }}>
+                  {t('editorEntry')}
+                </p>
+                <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                  {t('editorEntryHint')}
+                </p>
+              </div>
+            </button>
           </div>
 
           {/* 版本信息 */}
@@ -404,6 +488,74 @@ export default function ProfilePage() {
             <Heart className="w-5 h-5" fill="white" />
             <span className="font-medium">{t('donate')}</span>
           </button>
+        </div>
+      </Drawer>
+
+      {/* 编辑器密码抽屉 */}
+      <Drawer
+        isOpen={editorDrawerOpen}
+        onClose={() => setEditorDrawerOpen(false)}
+        height="auto"
+        showHandle
+      >
+        <div className="px-4 pb-6">
+          <div className="flex flex-col items-center mb-4">
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
+            >
+              <Lock className="w-6 h-6" style={{ color: 'var(--theme-primary)' }} />
+            </div>
+            <h2
+              className="text-lg font-bold"
+              style={{ color: 'var(--theme-on-surface)' }}
+            >
+              {t('editorPasswordTitle')}
+            </h2>
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleEditorPasswordSubmit()
+            }}
+          >
+            <input
+              ref={passwordInputRef}
+              type="password"
+              inputMode="numeric"
+              value={editorPassword}
+              onChange={(e) => {
+                setEditorPassword(e.target.value)
+                setEditorPasswordError(false)
+              }}
+              placeholder={t('editorPasswordPlaceholder')}
+              autoFocus
+              className="w-full p-3 text-center text-lg tracking-widest outline-none mb-3"
+              style={{
+                backgroundColor: 'var(--theme-surface-variant)',
+                color: 'var(--theme-on-surface)',
+                borderRadius: 'var(--theme-radius-lg)',
+                border: editorPasswordError ? '2px solid var(--theme-error)' : '2px solid transparent',
+              }}
+            />
+            {editorPasswordError && (
+              <p className="text-xs text-center mb-3" style={{ color: 'var(--theme-error)' }}>
+                {t('editorPasswordWrong')}
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={!editorPassword.trim()}
+              className="w-full p-3 font-medium transition-all active:scale-[0.98] disabled:opacity-40"
+              style={{
+                backgroundColor: 'var(--theme-primary)',
+                color: 'var(--theme-on-primary)',
+                borderRadius: 'var(--theme-radius-lg)',
+              }}
+            >
+              {t('editorPasswordConfirm')}
+            </button>
+          </form>
         </div>
       </Drawer>
 

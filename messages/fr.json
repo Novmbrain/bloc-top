@@ -283,7 +283,31 @@
     "feedbackThanks": "Merci pour votre retour 💚",
     "donate": "Offrez-moi un café ☕️",
     "avatarAlt": "Avatar de l'auteur",
-    "donateAlt": "Code QR de don"
+    "donateAlt": "Code QR de don",
+    "editorEntry": "Éditeur Topo",
+    "editorEntryHint": "Mot de passe requis",
+    "editorPasswordTitle": "Entrez le mot de passe",
+    "editorPasswordPlaceholder": "Entrez le mot de passe",
+    "editorPasswordWrong": "Mot de passe incorrect, réessayez",
+    "editorPasswordConfirm": "Accéder à l'éditeur"
+  },
+  "Intro": {
+    "heroTitle": "Luoyuan Bouldering TOPO",
+    "heroSubtitle": "Votre guide de bloc en plein air pour Luoyuan, Fuzhou",
+    "scene1Title": "Parcourir les sites, choisir votre destination",
+    "scene1Desc": "Explorez les sites avec changement de ville et météo d'escalade pour planifier votre sortie",
+    "scene2Title": "Voir les voies, consulter le topo",
+    "scene2Desc": "Filtrez par cotation V, ouvrez le topo et zoomez pour voir les détails des voies",
+    "scene3Title": "Apprendre les techniques d'escalade",
+    "scene3Desc": "Regardez les vidéos beta d'autres grimpeurs, filtrez par taille et envergure",
+    "scene4Title": "Grimpons ensemble",
+    "scene4Desc": "Partagez vos vidéos beta et vos retours pour aider plus de grimpeurs",
+    "cta": "Commencer l'exploration",
+    "profileEntry": "Présentation de l'app",
+    "profileEntryHint": "Découvrir les fonctionnalités",
+    "hintPinchZoom": "Pincez pour zoomer et voir les détails",
+    "hintSearch": "Recherchez par nom de voie ou cotation",
+    "backToHome": "Retour à l'accueil"
   },
   "Metadata": {
     "title": "Luoyuan Bouldering TOPO",

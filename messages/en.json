@@ -315,7 +315,31 @@
     "feedbackThanks": "Thanks for your feedback 💚",
     "donate": "Buy me a coffee ☕️",
     "avatarAlt": "Author avatar",
-    "donateAlt": "Donate QR code"
+    "donateAlt": "Donate QR code",
+    "editorEntry": "Topo Editor",
+    "editorEntryHint": "Password required",
+    "editorPasswordTitle": "Enter editor password",
+    "editorPasswordPlaceholder": "Enter password",
+    "editorPasswordWrong": "Wrong password, try again",
+    "editorPasswordConfirm": "Enter Editor"
+  },
+  "Intro": {
+    "heroTitle": "Luoyuan Bouldering TOPO",
+    "heroSubtitle": "Your outdoor bouldering guide for Luoyuan, Fuzhou",
+    "scene1Title": "Browse crags, pick your destination",
+    "scene1Desc": "Explore crag info with city switching and weather suitability to plan your climbing trip",
+    "scene2Title": "View routes, check the topo",
+    "scene2Desc": "Filter routes by V-grade, open the topo map and pinch-to-zoom for route details",
+    "scene3Title": "Learn climbing techniques",
+    "scene3Desc": "Watch beta videos from other climbers, filter by height and reach for the best match",
+    "scene4Title": "Climb together",
+    "scene4Desc": "Share your beta videos and feedback to help more climbers enjoy bouldering",
+    "cta": "Start Exploring",
+    "profileEntry": "App Introduction",
+    "profileEntryHint": "Learn about features and how to use",
+    "hintPinchZoom": "Pinch to zoom and see route details",
+    "hintSearch": "Search by route name or grade",
+    "backToHome": "Back to Home"
   },
   "Metadata": {
     "title": "Luoyuan Bouldering TOPO",

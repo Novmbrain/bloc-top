@@ -78,19 +78,22 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const cragId = formData.get('cragId') as string | null
     const routeName = formData.get('routeName') as string | null
+    const faceId = formData.get('faceId') as string | null
+    const area = formData.get('area') as string | null
     const checkOnly = formData.get('checkOnly') === 'true'
 
-    // 验证必需参数
-    if (!cragId || !routeName) {
+    // 验证必需参数：需要 cragId + (routeName 或 (faceId + area))
+    if (!cragId || (!routeName && (!faceId || !area))) {
       return NextResponse.json(
-        { success: false, error: '缺少岩场 ID 或线路名称' },
+        { success: false, error: '缺少岩场 ID 或线路名称/岩面信息' },
         { status: 400 }
       )
     }
 
-    // 构建 R2 对象路径
-    // 格式: {cragId}/{routeName}.jpg
-    const key = `${cragId}/${encodeURIComponent(routeName)}.jpg`
+    // 构建 R2 对象路径: {cragId}/{area}/{faceId}.jpg
+    const key = (faceId && area)
+      ? `${cragId}/${area}/${faceId}.jpg`
+      : `${cragId}/${routeName!}.jpg`
 
     // ===== 检查模式：只检查文件是否存在 =====
     if (checkOnly) {
@@ -153,7 +156,7 @@ export async function POST(request: NextRequest) {
     log.info('Image uploaded successfully', {
       action: 'POST /api/upload',
       duration: Date.now() - start,
-      metadata: { cragId, routeName, size: file.size },
+      metadata: { cragId, routeName, faceId, area, size: file.size },
     })
 
     return NextResponse.json({

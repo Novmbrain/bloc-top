@@ -133,6 +133,20 @@ export async function PATCH(
       updates.image = body.image?.trim() || undefined
     }
 
+    // 验证 faceId
+    if (body.faceId !== undefined) {
+      if (body.faceId === null) {
+        updates.faceId = undefined
+      } else if (typeof body.faceId === 'string' && /^[\u4e00-\u9fffa-z0-9-]+$/.test(body.faceId)) {
+        updates.faceId = body.faceId
+      } else {
+        return NextResponse.json(
+          { success: false, error: 'faceId 格式无效，仅允许中文、小写字母、数字和连字符' },
+          { status: 400 }
+        )
+      }
+    }
+
     // 验证 topoLine
     if (body.topoLine !== undefined) {
       if (body.topoLine === null) {

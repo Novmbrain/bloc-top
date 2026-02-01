@@ -2,10 +2,9 @@
 
 import { useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { ExternalLink, BookHeart, Ruler, ArrowUpFromLine, Plus, Copy, Check, RefreshCw } from 'lucide-react'
+import { ExternalLink, Play, Ruler, MoveHorizontal, Plus, Copy, Check, RefreshCw } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
-import { BETA_PLATFORMS } from '@/lib/beta-constants'
-import type { BetaLink, BetaPlatform } from '@/types'
+import type { BetaLink } from '@/types'
 
 interface BetaListDrawerProps {
   isOpen: boolean
@@ -16,10 +15,8 @@ interface BetaListDrawerProps {
   onAddBeta?: () => void
 }
 
-// 平台图标映射（目前仅支持小红书）
-const PLATFORM_ICONS: Record<BetaPlatform, React.ComponentType<{ className?: string }>> = {
-  xiaohongshu: BookHeart,
-}
+// Beta 视频图标（不强调具体平台）
+const BetaIcon = Play
 
 export function BetaListDrawer({
   isOpen,
@@ -187,9 +184,6 @@ export function BetaListDrawer({
 
             <div className="space-y-2">
               {betaLinks.map((beta, index) => {
-              const platform = BETA_PLATFORMS[beta.platform]
-              const Icon = PLATFORM_ICONS[beta.platform]
-
               return (
                 <button
                   key={beta.id}
@@ -202,12 +196,12 @@ export function BetaListDrawer({
                     animationDelay: `${index * 50}ms`,
                   }}
                 >
-                  {/* 平台图标 */}
+                  {/* Beta 视频图标 */}
                   <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: platform.color }}
+                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
                   >
-                    <Icon className="w-6 h-6 text-white" />
+                    <BetaIcon className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
                   </div>
 
                   {/* 链接信息 */}
@@ -216,31 +210,44 @@ export function BetaListDrawer({
                       className="text-sm font-medium block truncate"
                       style={{ color: 'var(--theme-on-surface)' }}
                     >
-                      {beta.title || t('platformVideo', { platform: platform.name })}
+                      {beta.title || (beta.author ? `@${beta.author}` : `Beta #${index + 1}`)}
                     </span>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span
-                        className="text-xs"
-                        style={{ color: 'var(--theme-on-surface-variant)' }}
-                      >
-                        {beta.author ? `@${beta.author}` : platform.name}
-                      </span>
-                      {/* 身高臂长信息 */}
-                      {(beta.climberHeight || beta.climberReach) && (
+                      {beta.author && beta.title && (
                         <span
-                          className="text-xs flex items-center gap-1"
-                          style={{ color: 'var(--theme-primary)' }}
+                          className="text-xs"
+                          style={{ color: 'var(--theme-on-surface-variant)' }}
                         >
+                          @{beta.author}
+                        </span>
+                      )}
+                      {/* 身高臂长标签 */}
+                      {(beta.climberHeight || beta.climberReach) && (
+                        <span className="flex items-center gap-1.5">
                           {beta.climberHeight && (
-                            <span className="flex items-center gap-0.5">
+                            <span
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[11px] font-medium"
+                              style={{
+                                backgroundColor: 'color-mix(in srgb, var(--theme-primary) 12%, transparent)',
+                                color: 'var(--theme-primary)',
+                                borderRadius: 'var(--theme-radius-sm)',
+                              }}
+                            >
                               <Ruler className="w-3 h-3" />
-                              {beta.climberHeight}
+                              {t('height')} {beta.climberHeight}cm
                             </span>
                           )}
                           {beta.climberReach && (
-                            <span className="flex items-center gap-0.5">
-                              <ArrowUpFromLine className="w-3 h-3" />
-                              {beta.climberReach}
+                            <span
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[11px] font-medium"
+                              style={{
+                                backgroundColor: 'color-mix(in srgb, var(--theme-success) 12%, transparent)',
+                                color: 'var(--theme-success)',
+                                borderRadius: 'var(--theme-radius-sm)',
+                              }}
+                            >
+                              <MoveHorizontal className="w-3 h-3" />
+                              {t('reach')} {beta.climberReach}cm
                             </span>
                           )}
                         </span>
