@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
+import { CompositionInput } from '@/components/ui/composition-input'
 import type { Route } from '@/types'
 import { getFaceTopoUrl } from '@/lib/constants'
 import { useToast } from '@/components/ui/toast'
@@ -514,11 +515,11 @@ export default function FaceManagementPage() {
                 <option value="__custom__">+ 新增区域</option>
               </select>
               {newArea === '__custom__' && (
-                <input
+                <CompositionInput
                   type="text"
                   placeholder="输入新区域名称"
                   value={customArea}
-                  onChange={(e) => setCustomArea(e.target.value)}
+                  onChange={setCustomArea}
                   className="w-full mt-2 px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                   style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
                 />
@@ -530,11 +531,11 @@ export default function FaceManagementPage() {
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>
                 岩面 ID (faceId)
               </label>
-              <input
+              <CompositionInput
                 type="text"
                 placeholder="如 主墙-1 或 main-wall-1"
                 value={newFaceId}
-                onChange={(e) => setNewFaceId(e.target.value.toLowerCase().replace(/[^\u4e00-\u9fffa-z0-9-]/g, ''))}
+                onChange={(v) => setNewFaceId(v.toLowerCase().replace(/[^\u4e00-\u9fffa-z0-9-]/g, ''))}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                 style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
               />
