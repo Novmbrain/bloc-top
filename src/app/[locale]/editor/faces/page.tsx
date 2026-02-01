@@ -14,6 +14,7 @@ import {
   Trash2,
   Pencil,
   Check,
+  RefreshCw,
 } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
@@ -35,6 +36,42 @@ interface FaceGroup {
   area: string
   routes: Route[]
   imageUrl: string
+}
+
+/**
+ * 岩面缩略图 - 独立管理加载/错误状态，支持重试
+ */
+function FaceThumbnail({ src, alt }: { src: string; alt: string }) {
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
+
+  // src 变化时重置状态
+  useEffect(() => {
+    setStatus('loading')
+  }, [src])
+
+  return (
+    <>
+      {status === 'loading' && (
+        <div className="w-full h-full skeleton-shimmer" />
+      )}
+      {status === 'error' && (
+        <div
+          className="w-full h-full flex items-center justify-center"
+          style={{ color: 'var(--theme-on-surface-variant)' }}
+        >
+          <ImageIcon className="w-5 h-5 opacity-40" />
+        </div>
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={alt}
+        className={`w-full h-full object-cover ${status === 'loaded' ? '' : 'hidden'}`}
+        onLoad={() => setStatus('loaded')}
+        onError={() => setStatus('error')}
+      />
+    </>
+  )
 }
 
 /**
@@ -83,22 +120,36 @@ export default function FaceManagementPage() {
   const { showToast } = useToast()
 
   // ============ 从 R2 加载岩面列表 ============
+  const loadFaces = useCallback((cragId: string) => {
+    setIsLoadingFaces(true)
+    return fetch(`/api/faces?cragId=${encodeURIComponent(cragId)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setR2Faces(data.faces as R2FaceInfo[])
+      })
+      .catch(() => { /* 静默失败，回退到仅 route 派生 */ })
+      .finally(() => setIsLoadingFaces(false))
+  }, [])
+
   useEffect(() => {
     if (!selectedCragId) {
       setR2Faces([])
       return
     }
     let cancelled = false
-    setIsLoadingFaces(true)
-    fetch(`/api/faces?cragId=${encodeURIComponent(selectedCragId)}`)
-      .then(res => res.json())
-      .then(data => {
-        if (!cancelled && data.success) setR2Faces(data.faces as R2FaceInfo[])
-      })
-      .catch(() => { /* 静默失败，回退到仅 route 派生 */ })
-      .finally(() => { if (!cancelled) setIsLoadingFaces(false) })
+    loadFaces(selectedCragId).then(() => { if (cancelled) return })
     return () => { cancelled = true }
-  }, [selectedCragId])
+  }, [selectedCragId, loadFaces])
+
+  // 刷新岩面列表
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const handleRefresh = useCallback(async () => {
+    if (!selectedCragId || isRefreshing) return
+    setIsRefreshing(true)
+    await loadFaces(selectedCragId)
+    setIsRefreshing(false)
+    showToast('已刷新', 'success', 2000)
+  }, [selectedCragId, isRefreshing, loadFaces, showToast])
 
   // ============ 桌面端突破 app-shell 宽度限制 ============
   useEffect(() => {
@@ -443,13 +494,7 @@ export default function FaceManagementPage() {
                       className="w-16 h-12 rounded-lg overflow-hidden flex-shrink-0"
                       style={{ backgroundColor: 'var(--theme-surface-variant)' }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={face.imageUrl}
-                        alt={face.faceId}
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                      />
+                      <FaceThumbnail src={face.imageUrl} alt={face.faceId} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="font-semibold block truncate" style={{ color: 'var(--theme-on-surface)' }}>
@@ -609,16 +654,8 @@ export default function FaceManagementPage() {
         /* 查看已有岩面 */
         <div className="space-y-4 animate-fade-in-up">
           {/* 大图预览 */}
-          <div style={{ borderRadius: 'var(--theme-radius-xl)', overflow: 'hidden' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={selectedFace.imageUrl}
-              alt={selectedFace.faceId}
-              className="w-full aspect-[4/3] object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none'
-              }}
-            />
+          <div className="aspect-[4/3]" style={{ borderRadius: 'var(--theme-radius-xl)', overflow: 'hidden', backgroundColor: 'var(--theme-surface-variant)' }}>
+            <FaceThumbnail src={selectedFace.imageUrl} alt={selectedFace.faceId} />
           </div>
 
           {/* 岩面信息 */}
@@ -792,7 +829,19 @@ export default function FaceManagementPage() {
             <ImageIcon className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
             <h1 className="text-lg font-bold" style={{ color: 'var(--theme-on-surface)' }}>岩面管理</h1>
           </div>
-          <div className="w-20" />
+          <div className="w-20 flex justify-end">
+            {selectedCragId && (
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="p-2 rounded-xl transition-all duration-200 active:scale-95"
+                style={{ color: 'var(--theme-primary)' }}
+                title="刷新岩面列表"
+              >
+                <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
