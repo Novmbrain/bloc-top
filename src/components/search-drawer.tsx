@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { Search, X, ChevronRight, ArrowRight, SlidersHorizontal } from 'lucide-react'
@@ -67,6 +67,11 @@ export function SearchDrawer({
     () => getSiblingRoutes(selectedRoute, allRoutes),
     [allRoutes, selectedRoute]
   )
+
+  // 处理线路切换（Topo 叠加层点击其他线路起点）
+  const handleRouteChange = useCallback((route: Route) => {
+    setSelectedRoute(route)
+  }, [])
 
   // 跳转到线路页面并带上搜索词
   const handleViewAll = () => {
@@ -242,6 +247,7 @@ export function SearchDrawer({
         route={selectedRoute}
         siblingRoutes={siblingRoutes}
         crag={selectedCrag}
+        onRouteChange={handleRouteChange}
       />
     </>
   )
