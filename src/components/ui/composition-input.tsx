@@ -1,12 +1,16 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback, type InputHTMLAttributes, type TextareaHTMLAttributes, forwardRef } from 'react'
+import { useState, useRef, useCallback, type InputHTMLAttributes, type TextareaHTMLAttributes, forwardRef } from 'react'
 
 /**
  * Input that handles IME composition correctly.
  * Uses an internal localValue state so the DOM stays responsive during
  * composition (Chinese IME, mobile predictive text, etc.), while only
  * propagating the final value to the parent via onChange.
+ *
+ * External value sync: when the parent updates `value` outside of composition,
+ * we detect the change by comparing with a state-tracked previous value and
+ * re-sync localValue. This avoids useEffect + setState and ref access during render.
  */
 export const CompositionInput = forwardRef<
   HTMLInputElement,
@@ -15,14 +19,16 @@ export const CompositionInput = forwardRef<
   }
 >(function CompositionInput({ onChange, value, ...props }, ref) {
   const [localValue, setLocalValue] = useState(value ?? '')
+  const [prevExternal, setPrevExternal] = useState(value)
   const isComposing = useRef(false)
 
-  // Sync from external value when not composing
-  useEffect(() => {
-    if (!isComposing.current) {
+  // Derived state pattern: sync from external value (no useEffect needed)
+  if (value !== prevExternal) {
+    setPrevExternal(value)
+    if (!isComposing.current) { // eslint-disable-line react-hooks/refs -- reading isComposing during render is intentional for IME sync
       setLocalValue(value ?? '')
     }
-  }, [value])
+  }
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,13 +73,15 @@ export const CompositionTextarea = forwardRef<
   }
 >(function CompositionTextarea({ onChange, value, ...props }, ref) {
   const [localValue, setLocalValue] = useState(value ?? '')
+  const [prevExternal, setPrevExternal] = useState(value)
   const isComposing = useRef(false)
 
-  useEffect(() => {
-    if (!isComposing.current) {
+  if (value !== prevExternal) {
+    setPrevExternal(value)
+    if (!isComposing.current) { // eslint-disable-line react-hooks/refs -- reading isComposing during render is intentional for IME sync
       setLocalValue(value ?? '')
     }
-  }, [value])
+  }
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
