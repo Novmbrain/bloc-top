@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
-import { CompositionInput } from '@/components/ui/composition-input'
+import { Input } from '@/components/ui/input'
 import type { Route } from '@/types'
 import { getFaceTopoUrl } from '@/lib/constants'
 import { useToast } from '@/components/ui/toast'
@@ -556,13 +556,11 @@ export default function FaceManagementPage() {
                 <option value="__custom__">+ 新增区域</option>
               </select>
               {newArea === '__custom__' && (
-                <CompositionInput
-                  type="text"
+                <Input
                   placeholder="输入新区域名称"
                   value={customArea}
                   onChange={setCustomArea}
-                  className="w-full mt-2 px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
-                  style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                  className="mt-2"
                 />
               )}
             </div>
@@ -572,8 +570,7 @@ export default function FaceManagementPage() {
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>
                 岩面 ID (faceId)
               </label>
-              <CompositionInput
-                type="text"
+              <Input
                 placeholder="如 主墙-1 或 main-wall-1"
                 value={newFaceId}
                 onChange={(v) => setNewFaceId(v)}
@@ -581,8 +578,6 @@ export default function FaceManagementPage() {
                   const cleaned = e.target.value.toLowerCase().replace(/[^\u4e00-\u9fffa-z0-9-]/g, '')
                   setNewFaceId(cleaned)
                 }}
-                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
-                style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
               />
               {newFaceId && !/^[\u4e00-\u9fffa-z0-9-]+$/.test(newFaceId) && (
                 <p className="text-xs mt-1.5" style={{ color: 'var(--theme-error)' }}>
@@ -663,8 +658,7 @@ export default function FaceManagementPage() {
             <div className="flex items-center justify-between mb-3 gap-2">
               {isRenaming ? (
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <CompositionInput
-                    type="text"
+                  <Input
                     value={renameValue}
                     onChange={(value) => setRenameValue(value)}
                     onBlur={(e) => {
@@ -673,8 +667,7 @@ export default function FaceManagementPage() {
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleRenameFace(); if (e.key === 'Escape') setIsRenaming(false) }}
                     autoFocus
-                    className="flex-1 min-w-0 px-3 py-1.5 rounded-lg text-sm font-semibold outline-none focus:ring-2 focus:ring-[var(--theme-primary)]"
-                    style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
+                    className="flex-1 min-w-0 px-3 py-1.5 rounded-lg font-semibold"
                     disabled={isSubmittingRename}
                   />
                   <button

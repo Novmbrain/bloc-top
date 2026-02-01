@@ -11,7 +11,7 @@ import { ThemeSwitcher } from '@/components/theme-switcher'
 import { LocaleSegmented } from '@/components/locale-switcher'
 import { OfflineCacheSection } from '@/components/offline-cache-manager'
 import { Drawer } from '@/components/ui/drawer'
-import { CompositionTextarea } from '@/components/ui/composition-input'
+import { Textarea } from '@/components/ui/textarea'
 import { ImageViewer } from '@/components/ui/image-viewer'
 // 访问统计缓存 key
 const VISITS_CACHE_KEY = 'total_visits_cache'
@@ -440,16 +440,15 @@ export default function ProfilePage() {
           {/* 留言区域 */}
           <div className="mb-4">
             <div className="relative">
-              <CompositionTextarea
+              <Textarea
                 value={feedbackContent}
                 onChange={(value) => setFeedbackContent(value)}
                 placeholder={t('feedbackPlaceholder')}
                 maxLength={500}
                 rows={3}
-                className="w-full p-3 pr-12 text-sm resize-none outline-none"
+                className="p-3 pr-12"
                 style={{
                   backgroundColor: 'var(--theme-surface-variant)',
-                  color: 'var(--theme-on-surface)',
                   borderRadius: 'var(--theme-radius-lg)',
                 }}
               />

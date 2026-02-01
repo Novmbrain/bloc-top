@@ -618,18 +618,50 @@ GitHub Actions 自动运行 (push/PR 到 main/dev):
 
 ### ⚠️ Claude 必须遵循的工作流
 
+**核心原则：一个 Issue = 一个分支 = 一个 PR，合并后立即切新分支**
+
 **每个新需求/功能/修复都必须**：
 1. **先创建 Issue** - 使用 `gh issue create` 描述需求
-2. **创建 feature 分支** - 命名格式 `feature/issue-{N}-{short-desc}`
+2. **从最新 main 创建 feature 分支** - 命名格式 `feature/issue-{N}-{short-desc}`
 3. **完成开发后创建 PR** - 使用 `Closes #{N}` 链接 Issue
 4. **启用 auto-merge** - 创建 PR 后立即执行 `gh pr merge --auto --rebase`，CI 通过后自动合并
+5. **PR 合并后切回 main** - 拉取最新代码，为下一个任务准备干净基础
 
 > 不要跳过任何步骤，即使是小改动也要遵循此流程。
+
+### ⚠️ 避免合并冲突的关键规则
+
+1. **禁止在同一 feature 分支上做多个不相关任务**
+   - 每个任务（修 bug、加功能、重构）必须有独立的 Issue + 独立的分支
+   - 如果在开发过程中发现额外需要做的事，创建新 Issue，当前 PR 合并后再开新分支处理
+
+2. **每个新分支必须从最新 main 创建**
+   ```bash
+   git checkout main && git pull origin main
+   git checkout -b feature/issue-{N}-{desc}
+   ```
+
+3. **PR 合并后立即清理**
+   ```bash
+   git checkout main && git pull origin main
+   git branch -d feature/issue-{N}-{desc}  # 删除本地旧分支
+   # 然后从 main 开新分支做下一个任务
+   ```
+
+4. **如果需要连续做多个任务**
+   ```
+   任务 A: main → feature/issue-1-xxx → PR → auto-merge
+                                                  ↓
+   任务 B:                               main (pull) → feature/issue-2-yyy → PR → auto-merge
+                                                                                       ↓
+   任务 C:                                                                    main (pull) → feature/issue-3-zzz
+   ```
+   **绝对不要**：在 feature/issue-1-xxx 上继续追加任务 B 的 commit
 
 ### Issue-First 开发流程
 
 ```
-Issue 创建 → Feature 分支 → PR (dev→main) → 合并 → Issue 自动关闭
+Issue 创建 → 从 main 创建分支 → 开发 → PR → auto-merge → 切回 main → (下一个 Issue)
 ```
 
 ### 分支策略
@@ -637,8 +669,9 @@ Issue 创建 → Feature 分支 → PR (dev→main) → 合并 → Issue 自动�
 | 分支 | 用途 |
 |------|------|
 | `main` | 生产分支，受保护，必须通过 PR 合并 |
-| `dev` | 开发分支，日常开发 |
-| `feature/issue-{N}-{desc}` | 功能分支，从 dev 创建 |
+| `feature/issue-{N}-{desc}` | 功能分支，从 main 创建，合并后删除 |
+
+> 注意：不再使用 `dev` 分支，所有 feature 分支直接从 main 创建并合并回 main。
 
 ### 完整工作流
 
@@ -646,18 +679,22 @@ Issue 创建 → Feature 分支 → PR (dev→main) → 合并 → Issue 自动�
 # 1. 创建 Issue
 gh issue create --title "[Feature] 功能描述" --body "..."
 
-# 2. 创建 feature 分支
-git checkout dev && git pull
+# 2. 从最新 main 创建 feature 分支
+git checkout main && git pull origin main
 git checkout -b feature/issue-42-add-favorites
 
 # 3. 开发并提交
-git add . && git commit -m "feat: add user favorites"
+git add <files> && git commit -m "feat: add user favorites"
 git push origin feature/issue-42-add-favorites
 
 # 4. 创建 PR (关联 Issue) + 启用 auto-merge
 gh pr create --base main --title "feat: add favorites" \
   --body "Closes #42"
 gh pr merge --auto --rebase
+
+# 5. PR 合并后清理 (开始下一个任务前必做)
+git checkout main && git pull origin main
+git branch -d feature/issue-42-add-favorites
 ```
 
 ### Branch Protection (main)

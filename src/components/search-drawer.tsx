@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { Search, X, ChevronRight, ArrowRight, SlidersHorizontal, Video, User } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
-import { CompositionInput } from '@/components/ui/composition-input'
+import { Input } from '@/components/ui/input'
 import { ContextualHint } from '@/components/contextual-hint'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
 import { getGradeColor } from '@/lib/tokens'
@@ -105,16 +105,15 @@ export function SearchDrawer({
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
               style={{ color: 'var(--theme-on-surface-variant)' }}
             />
-            <CompositionInput
+            <Input
               ref={inputRef}
-              type="text"
+              variant="search"
               placeholder={t('placeholder')}
               value={searchQuery}
               onChange={(value) => onSearchChange(value)}
-              className="w-full h-11 pl-10 pr-10 text-sm focus:outline-none"
+              className="h-11"
               style={{
                 backgroundColor: 'var(--theme-surface-variant)',
-                color: 'var(--theme-on-surface)',
                 borderRadius: 'var(--theme-radius-full)',
               }}
             />

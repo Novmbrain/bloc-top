@@ -9,7 +9,7 @@ import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, type SortDire
 import { compareGrades } from '@/lib/grade-utils'
 import { getSiblingRoutes } from '@/lib/route-utils'
 import { matchRouteByQuery } from '@/hooks/use-route-search'
-import { CompositionInput } from '@/components/ui/composition-input'
+import { Input } from '@/components/ui/input'
 import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
 import { GradeRangeSelector } from '@/components/grade-range-selector'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
@@ -207,15 +207,13 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
               style={{ color: 'var(--theme-on-surface-variant)' }}
             />
-            <CompositionInput
-              type="text"
+            <Input
+              variant="search"
               placeholder={tSearch('placeholder')}
               value={searchQuery}
               onChange={(value) => handleSearchChange(value)}
-              className="w-full h-10 pl-10 pr-10 text-sm focus:outline-none"
               style={{
                 backgroundColor: 'var(--theme-surface-variant)',
-                color: 'var(--theme-on-surface)',
                 borderRadius: 'var(--theme-radius-full)',
               }}
             />
