@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { S3Client, ListObjectsV2Command, DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, ListObjectsV2Command, DeleteObjectCommand, CopyObjectCommand } from '@aws-sdk/client-s3'
 import { getDatabase } from '@/lib/mongodb'
 import { createModuleLogger } from '@/lib/logger'
 
@@ -104,6 +104,94 @@ export async function GET(request: NextRequest) {
     })
     return NextResponse.json(
       { success: false, error: '获取岩面列表失败' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * PATCH /api/faces
+ * 重命名岩面：复制 R2 文件到新 key，删除旧文件，更新关联 routes 的 faceId
+ *
+ * Body: { cragId, area, oldFaceId, newFaceId }
+ */
+export async function PATCH(request: NextRequest) {
+  const start = Date.now()
+
+  try {
+    const { cragId, area, oldFaceId, newFaceId } = await request.json()
+
+    if (!cragId || !area || !oldFaceId || !newFaceId) {
+      return NextResponse.json(
+        { success: false, error: '缺少必要参数' },
+        { status: 400 }
+      )
+    }
+
+    if (oldFaceId === newFaceId) {
+      return NextResponse.json(
+        { success: false, error: '新旧名称相同' },
+        { status: 400 }
+      )
+    }
+
+    if (!/^[\u4e00-\u9fffa-z0-9-]+$/.test(newFaceId)) {
+      return NextResponse.json(
+        { success: false, error: '名称只允许中文、小写字母、数字和连字符' },
+        { status: 400 }
+      )
+    }
+
+    const bucketName = process.env.R2_BUCKET_NAME
+    if (!bucketName) {
+      return NextResponse.json(
+        { success: false, error: 'R2 配置未设置' },
+        { status: 500 }
+      )
+    }
+
+    const client = getS3Client()
+    const oldKey = `${cragId}/${area}/${encodeURIComponent(oldFaceId)}.jpg`
+    const newKey = `${cragId}/${area}/${encodeURIComponent(newFaceId)}.jpg`
+
+    // 1. 复制到新 key
+    await client.send(new CopyObjectCommand({
+      Bucket: bucketName,
+      CopySource: `${bucketName}/${oldKey}`,
+      Key: newKey,
+      ContentType: 'image/jpeg',
+    }))
+
+    // 2. 删除旧 key
+    await client.send(new DeleteObjectCommand({
+      Bucket: bucketName,
+      Key: oldKey,
+    }))
+
+    // 3. 更新关联 routes 的 faceId
+    const db = await getDatabase()
+    const updateResult = await db.collection('routes').updateMany(
+      { cragId, faceId: oldFaceId },
+      { $set: { faceId: newFaceId } }
+    )
+
+    log.info('Face renamed', {
+      action: 'PATCH /api/faces',
+      duration: Date.now() - start,
+      metadata: { cragId, area, oldFaceId, newFaceId, routesUpdated: updateResult.modifiedCount },
+    })
+
+    return NextResponse.json({
+      success: true,
+      routesUpdated: updateResult.modifiedCount,
+    })
+  } catch (error) {
+    log.error('Failed to rename face', error, {
+      action: 'PATCH /api/faces',
+      duration: Date.now() - start,
+    })
+    return NextResponse.json(
+      { success: false, error: '重命名岩面失败' },
       { status: 500 }
     )
   }
