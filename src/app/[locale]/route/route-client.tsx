@@ -7,6 +7,7 @@ import { Search, ChevronRight, X, ArrowUp, ArrowDown } from 'lucide-react'
 import { getGradeColor } from '@/lib/tokens'
 import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, type SortDirection } from '@/lib/filter-constants'
 import { compareGrades } from '@/lib/grade-utils'
+import { getSiblingRoutes } from '@/lib/route-utils'
 import { matchRouteByQuery } from '@/hooks/use-route-search'
 import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
 import { GradeRangeSelector } from '@/components/grade-range-selector'
@@ -119,22 +120,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
 
   // 获取同岩面的线路（用于多线路叠加显示）
   const siblingRoutes = useMemo(() => {
-    if (!selectedRoute) return []
-
-    // 优先使用 faceId 匹配
-    if (selectedRoute.faceId) {
-      return routes.filter(r =>
-        r.faceId === selectedRoute.faceId &&
-        r.topoLine && r.topoLine.length >= 2
-      )
-    }
-
-    // 回退到 area + cragId 匹配（向后兼容）
-    return routes.filter(r =>
-      r.cragId === selectedRoute.cragId &&
-      r.area === selectedRoute.area &&
-      r.topoLine && r.topoLine.length >= 2
-    )
+    return getSiblingRoutes(selectedRoute, routes)
   }, [routes, selectedRoute])
 
   // 处理线路切换

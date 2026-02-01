@@ -8,6 +8,7 @@ import { Drawer } from '@/components/ui/drawer'
 import { ContextualHint } from '@/components/contextual-hint'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
 import { getGradeColor } from '@/lib/tokens'
+import { getSiblingRoutes } from '@/lib/route-utils'
 import type { Route, Crag } from '@/types'
 
 interface SearchDrawerProps {
@@ -62,22 +63,10 @@ export function SearchDrawer({
     ? crags.find((c) => c.id === selectedRoute.cragId) || null
     : null
 
-  // 计算同一岩面的兄弟线路（与 route-client.tsx 逻辑一致）
-  const siblingRoutes = useMemo(() => {
-    if (!selectedRoute) return []
-    if (selectedRoute.faceId) {
-      return allRoutes.filter(
-        (r) => r.faceId === selectedRoute.faceId && r.topoLine && r.topoLine.length >= 2
-      )
-    }
-    return allRoutes.filter(
-      (r) =>
-        r.cragId === selectedRoute.cragId &&
-        r.area === selectedRoute.area &&
-        r.topoLine &&
-        r.topoLine.length >= 2
-    )
-  }, [allRoutes, selectedRoute])
+  const siblingRoutes = useMemo(
+    () => getSiblingRoutes(selectedRoute, allRoutes),
+    [allRoutes, selectedRoute]
+  )
 
   // 跳转到线路页面并带上搜索词
   const handleViewAll = () => {
