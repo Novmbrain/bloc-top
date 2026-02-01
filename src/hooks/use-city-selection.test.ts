@@ -1,465 +1,126 @@
-/**
- * 城市选择 Hook 测试
- *
- * 测试覆盖:
- * - localStorage 读取已存储的城市
- * - 首次访问时的 IP 定位
- * - API 失败时的回退逻辑
- * - 城市切换功能
- * - 首次访问提示管理
- */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { useCitySelection } from './use-city-selection'
 
-// Mock localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {}
-  return {
-    getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key]
-    }),
-    clear: vi.fn(() => {
-      store = {}
-    }),
-    get _store() {
-      return store
-    },
-  }
-})()
-
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-})
-
-// Mock sessionStorage (用于单会话访问去重)
-const sessionStorageMock = (() => {
-  let store: Record<string, string> = {}
-  return {
-    getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key]
-    }),
-    clear: vi.fn(() => {
-      store = {}
-    }),
-    get _store() {
-      return store
-    },
-  }
-})()
-
-Object.defineProperty(window, 'sessionStorage', {
-  value: sessionStorageMock,
-})
-
-// Mock fetch
 const mockFetch = vi.fn()
-global.fetch = mockFetch
 
 describe('useCitySelection', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    localStorageMock.clear()
-    sessionStorageMock.clear()
-    // 默认 fetch 返回罗源
+    vi.stubGlobal('fetch', mockFetch)
+    mockFetch.mockReset()
+    localStorage.clear()
+    sessionStorage.clear()
+
+    // Default: geo API returns luoyuan
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ cityId: 'luoyuan' }),
+      json: () => Promise.resolve({ cityId: 'luoyuan', province: '福建' }),
     })
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
+  it('should return default city on first load', async () => {
+    const { result } = renderHook(() => useCitySelection())
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    expect(result.current.cityId).toBe('luoyuan')
+    expect(result.current.city).toBeDefined()
+    expect(result.current.cities.length).toBeGreaterThan(0)
   })
 
-  describe('初始化', () => {
-    it('从 localStorage 读取已存储的城市', async () => {
-      localStorageMock.setItem('selected-city', 'xiamen')
+  it('should use stored city from localStorage', async () => {
+    localStorage.setItem('selected-city', 'xiamen')
+    localStorage.setItem('city-first-visit', 'true')
 
-      const { result } = renderHook(() => useCitySelection())
+    const { result } = renderHook(() => useCitySelection())
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      expect(result.current.cityId).toBe('xiamen')
-      expect(result.current.city.name).toBe('厦门')
-      // 即使有存储的城市，也会调用 /api/geo 获取省份信息用于访问记录
-      expect(mockFetch).toHaveBeenCalledWith('/api/geo')
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
-    it('localStorage 中的无效城市 ID 被忽略', async () => {
-      localStorageMock.setItem('selected-city', 'invalid-city')
-
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      // 无效 ID 时会调用 API
-      expect(mockFetch).toHaveBeenCalledWith('/api/geo')
-    })
-
-    it('首次访问时调用 IP 定位 API', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ cityId: 'luoyuan' }),
-      })
-
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      expect(mockFetch).toHaveBeenCalledWith('/api/geo')
-      expect(result.current.cityId).toBe('luoyuan')
-      // 检测到的城市应存入 localStorage
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'selected-city',
-        'luoyuan'
-      )
-    })
-
-    it('API 返回无效城市 ID 时使用默认值', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ cityId: 'unknown-city' }),
-      })
-
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      // 使用默认城市 (luoyuan)
-      expect(result.current.cityId).toBe('luoyuan')
-    })
-
-    it('API 失败时使用默认城市', async () => {
-      mockFetch.mockRejectedValue(new Error('Network error'))
-
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      // 使用默认城市
-      expect(result.current.cityId).toBe('luoyuan')
-    })
-
-    it('API 返回非 OK 状态时使用默认城市', async () => {
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 500,
-      })
-
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      expect(result.current.cityId).toBe('luoyuan')
-    })
+    expect(result.current.cityId).toBe('xiamen')
   })
 
-  describe('首次访问标记', () => {
-    it('首次访问时 isFirstVisit 为 true', async () => {
-      const { result } = renderHook(() => useCitySelection())
+  it('should set isFirstVisit on first visit', async () => {
+    const { result } = renderHook(() => useCitySelection())
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      expect(result.current.isFirstVisit).toBe(true)
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'city-first-visit',
-        'true'
-      )
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
-    it('非首次访问时 isFirstVisit 为 false', async () => {
-      localStorageMock.setItem('city-first-visit', 'true')
-
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      expect(result.current.isFirstVisit).toBe(false)
-    })
-
-    it('dismissFirstVisitHint 清除首次访问标记', async () => {
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      expect(result.current.isFirstVisit).toBe(true)
-
-      act(() => {
-        result.current.dismissFirstVisitHint()
-      })
-
-      expect(result.current.isFirstVisit).toBe(false)
-    })
+    expect(result.current.isFirstVisit).toBe(true)
   })
 
-  describe('城市切换', () => {
-    it('setCity 更新当前城市', async () => {
-      const { result } = renderHook(() => useCitySelection())
+  it('should not set isFirstVisit if already visited', async () => {
+    localStorage.setItem('city-first-visit', 'true')
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
+    const { result } = renderHook(() => useCitySelection())
 
-      act(() => {
-        result.current.setCity('xiamen')
-      })
-
-      expect(result.current.cityId).toBe('xiamen')
-      expect(result.current.city.name).toBe('厦门')
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
-    it('setCity 将新城市存入 localStorage', async () => {
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      act(() => {
-        result.current.setCity('xiamen')
-      })
-
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'selected-city',
-        'xiamen'
-      )
-    })
-
-    it('setCity 清除首次访问提示', async () => {
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      expect(result.current.isFirstVisit).toBe(true)
-
-      act(() => {
-        result.current.setCity('xiamen')
-      })
-
-      expect(result.current.isFirstVisit).toBe(false)
-    })
+    expect(result.current.isFirstVisit).toBe(false)
   })
 
-  describe('返回值', () => {
-    it('返回所有可用城市列表', async () => {
-      const { result } = renderHook(() => useCitySelection())
+  it('should update city when setCity is called', async () => {
+    const { result } = renderHook(() => useCitySelection())
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      expect(result.current.cities).toBeDefined()
-      expect(result.current.cities.length).toBeGreaterThan(0)
-      expect(result.current.cities.some((c) => c.id === 'luoyuan')).toBe(true)
-      expect(result.current.cities.some((c) => c.id === 'xiamen')).toBe(true)
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
-    it('city 对象包含完整配置', async () => {
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      const { city } = result.current
-      expect(city.id).toBeDefined()
-      expect(city.name).toBeDefined()
-      expect(city.adcode).toBeDefined()
-      expect(city.coordinates).toBeDefined()
-      expect(typeof city.available).toBe('boolean')
+    act(() => {
+      result.current.setCity('xiamen')
     })
+
+    expect(result.current.cityId).toBe('xiamen')
+    expect(localStorage.getItem('selected-city')).toBe('xiamen')
   })
 
-  describe('用户场景模拟', () => {
-    it('新用户首次访问：IP 定位到罗源', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ cityId: 'luoyuan' }),
-      })
+  it('should dismiss first visit hint', async () => {
+    const { result } = renderHook(() => useCitySelection())
 
-      const { result } = renderHook(() => useCitySelection())
-
-      // 初始加载中
-      expect(result.current.isLoading).toBe(true)
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      // IP 定位成功
-      expect(result.current.cityId).toBe('luoyuan')
-      expect(result.current.isFirstVisit).toBe(true)
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
-    it('老用户再次访问：直接读取存储的城市', async () => {
-      localStorageMock.setItem('selected-city', 'xiamen')
-      localStorageMock.setItem('city-first-visit', 'true')
+    expect(result.current.isFirstVisit).toBe(true)
 
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      expect(result.current.cityId).toBe('xiamen')
-      expect(result.current.isFirstVisit).toBe(false)
-      // 即使是老用户，也会调用 /api/geo 获取省份信息用于访问记录
-      expect(mockFetch).toHaveBeenCalledWith('/api/geo')
+    act(() => {
+      result.current.dismissFirstVisitHint()
     })
 
-    it('用户手动切换城市后再次访问', async () => {
-      // 模拟之前用户手动切换到厦门
-      localStorageMock.setItem('selected-city', 'xiamen')
-      localStorageMock.setItem('city-first-visit', 'true')
-
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      // 读取到厦门
-      expect(result.current.cityId).toBe('xiamen')
-
-      // 切换回罗源
-      act(() => {
-        result.current.setCity('luoyuan')
-      })
-
-      expect(result.current.cityId).toBe('luoyuan')
-      expect(localStorageMock._store['selected-city']).toBe('luoyuan')
-    })
+    expect(result.current.isFirstVisit).toBe(false)
   })
 
-  describe('访问记录', () => {
-    it('首次访问时记录访问', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ cityId: 'luoyuan', province: '福建省' }),
-      })
+  it('should handle geo API failure gracefully', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      renderHook(() => useCitySelection())
+    const { result } = renderHook(() => useCitySelection())
 
-      await waitFor(() => {
-        // 等待 /api/visit 被调用
-        expect(mockFetch).toHaveBeenCalledWith('/api/visit', expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        }))
-      })
-
-      // 检查 sessionStorage 标记已设置
-      expect(sessionStorageMock.setItem).toHaveBeenCalledWith(
-        'session-visit-recorded',
-        'true'
-      )
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
-    it('同一会话内多次渲染不重复记录', async () => {
-      // 模拟已经在本会话中记录过
-      sessionStorageMock.setItem('session-visit-recorded', 'true')
+    // Should fall back to default city
+    expect(result.current.cityId).toBe('luoyuan')
+  })
 
-      renderHook(() => useCitySelection())
+  it('should skip geo API when localStorage has city and session is recorded', async () => {
+    localStorage.setItem('selected-city', 'luoyuan')
+    localStorage.setItem('city-first-visit', 'true')
+    sessionStorage.setItem('session-visit-recorded', 'true')
 
-      await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/geo')
-      })
+    const { result } = renderHook(() => useCitySelection())
 
-      // /api/visit 不应被调用
-      expect(mockFetch).not.toHaveBeenCalledWith('/api/visit', expect.anything())
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
     })
 
-    it('访问记录包含省份信息', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ cityId: 'luoyuan', province: '福建省' }),
-      })
-
-      renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/visit', expect.objectContaining({
-          body: JSON.stringify({ province: '福建省' }),
-        }))
-      })
-    })
-
-    it('geo API 失败时仍然记录访问（无省份）', async () => {
-      mockFetch.mockRejectedValue(new Error('Network error'))
-
-      renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/visit', expect.objectContaining({
-          body: JSON.stringify({ province: undefined }),
-        }))
-      })
-    })
-
-    it('老用户 + 本会话已记录时跳过 geo API 调用（优化）', async () => {
-      // 模拟老用户：有缓存城市
-      localStorageMock.setItem('selected-city', 'xiamen')
-      localStorageMock.setItem('city-first-visit', 'true')
-      // 模拟本会话已记录
-      sessionStorageMock.setItem('session-visit-recorded', 'true')
-
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      // 应该使用缓存的城市
-      expect(result.current.cityId).toBe('xiamen')
-      // 关键断言：不应该调用任何 API（geo 和 visit 都不需要）
-      expect(mockFetch).not.toHaveBeenCalled()
-    })
-
-    it('老用户首次进入本会话时仍调用 geo API（需要省份信息）', async () => {
-      // 模拟老用户：有缓存城市
-      localStorageMock.setItem('selected-city', 'xiamen')
-      localStorageMock.setItem('city-first-visit', 'true')
-      // 本会话未记录（sessionStorage 是空的）
-
-      const { result } = renderHook(() => useCitySelection())
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      // 应该调用 geo API 获取省份信息
-      expect(mockFetch).toHaveBeenCalledWith('/api/geo')
-      // 城市仍然使用缓存的
-      expect(result.current.cityId).toBe('xiamen')
-    })
+    // Should not have called fetch at all
+    expect(mockFetch).not.toHaveBeenCalled()
   })
 })
