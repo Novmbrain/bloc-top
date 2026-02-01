@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
+import { CompositionInput, CompositionTextarea } from '@/components/ui/composition-input'
 import type { Route, TopoPoint } from '@/types'
 import { bezierCurve, scalePoints, normalizePoint } from '@/lib/topo-utils'
 import { getGradeColor } from '@/lib/tokens'
@@ -445,11 +446,11 @@ export default function RouteAnnotationPage() {
           {/* 搜索和筛选 */}
           <div className="relative mb-3">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />
-            <input
+            <CompositionInput
               type="text"
               placeholder="搜索线路..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={setSearchQuery}
               className="w-full pl-12 pr-10 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
               style={{ backgroundColor: 'var(--theme-surface-variant)', color: 'var(--theme-on-surface)' }}
             />
@@ -550,10 +551,10 @@ export default function RouteAnnotationPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>名称 *</label>
-                <input
+                <CompositionInput
                   type="text"
                   value={newRoute.name}
-                  onChange={(e) => setNewRoute(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(v) => setNewRoute(prev => ({ ...prev, name: v }))}
                   placeholder="线路名称"
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                   style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
@@ -609,10 +610,10 @@ export default function RouteAnnotationPage() {
                     {areas.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
                 ) : (
-                  <input
+                  <CompositionInput
                     type="text"
                     value={newRoute.area}
-                    onChange={(e) => setNewRoute(prev => ({ ...prev, area: e.target.value }))}
+                    onChange={(v) => setNewRoute(prev => ({ ...prev, area: v }))}
                     placeholder="如：A 区"
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                     style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
@@ -621,29 +622,29 @@ export default function RouteAnnotationPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>首攀者 (FA)</label>
-                <input
+                <CompositionInput
                   type="text"
                   value={newRoute.FA}
-                  onChange={(e) => setNewRoute(prev => ({ ...prev, FA: e.target.value }))}
+                  onChange={(v) => setNewRoute(prev => ({ ...prev, FA: v }))}
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                   style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>定线者</label>
-                <input
+                <CompositionInput
                   type="text"
                   value={newRoute.setter}
-                  onChange={(e) => setNewRoute(prev => ({ ...prev, setter: e.target.value }))}
+                  onChange={(v) => setNewRoute(prev => ({ ...prev, setter: v }))}
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                   style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
                 />
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>描述</label>
-                <textarea
+                <CompositionTextarea
                   value={newRoute.description}
-                  onChange={(e) => setNewRoute(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(v) => setNewRoute(prev => ({ ...prev, description: v }))}
                   rows={3}
                   className="w-full px-3 py-2.5 rounded-xl text-sm resize-none outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                   style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
@@ -928,10 +929,10 @@ export default function RouteAnnotationPage() {
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>名称 *</label>
-                <input
+                <CompositionInput
                   type="text"
                   value={editedRoute.name || ''}
-                  onChange={(e) => setEditedRoute((prev) => ({ ...prev, name: e.target.value }))}
+                  onChange={(v) => setEditedRoute((prev) => ({ ...prev, name: v }))}
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                   style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
                 />
@@ -985,10 +986,10 @@ export default function RouteAnnotationPage() {
                     {areas.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
                 ) : (
-                  <input
+                  <CompositionInput
                     type="text"
                     value={editedRoute.area || ''}
-                    onChange={(e) => setEditedRoute(prev => ({ ...prev, area: e.target.value }))}
+                    onChange={(v) => setEditedRoute(prev => ({ ...prev, area: v }))}
                     placeholder="输入新区域名称"
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                     style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
@@ -997,29 +998,29 @@ export default function RouteAnnotationPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>首攀者 (FA)</label>
-                <input
+                <CompositionInput
                   type="text"
                   value={editedRoute.FA || ''}
-                  onChange={(e) => setEditedRoute((prev) => ({ ...prev, FA: e.target.value }))}
+                  onChange={(v) => setEditedRoute((prev) => ({ ...prev, FA: v }))}
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                   style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>定线者</label>
-                <input
+                <CompositionInput
                   type="text"
                   value={editedRoute.setter || ''}
-                  onChange={(e) => setEditedRoute((prev) => ({ ...prev, setter: e.target.value }))}
+                  onChange={(v) => setEditedRoute((prev) => ({ ...prev, setter: v }))}
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                   style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
                 />
               </div>
               <div className="col-span-2 lg:col-span-3">
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>描述</label>
-                <textarea
+                <CompositionTextarea
                   value={editedRoute.description || ''}
-                  onChange={(e) => setEditedRoute((prev) => ({ ...prev, description: e.target.value }))}
+                  onChange={(v) => setEditedRoute((prev) => ({ ...prev, description: v }))}
                   rows={3}
                   className="w-full px-3 py-2.5 rounded-xl text-sm resize-none outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                   style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}

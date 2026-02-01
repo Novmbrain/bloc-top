@@ -59,7 +59,7 @@
     "allRoutes": "全部线路",
     "allGrades": "全部难度",
     "selectedGrades": "已选 {count} 个难度",
-    "gradeHint": "点击切换单个难度，拖动选择范围",
+    "gradeHint": "点击或拖动选择难度范围",
     "filterTitle": "筛选线路",
     "cragLabel": "岩场",
     "gradeMultiSelect": "难度（可多选）",
@@ -338,7 +338,7 @@
     "profileEntry": "App 介绍",
     "profileEntryHint": "了解功能和使用方式",
     "hintPinchZoom": "双指缩放查看线路细节",
-    "hintSearch": "支持按线路名或难度搜索",
+    "hintSearch": "支持按线路名搜索，也支持拼音",
     "backToHome": "返回首页"
   },
   "Metadata": {

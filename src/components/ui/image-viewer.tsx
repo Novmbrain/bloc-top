@@ -22,14 +22,14 @@ interface ImageViewerProps {
   topSlot?: React.ReactNode
 }
 
-// 缩放控制按钮组件
-function ZoomControls() {
+// 底部控制栏组件（缩放 + 关闭）
+function BottomControls({ onClose }: { onClose: () => void }) {
   const { zoomIn, zoomOut, resetTransform } = useControls()
   const scale = useTransformComponent((ctx) => ctx.state.scale)
 
   return (
     <div
-      className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-4 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm"
+      className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm"
       style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
     >
       <button
@@ -67,6 +67,19 @@ function ZoomControls() {
         aria-label="重置"
       >
         <RotateCcw className={`w-4 h-4 ${scale === 1 ? 'text-white/40' : 'text-white'}`} />
+      </button>
+      {/* 分隔线 */}
+      <div className="w-px h-5 bg-white/20" />
+      {/* 关闭按钮 */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose()
+        }}
+        className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/20"
+        aria-label="关闭"
+      >
+        <X className="w-5 h-5 text-white" />
       </button>
     </div>
   )
@@ -149,19 +162,6 @@ export function ImageViewer({ isOpen, onClose, src, alt = '', children, topSlot 
       {/* 顶部插槽 */}
       {topSlot}
 
-      {/* 关闭按钮 */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          onClose()
-        }}
-        className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center bg-white/10 backdrop-blur-sm transition-colors hover:bg-white/20"
-        style={{ marginTop: 'env(safe-area-inset-top)' }}
-        aria-label="关闭"
-      >
-        <X className="w-5 h-5 text-white" />
-      </button>
-
       {/* 图片查看器 */}
       <TransformWrapper
         ref={transformRef}
@@ -177,7 +177,7 @@ export function ImageViewer({ isOpen, onClose, src, alt = '', children, topSlot 
         smooth
       >
         <>
-          <ZoomControls />
+          <BottomControls onClose={onClose} />
           <TransformComponent
               wrapperStyle={{
                 width: '100%',

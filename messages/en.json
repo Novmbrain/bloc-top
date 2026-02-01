@@ -59,7 +59,7 @@
     "allRoutes": "All Routes",
     "allGrades": "All Grades",
     "selectedGrades": "{count, plural, =1 {# grade selected} other {# grades selected}}",
-    "gradeHint": "Tap to toggle, drag to select range",
+    "gradeHint": "Tap or drag to select grade range",
     "filterTitle": "Filter Routes",
     "cragLabel": "Crag",
     "gradeMultiSelect": "Grade (multi-select)",
@@ -338,7 +338,7 @@
     "profileEntry": "App Introduction",
     "profileEntryHint": "Learn about features and how to use",
     "hintPinchZoom": "Pinch to zoom and see route details",
-    "hintSearch": "Search by route name or grade",
+    "hintSearch": "Search by route name, pinyin supported",
     "backToHome": "Back to Home"
   },
   "Metadata": {

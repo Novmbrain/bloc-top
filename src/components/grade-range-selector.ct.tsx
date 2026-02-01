@@ -1,15 +1,14 @@
 /**
  * GradeRangeSelector Playwright 组件测试
  * 测试需要真实浏览器环境的复杂交互：
- * - 单击切换选择
+ * - 点选单个等级
  * - 拖动范围选择
- * - 复合选择（不连续多选）
  */
 import { test, expect } from '@playwright/experimental-ct-react'
 import { GradeRangeSelector } from './grade-range-selector'
 
 test.describe('GradeRangeSelector 真实交互测试', () => {
-  test('单击应切换单个难度的选择状态', async ({ mount }) => {
+  test('单击应选中单个难度', async ({ mount }) => {
     let selectedGrades: string[] = []
 
     const component = await mount(
@@ -87,18 +86,6 @@ test.describe('GradeRangeSelector 真实交互测试', () => {
 
     // 验证显示"全部难度"
     await expect(component.getByText('全部难度')).toBeVisible()
-  })
-
-  test('不连续选择应显示选中数量', async ({ mount }) => {
-    const component = await mount(
-      <GradeRangeSelector
-        selectedGrades={['V0', 'V5', 'V10']}
-        onChange={() => {}}
-      />
-    )
-
-    // 验证显示选中数量
-    await expect(component.getByText('已选 3 个难度')).toBeVisible()
   })
 
   test('应渲染所有 14 个难度等级', async ({ mount }) => {
