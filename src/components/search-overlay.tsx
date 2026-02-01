@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { Search, X, ChevronRight } from 'lucide-react'
+import { CompositionInput } from '@/components/ui/composition-input'
 import type { Route } from '@/types'
 import { getGradeColor } from '@/lib/tokens'
 
@@ -80,12 +81,12 @@ export function SearchOverlay({
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
               style={{ color: 'var(--theme-on-surface-variant)' }}
             />
-            <input
+            <CompositionInput
               ref={inputRef}
               type="text"
               placeholder={t('placeholder')}
               value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={(value) => onSearchChange(value)}
               className="w-full h-10 pl-10 pr-10 text-sm focus:outline-none"
               style={{
                 backgroundColor: 'var(--theme-surface-variant)',
