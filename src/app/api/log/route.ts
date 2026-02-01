@@ -1,24 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/request-utils'
 
 // Rate Limiting 配置：每 IP 每分钟最多 20 次
 const LOG_RATE_LIMIT = { maxRequests: 20, windowMs: 60000 }
-
-/**
- * 获取客户端 IP 地址
- */
-function getClientIp(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for')
-  if (forwarded) {
-    return forwarded.split(',')[0].trim()
-  }
-  const realIp = request.headers.get('x-real-ip')
-  if (realIp) {
-    return realIp.trim()
-  }
-  return '127.0.0.1'
-}
 
 /**
  * 客户端日志上报请求体

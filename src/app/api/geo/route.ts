@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCityByAdcode, DEFAULT_CITY_ID, type CityId } from '@/lib/city-config'
 import { createModuleLogger } from '@/lib/logger'
+import { getClientIp } from '@/lib/request-utils'
 
 // 创建 Geo 模块专用 logger
 const log = createModuleLogger('Geo')
@@ -148,21 +149,3 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * 获取客户端 IP 地址
- */
-function getClientIp(request: NextRequest): string {
-  // Vercel/Cloudflare 等代理会设置这些头
-  const forwarded = request.headers.get('x-forwarded-for')
-  if (forwarded) {
-    return forwarded.split(',')[0].trim()
-  }
-
-  const realIp = request.headers.get('x-real-ip')
-  if (realIp) {
-    return realIp.trim()
-  }
-
-  // 本地开发环境
-  return '127.0.0.1'
-}

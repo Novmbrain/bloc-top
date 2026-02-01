@@ -9,6 +9,14 @@ const log = createModuleLogger('DB')
 // ============ 类型转换辅助函数 ============
 
 /**
+ * 将业务 ID 转换为 MongoDB _id 类型
+ * MongoDB 原生驱动使用 _id: ObjectId，但本项目使用字符串/数字作为 _id
+ */
+function toMongoId(id: string | number): Document['_id'] {
+  return toMongoId(id)
+}
+
+/**
  * 将 MongoDB 文档转换为 Crag 类型
  * MongoDB 使用 _id 作为主键，需要转换为业务 id
  */
@@ -67,7 +75,7 @@ export async function getCragById(id: string): Promise<Crag | null> {
 
   try {
     const db = await getDatabase()
-    const doc = await db.collection('crags').findOne({ _id: id as unknown as Document['_id'] })
+    const doc = await db.collection('crags').findOne({ _id: toMongoId(id) })
 
     if (!doc) {
       log.info(`Crag not found: ${id}`, {
@@ -131,7 +139,7 @@ export async function getRouteById(id: number): Promise<Route | null> {
 
   try {
     const db = await getDatabase()
-    const doc = await db.collection('routes').findOne({ _id: id as unknown as Document['_id'] })
+    const doc = await db.collection('routes').findOne({ _id: toMongoId(id) })
 
     if (!doc) {
       log.info(`Route not found: ${id}`, {
@@ -207,7 +215,7 @@ export async function updateRoute(
     }
 
     const result = await db.collection('routes').findOneAndUpdate(
-      { _id: id as unknown as Document['_id'] },
+      { _id: toMongoId(id) },
       { $set: updateData },
       { returnDocument: 'after' }
     )
@@ -255,7 +263,7 @@ export async function createRoute(
     const newId = lastDoc.length > 0 ? (lastDoc[0]._id as unknown as number) + 1 : 1
 
     const doc = {
-      _id: newId as unknown as Document['_id'],
+      _id: toMongoId(newId),
       ...data,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -335,7 +343,7 @@ export async function recordVisit(province: string): Promise<void> {
 
     // 使用 upsert + $inc 实现原子更新
     await db.collection('visits').updateOne(
-      { _id: VISIT_STATS_ID as unknown as Document['_id'] },
+      { _id: toMongoId(VISIT_STATS_ID) },
       {
         $inc: {
           [`provinces.${province}`]: 1,
@@ -370,7 +378,7 @@ export async function getVisitStats(): Promise<VisitStats> {
   try {
     const db = await getDatabase()
     const doc = await db.collection('visits').findOne({
-      _id: VISIT_STATS_ID as unknown as Document['_id'],
+      _id: toMongoId(VISIT_STATS_ID),
     })
 
     if (!doc) {

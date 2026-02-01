@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { createModuleLogger } from '@/lib/logger'
+import { sanitizePathSegment } from '@/lib/request-utils'
 
 const log = createModuleLogger('API:Upload')
 
@@ -90,10 +91,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 构建 R2 对象路径: {cragId}/{area}/{faceId}.jpg
+    // 构建 R2 对象路径: {cragId}/{area}/{faceId}.jpg（净化防止路径遍历）
+    const safeCragId = sanitizePathSegment(cragId)
     const key = (faceId && area)
-      ? `${cragId}/${area}/${faceId}.jpg`
-      : `${cragId}/${routeName!}.jpg`
+      ? `${safeCragId}/${sanitizePathSegment(area)}/${sanitizePathSegment(faceId)}.jpg`
+      : `${safeCragId}/${sanitizePathSegment(routeName!)}.jpg`
 
     // ===== 检查模式：只检查文件是否存在 =====
     if (checkOnly) {

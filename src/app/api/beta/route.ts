@@ -5,30 +5,11 @@ import { checkRateLimit, BETA_RATE_LIMIT_CONFIG } from '@/lib/rate-limit'
 import { HTTP_CACHE } from '@/lib/cache-config'
 import { createModuleLogger } from '@/lib/logger'
 import { API_ERROR_CODES, createErrorResponse } from '@/lib/api-error-codes'
+import { getClientIp } from '@/lib/request-utils'
 import type { Document } from 'mongodb'
 
 // 创建 API 模块专用 logger
 const log = createModuleLogger('API')
-
-/**
- * 获取客户端 IP 地址
- */
-function getClientIp(request: NextRequest): string {
-  // Vercel/Cloudflare 等代理会设置这些头
-  const forwarded = request.headers.get('x-forwarded-for')
-  if (forwarded) {
-    // 取第一个 IP（原始客户端）
-    return forwarded.split(',')[0].trim()
-  }
-
-  const realIp = request.headers.get('x-real-ip')
-  if (realIp) {
-    return realIp.trim()
-  }
-
-  // 本地开发环境
-  return '127.0.0.1'
-}
 
 /**
  * 解析小红书短链接，获取最终 URL
