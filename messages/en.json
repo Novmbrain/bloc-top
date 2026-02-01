@@ -59,7 +59,7 @@
     "allRoutes": "All Routes",
     "allGrades": "All Grades",
     "selectedGrades": "{count, plural, =1 {# grade selected} other {# grades selected}}",
-    "gradeHint": "Tap to toggle, drag to select range",
+    "gradeHint": "Tap or drag to select grade range",
     "filterTitle": "Filter Routes",
     "cragLabel": "Crag",
     "gradeMultiSelect": "Grade (multi-select)",

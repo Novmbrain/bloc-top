@@ -6,7 +6,7 @@ import { X } from 'lucide-react'
 import { V_GRADES } from '@/lib/filter-constants'
 import { getGradeColor } from '@/lib/tokens'
 
-// 手指微抖阈值（像素），小于此距离视为单击而非拖动
+// 手指微抖阈值（像素），小于此距离视为点选而非拖动
 const DRAG_THRESHOLD = 8
 
 interface GradeRangeSelectorProps {
@@ -17,9 +17,9 @@ interface GradeRangeSelectorProps {
 
 /**
  * 难度色谱条组件
- * 支持三种选择方式：
- * 1. 单击切换（toggle）：点击某个等级，切换其选中状态，支持不连续的复合选择
- * 2. 拖动范围选择：拖动选择连续范围，会替换当前选择
+ * 仅支持滑动选择连续范围：
+ * 1. 点击：选中单个等级
+ * 2. 拖动：选择连续范围
  * 3. 清除按钮：清除所有选择
  */
 export function GradeRangeSelector({
@@ -33,7 +33,7 @@ export function GradeRangeSelector({
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState<number | null>(null)
   const [dragEnd, setDragEnd] = useState<number | null>(null)
-  // 追踪是否发生了实际的拖动移动（用于区分单击和拖动）
+  // 追踪是否发生了实际的拖动移动（用于区分点选和拖动）
   const [hasMoved, setHasMoved] = useState(false)
   // 记录触摸起始位置，用于计算移动距离阈值
   const dragStartX = useRef<number | null>(null)
@@ -42,7 +42,6 @@ export function GradeRangeSelector({
   const [optimisticSelection, setOptimisticSelection] = useState<string[] | null>(null)
 
   // 当 selectedGrades prop 更新时，清除乐观状态
-  // 这是 React 推荐的"根据 prop 变化重置状态"的用例
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 合理用例：prop 变化时重置内部状态
     setOptimisticSelection(null)
@@ -67,32 +66,13 @@ export function GradeRangeSelector({
     return V_GRADES.slice(min, max + 1) as string[]
   }, [])
 
-  // 切换单个等级的选中状态（用于单击）
-  const toggleGrade = useCallback((index: number) => {
-    const grade = V_GRADES[index]
-    const isSelected = displayedSelection.includes(grade)
-
-    let newSelection: string[]
-    if (isSelected) {
-      // 已选中，取消选择
-      newSelection = displayedSelection.filter(g => g !== grade)
-    } else {
-      // 未选中，添加到选择中
-      newSelection = [...displayedSelection, grade]
-    }
-
-    // 设置乐观状态
-    setOptimisticSelection(newSelection)
-    onChange(newSelection)
-  }, [displayedSelection, onChange])
-
   // 处理拖动开始
   const handleDragStart = useCallback((clientX: number) => {
     const index = getGradeIndexFromPosition(clientX)
     setIsDragging(true)
     setDragStart(index)
     setDragEnd(index)
-    setHasMoved(false) // 重置移动标记
+    setHasMoved(false)
     dragStartX.current = clientX
   }, [getGradeIndexFromPosition])
 
@@ -101,7 +81,6 @@ export function GradeRangeSelector({
     if (!isDragging || dragStart === null) return
     const index = getGradeIndexFromPosition(clientX)
 
-    // 需要同时满足：移动到不同格子 + 超过像素阈值（防止手指微抖误判）
     if (index !== dragStart && dragStartX.current !== null && Math.abs(clientX - dragStartX.current) >= DRAG_THRESHOLD) {
       setHasMoved(true)
     }
@@ -116,15 +95,13 @@ export function GradeRangeSelector({
       return
     }
 
-    if (hasMoved) {
-      // 实际发生了拖动 → 范围选择，替换当前选择
-      const newSelection = getSelectedFromRange(dragStart, dragEnd)
-      setOptimisticSelection(newSelection)
-      onChange(newSelection)
-    } else {
-      // 没有移动 → 单击，切换单个等级
-      toggleGrade(dragStart)
-    }
+    // 无论点选还是拖动，都产出连续范围
+    const newSelection = hasMoved
+      ? getSelectedFromRange(dragStart, dragEnd)
+      : [V_GRADES[dragStart] as string]
+
+    setOptimisticSelection(newSelection)
+    onChange(newSelection)
 
     // 清除拖动状态
     setIsDragging(false)
@@ -132,7 +109,7 @@ export function GradeRangeSelector({
     setDragEnd(null)
     setHasMoved(false)
     dragStartX.current = null
-  }, [isDragging, dragStart, dragEnd, hasMoved, getSelectedFromRange, onChange, toggleGrade])
+  }, [isDragging, dragStart, dragEnd, hasMoved, getSelectedFromRange, onChange])
 
   // 鼠标事件处理
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -206,7 +183,7 @@ export function GradeRangeSelector({
     if (displayedSelection.length === 0) return t('allGrades')
     if (displayedSelection.length === 1) return displayedSelection[0]
 
-    // 检查是否是连续选择
+    // 选择永远是连续的，直接取首尾
     const indices = displayedSelection
       .map(g => V_GRADES.indexOf(g as typeof V_GRADES[number]))
       .filter(i => i >= 0)
@@ -214,21 +191,10 @@ export function GradeRangeSelector({
 
     if (indices.length === 0) return t('allGrades')
 
-    // 检查是否连续
-    const isContiguous = indices.every((val, i) =>
-      i === 0 || val === indices[i - 1] + 1
-    )
-
-    if (isContiguous) {
-      // 连续范围，显示 "V2 - V5"
-      const min = indices[0]
-      const max = indices[indices.length - 1]
-      if (min === max) return V_GRADES[min]
-      return `${V_GRADES[min]} - ${V_GRADES[max]}`
-    } else {
-      // 不连续，显示 "已选 3 个难度"
-      return t('selectedGrades', { count: displayedSelection.length })
-    }
+    const min = indices[0]
+    const max = indices[indices.length - 1]
+    if (min === max) return V_GRADES[min]
+    return `${V_GRADES[min]} - ${V_GRADES[max]}`
   }
 
   return (
@@ -285,7 +251,6 @@ export function GradeRangeSelector({
                 boxShadow: selected ? 'inset 0 0 0 1px rgba(255,255,255,0.3)' : undefined,
               }}
             >
-              {/* 显示简化的等级名 */}
               {grade.replace('V', '')}
             </div>
           )

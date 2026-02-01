@@ -1,7 +1,7 @@
 /**
  * GradeRangeSelector 组件测试
  * 测试难度色谱条的交互行为：
- * - 单击切换（toggle）
+ * - 点选单个等级
  * - 拖动范围选择
  * - 清除选择
  * - 显示状态
@@ -44,7 +44,6 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      // 使用翻译键匹配
       expect(screen.getByText('allGrades')).toBeInTheDocument()
     })
 
@@ -70,18 +69,6 @@ describe('GradeRangeSelector', () => {
       expect(screen.getByText('V2 - V5')).toBeInTheDocument()
     })
 
-    it('不连续选择时应显示选中数量', () => {
-      render(
-        <GradeRangeSelector
-          selectedGrades={['V0', 'V5', 'V10']}
-          onChange={mockOnChange}
-        />
-      )
-
-      // 使用翻译键匹配（参数会被替换）
-      expect(screen.getByText(/selectedGrades/i)).toBeInTheDocument()
-    })
-
     it('有选择时应显示清除按钮', () => {
       render(
         <GradeRangeSelector
@@ -90,7 +77,6 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      // 使用翻译键匹配
       expect(screen.getByText('clear')).toBeInTheDocument()
     })
 
@@ -106,16 +92,15 @@ describe('GradeRangeSelector', () => {
     })
   })
 
-  describe('单击交互', () => {
+  describe('交互', () => {
     /**
      * 注意：以下测试需要真实浏览器环境（Playwright）
      * 因为 jsdom 中 getBoundingClientRect() 返回 { width: 0, height: 0 }
      * 导致位置计算无法正常工作
      *
      * 在 Playwright 组件测试中应覆盖：
-     * - 单击切换选择
+     * - 点选单个等级
      * - 拖动范围选择
-     * - 复合选择
      */
 
     it('色谱条容器应支持鼠标事件', () => {
@@ -126,7 +111,6 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      // 验证色谱条容器存在且可交互
       const colorBar = container.querySelector('.touch-none')
       expect(colorBar).toBeInTheDocument()
       expect(colorBar).toHaveClass('cursor-pointer')
@@ -143,16 +127,14 @@ describe('GradeRangeSelector', () => {
       const colorBar = container.querySelector('.touch-none')
       expect(colorBar).toBeInTheDocument()
 
-      // 验证触摸事件可以触发
       fireEvent.touchStart(colorBar!, {
         touches: [{ clientX: 100, clientY: 0 }],
       })
 
-      // 组件应进入拖动状态（内部状态，这里只验证不报错）
       fireEvent.touchEnd(colorBar!)
     })
 
-    it('mouseDown 应触发交互流程', () => {
+    it('mouseDown + mouseUp 应触发 onChange', () => {
       const { container } = render(
         <GradeRangeSelector
           selectedGrades={[]}
@@ -162,12 +144,9 @@ describe('GradeRangeSelector', () => {
 
       const colorBar = container.querySelector('.touch-none')
 
-      // mouseDown 后 mouseUp 应触发 onChange
-      // 虽然在 jsdom 中位置计算有问题，但交互流程应该正常
       fireEvent.mouseDown(colorBar!, { clientX: 0 })
       fireEvent.mouseUp(colorBar!)
 
-      // 应该调用 onChange（位置可能不正确，但流程正常）
       expect(mockOnChange).toHaveBeenCalled()
     })
   })
@@ -181,7 +160,6 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      // 使用翻译键匹配
       const clearButton = screen.getByText('clear')
       fireEvent.click(clearButton)
 
@@ -198,7 +176,6 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      // 使用翻译键匹配
       expect(screen.getByText('gradeHint')).toBeInTheDocument()
     })
   })
