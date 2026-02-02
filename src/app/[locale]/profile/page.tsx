@@ -519,6 +519,7 @@ export default function ProfilePage() {
               handleEditorPasswordSubmit()
             }}
           >
+            {/* eslint-disable-next-line no-restricted-syntax -- type="password" has no IME composition */}
             <input
               ref={passwordInputRef}
               type="password"

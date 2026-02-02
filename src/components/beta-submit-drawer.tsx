@@ -236,6 +236,7 @@ export function BetaSubmitDrawer({
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
                 style={{ color: 'var(--theme-on-surface-variant)' }}
               />
+              {/* eslint-disable-next-line no-restricted-syntax -- type="number" has no IME composition */}
               <input
                 type="number"
                 value={height}
@@ -264,6 +265,7 @@ export function BetaSubmitDrawer({
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
                 style={{ color: 'var(--theme-on-surface-variant)' }}
               />
+              {/* eslint-disable-next-line no-restricted-syntax -- type="number" has no IME composition */}
               <input
                 type="number"
                 value={reach}

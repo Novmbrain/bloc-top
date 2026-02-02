@@ -319,6 +319,40 @@ setTheme('system')  // 自动模式 (跟随系统)
 // 当 theme='system' 时，resolvedTheme 会根据系统偏好返回实际值
 ```
 
+## Input Component Rules (IME Composition)
+
+**禁止在 `src/` 中直接使用 `<input>` 或 `<textarea>`**，必须使用封装组件：
+
+| 原生元素 | 替代组件 | 导入路径 |
+|---------|---------|---------|
+| `<input>` | `<Input>` | `@/components/ui/input` |
+| `<textarea>` | `<Textarea>` | `@/components/ui/textarea` |
+
+**原因**: 原生 `<input>` 的 `onChange` 在中文/日文 IME 输入法组合过程中会提前触发，导致拼音被意外提交。`Input`/`Textarea` 内部使用 `CompositionInput`，通过 `compositionstart`/`compositionend` 事件正确处理 IME 输入。
+
+**ESLint 强制执行**: `eslint.config.mjs` 中配置了 `no-restricted-syntax` 规则，违规会报错。
+
+**例外情况** (需添加 `// eslint-disable-next-line no-restricted-syntax` 注释):
+- `type="file"` / `type="hidden"` — 无文本输入，不涉及 IME
+- `type="number"` — 数字输入无 IME 组合问题
+- `type="password"` — 密码输入无 IME 组合问题
+
+```tsx
+// ✅ 正确
+import { Input } from '@/components/ui/input'
+<Input value={text} onChange={setText} placeholder="搜索..." />
+
+// ✅ 使用 unstyled variant（自定义样式场景）
+<Input variant="unstyled" value={text} onChange={setText} />
+
+// ✅ 允许的例外（带注释说明）
+{/* eslint-disable-next-line no-restricted-syntax -- type="file" has no IME composition */}
+<input type="file" onChange={handleFile} />
+
+// ❌ 错误 — 会导致中文输入 bug
+<input value={text} onChange={e => setText(e.target.value)} />
+```
+
 ## Component Patterns
 
 ### 提示组件模式 (参考 sw-update-prompt.tsx)
