@@ -738,6 +738,7 @@ export default function RouteAnnotationPage() {
                       // 已选中的岩面不重复操作
                       if (face.faceId === selectedFaceId) return
                       setSelectedFaceId(face.faceId)
+                      setTopoLine([])  // 切换岩面时清空旧控制点
                       const url = getFaceTopoUrl(selectedRoute.cragId, face.area, face.faceId)
                       setImageUrl(url)
                       setIsImageLoading(true)
