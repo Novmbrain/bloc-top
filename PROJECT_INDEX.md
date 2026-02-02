@@ -1,6 +1,6 @@
 # Project Index: 罗源野抱 TOPO PWA
 
-Generated: 2026-01-30 (updated)
+Generated: 2026-02-02 (updated)
 
 ## 📁 Project Structure
 
@@ -25,17 +25,20 @@ src/
 │   │   │   ├── page.tsx             # Editor home
 │   │   │   ├── faces/page.tsx       # Face management
 │   │   │   └── routes/page.tsx      # Route annotation
+│   │   ├── intro/page.tsx           # Introduction page
 │   │   ├── profile/page.tsx         # User profile
 │   │   └── offline/                 # Offline fallback pages
 │   │       ├── page.tsx
 │   │       ├── crag/[id]/page.tsx
 │   │       └── route/[id]/page.tsx
-│   └── api/                          # API Routes
+│   └── api/                          # API Routes (14 endpoints)
 │       ├── beta/route.ts             # Beta video CRUD
 │       ├── crags/route.ts            # GET all crags
 │       ├── crags/[id]/routes/route.ts # GET crag routes
-│       ├── faces/route.ts            # GET R2 face listing
+│       ├── crags/[id]/areas/route.ts # GET crag areas
+│       ├── routes/route.ts           # GET routes list
 │       ├── routes/[id]/route.ts      # GET/PATCH route
+│       ├── faces/route.ts            # GET R2 face listing
 │       ├── upload/route.ts           # POST topo image to R2
 │       ├── weather/route.ts          # GET weather data
 │       ├── geo/route.ts              # IP geolocation
@@ -48,7 +51,9 @@ src/
 │   │   ├── button.tsx, skeleton.tsx, toast.tsx
 │   │   ├── drawer.tsx               # Swipe-to-dismiss drawer
 │   │   ├── image-viewer.tsx         # Pinch-zoom image viewer
-│   │   └── segmented-control.tsx    # Tab-like segmented control
+│   │   ├── segmented-control.tsx    # Tab-like segmented control
+│   │   ├── input.tsx / textarea.tsx # IME-safe input components
+│   │   └── composition-input.tsx    # IME composition handler
 │   ├── editor/                       # Editor-specific components
 │   │   ├── fullscreen-topo-editor.tsx # SVG topo line editor
 │   │   ├── crag-selector.tsx        # Editor crag selector
@@ -58,14 +63,18 @@ src/
 │   ├── app-tabbar.tsx               # Bottom navigation (glass morphism)
 │   ├── filter-chip.tsx              # Single/multi select filter chip
 │   ├── filter-drawer.tsx            # Filter panel drawer
+│   ├── grade-range-selector.tsx     # Grade range selector
+│   ├── grade-range-selector-vertical.tsx # Vertical grade selector
 │   ├── route-detail-drawer.tsx      # Route detail (multi-route switch)
 │   ├── topo-line-overlay.tsx        # SVG topo line (single route)
 │   ├── multi-topo-line-overlay.tsx  # SVG topo lines (shared face)
+│   ├── face-thumbnail-strip.tsx     # Face thumbnail strip
 │   ├── beta-list-drawer.tsx         # Beta video list
 │   ├── beta-submit-drawer.tsx       # Beta video submission
 │   ├── search-overlay.tsx           # Search overlay
 │   ├── search-drawer.tsx            # Search drawer
 │   ├── floating-search.tsx          # Floating search button
+│   ├── floating-search-input.tsx    # Floating search input
 │   ├── amap-container.tsx           # AMap container
 │   ├── weather-strip.tsx            # Homepage weather bar
 │   ├── weather-badge.tsx            # Card weather badge
@@ -74,7 +83,9 @@ src/
 │   ├── empty-city.tsx               # Empty city state
 │   ├── theme-provider.tsx           # next-themes provider
 │   ├── theme-switcher.tsx           # Theme toggle
+│   ├── locale-detector.tsx          # Auto locale detection
 │   ├── locale-switcher.tsx          # Language switcher
+│   ├── contextual-hint.tsx          # Contextual hint tooltip
 │   ├── install-prompt.tsx           # PWA install prompt
 │   ├── sw-update-prompt.tsx         # SW update prompt
 │   ├── offline-indicator.tsx        # Offline banner
@@ -82,20 +93,26 @@ src/
 │   ├── offline-download-provider.tsx # Offline download context
 │   └── download-button.tsx          # Download for offline button
 ├── hooks/
-│   ├── use-route-search.ts          # Route search logic
+│   ├── use-route-search.ts          # Route search (pinyin support)
 │   ├── use-city-selection.ts        # City selection (localStorage + IP)
 │   ├── use-crag-routes.ts           # Crag & routes data fetching
+│   ├── use-weather.ts               # Weather data hook
 │   ├── use-delayed-loading.ts       # Delayed skeleton loading
 │   ├── use-climber-body-data.ts     # Climber body measurements
 │   ├── use-locale-preference.ts     # Locale preference
 │   ├── use-offline-download.ts      # Offline download management
-│   └── use-offline-mode.ts          # Offline mode detection
+│   ├── use-offline-mode.ts          # Offline mode detection
+│   ├── use-platform-detect.ts       # Platform detection (iOS/Android)
+│   ├── use-contextual-hint.ts       # Contextual hint state
+│   └── use-scroll-reveal.ts         # Scroll reveal animation
 ├── lib/
 │   ├── utils.ts                     # cn() utility
 │   ├── tokens.ts                    # Design tokens
 │   ├── constants.ts                 # App constants (R2 URLs, etc.)
 │   ├── grade-utils.ts               # V-grade utilities
 │   ├── filter-constants.ts          # Filter config (grades, URL params)
+│   ├── route-utils.ts               # Route helper utilities
+│   ├── request-utils.ts             # Request utilities
 │   ├── beta-constants.ts            # Beta platform config
 │   ├── cache-config.ts              # Unified cache TTL config
 │   ├── rate-limit.ts                # In-memory rate limiting
@@ -141,10 +158,19 @@ scripts/
 └── init-visits.ts                   # Initialize visit counters
 ```
 
+## 📊 Stats
+
+- **181 source files** / **52 test files**
+- **14 API endpoints**
+- **11 pages** (including offline variants)
+- **~35 business components** + **9 UI primitives**
+- **12 custom hooks**
+- **22 lib modules**
+
 ## 🚀 Entry Points
 
 - **App**: `src/app/[locale]/page.tsx` — Homepage (crag list, SSR + ISR)
-- **API**: `src/app/api/` — 12 API routes
+- **API**: `src/app/api/` — 14 API routes
 - **SW**: `src/app/sw.ts` — Serwist service worker
 - **Middleware**: `src/middleware.ts` — i18n locale detection
 - **DB seed**: `scripts/seed.ts` — Database migration
@@ -171,33 +197,37 @@ scripts/
 | `next.config.ts` | Next.js config (Turbopack, image domains) |
 | `vitest.config.ts` | Vitest test config |
 | `playwright-ct.config.ts` | Playwright component test config |
+| `eslint.config.mjs` | ESLint (includes IME input rule) |
 | `components.json` | shadcn/ui config (new-york style) |
 | `vercel.json` | Vercel deployment config |
 | `.env.local` | Environment variables (MONGODB_URI, AMAP_KEY) |
 
 ## 🧪 Tests
 
-- **42 test files** (unit + component + Playwright)
+- **52 test files** (unit + component + Playwright)
 - **Unit tests**: `src/lib/*.test.ts` (19 files)
 - **Component tests**: `src/components/*.test.tsx` (15 files)
+- **Hook tests**: `src/hooks/*.test.ts` (8 files)
 - **Playwright**: `*.ct.tsx` (2 files)
-- **Hook tests**: `src/hooks/*.test.ts` (6 files)
+- **App tests**: `src/app/**/*.test.tsx` (3 files)
 - Coverage: ~34%
 
 ## 🔗 Core Dependencies
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| next | 16.1.2 | React framework |
-| react | 19.2.3 | UI library |
-| mongodb | 7.x | Database driver |
-| @serwist/next | 9.5.x | PWA service worker |
-| next-intl | 4.7.x | Internationalization |
-| next-themes | 0.4.x | Theme switching |
-| @aws-sdk/client-s3 | 3.975.x | R2 image storage |
-| lucide-react | 0.562.x | Icons |
-| pinyin-pro | 3.28.x | Chinese pinyin search |
-| react-zoom-pan-pinch | 3.7.x | Image zoom/pan |
+| Package | Purpose |
+|---------|---------|
+| next 16.1.2 | React framework (App Router + ISR) |
+| react / react-dom | UI library |
+| mongodb | Database driver (Atlas) |
+| @serwist/next + serwist | PWA service worker |
+| next-intl | Internationalization (zh/en/fr) |
+| next-themes | Theme switching (Dracula) |
+| @aws-sdk/client-s3 | R2 image storage |
+| @amap/amap-jsapi-loader | 高德地图 |
+| lucide-react | Icons |
+| pinyin-pro | Chinese pinyin search |
+| react-zoom-pan-pinch | Image zoom/pan |
+| tailwind-merge + clsx + cva | Styling utilities |
 
 ## 📝 Quick Start
 
@@ -217,4 +247,5 @@ npm run build                # Production build
 - **Theming**: CSS variables (`--theme-*`) controlled by `.dark` class
 - **Offline**: IndexedDB storage + R2 image caching (30d, max 200)
 - **Editor**: Desktop dual-panel / mobile master-detail navigation
-- **Git workflow**: Issue-first → feature branch → PR → CI → merge
+- **IME safety**: Custom Input/Textarea components wrapping composition events
+- **Git workflow**: Issue-first → feature branch → PR → CI → auto-merge
