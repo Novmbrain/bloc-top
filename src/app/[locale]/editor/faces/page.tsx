@@ -26,6 +26,7 @@ import { useToast } from '@/components/ui/toast'
 import { useCragRoutes } from '@/hooks/use-crag-routes'
 import { CragSelector } from '@/components/editor/crag-selector'
 import { preloadImage } from '@/lib/editor-utils'
+import { deriveAreas } from '@/lib/editor-areas'
 
 interface R2FaceInfo {
   faceId: string
@@ -171,11 +172,10 @@ export default function FaceManagementPage() {
 
   // ============ 派生数据 ============
   const selectedCrag = useMemo(() => crags.find(c => c.id === selectedCragId), [crags, selectedCragId])
-  const areas = useMemo(() => {
-    const routeAreas = routes.map(r => r.area).filter(Boolean)
-    const cragAreas = selectedCrag?.areas ?? []
-    return [...new Set([...cragAreas, ...routeAreas])].sort()
-  }, [routes, selectedCrag])
+  const areas = useMemo(
+    () => deriveAreas(routes, selectedCragId, selectedCrag),
+    [routes, selectedCrag, selectedCragId],
+  )
 
   const faceGroups = useMemo(() => {
     if (!selectedCragId) return []
@@ -318,7 +318,7 @@ export default function FaceManagementPage() {
     } finally {
       setIsUploading(false)
     }
-  }, [uploadedFile, selectedCragId, isCreating, newFaceId, selectedFace, showToast])
+  }, [uploadedFile, selectedCragId, isCreating, newFaceId, selectedFace, newArea, customArea, areas, updateCragAreas, showToast])
 
   const handleUpload = useCallback(async () => {
     if (!uploadedFile || !selectedCragId) return
@@ -349,7 +349,7 @@ export default function FaceManagementPage() {
     }
 
     await doUpload()
-  }, [uploadedFile, selectedCragId, isCreating, newFaceId, selectedFace, doUpload])
+  }, [uploadedFile, selectedCragId, isCreating, newFaceId, newArea, customArea, selectedFace, doUpload])
 
   // ============ 删除岩面 ============
   const handleDeleteFace = useCallback(async () => {

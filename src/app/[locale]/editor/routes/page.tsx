@@ -35,6 +35,7 @@ import { FullscreenTopoEditor } from '@/components/editor/fullscreen-topo-editor
 import { MultiTopoLineOverlay } from '@/components/multi-topo-line-overlay'
 import type { MultiTopoRoute } from '@/components/multi-topo-line-overlay'
 import { VIEW_WIDTH, VIEW_HEIGHT, GRADE_OPTIONS } from '@/lib/editor-utils'
+import { deriveAreas } from '@/lib/editor-areas'
 
 interface R2FaceInfo {
   faceId: string
@@ -142,11 +143,10 @@ export default function RouteAnnotationPage() {
   // ============ 派生数据 ============
   // 合并 crag.areas 与 route 派生 areas
   const selectedCrag = useMemo(() => crags.find(c => c.id === selectedCragId), [crags, selectedCragId])
-  const areas = useMemo(() => {
-    const routeAreas = routes.map(r => r.area).filter(Boolean)
-    const cragAreas = selectedCrag?.areas ?? []
-    return [...new Set([...cragAreas, ...routeAreas])].sort()
-  }, [routes, selectedCrag])
+  const areas = useMemo(
+    () => deriveAreas(routes, selectedCragId, selectedCrag),
+    [routes, selectedCrag, selectedCragId],
+  )
 
   // 按 area 筛选的 face 列表（右栏 face 选择器用）
   // 以 R2 返回的 face 数据为主（自带 area），再关联 routes
