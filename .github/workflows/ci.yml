@@ -6,10 +6,10 @@ on:
   pull_request:
     branches: [main, dev]
 
-# 取消同一 PR 的旧运行，节省资源
+# 取消同一 PR 的旧运行，节省资源（main 分支除外）
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   # ============================================
