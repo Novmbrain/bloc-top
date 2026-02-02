@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { Link2, Ruler, MoveHorizontal, Check, AlertCircle } from 'lucide-react'
+import { Link2, User, Ruler, MoveHorizontal, Check, AlertCircle } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { detectPlatformFromUrl, isXiaohongshuUrl, extractUrlFromText, BETA_PLATFORMS } from '@/lib/beta-constants'
@@ -27,15 +27,17 @@ export function BetaSubmitDrawer({
   const tApiError = useTranslations('APIError')
   const { bodyData, updateBodyData } = useClimberBodyData()
   const [url, setUrl] = useState('')
+  const [nickname, setNickname] = useState('')
   const [height, setHeight] = useState('')
   const [reach, setReach] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  // 抽屉打开时，用缓存的身体数据预填充表单
+  // 抽屉打开时，用缓存数据预填充表单
   useEffect(() => {
     if (isOpen) {
+      setNickname(localStorage.getItem('beta_nickname') || '')
       setHeight(bodyData.height)
       setReach(bodyData.reach)
     }
@@ -78,6 +80,7 @@ export function BetaSubmitDrawer({
   // 重置表单
   const resetForm = useCallback(() => {
     setUrl('')
+    setNickname('')
     setHeight('')
     setReach('')
     setError(null)
@@ -113,6 +116,7 @@ export function BetaSubmitDrawer({
         body: JSON.stringify({
           routeId,
           url: url.startsWith('http') ? url : `https://${url}`,
+          author: nickname.trim() || undefined,
           climberHeight: height ? parseInt(height, 10) : undefined,
           climberReach: reach ? parseInt(reach, 10) : undefined,
         }),
@@ -127,7 +131,8 @@ export function BetaSubmitDrawer({
       }
 
       setSuccess(true)
-      // 提交成功后缓存身高和臂长数据
+      // 提交成功后缓存昵称和身体数据
+      if (nickname.trim()) localStorage.setItem('beta_nickname', nickname.trim())
       updateBodyData({ height, reach })
       setTimeout(() => {
         handleClose()
@@ -219,6 +224,35 @@ export function BetaSubmitDrawer({
               {t('urlDetected', { platform: platformInfo.name })}
             </div>
           )}
+        </div>
+
+        {/* 昵称（可选） */}
+        <div>
+          <label
+            className="text-sm font-medium mb-2 block"
+            style={{ color: 'var(--theme-on-surface)' }}
+          >
+            {t('nicknameLabel')} <span className="text-xs font-normal" style={{ color: 'var(--theme-on-surface-variant)' }}>{t('nicknameOptional')}</span>
+          </label>
+          <div className="relative">
+            <User
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
+              style={{ color: 'var(--theme-on-surface-variant)' }}
+            />
+            <Input
+              variant="unstyled"
+              value={nickname}
+              onChange={setNickname}
+              placeholder={t('nicknamePlaceholder')}
+              className="w-full pl-10 pr-4 py-3 text-sm outline-none"
+              style={{
+                backgroundColor: 'var(--theme-surface-variant)',
+                borderRadius: 'var(--theme-radius-lg)',
+                color: 'var(--theme-on-surface)',
+              }}
+              disabled={isSubmitting || success}
+            />
+          </div>
         </div>
 
         {/* 身体数据（可选） */}

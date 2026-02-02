@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     // ==================== 2. 请求验证 ====================
     const body = await request.json()
-    const { routeId, url: rawUrl, climberHeight, climberReach } = body
+    const { routeId, url: rawUrl, author, climberHeight, climberReach } = body
 
     // 验证必填字段
     if (!routeId || !rawUrl) {
@@ -202,6 +202,7 @@ export async function POST(request: NextRequest) {
       noteId, // 存储笔记 ID 用于去重
       url: resolvedUrl,
       originalUrl: url !== resolvedUrl ? url : undefined,
+      ...(author && typeof author === 'string' && { author: author.trim().slice(0, 30) }),
       ...(climberHeight && { climberHeight }),
       ...(climberReach && { climberReach }),
       createdAt: new Date(),
