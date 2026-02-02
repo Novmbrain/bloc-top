@@ -81,9 +81,8 @@ export const TopoLineOverlay = forwardRef<TopoLineOverlayRef, TopoLineOverlayPro
     // 生成贝塞尔曲线路径
     const pathData = useMemo(() => bezierCurve(scaledPoints), [scaledPoints])
 
-    // 起点和终点
+    // 起点
     const startPoint = scaledPoints[0]
-    const endPoint = scaledPoints[scaledPoints.length - 1]
 
     // 画线动画函数
     const animate = useCallback(() => {
@@ -181,15 +180,7 @@ export const TopoLineOverlay = forwardRef<TopoLineOverlayRef, TopoLineOverlayPro
           }}
         />
 
-        {/* 终点 */}
-        <circle
-          cx={endPoint.x}
-          cy={endPoint.y}
-          r={TOPO_MARKER_CONFIG.endRadius}
-          fill="white"
-          stroke={color}
-          strokeWidth={TOPO_MARKER_CONFIG.endStrokeWidth}
-        />
+
       </svg>
     )
   }

@@ -80,7 +80,7 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
 
     // 预计算所有线路的路径数据
     const routePathData = useMemo(() => {
-      const map = new Map<number, { path: string; start: TopoPoint; end: TopoPoint }>()
+      const map = new Map<number, { path: string; start: TopoPoint }>()
 
       routes.forEach(route => {
         if (route.topoLine.length < 2) return
@@ -89,7 +89,6 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
         map.set(route.id, {
           path: bezierCurve(scaledPoints),
           start: scaledPoints[0],
-          end: scaledPoints[scaledPoints.length - 1],
         })
       })
 
@@ -274,15 +273,7 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
               }}
             />
 
-            {/* 终点 */}
-            <circle
-              cx={selectedData.end.x}
-              cy={selectedData.end.y}
-              r={TOPO_MARKER_CONFIG.endRadius}
-              fill="white"
-              stroke={selectedColor}
-              strokeWidth={TOPO_MARKER_CONFIG.endStrokeWidth}
-            />
+
           </g>
         )}
       </svg>
