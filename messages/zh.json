@@ -382,6 +382,8 @@
     "ROUTE_NOT_FOUND": "线路不存在",
     "DUPLICATE_BETA": "该视频已被分享过啦～",
     "UPDATE_FAILED": "更新失败，请重试",
+    "MISSING_BETA_ID": "缺少 Beta ID",
+    "BETA_NOT_FOUND": "未找到该 Beta",
     "UNKNOWN": "发生未知错误"
   }
 }

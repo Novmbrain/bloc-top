@@ -224,7 +224,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   return (
     <>
       <div
-        className="flex flex-col h-screen overflow-hidden"
+        className="flex flex-col h-dvh overflow-hidden"
         style={{
           backgroundColor: 'var(--theme-surface)',
           transition: 'var(--theme-transition)',

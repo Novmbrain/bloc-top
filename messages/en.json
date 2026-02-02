@@ -382,6 +382,8 @@
     "ROUTE_NOT_FOUND": "Route not found",
     "DUPLICATE_BETA": "This video has already been shared!",
     "UPDATE_FAILED": "Update failed, please retry",
+    "MISSING_BETA_ID": "Missing beta ID",
+    "BETA_NOT_FOUND": "Beta not found",
     "UNKNOWN": "An unknown error occurred"
   }
 }
