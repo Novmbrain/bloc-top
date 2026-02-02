@@ -78,7 +78,7 @@ function FaceThumbnail({ src, alt }: { src: string; alt: string }) {
  */
 export default function FaceManagementPage() {
   const {
-    crags, routes, selectedCragId, setSelectedCragId,
+    crags, routes, setRoutes, selectedCragId, setSelectedCragId,
     isLoadingCrags, isLoadingRoutes, stats, updateCragAreas,
   } = useCragRoutes()
 
@@ -416,8 +416,12 @@ export default function FaceManagementPage() {
       if (!res.ok) throw new Error(data.error || '重命名失败')
 
       // 更新本地状态
+      const oldFaceId = selectedFace.faceId
       setR2Faces(prev => prev.map(f =>
-        f.faceId === selectedFace.faceId ? { ...f, faceId: newFaceId } : f
+        f.faceId === oldFaceId ? { ...f, faceId: newFaceId } : f
+      ))
+      setRoutes(prev => prev.map(r =>
+        r.faceId === oldFaceId ? { ...r, faceId: newFaceId } : r
       ))
       setSelectedFace(prev => prev ? {
         ...prev,
@@ -436,7 +440,7 @@ export default function FaceManagementPage() {
     } finally {
       setIsSubmittingRename(false)
     }
-  }, [selectedFace, selectedCragId, renameValue, showToast])
+  }, [selectedFace, selectedCragId, renameValue, showToast, setRoutes])
 
   // ============ 左栏：岩面列表 ============
   const leftPanel = (

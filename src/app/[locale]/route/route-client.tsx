@@ -3,15 +3,14 @@
 import { useMemo, useCallback, useState, useTransition, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { ChevronRight, ArrowUp, ArrowDown, X } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { getGradeColor } from '@/lib/tokens'
 import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, type SortDirection } from '@/lib/filter-constants'
 import { compareGrades } from '@/lib/grade-utils'
 import { getSiblingRoutes } from '@/lib/route-utils'
 import { matchRouteByQuery } from '@/hooks/use-route-search'
-import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
 import { GradeRangeSelectorVertical } from '@/components/grade-range-selector-vertical'
-import { FaceThumbnailStrip } from '@/components/face-thumbnail-strip'
+import { RouteFilterBar } from '@/components/route-filter-bar'
 import { FloatingSearchInput } from '@/components/floating-search-input'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
 import { AppTabbar } from '@/components/app-tabbar'
@@ -231,40 +230,25 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
           transition: 'var(--theme-transition)',
         }}
       >
-        {/* 顶部 filter 区域 — 全宽 */}
-        <header className="flex-shrink-0 pt-6 px-4 pb-2">
-          <FilterChipGroup>
-            <FilterChip
-              label={tCommon('all')}
-              selected={!selectedCrag}
-              onClick={() => handleCragSelect('')}
-            />
-            {crags.map((crag) => (
-              <FilterChip
-                key={crag.id}
-                label={crag.name}
-                selected={selectedCrag === crag.id}
-                onClick={() => handleCragSelect(crag.id)}
-              />
-            ))}
-          </FilterChipGroup>
-        </header>
-
-        {/* 岩面缩略图 — 全宽 */}
-        {selectedCrag ? (
-          <FaceThumbnailStrip
-            selectedCrag={selectedCrag}
-            selectedFace={selectedFace}
-            onFaceSelect={handleFaceSelect}
-          />
-        ) : (
-          <p
-            className="px-4 pb-2 text-xs"
-            style={{ color: 'var(--theme-on-surface-variant)', opacity: 0.6 }}
-          >
-            {t('faceHint')}
-          </p>
-        )}
+        {/* 顶部筛选栏 — 全宽 */}
+        <RouteFilterBar
+          crags={crags}
+          selectedCrag={selectedCrag}
+          onCragSelect={handleCragSelect}
+          selectedFace={selectedFace}
+          onFaceSelect={handleFaceSelect}
+          sortDirection={sortDirection}
+          onToggleSort={toggleSortDirection}
+          filteredCount={filteredRoutes.length}
+          activeFilterTags={activeFilterTags}
+          allLabel={tCommon('all')}
+          totalCountLabel={t('totalCount', { count: filteredRoutes.length })}
+          sortAscLabel={t('sortAsc')}
+          sortDescLabel={t('sortDesc')}
+          sortAscHint={t('sortAscHint')}
+          sortDescHint={t('sortDescHint')}
+          faceHintLabel={t('faceHint')}
+        />
 
         {/* 中间内容区 — flex row */}
         <div className="flex flex-1 min-h-0">
@@ -282,56 +266,6 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
 
           {/* 右侧线路列表 */}
           <main className="flex-1 overflow-y-auto px-4 pb-36">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                {t('totalCount', { count: filteredRoutes.length })}
-              </p>
-              {/* 排序切换按钮 */}
-              <button
-                onClick={toggleSortDirection}
-                className="flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors"
-                style={{
-                  color: 'var(--theme-on-surface-variant)',
-                  backgroundColor: 'var(--theme-surface-variant)',
-                  borderRadius: 'var(--theme-radius-full)',
-                }}
-                aria-label={sortDirection === 'asc' ? t('sortAscHint') : t('sortDescHint')}
-              >
-                {sortDirection === 'asc' ? (
-                  <>
-                    <ArrowUp className="w-3 h-3" />
-                    <span>{t('sortAsc')}</span>
-                  </>
-                ) : (
-                  <>
-                    <ArrowDown className="w-3 h-3" />
-                    <span>{t('sortDesc')}</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* ❷ Active filter tags */}
-            {activeFilterTags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {activeFilterTags.map((tag) => (
-                  <button
-                    key={tag.label}
-                    onClick={tag.onRemove}
-                    className="flex items-center gap-1 px-2 py-0.5 text-xs transition-all active:scale-95"
-                    style={{
-                      color: 'var(--theme-primary)',
-                      backgroundColor: 'color-mix(in srgb, var(--theme-primary) 10%, transparent)',
-                      borderRadius: 'var(--theme-radius-full)',
-                    }}
-                  >
-                    <span className="max-w-24 truncate">{tag.label}</span>
-                    <X className="w-3 h-3 flex-shrink-0 opacity-60" />
-                  </button>
-                ))}
-              </div>
-            )}
-
             <div className="space-y-2">
               {filteredRoutes.map((route, index) => (
                 <button
