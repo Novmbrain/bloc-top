@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { deriveAreas } from './editor-areas'
+import { deriveAreas, getPersistedAreas } from './editor-areas'
 import type { Route, Crag } from '@/types'
 
 function makeRoute(overrides: Partial<Route> & { cragId: string; area: string }): Route {
@@ -84,5 +84,21 @@ describe('deriveAreas', () => {
   it('returns crag.areas even when routes is empty', () => {
     const crag = makeCrag({ id: 'c1', areas: ['预设区域'] })
     expect(deriveAreas([], 'c1', crag)).toEqual(['预设区域'])
+  })
+})
+
+describe('getPersistedAreas', () => {
+  it('returns crag.areas when available', () => {
+    const crag = makeCrag({ id: 'c1', areas: ['区域A', '区域B'] })
+    expect(getPersistedAreas(crag)).toEqual(['区域A', '区域B'])
+  })
+
+  it('returns empty array when crag has no areas', () => {
+    const crag = makeCrag({ id: 'c1' })
+    expect(getPersistedAreas(crag)).toEqual([])
+  })
+
+  it('returns empty array when crag is undefined', () => {
+    expect(getPersistedAreas(undefined)).toEqual([])
   })
 })

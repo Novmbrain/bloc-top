@@ -26,7 +26,7 @@ import { useToast } from '@/components/ui/toast'
 import { useCragRoutes } from '@/hooks/use-crag-routes'
 import { CragSelector } from '@/components/editor/crag-selector'
 import { preloadImage } from '@/lib/editor-utils'
-import { deriveAreas } from '@/lib/editor-areas'
+import { deriveAreas, getPersistedAreas } from '@/lib/editor-areas'
 
 interface R2FaceInfo {
   faceId: string
@@ -176,6 +176,8 @@ export default function FaceManagementPage() {
     () => deriveAreas(routes, selectedCragId, selectedCrag),
     [routes, selectedCrag, selectedCragId],
   )
+  // 仅持久化的 areas（用于写入 DB 时的基础，避免将 route 派生 area 意外持久化）
+  const persistedAreas = useMemo(() => getPersistedAreas(selectedCrag), [selectedCrag])
 
   const faceGroups = useMemo(() => {
     if (!selectedCragId) return []
@@ -294,9 +296,9 @@ export default function FaceManagementPage() {
       if (isCreating) {
         // 将新上传的 faceId 加入 R2 列表使其立即可见
         const area = newArea === '__custom__' ? customArea : newArea
-        // 如果是新区域，同步到 crag.areas
-        if (area && selectedCragId && !areas.includes(area)) {
-          const merged = [...new Set([...areas, area])].sort()
+        // 如果是新区域，同步到 crag.areas（仅基于持久化 areas，避免 route 派生 area 泄漏）
+        if (area && selectedCragId && !persistedAreas.includes(area)) {
+          const merged = [...new Set([...persistedAreas, area])].sort()
           updateCragAreas(selectedCragId, merged).catch(() => {})
         }
         setR2Faces(prev => prev.some(f => f.faceId === faceId) ? prev : [...prev, { faceId, area }])
@@ -318,7 +320,7 @@ export default function FaceManagementPage() {
     } finally {
       setIsUploading(false)
     }
-  }, [uploadedFile, selectedCragId, isCreating, newFaceId, selectedFace, newArea, customArea, areas, updateCragAreas, showToast])
+  }, [uploadedFile, selectedCragId, isCreating, newFaceId, selectedFace, newArea, customArea, persistedAreas, updateCragAreas, showToast])
 
   const handleUpload = useCallback(async () => {
     if (!uploadedFile || !selectedCragId) return
@@ -484,7 +486,7 @@ export default function FaceManagementPage() {
                 onKeyDown={async (e) => {
                   if (e.key === 'Enter' && newAreaName.trim() && selectedCragId) {
                     const name = newAreaName.trim()
-                    const merged = [...new Set([...areas, name])].sort()
+                    const merged = [...new Set([...persistedAreas, name])].sort()
                     try {
                       await updateCragAreas(selectedCragId, merged)
                       showToast(`区域「${name}」已创建`, 'success', 3000)
@@ -501,7 +503,7 @@ export default function FaceManagementPage() {
                 onBlur={async () => {
                   if (newAreaName.trim() && selectedCragId) {
                     const name = newAreaName.trim()
-                    const merged = [...new Set([...areas, name])].sort()
+                    const merged = [...new Set([...persistedAreas, name])].sort()
                     try {
                       await updateCragAreas(selectedCragId, merged)
                       showToast(`区域「${name}」已创建`, 'success', 3000)
