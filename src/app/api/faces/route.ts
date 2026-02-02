@@ -151,13 +151,15 @@ export async function PATCH(request: NextRequest) {
     }
 
     const client = getS3Client()
-    const oldKey = `${cragId}/${area}/${encodeURIComponent(oldFaceId)}.jpg`
-    const newKey = `${cragId}/${area}/${encodeURIComponent(newFaceId)}.jpg`
+    const oldKey = `${cragId}/${area}/${oldFaceId}.jpg`
+    const newKey = `${cragId}/${area}/${newFaceId}.jpg`
 
     // 1. 复制到新 key
+    // CopySource 需要对 key 中的非 ASCII 字符进行 URI 编码
+    const encodedOldKey = oldKey.split('/').map(s => encodeURIComponent(s)).join('/')
     await client.send(new CopyObjectCommand({
       Bucket: bucketName,
-      CopySource: `${bucketName}/${oldKey}`,
+      CopySource: `${bucketName}/${encodedOldKey}`,
       Key: newKey,
       ContentType: 'image/jpeg',
     }))
