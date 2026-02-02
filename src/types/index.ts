@@ -53,6 +53,7 @@ export interface Crag {
   coverImages?: string[]
   coordinates?: Coordinates     // 岩场坐标 (用于地图标记)
   approachPaths?: ApproachPath[] // 接近路径 (用于 KML 导入)
+  areas?: string[]               // 持久化的区域列表
 }
 
 // 评论数据类型

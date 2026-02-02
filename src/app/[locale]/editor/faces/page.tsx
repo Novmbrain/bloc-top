@@ -77,7 +77,7 @@ function FaceThumbnail({ src, alt }: { src: string; alt: string }) {
 export default function FaceManagementPage() {
   const {
     crags, routes, selectedCragId, setSelectedCragId,
-    isLoadingCrags, isLoadingRoutes, stats,
+    isLoadingCrags, isLoadingRoutes, stats, updateCragAreas,
   } = useCragRoutes()
 
   // ============ R2 上已有的 face 列表 ============
@@ -108,6 +108,8 @@ export default function FaceManagementPage() {
   const [isRenaming, setIsRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
   const [isSubmittingRename, setIsSubmittingRename] = useState(false)
+  const [isAddingArea, setIsAddingArea] = useState(false)
+  const [newAreaName, setNewAreaName] = useState('')
 
   // ============ Refs ============
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -165,9 +167,12 @@ export default function FaceManagementPage() {
   }, [])
 
   // ============ 派生数据 ============
-  const areas = useMemo(() =>
-    [...new Set(routes.map(r => r.area).filter(Boolean))].sort()
-  , [routes])
+  const selectedCrag = useMemo(() => crags.find(c => c.id === selectedCragId), [crags, selectedCragId])
+  const areas = useMemo(() => {
+    const routeAreas = routes.map(r => r.area).filter(Boolean)
+    const cragAreas = selectedCrag?.areas ?? []
+    return [...new Set([...cragAreas, ...routeAreas])].sort()
+  }, [routes, selectedCrag])
 
   const faceGroups = useMemo(() => {
     if (!selectedCragId) return []
@@ -275,6 +280,11 @@ export default function FaceManagementPage() {
       if (isCreating) {
         // 将新上传的 faceId 加入 R2 列表使其立即可见
         const area = newArea === '__custom__' ? customArea : newArea
+        // 如果是新区域，同步到 crag.areas
+        if (area && selectedCragId && !areas.includes(area)) {
+          const merged = [...new Set([...areas, area])].sort()
+          updateCragAreas(selectedCragId, merged).catch(() => {})
+        }
         setR2Faces(prev => prev.some(f => f.faceId === faceId) ? prev : [...prev, { faceId, area }])
         const newFace: FaceGroup = {
           faceId,
@@ -450,6 +460,66 @@ export default function FaceManagementPage() {
                 {area}
               </button>
             ))}
+            {isAddingArea ? (
+              <Input
+                autoFocus
+                variant="unstyled"
+                themed={false}
+                value={newAreaName}
+                onChange={setNewAreaName}
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter' && newAreaName.trim() && selectedCragId) {
+                    const name = newAreaName.trim()
+                    const merged = [...new Set([...areas, name])].sort()
+                    try {
+                      await updateCragAreas(selectedCragId, merged)
+                      showToast(`区域「${name}」已创建`, 'success', 3000)
+                    } catch {
+                      showToast('创建区域失败', 'error', 3000)
+                    }
+                    setNewAreaName('')
+                    setIsAddingArea(false)
+                  } else if (e.key === 'Escape') {
+                    setNewAreaName('')
+                    setIsAddingArea(false)
+                  }
+                }}
+                onBlur={async () => {
+                  if (newAreaName.trim() && selectedCragId) {
+                    const name = newAreaName.trim()
+                    const merged = [...new Set([...areas, name])].sort()
+                    try {
+                      await updateCragAreas(selectedCragId, merged)
+                      showToast(`区域「${name}」已创建`, 'success', 3000)
+                    } catch {
+                      showToast('创建区域失败', 'error', 3000)
+                    }
+                  }
+                  setNewAreaName('')
+                  setIsAddingArea(false)
+                }}
+                className="px-3 py-2 rounded-full text-sm font-medium outline-none min-w-[80px]"
+                style={{
+                  backgroundColor: 'var(--theme-surface)',
+                  color: 'var(--theme-on-surface)',
+                  border: '2px solid var(--theme-primary)',
+                }}
+                placeholder="区域名…"
+              />
+            ) : (
+              <button
+                onClick={() => setIsAddingArea(true)}
+                className="px-3 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 flex items-center gap-1"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: 'var(--theme-primary)',
+                  border: '1.5px dashed var(--theme-primary)',
+                }}
+              >
+                <Plus className="w-4 h-4" />
+                <span className="text-sm font-medium">新增区域</span>
+              </button>
+            )}
           </div>
 
           {/* 岩面列表 */}
@@ -610,6 +680,7 @@ export default function FaceManagementPage() {
                 <Upload className="w-10 h-10 mb-3" style={{ color: 'var(--theme-on-surface-variant)' }} />
                 <p className="font-medium mb-1" style={{ color: 'var(--theme-on-surface)' }}>上传岩面照片</p>
                 <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>拖拽或点击选择</p>
+                {/* eslint-disable-next-line no-restricted-syntax -- type="file" is not a text input */}
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
               </div>
             ) : (
@@ -756,6 +827,7 @@ export default function FaceManagementPage() {
               >
                 <Upload className="w-8 h-8 mb-2" style={{ color: 'var(--theme-on-surface-variant)' }} />
                 <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>拖拽或点击选择新照片</p>
+                {/* eslint-disable-next-line no-restricted-syntax -- type="file" is not a text input */}
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
               </div>
             ) : (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import type { Crag, Route } from '@/types'
 
 /**
@@ -69,6 +69,20 @@ export function useCragRoutes() {
     }
   }, [routes])
 
+  // 更新指定岩场的 areas 并同步本地状态
+  const updateCragAreas = useCallback(async (cragId: string, areas: string[]) => {
+    const res = await fetch(`/api/crags/${cragId}/areas`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ areas }),
+    })
+    if (!res.ok) throw new Error('更新区域失败')
+    const data = await res.json()
+    const savedAreas: string[] = data.areas
+    setCrags(prev => prev.map(c => c.id === cragId ? { ...c, areas: savedAreas } : c))
+    return savedAreas
+  }, [])
+
   return {
     crags,
     routes,
@@ -78,5 +92,6 @@ export function useCragRoutes() {
     isLoadingCrags,
     isLoadingRoutes,
     stats,
+    updateCragAreas,
   }
 }

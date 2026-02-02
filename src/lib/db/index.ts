@@ -287,6 +287,45 @@ export async function createRoute(
   }
 }
 
+/**
+ * 更新岩场的区域列表
+ */
+export async function updateCragAreas(cragId: string, areas: string[]): Promise<string[]> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const result = await db.collection('crags').findOneAndUpdate(
+      { _id: toMongoId(cragId) },
+      { $set: { areas, updatedAt: new Date() } },
+      { returnDocument: 'after' }
+    )
+
+    if (!result) {
+      log.info(`Crag not found for areas update: ${cragId}`, {
+        action: 'updateCragAreas',
+        duration: Date.now() - start,
+      })
+      return areas
+    }
+
+    log.info(`Updated crag areas: ${cragId}`, {
+      action: 'updateCragAreas',
+      duration: Date.now() - start,
+      metadata: { cragId, areaCount: areas.length },
+    })
+
+    return (result.areas as string[]) || areas
+  } catch (error) {
+    log.error(`Failed to update crag areas: ${cragId}`, error, {
+      action: 'updateCragAreas',
+      duration: Date.now() - start,
+      metadata: { cragId },
+    })
+    throw error
+  }
+}
+
 // ============ Feedback 相关操作 ============
 
 /**

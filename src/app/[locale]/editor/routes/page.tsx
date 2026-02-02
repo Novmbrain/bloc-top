@@ -55,7 +55,7 @@ interface FaceGroup {
 export default function RouteAnnotationPage() {
   const {
     crags, routes, setRoutes, selectedCragId, setSelectedCragId,
-    isLoadingCrags, isLoadingRoutes, stats,
+    isLoadingCrags, isLoadingRoutes, stats, updateCragAreas,
   } = useCragRoutes()
 
   // ============ R2 上已有的 face 列表 ============
@@ -140,10 +140,13 @@ export default function RouteAnnotationPage() {
   }, [])
 
   // ============ 派生数据 ============
-  // 提取所有 area
+  // 合并 crag.areas 与 route 派生 areas
+  const selectedCrag = useMemo(() => crags.find(c => c.id === selectedCragId), [crags, selectedCragId])
   const areas = useMemo(() => {
-    return [...new Set(routes.map(r => r.area).filter(Boolean))].sort()
-  }, [routes])
+    const routeAreas = routes.map(r => r.area).filter(Boolean)
+    const cragAreas = selectedCrag?.areas ?? []
+    return [...new Set([...cragAreas, ...routeAreas])].sort()
+  }, [routes, selectedCrag])
 
   // 按 area 筛选的 face 列表（右栏 face 选择器用）
   // 以 R2 返回的 face 数据为主（自带 area），再关联 routes
@@ -320,6 +323,13 @@ export default function RouteAnnotationPage() {
       setRoutes((prev) => prev.map((r) => (r.id === selectedRoute.id ? data.route : r)))
       setSelectedRoute(data.route)
 
+      // 如果区域是新的，同步到 crag.areas
+      const savedArea = editedRoute.area?.trim()
+      if (savedArea && selectedCragId && !areas.includes(savedArea)) {
+        const merged = [...new Set([...areas, savedArea])].sort()
+        updateCragAreas(selectedCragId, merged).catch(() => {})
+      }
+
       showToast('线路信息保存成功！', 'success', 3000)
       setTimeout(() => setSaveSuccess(false), 2000)
     } catch (error) {
@@ -329,7 +339,7 @@ export default function RouteAnnotationPage() {
     } finally {
       setIsSaving(false)
     }
-  }, [selectedRoute, editedRoute, topoLine, selectedFaceId, setRoutes, showToast])
+  }, [selectedRoute, editedRoute, topoLine, selectedFaceId, setRoutes, showToast, areas, selectedCragId, updateCragAreas])
 
   // ============ 新增线路逻辑 ============
   const handleStartCreate = useCallback(() => {
@@ -360,13 +370,21 @@ export default function RouteAnnotationPage() {
       setRoutes(prev => [...prev, created])
       setIsCreatingRoute(false)
       setSelectedRoute(created)
+
+      // 如果区域是新的，同步到 crag.areas
+      const createdArea = newRoute.area.trim()
+      if (createdArea && selectedCragId && !areas.includes(createdArea)) {
+        const merged = [...new Set([...areas, createdArea])].sort()
+        updateCragAreas(selectedCragId, merged).catch(() => {})
+      }
+
       showToast(`线路「${created.name}」创建成功！`, 'success', 3000)
     } catch (error) {
       showToast(error instanceof Error ? error.message : '创建失败', 'error', 4000)
     } finally {
       setIsSubmittingCreate(false)
     }
-  }, [selectedCragId, newRoute, setRoutes, showToast])
+  }, [selectedCragId, newRoute, setRoutes, showToast, areas, updateCragAreas])
 
   const handleCancelCreate = useCallback(() => {
     setIsCreatingRoute(false)
