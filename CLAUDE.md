@@ -510,6 +510,37 @@ import AMapContainer from '@/components/amap-container'
 - R2 图片缓存 30 天，最多 200 张
 - 图片域名: `img.bouldering.top` (Cloudflare R2)
 
+## R2 Key 与中文编码规则
+
+> ⚠️ 曾因编码不一致导致多次线上 bug，新增 R2 相关代码时必须遵守以下规则。
+
+| 场景 | 编码方式 | 示例 |
+|------|---------|------|
+| **R2 Key 存储** (`Key` 参数) | **不编码**，使用原始 UTF-8 | `cragId/区域A/岩面1.jpg` |
+| **路径净化** (防注入) | `sanitizePathSegment()` | 保留中文，移除 `../` 等危险字符 |
+| **公共图片 URL** | `encodeURIComponent` | `img.bouldering.top/cragId/%E5%8C%BA%E5%9F%9FA/%E5%B2%A9%E9%9D%A21.jpg` |
+| **S3 `CopySource`** | 按段 `encodeURIComponent` | `bucket/cragId/%E5%8C%BA%E5%9F%9FA/%E5%B2%A9%E9%9D%A21.jpg` |
+| **URL 查询参数** | `encodeURIComponent` | `?cragId=xxx&area=%E5%8C%BA%E5%9F%9FA` |
+| **R2 列表解析** | `decodeURIComponent` (try-catch) | 兼容旧的双重编码 key |
+
+**核心原则**: Cloudflare 公共域名 (`img.bouldering.top`) 会自动解码 URL 路径，所以 R2 Key 必须存储为原始 Unicode。若存为 percent-encoded 字符串，CDN URL 解码后找不到对应 key → 404。
+
+```typescript
+// ✅ 正确 — R2 Key 原始存储
+const key = `${cragId}/${area}/${faceId}.jpg`
+await s3.send(new PutObjectCommand({ Bucket, Key: key, Body: file }))
+
+// ✅ 正确 — CopySource 需要编码 (S3 HTTP 头不支持非 ASCII)
+const encoded = key.split('/').map(s => encodeURIComponent(s)).join('/')
+await s3.send(new CopyObjectCommand({ Bucket, CopySource: `${Bucket}/${encoded}`, Key: newKey }))
+
+// ✅ 正确 — 公共 URL 编码
+const url = `${IMAGE_BASE_URL}/${cragId}/${encodeURIComponent(faceId)}.jpg`
+
+// ❌ 错误 — R2 Key 不应编码
+const key = `${cragId}/${encodeURIComponent(faceId)}.jpg`  // 会导致双重编码
+```
+
 ## API Routes
 
 | 方法 | 路径 | 说明 |
