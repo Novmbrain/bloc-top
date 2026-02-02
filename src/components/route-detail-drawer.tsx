@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { MapPin, User, Wrench, Video, ImageIcon, ZoomIn } from 'lucide-react'
+import { MapPin, User, Wrench, Video, ImageIcon, ZoomIn, Eye, EyeOff } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
 import { BetaListDrawer } from '@/components/beta-list-drawer'
@@ -48,6 +48,9 @@ export function RouteDetailDrawer({
   // 本地 Beta 数据状态，用于绕过 ISR 缓存实现即时更新
   const [localBetaLinks, setLocalBetaLinks] = useState<BetaLink[] | null>(null)
 
+  // 是否显示同岩面的其他线路
+  const [showOtherRoutes, setShowOtherRoutes] = useState(true)
+
   // Topo 线路 overlay refs (用于触发动画)
   const drawerOverlayRef = useRef<TopoLineOverlayRef>(null)
   const fullscreenOverlayRef = useRef<TopoLineOverlayRef>(null)
@@ -79,8 +82,11 @@ export function RouteDetailDrawer({
       }))
   }, [siblingRoutes])
 
-  // 是否使用多线路模式
-  const useMultiLineMode = validSiblingRoutes.length > 1 && hasTopoLine
+  // 是否有可用的多线路数据
+  const hasMultiLines = validSiblingRoutes.length > 1 && hasTopoLine
+
+  // 是否使用多线路模式（受用户切换控制）
+  const useMultiLineMode = hasMultiLines && showOtherRoutes
 
   // 当线路变化时重置状态
   useEffect(() => {
@@ -222,6 +228,27 @@ export function RouteDetailDrawer({
                       animated
                     />
                   )
+                )}
+
+                {/* 多线路切换按钮（图片右上角） */}
+                {!imageLoading && hasMultiLines && (
+                  <button
+                    className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-black/50 backdrop-blur-sm transition-all active:scale-95"
+                    style={{ borderRadius: 'var(--theme-radius-md)', pointerEvents: 'auto', zIndex: 10 }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowOtherRoutes(prev => !prev)
+                    }}
+                    aria-label={showOtherRoutes ? t('hideOtherRoutes') : t('showOtherRoutes')}
+                  >
+                    {showOtherRoutes
+                      ? <Eye className="w-3.5 h-3.5 text-white" />
+                      : <EyeOff className="w-3.5 h-3.5 text-white/60" />
+                    }
+                    <span className={`text-xs ${showOtherRoutes ? 'text-white' : 'text-white/60'}`}>
+                      {validSiblingRoutes.length - 1}
+                    </span>
+                  </button>
                 )}
 
                 {/* 放大提示（图片加载完成后显示） */}
@@ -429,12 +456,27 @@ export function RouteDetailDrawer({
           src={topoImageUrl}
           alt={route.name}
           topSlot={
-            <div className="absolute top-12 left-4 right-4 z-10">
+            <div className="absolute top-12 left-4 right-4 z-10 flex items-start justify-between">
               <ContextualHint
                 hintKey="topo-pinch-zoom"
                 message={tIntro('hintPinchZoom')}
                 icon={<ZoomIn className="w-3.5 h-3.5" />}
               />
+              {hasMultiLines && (
+                <button
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/50 backdrop-blur-sm transition-all active:scale-95"
+                  style={{ borderRadius: 'var(--theme-radius-md)' }}
+                  onClick={() => setShowOtherRoutes(prev => !prev)}
+                >
+                  {showOtherRoutes
+                    ? <Eye className="w-4 h-4 text-white" />
+                    : <EyeOff className="w-4 h-4 text-white/60" />
+                  }
+                  <span className={`text-xs ${showOtherRoutes ? 'text-white' : 'text-white/60'}`}>
+                    {validSiblingRoutes.length - 1}
+                  </span>
+                </button>
+              )}
             </div>
           }
         >

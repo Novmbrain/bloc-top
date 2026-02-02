@@ -91,7 +91,9 @@
     "tapToZoom": "Tap to zoom",
     "imageLoadFailed": "Image failed to load",
     "comments": "Comments",
-    "commentsComingSoon": "Comments coming soon..."
+    "commentsComingSoon": "Comments coming soon...",
+    "showOtherRoutes": "Show other routes",
+    "hideOtherRoutes": "Current route only"
   },
   "Weather": {
     "title": "Weather",

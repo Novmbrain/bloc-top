@@ -91,7 +91,9 @@
     "tapToZoom": "点击放大",
     "imageLoadFailed": "图片加载失败",
     "comments": "评论",
-    "commentsComingSoon": "评论功能开发中..."
+    "commentsComingSoon": "评论功能开发中...",
+    "showOtherRoutes": "显示其他线路",
+    "hideOtherRoutes": "仅看当前线路"
   },
   "Weather": {
     "title": "天气",

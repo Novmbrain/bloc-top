@@ -91,7 +91,9 @@
     "tapToZoom": "Appuyez pour zoomer",
     "imageLoadFailed": "Échec du chargement de l'image",
     "comments": "Commentaires",
-    "commentsComingSoon": "Commentaires bientôt disponibles..."
+    "commentsComingSoon": "Commentaires bientôt disponibles...",
+    "showOtherRoutes": "Afficher les autres voies",
+    "hideOtherRoutes": "Voie actuelle uniquement"
   },
   "Weather": {
     "title": "Météo",
