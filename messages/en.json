@@ -68,7 +68,9 @@
     "sortDesc": "Hard→Easy",
     "sortAscHint": "Currently: Easy to Hard, tap to reverse",
     "sortDescHint": "Currently: Hard to Easy, tap to reverse",
-    "totalCount": "{count, plural, =1 {# route total} other {# routes total}}"
+    "totalCount": "{count, plural, =1 {# route total} other {# routes total}}",
+    "clearFilters": "Clear all filters",
+    "faceHint": "Select a crag to filter by rock face"
   },
   "RouteDetail": {
     "grade": "Grade",

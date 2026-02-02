@@ -68,7 +68,9 @@
     "sortDesc": "Difficile→Facile",
     "sortAscHint": "Actuellement : Facile à Difficile, appuyez pour inverser",
     "sortDescHint": "Actuellement : Difficile à Facile, appuyez pour inverser",
-    "totalCount": "{count, plural, =1 {# voie au total} other {# voies au total}}"
+    "totalCount": "{count, plural, =1 {# voie au total} other {# voies au total}}",
+    "clearFilters": "Effacer tous les filtres",
+    "faceHint": "Sélectionnez un site pour filtrer par face"
   },
   "RouteDetail": {
     "grade": "Cotation",

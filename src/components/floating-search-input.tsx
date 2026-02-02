@@ -44,6 +44,11 @@ export function FloatingSearchInput({
           themed={false}
           value={value}
           onChange={onChange}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              inputRef.current?.blur()
+            }
+          }}
           placeholder={placeholder}
           className="w-full h-full bg-transparent pl-12 pr-10 text-sm outline-none"
           style={{ color: 'var(--theme-on-surface)' }}

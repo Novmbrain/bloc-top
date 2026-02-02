@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+
+# Pre-push hook: run tsc --noEmit against committed-only files
+# Stash uncommitted changes so tsc sees the same code as CI
+
+# Check if there are uncommitted changes to stash
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  git stash push --keep-index --include-untracked -q -m "pre-push-hook"
+  STASHED=1
+else
+  STASHED=0
+fi
+
+echo "🔍 Running TypeScript check before push..."
+npx tsc --noEmit
+TSC_EXIT=$?
+
+# Restore stashed changes
+if [ "$STASHED" = "1" ]; then
+  git stash pop -q
+fi
+
+if [ $TSC_EXIT -ne 0 ]; then
+  echo "❌ TypeScript check failed. Push aborted."
+  exit 1
+fi
+
+echo "✅ TypeScript check passed."

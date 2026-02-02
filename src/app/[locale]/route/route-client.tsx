@@ -3,7 +3,7 @@
 import { useMemo, useCallback, useState, useTransition, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { ChevronRight, ArrowUp, ArrowDown } from 'lucide-react'
+import { ChevronRight, ArrowUp, ArrowDown, X } from 'lucide-react'
 import { getGradeColor } from '@/lib/tokens'
 import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, type SortDirection } from '@/lib/filter-constants'
 import { compareGrades } from '@/lib/grade-utils'
@@ -76,6 +76,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   )
 
   // 处理岩场筛选（单选）— 切换岩场时清除 face 筛选
+  // 点击"全部"时重置所有 filter（岩场、岩面、难度、搜索）
   const handleCragSelect = useCallback(
     (cragId: string) => {
       const newCrag = cragId === selectedCrag ? null : cragId
@@ -84,9 +85,11 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
       if (newCrag) {
         params.set(FILTER_PARAMS.CRAG, newCrag)
       } else {
+        // "全部" — 清除所有筛选条件
         params.delete(FILTER_PARAMS.CRAG)
+        params.delete(FILTER_PARAMS.GRADE)
+        params.delete(FILTER_PARAMS.QUERY)
       }
-      // 切换岩场时清除 face 筛选
       params.delete(FILTER_PARAMS.FACE)
 
       const queryString = params.toString()
@@ -120,6 +123,22 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
     updateSearchParams(FILTER_PARAMS.SORT, newDirection)
   }, [sortDirection, updateSearchParams])
 
+  // 是否有任何 filter 激活（用于 0 结果提示）
+  const hasActiveFilters = selectedCrag !== '' || selectedGrades.length > 0 || searchQuery !== '' || selectedFace !== null
+
+  // 清除所有筛选
+  const handleClearAllFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete(FILTER_PARAMS.CRAG)
+    params.delete(FILTER_PARAMS.FACE)
+    params.delete(FILTER_PARAMS.GRADE)
+    params.delete(FILTER_PARAMS.QUERY)
+    const queryString = params.toString()
+    startTransition(() => {
+      router.replace(queryString ? `/route?${queryString}` : '/route', { scroll: false })
+    })
+  }, [searchParams, router, startTransition])
+
   // 处理线路卡片点击
   const handleRouteClick = useCallback((route: Route) => {
     setSelectedRoute(route)
@@ -141,6 +160,33 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   const handleRouteChange = useCallback((route: Route) => {
     setSelectedRoute(route)
   }, [])
+
+  // Active filter tags 列表（❷ filter 汇总提示）
+  const activeFilterTags = useMemo(() => {
+    const tags: { label: string; onRemove: () => void }[] = []
+    if (selectedFace) {
+      tags.push({
+        label: selectedFace,
+        onRemove: () => updateSearchParams(FILTER_PARAMS.FACE, null),
+      })
+    }
+    if (selectedGrades.length > 0) {
+      const label = selectedGrades.length <= 3
+        ? selectedGrades.join(', ')
+        : `${selectedGrades.length} ${t('selectedGrades', { count: selectedGrades.length }).replace(/^已选 \d+ 个/, '')}`
+      tags.push({
+        label,
+        onRemove: () => updateSearchParams(FILTER_PARAMS.GRADE, null),
+      })
+    }
+    if (searchQuery) {
+      tags.push({
+        label: `"${searchQuery}"`,
+        onRemove: () => updateSearchParams(FILTER_PARAMS.QUERY, null),
+      })
+    }
+    return tags
+  }, [selectedFace, selectedGrades, searchQuery, t, updateSearchParams])
 
   // 筛选逻辑
   const filteredRoutes = useMemo(() => {
@@ -203,11 +249,20 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         </header>
 
         {/* 岩面缩略图 — 全宽 */}
-        <FaceThumbnailStrip
-          selectedCrag={selectedCrag}
-          selectedFace={selectedFace}
-          onFaceSelect={handleFaceSelect}
-        />
+        {selectedCrag ? (
+          <FaceThumbnailStrip
+            selectedCrag={selectedCrag}
+            selectedFace={selectedFace}
+            onFaceSelect={handleFaceSelect}
+          />
+        ) : (
+          <p
+            className="px-4 pb-2 text-xs"
+            style={{ color: 'var(--theme-on-surface-variant)', opacity: 0.6 }}
+          >
+            {t('faceHint')}
+          </p>
+        )}
 
         {/* 中间内容区 — flex row */}
         <div className="flex flex-1 min-h-0">
@@ -253,6 +308,27 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
                 )}
               </button>
             </div>
+
+            {/* ❷ Active filter tags */}
+            {activeFilterTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {activeFilterTags.map((tag) => (
+                  <button
+                    key={tag.label}
+                    onClick={tag.onRemove}
+                    className="flex items-center gap-1 px-2 py-0.5 text-xs transition-all active:scale-95"
+                    style={{
+                      color: 'var(--theme-primary)',
+                      backgroundColor: 'color-mix(in srgb, var(--theme-primary) 10%, transparent)',
+                      borderRadius: 'var(--theme-radius-full)',
+                    }}
+                  >
+                    <span className="max-w-24 truncate">{tag.label}</span>
+                    <X className="w-3 h-3 flex-shrink-0 opacity-60" />
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="space-y-2">
               {filteredRoutes.map((route, index) => (
@@ -310,6 +386,19 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
                 <p style={{ color: 'var(--theme-on-surface-variant)' }}>
                   {t('noResults')}
                 </p>
+                {hasActiveFilters && (
+                  <button
+                    onClick={handleClearAllFilters}
+                    className="mt-3 px-4 py-2 text-sm font-medium transition-all active:scale-95"
+                    style={{
+                      color: 'var(--theme-primary)',
+                      backgroundColor: 'color-mix(in srgb, var(--theme-primary) 12%, transparent)',
+                      borderRadius: 'var(--theme-radius-full)',
+                    }}
+                  >
+                    {t('clearFilters')}
+                  </button>
+                )}
               </div>
             )}
           </main>
