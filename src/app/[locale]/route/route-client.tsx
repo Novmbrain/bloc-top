@@ -232,7 +232,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         }}
       >
         {/* 顶部 filter 区域 — 全宽 */}
-        <header className="flex-shrink-0 pt-12 px-4 pb-2">
+        <header className="flex-shrink-0 pt-6 px-4 pb-2">
           <FilterChipGroup>
             <FilterChip
               label={tCommon('all')}

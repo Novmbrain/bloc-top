@@ -23,7 +23,7 @@ export default function RouteListLoading() {
       className="flex flex-col h-screen overflow-hidden"
       style={{ backgroundColor: 'var(--theme-surface)' }}
     >
-      <header className="flex-shrink-0 pt-12 px-4 pb-3">
+      <header className="flex-shrink-0 pt-6 px-4 pb-3">
         <div className="flex items-center gap-3 mb-3">
           <div
             className="h-7 w-24 rounded-md skeleton-shimmer"
