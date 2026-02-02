@@ -19,7 +19,7 @@ export default function Loading() {
 
   return (
     <div
-      className="flex flex-col h-screen overflow-hidden px-4"
+      className="flex flex-col h-dvh overflow-hidden px-4"
       style={{
         backgroundColor: 'var(--theme-surface)',
         transition: 'var(--theme-transition)',

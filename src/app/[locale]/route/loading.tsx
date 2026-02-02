@@ -20,7 +20,7 @@ export default function RouteListLoading() {
 
   return (
     <div
-      className="flex flex-col h-screen overflow-hidden"
+      className="flex flex-col h-dvh overflow-hidden"
       style={{ backgroundColor: 'var(--theme-surface)' }}
     >
       <header className="flex-shrink-0 pt-6 px-4 pb-3">

@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Image as ImageIcon, Edit3 } from 'lucide-react'
+import { ArrowLeft, Image as ImageIcon, Edit3, Play } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
 
@@ -23,6 +23,13 @@ export default function TopoEditorPage() {
       title: '线路标注',
       description: '标注线路攀爬路径',
       detail: '选择岩面 → 选择线路 → 画 Topo 路线',
+    },
+    {
+      href: '/editor/betas' as const,
+      icon: Play,
+      title: 'Beta 管理',
+      description: '管理用户提交的 Beta 视频',
+      detail: '选择线路 → 查看 Beta → 编辑或删除',
     },
   ]
 

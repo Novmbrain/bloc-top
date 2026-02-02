@@ -261,6 +261,147 @@ export async function POST(request: NextRequest) {
 }
 
 /**
+ * PATCH /api/beta
+ * 更新 Beta 链接的可编辑字段 (title, author, climberHeight, climberReach)
+ */
+export async function PATCH(request: NextRequest) {
+  const start = Date.now()
+
+  try {
+    const body = await request.json()
+    const { routeId, betaId, title, author, climberHeight, climberReach } = body
+
+    if (!routeId || !betaId) {
+      return NextResponse.json(
+        createErrorResponse(API_ERROR_CODES.MISSING_BETA_ID),
+        { status: 400 }
+      )
+    }
+
+    // 验证身体数据范围
+    if (climberHeight !== undefined && (climberHeight < 100 || climberHeight > 250)) {
+      return NextResponse.json(
+        createErrorResponse(API_ERROR_CODES.INVALID_HEIGHT),
+        { status: 400 }
+      )
+    }
+    if (climberReach !== undefined && (climberReach < 100 || climberReach > 250)) {
+      return NextResponse.json(
+        createErrorResponse(API_ERROR_CODES.INVALID_REACH),
+        { status: 400 }
+      )
+    }
+
+    const db = await getDatabase()
+
+    // 构建 $set 更新对象，仅更新提供的字段
+    const setFields: Record<string, unknown> = { updatedAt: new Date() }
+    if (title !== undefined) setFields['betaLinks.$[elem].title'] = typeof title === 'string' ? title.trim().slice(0, 100) || undefined : undefined
+    if (author !== undefined) setFields['betaLinks.$[elem].author'] = typeof author === 'string' ? author.trim().slice(0, 30) || undefined : undefined
+    if (climberHeight !== undefined) setFields['betaLinks.$[elem].climberHeight'] = climberHeight || undefined
+    if (climberReach !== undefined) setFields['betaLinks.$[elem].climberReach'] = climberReach || undefined
+
+    const result = await db.collection('routes').updateOne(
+      { _id: routeId as unknown as Document['_id'] },
+      { $set: setFields },
+      { arrayFilters: [{ 'elem.id': betaId }] }
+    )
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        createErrorResponse(API_ERROR_CODES.ROUTE_NOT_FOUND),
+        { status: 404 }
+      )
+    }
+
+    if (result.modifiedCount === 0) {
+      return NextResponse.json(
+        createErrorResponse(API_ERROR_CODES.BETA_NOT_FOUND),
+        { status: 404 }
+      )
+    }
+
+    log.info('Beta updated successfully', {
+      action: 'PATCH /api/beta',
+      duration: Date.now() - start,
+      metadata: { routeId, betaId },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    log.error('Beta update failed', error, {
+      action: 'PATCH /api/beta',
+      duration: Date.now() - start,
+    })
+    return NextResponse.json(
+      createErrorResponse(API_ERROR_CODES.SERVER_ERROR),
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * DELETE /api/beta
+ * 从线路中移除指定的 Beta 链接
+ */
+export async function DELETE(request: NextRequest) {
+  const start = Date.now()
+
+  try {
+    const body = await request.json()
+    const { routeId, betaId } = body
+
+    if (!routeId || !betaId) {
+      return NextResponse.json(
+        createErrorResponse(API_ERROR_CODES.MISSING_BETA_ID),
+        { status: 400 }
+      )
+    }
+
+    const db = await getDatabase()
+
+    const result = await db.collection('routes').updateOne(
+      { _id: routeId as unknown as Document['_id'] },
+      {
+        $pull: { betaLinks: { id: betaId } } as Document,
+        $set: { updatedAt: new Date() },
+      }
+    )
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        createErrorResponse(API_ERROR_CODES.ROUTE_NOT_FOUND),
+        { status: 404 }
+      )
+    }
+
+    if (result.modifiedCount === 0) {
+      return NextResponse.json(
+        createErrorResponse(API_ERROR_CODES.BETA_NOT_FOUND),
+        { status: 404 }
+      )
+    }
+
+    log.info('Beta deleted successfully', {
+      action: 'DELETE /api/beta',
+      duration: Date.now() - start,
+      metadata: { routeId, betaId },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    log.error('Beta deletion failed', error, {
+      action: 'DELETE /api/beta',
+      duration: Date.now() - start,
+    })
+    return NextResponse.json(
+      createErrorResponse(API_ERROR_CODES.SERVER_ERROR),
+      { status: 500 }
+    )
+  }
+}
+
+/**
  * GET /api/beta?routeId=123
  * 获取指定线路的所有 Beta
  */

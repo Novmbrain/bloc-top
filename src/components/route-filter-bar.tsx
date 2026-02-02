@@ -52,7 +52,7 @@ export function RouteFilterBar({
   return (
     <div className="flex-shrink-0">
       {/* 岩场筛选 */}
-      <div className="pt-6 px-4 pb-2">
+      <div className="pt-[max(1.5rem,env(safe-area-inset-top))] px-4 pb-2">
         <FilterChipGroup>
           <FilterChip
             label={allLabel}

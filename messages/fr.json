@@ -350,6 +350,8 @@
     "ROUTE_NOT_FOUND": "Voie non trouvée",
     "DUPLICATE_BETA": "Cette vidéo a déjà été partagée !",
     "UPDATE_FAILED": "Échec de la mise à jour, veuillez réessayer",
+    "MISSING_BETA_ID": "ID bêta manquant",
+    "BETA_NOT_FOUND": "Bêta introuvable",
     "UNKNOWN": "Une erreur inconnue s'est produite"
   }
 }
