@@ -47,6 +47,7 @@ export const FILTER_PARAMS = {
   GRADE: 'grade',
   QUERY: 'q',
   SORT: 'sort',
+  FACE: 'face',
 } as const
 
 /**
