@@ -1,6 +1,6 @@
 # Project Index: 罗源野抱 TOPO PWA
 
-Generated: 2026-02-02 (updated)
+Generated: 2026-02-02 (v3)
 
 ## 📁 Project Structure
 
@@ -61,6 +61,7 @@ src/
 │   │   └── route-card.tsx           # Editor route card
 │   ├── crag-card.tsx                # Crag list card
 │   ├── app-tabbar.tsx               # Bottom navigation (glass morphism)
+│   ├── route-filter-bar.tsx         # Route page filter bar (crag chips + face strip + sort + tags)
 │   ├── filter-chip.tsx              # Single/multi select filter chip
 │   ├── filter-drawer.tsx            # Filter panel drawer
 │   ├── grade-range-selector.tsx     # Grade range selector
@@ -123,6 +124,7 @@ src/
 │   ├── api-error-codes.ts           # API error code constants
 │   ├── topo-constants.ts            # Topo editor constants
 │   ├── topo-utils.ts                # Topo coordinate utilities
+│   ├── editor-areas.ts              # deriveAreas + getPersistedAreas
 │   ├── editor-utils.ts              # Editor helper utilities
 │   ├── offline-storage.ts           # IndexedDB offline storage
 │   ├── logger.ts                    # Server-side logger
