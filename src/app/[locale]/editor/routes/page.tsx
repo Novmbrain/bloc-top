@@ -35,7 +35,7 @@ import { FullscreenTopoEditor } from '@/components/editor/fullscreen-topo-editor
 import { MultiTopoLineOverlay } from '@/components/multi-topo-line-overlay'
 import type { MultiTopoRoute } from '@/components/multi-topo-line-overlay'
 import { VIEW_WIDTH, VIEW_HEIGHT, GRADE_OPTIONS } from '@/lib/editor-utils'
-import { deriveAreas } from '@/lib/editor-areas'
+import { deriveAreas, getPersistedAreas } from '@/lib/editor-areas'
 
 interface R2FaceInfo {
   faceId: string
@@ -147,6 +147,7 @@ export default function RouteAnnotationPage() {
     () => deriveAreas(routes, selectedCragId, selectedCrag),
     [routes, selectedCrag, selectedCragId],
   )
+  const persistedAreas = useMemo(() => getPersistedAreas(selectedCrag), [selectedCrag])
 
   // 按 area 筛选的 face 列表（右栏 face 选择器用）
   // 以 R2 返回的 face 数据为主（自带 area），再关联 routes
@@ -323,10 +324,10 @@ export default function RouteAnnotationPage() {
       setRoutes((prev) => prev.map((r) => (r.id === selectedRoute.id ? data.route : r)))
       setSelectedRoute(data.route)
 
-      // 如果区域是新的，同步到 crag.areas
+      // 如果区域是新的，同步到 crag.areas（仅基于持久化 areas，避免 route 派生 area 泄漏）
       const savedArea = editedRoute.area?.trim()
-      if (savedArea && selectedCragId && !areas.includes(savedArea)) {
-        const merged = [...new Set([...areas, savedArea])].sort()
+      if (savedArea && selectedCragId && !persistedAreas.includes(savedArea)) {
+        const merged = [...new Set([...persistedAreas, savedArea])].sort()
         updateCragAreas(selectedCragId, merged).catch(() => {})
       }
 
@@ -339,7 +340,7 @@ export default function RouteAnnotationPage() {
     } finally {
       setIsSaving(false)
     }
-  }, [selectedRoute, editedRoute, topoLine, selectedFaceId, setRoutes, showToast, areas, selectedCragId, updateCragAreas])
+  }, [selectedRoute, editedRoute, topoLine, selectedFaceId, setRoutes, showToast, persistedAreas, selectedCragId, updateCragAreas])
 
   // ============ 新增线路逻辑 ============
   const handleStartCreate = useCallback(() => {
@@ -371,10 +372,10 @@ export default function RouteAnnotationPage() {
       setIsCreatingRoute(false)
       setSelectedRoute(created)
 
-      // 如果区域是新的，同步到 crag.areas
+      // 如果区域是新的，同步到 crag.areas（仅基于持久化 areas）
       const createdArea = newRoute.area.trim()
-      if (createdArea && selectedCragId && !areas.includes(createdArea)) {
-        const merged = [...new Set([...areas, createdArea])].sort()
+      if (createdArea && selectedCragId && !persistedAreas.includes(createdArea)) {
+        const merged = [...new Set([...persistedAreas, createdArea])].sort()
         updateCragAreas(selectedCragId, merged).catch(() => {})
       }
 
