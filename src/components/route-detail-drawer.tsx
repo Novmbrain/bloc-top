@@ -121,10 +121,12 @@ export function RouteDetailDrawer({
   }, [imageViewerOpen, route?.topoLine, useMultiLineMode])
 
   // 从 API 获取最新 Beta 数据
-  const fetchLatestBetas = useCallback(async () => {
+  const fetchLatestBetas = useCallback(async (skipCache = false) => {
     if (!route) return
     try {
-      const res = await fetch(`/api/beta?routeId=${route.id}`)
+      const res = await fetch(`/api/beta?routeId=${route.id}`,
+        skipCache ? { cache: 'no-cache' } : undefined
+      )
       const data = await res.json()
       if (data.success && data.betaLinks) {
         setLocalBetaLinks(data.betaLinks)
@@ -479,7 +481,7 @@ export function RouteDetailDrawer({
         routeId={route.id}
         routeName={route.name}
         onSuccess={() => {
-          fetchLatestBetas()
+          fetchLatestBetas(true)
         }}
       />
     </>

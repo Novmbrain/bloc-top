@@ -61,6 +61,10 @@ npm run db:seed:prod  # 数据迁移 (生产环境)
 
 # UI
 npx shadcn@latest add <component>  # 添加 UI 组件
+
+# Claude Code 自定义命令
+/ship "描述"          # 端到端 Git 工作流 (commit → PR → CI → merge)
+/ship "#42"           # 关联已有 issue 的工作流
 ```
 
 ## Tech Stack
