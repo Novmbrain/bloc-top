@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
-import { FileText, Car, ChevronLeft, Map } from 'lucide-react'
+import { FileText, Car, ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getCragCoverUrl } from '@/lib/constants'
 import AMapContainer from '@/components/amap-container'
@@ -171,45 +171,47 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
           </div>
         </div>
 
-        {/* 前往方式卡片 */}
-        {crag.approach && (
-          <InfoCard
-            icon={<Car className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />}
-            iconBg="var(--theme-surface-variant)"
-            title="前往方式"
-            content={crag.approach}
-            delay={0}
-          />
-        )}
-
         {/* 天气卡片 */}
         <WeatherCard
           coordinates={crag.coordinates || CRAG_COORDINATES[crag.id] || CRAG_COORDINATES.default}
-          delay={25}
+          delay={0}
         />
 
-        {/* 地图卡片 */}
+        {/* 前往方式卡片（含地图） */}
         <div
           className="p-3 mb-2 animate-fade-in-up"
           style={{
             backgroundColor: 'var(--theme-surface)',
             borderRadius: 'var(--theme-radius-xl)',
             boxShadow: 'var(--theme-shadow-sm)',
-            animationDelay: '50ms',
+            animationDelay: '25ms',
             transition: 'var(--theme-transition)',
           }}
         >
-          <div className="flex items-center mb-3">
+          {/* 标题行：Car 图标 + "前往方式" */}
+          <div className="flex items-center mb-2">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0"
-              style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
+              style={{ backgroundColor: 'var(--theme-surface-variant)' }}
             >
-              <Map className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
+              <Car className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />
             </div>
             <span className="text-base font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-              岩场地图
+              前往方式
             </span>
           </div>
+
+          {/* 前往方式文字描述 */}
+          {crag.approach && (
+            <p
+              className="text-sm leading-relaxed mb-3"
+              style={{ color: 'var(--theme-on-surface-variant)' }}
+            >
+              {crag.approach}
+            </p>
+          )}
+
+          {/* 地图组件 */}
           <AMapContainer
             center={crag.coordinates || CRAG_COORDINATES[crag.id] || CRAG_COORDINATES.default}
             name={crag.name}
@@ -217,6 +219,8 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             height="180px"
             approachPaths={crag.approachPaths}
           />
+
+          {/* 导航提示 */}
           <p
             className="text-xs mt-2 text-center"
             style={{ color: 'var(--theme-on-surface-variant)' }}
@@ -231,7 +235,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
           iconBg="var(--theme-surface-variant)"
           title="岩场介绍"
           content={crag.description}
-          delay={100}
+          delay={50}
         />
       </main>
 
