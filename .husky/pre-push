@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
-# Pre-push hook: 完整本地 CI（替代 GitHub Actions）
-# 运行 ESLint + TypeScript + Vitest + Playwright
+# Pre-push hook: 并行执行 CI 检查（ESLint 已在 pre-commit 完成）
+# 运行 TypeScript + Vitest + Playwright 并行
 
 set -e
 
@@ -22,51 +22,82 @@ cleanup() {
   if [ "$STASHED" = "1" ]; then
     git stash pop -q 2>/dev/null || true
   fi
+  # Kill background jobs on exit
+  jobs -p | xargs -r kill 2>/dev/null || true
 }
 trap cleanup EXIT
 
-# Track failures
+# Create temp files for capturing results
+TMPDIR=$(mktemp -d)
+TSC_LOG="$TMPDIR/tsc.log"
+VITEST_LOG="$TMPDIR/vitest.log"
+PLAYWRIGHT_LOG="$TMPDIR/playwright.log"
+
+echo ""
+echo "⚡ Running checks in parallel..."
+echo ""
+
+# Run all checks in parallel
+(
+  echo "📘 TypeScript..."
+  if npx tsc --noEmit > "$TSC_LOG" 2>&1; then
+    echo "TSC_PASS" >> "$TSC_LOG"
+  fi
+) &
+TSC_PID=$!
+
+(
+  echo "🧪 Vitest..."
+  if npm run test:run --silent > "$VITEST_LOG" 2>&1; then
+    echo "VITEST_PASS" >> "$VITEST_LOG"
+  fi
+) &
+VITEST_PID=$!
+
+(
+  echo "🎭 Playwright..."
+  if npm run test:ct --silent > "$PLAYWRIGHT_LOG" 2>&1; then
+    echo "PLAYWRIGHT_PASS" >> "$PLAYWRIGHT_LOG"
+  fi
+) &
+PLAYWRIGHT_PID=$!
+
+# Wait for all and collect results
 FAILED=0
 
-# 1. ESLint
-echo ""
-echo "🔍 [1/4] ESLint..."
-if npm run lint --silent; then
-  echo "   ✅ ESLint passed"
-else
-  echo "   ❌ ESLint failed"
-  FAILED=1
-fi
-
-# 2. TypeScript
-echo ""
-echo "📘 [2/4] TypeScript..."
-if npx tsc --noEmit; then
+wait $TSC_PID || true
+if grep -q "TSC_PASS" "$TSC_LOG" 2>/dev/null; then
   echo "   ✅ TypeScript passed"
 else
   echo "   ❌ TypeScript failed"
+  cat "$TSC_LOG" 2>/dev/null | grep -v "TSC_PASS" | head -20
   FAILED=1
 fi
 
-# 3. Vitest (单元测试)
-echo ""
-echo "🧪 [3/4] Vitest..."
-if npm run test:run --silent; then
-  echo "   ✅ Vitest passed"
+wait $VITEST_PID || true
+if grep -q "VITEST_PASS" "$VITEST_LOG" 2>/dev/null; then
+  # Extract test count
+  TESTS=$(grep -oE "[0-9]+ passed" "$VITEST_LOG" 2>/dev/null | tail -1 || echo "")
+  echo "   ✅ Vitest passed ${TESTS}"
 else
   echo "   ❌ Vitest failed"
+  cat "$VITEST_LOG" 2>/dev/null | grep -v "VITEST_PASS" | tail -30
   FAILED=1
 fi
 
-# 4. Playwright (组件测试)
-echo ""
-echo "🎭 [4/4] Playwright..."
-if npm run test:ct --silent 2>/dev/null; then
-  echo "   ✅ Playwright passed"
+wait $PLAYWRIGHT_PID || true
+if grep -q "PLAYWRIGHT_PASS" "$PLAYWRIGHT_LOG" 2>/dev/null; then
+  # Extract test count
+  TESTS=$(grep -oE "[0-9]+ passed" "$PLAYWRIGHT_LOG" 2>/dev/null | tail -1 || echo "")
+  echo "   ✅ Playwright passed ${TESTS}"
 else
   echo "   ❌ Playwright failed"
+  cat "$PLAYWRIGHT_LOG" 2>/dev/null | grep -v "PLAYWRIGHT_PASS" | tail -30
   FAILED=1
 fi
+
+# Cleanup temp files
+rm -rf "$TMPDIR"
 
 echo ""
 echo "─────────────────────────────────────────────"
