@@ -7,10 +7,22 @@ import { render, screen } from '@testing-library/react'
 import { CragCard } from './crag-card'
 import type { Crag, Route } from '@/types'
 
-// Mock next/link
+// Mock next/link - 传递所有常用属性
 vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
+  default: ({
+    children,
+    href,
+    className,
+    style,
+  }: {
+    children: React.ReactNode
+    href: string
+    className?: string
+    style?: React.CSSProperties
+  }) => (
+    <a href={href} className={className} style={style}>
+      {children}
+    </a>
   ),
 }))
 
@@ -104,20 +116,18 @@ describe('CragCard', () => {
     })
   })
 
-  describe('封面图片', () => {
-    it('有封面图时渲染 Image 组件', () => {
-      render(<CragCard crag={mockCragWithImage} routes={mockRoutes} />)
-      const img = screen.getByRole('img')
-      expect(img).toHaveAttribute('alt', '测试岩场')
+  describe('渐变背景', () => {
+    it('卡片使用渐变背景', () => {
+      render(<CragCard crag={mockCrag} routes={mockRoutes} />)
+      // 渐变背景应用在 Link 元素上
+      const link = screen.getByRole('link')
+      expect(link.getAttribute('style')).toContain('linear-gradient')
     })
 
-    it('无封面图时显示渐变背景', () => {
-      const { container } = render(<CragCard crag={mockCrag} routes={mockRoutes} />)
-      // 无图片时应该没有 img 元素
+    it('不再渲染图片元素（统一使用渐变）', () => {
+      render(<CragCard crag={mockCragWithImage} routes={mockRoutes} />)
+      // 即使有 coverImages，也不应该渲染 img 元素
       expect(screen.queryByRole('img')).not.toBeInTheDocument()
-      // 应该有渐变背景的容器
-      const gradientDiv = container.querySelector('[style*="linear-gradient"]')
-      expect(gradientDiv).toBeInTheDocument()
     })
   })
 

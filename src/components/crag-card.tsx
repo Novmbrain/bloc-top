@@ -1,11 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
-import { MapPin, Route as RouteIcon } from 'lucide-react'
+import { MapPin, GitBranch } from 'lucide-react'
 import type { Crag, Route, WeatherData } from '@/types'
 import { getCragTheme } from '@/lib/crag-theme'
-import { getGradeColor } from '@/lib/tokens'
 import { compareGrades } from '@/lib/grade-utils'
 import { WeatherBadge } from '@/components/weather-badge'
 import { DownloadButton } from '@/components/download-button'
@@ -36,128 +34,97 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
   const maxGrade = grades[grades.length - 1] || minGrade
   const gradeRange = minGrade === maxGrade ? minGrade : `${minGrade}-${maxGrade}`
 
-  const hasCoverImage = crag.coverImages && crag.coverImages.length > 0
-
   return (
     <Link
       href={`/crag/${crag.id}`}
-      className="group relative block overflow-hidden rounded-2xl
+      className="group relative block overflow-hidden rounded-2xl p-4
                  shadow-sm hover:shadow-xl transition-all duration-300
                  active:scale-[0.97] active:shadow-md
                  animate-fade-in-up touch-manipulation"
-      style={{ animationDelay: `${index * 80}ms` }}
+      style={{
+        animationDelay: `${index * 80}ms`,
+        background: theme.gradient,
+      }}
     >
-      {/* 背景层 - 图片或渐变 */}
-      <div className="relative h-44 overflow-hidden">
-        {/* 顶部工具栏 (右上角) - 天气 + 下载按钮 */}
-        <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
-          {/* 下载按钮 */}
-          {showDownload && offlineDownload && offlineDownload.isSupported && (
-            <DownloadButton
-              crag={crag}
-              routes={routes}
-              isDownloaded={offlineDownload.isDownloaded(crag.id)}
-              progress={offlineDownload.downloadProgress}
-              onDownload={offlineDownload.downloadCrag}
-              onDelete={offlineDownload.deleteCrag}
-            />
-          )}
-
-          {/* 天气角标 */}
-          {weather && (
-            <WeatherBadge
-              temperature={weather.live.temperature}
-              weather={weather.live.weather}
-            />
-          )}
-        </div>
-
-        {hasCoverImage ? (
-          // 有封面图时显示图片
-          <Image
-            src={crag.coverImages![0]}
-            alt={crag.name}
-            fill
-            priority={index < 2}
-            sizes="100vw"
-            className="object-cover transition-transform duration-500
-                       group-hover:scale-105"
-          />
-        ) : (
-          // 无图片时显示渐变背景 + 装饰元素
-          <div
-            className="absolute inset-0 transition-transform duration-500
-                       group-hover:scale-105"
-            style={{ background: theme.gradient }}
-          >
-            {/* 装饰性图标 */}
-            <span
-              className="absolute right-4 top-4 text-5xl opacity-30
-                         transition-all duration-300 group-hover:opacity-50
-                         group-hover:scale-110"
-            >
-              {theme.icon}
-            </span>
-
-            {/* 纹理叠加层 */}
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-              }}
-            />
-          </div>
-        )}
-
-        {/* 底部渐变遮罩 */}
-        <div
-          className="absolute inset-0 bg-gradient-to-t
-                     from-black/70 via-black/20 to-transparent"
-        />
-
-        {/* 内容层 */}
-        <div className="absolute inset-0 flex flex-col justify-end p-4">
+      {/* 垂直布局容器 */}
+      <div className="flex flex-col gap-3">
+        {/* 顶部行: 标题 + 操作按钮 */}
+        <div className="flex items-start justify-between gap-2">
           {/* 岩场名称 */}
-          <h3
-            className="text-2xl font-bold text-white tracking-wide
-                       drop-shadow-lg"
-          >
+          <h3 className="text-[22px] font-bold text-white leading-tight">
             {crag.name}
           </h3>
 
-          {/* 信息行 */}
-          <div className="flex items-center gap-3 mt-2">
-            {/* 线路数量 */}
-            <div
-              className="flex items-center gap-1.5 px-2.5 py-1
-                         bg-white/20 backdrop-blur-sm rounded-full"
-            >
-              <RouteIcon className="w-3.5 h-3.5 text-white" />
-              <span className="text-sm text-white font-medium">
-                {routeCount} 条线路
-              </span>
-            </div>
+          {/* 操作按钮组 */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* 下载按钮 */}
+            {showDownload && offlineDownload && offlineDownload.isSupported && (
+              <DownloadButton
+                crag={crag}
+                routes={routes}
+                isDownloaded={offlineDownload.isDownloaded(crag.id)}
+                progress={offlineDownload.downloadProgress}
+                onDownload={offlineDownload.downloadCrag}
+                onDelete={offlineDownload.deleteCrag}
+                className="!w-8 !h-8 !rounded-lg"
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                  boxShadow: 'none',
+                }}
+              />
+            )}
 
-            {/* 难度范围 */}
-            <div
-              className="px-2.5 py-1 rounded-full text-sm font-bold text-white"
-              style={{
-                backgroundColor: getGradeColor(minGrade),
-                boxShadow: `0 2px 8px ${getGradeColor(minGrade)}40`,
-              }}
-            >
-              {gradeRange}
-            </div>
+            {/* 天气徽章 */}
+            {weather && (
+              <WeatherBadge
+                temperature={weather.live.temperature}
+                weather={weather.live.weather}
+                className="!h-7 !rounded-lg"
+                style={{
+                  backgroundColor: 'rgba(12, 12, 12, 0.8)',
+                }}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* 标签行: 线路数 + 难度范围 */}
+        <div className="flex items-center gap-2">
+          {/* 线路数量标签 */}
+          <div
+            className="flex items-center gap-1.5 h-[26px] px-2.5 rounded-md"
+            style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+          >
+            <GitBranch className="w-3.5 h-3.5 text-white" />
+            <span className="text-xs text-white font-medium">
+              {routeCount} 条线路
+            </span>
           </div>
 
-          {/* 位置信息 (可选) */}
-          {crag.location && (
-            <div className="flex items-center gap-1 mt-2 text-white/70">
-              <MapPin className="w-3 h-3" />
-              <span className="text-xs truncate">{crag.location}</span>
-            </div>
-          )}
+          {/* 难度范围标签 */}
+          <div
+            className="h-[26px] px-2.5 rounded-md flex items-center"
+            style={{
+              backgroundColor: '#FFFFFF',
+              color: '#0C0C0C',
+            }}
+          >
+            <span className="text-xs font-bold">{gradeRange}</span>
+          </div>
         </div>
+
+        {/* 位置信息行 */}
+        {crag.location && (
+          <div className="flex items-center gap-1">
+            <MapPin className="w-3 h-3" style={{ color: 'rgba(255, 255, 255, 0.67)' }} />
+            <span
+              className="text-[11px] truncate"
+              style={{ color: 'rgba(255, 255, 255, 0.67)' }}
+            >
+              {crag.location}
+            </span>
+          </div>
+        )}
       </div>
     </Link>
   )

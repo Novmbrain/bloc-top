@@ -26,6 +26,7 @@ interface DownloadButtonProps {
   onDelete?: (cragId: string) => Promise<void>
   variant?: 'icon' | 'badge'  // icon=仅图标按钮, badge=已下载徽章
   className?: string
+  style?: React.CSSProperties
 }
 
 /**
@@ -86,6 +87,7 @@ export function DownloadButton({
   onDelete,
   variant = 'icon',
   className,
+  style,
 }: DownloadButtonProps) {
   const t = useTranslations('Offline')
   const { showToast } = useToast()
@@ -184,6 +186,7 @@ export function DownloadButton({
       )}
       style={{
         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+        ...style,
       }}
       title={
         status === 'idle' ? t('download') :

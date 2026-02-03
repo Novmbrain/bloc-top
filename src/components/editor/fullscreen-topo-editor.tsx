@@ -183,16 +183,16 @@ export function FullscreenTopoEditor({
                     <circle
                       cx={point.x}
                       cy={point.y}
-                      r={index === 0 ? 10 : index === fsScaledPoints.length - 1 ? 8 : 6}
+                      r={index === 0 ? 6 : index === fsScaledPoints.length - 1 ? 5 : 4}
                       fill={index === 0 ? routeColor : 'white'}
                       stroke={index === 0 ? 'white' : routeColor}
-                      strokeWidth={index === 0 ? 2 : 3}
+                      strokeWidth={index === 0 ? 1.5 : 2}
                     />
                     <text
                       x={point.x}
-                      y={point.y + 4}
+                      y={point.y + 2.5}
                       textAnchor="middle"
-                      fontSize="10"
+                      fontSize="7"
                       fontWeight="bold"
                       fill={index === 0 ? 'white' : routeColor}
                     >
@@ -202,10 +202,10 @@ export function FullscreenTopoEditor({
                 ))}
                 {fsScaledPoints.length > 0 && (
                   <text
-                    x={fsScaledPoints[0].x - 15}
-                    y={fsScaledPoints[0].y + 25}
+                    x={fsScaledPoints[0].x - 12}
+                    y={fsScaledPoints[0].y + 18}
                     fill={routeColor}
-                    fontSize="12"
+                    fontSize="10"
                     fontWeight="bold"
                   >
                     起点
@@ -213,10 +213,10 @@ export function FullscreenTopoEditor({
                 )}
                 {fsScaledPoints.length > 1 && (
                   <text
-                    x={fsScaledPoints[fsScaledPoints.length - 1].x - 15}
-                    y={fsScaledPoints[fsScaledPoints.length - 1].y - 15}
+                    x={fsScaledPoints[fsScaledPoints.length - 1].x - 12}
+                    y={fsScaledPoints[fsScaledPoints.length - 1].y - 12}
                     fill={routeColor}
-                    fontSize="12"
+                    fontSize="10"
                     fontWeight="bold"
                   >
                     终点

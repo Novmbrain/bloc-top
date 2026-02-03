@@ -877,21 +877,21 @@ export default function RouteAnnotationPage() {
                       <g key={index}>
                         <circle
                           cx={point.x} cy={point.y}
-                          r={index === 0 ? 10 : index === scaledPoints.length - 1 ? 8 : 6}
+                          r={index === 0 ? 6 : index === scaledPoints.length - 1 ? 5 : 4}
                           fill={index === 0 ? routeColor : 'white'}
                           stroke={index === 0 ? 'white' : routeColor}
-                          strokeWidth={index === 0 ? 2 : 3}
+                          strokeWidth={index === 0 ? 1.5 : 2}
                         />
-                        <text x={point.x} y={point.y + 4} textAnchor="middle" fontSize="10" fontWeight="bold" fill={index === 0 ? 'white' : routeColor}>
+                        <text x={point.x} y={point.y + 2.5} textAnchor="middle" fontSize="7" fontWeight="bold" fill={index === 0 ? 'white' : routeColor}>
                           {index + 1}
                         </text>
                       </g>
                     ))}
                     {scaledPoints.length > 0 && (
-                      <text x={scaledPoints[0].x - 15} y={scaledPoints[0].y + 25} fill={routeColor} fontSize="12" fontWeight="bold">起点</text>
+                      <text x={scaledPoints[0].x - 12} y={scaledPoints[0].y + 18} fill={routeColor} fontSize="10" fontWeight="bold">起点</text>
                     )}
                     {scaledPoints.length > 1 && (
-                      <text x={scaledPoints[scaledPoints.length - 1].x - 15} y={scaledPoints[scaledPoints.length - 1].y - 15} fill={routeColor} fontSize="12" fontWeight="bold">终点</text>
+                      <text x={scaledPoints[scaledPoints.length - 1].x - 12} y={scaledPoints[scaledPoints.length - 1].y - 12} fill={routeColor} fontSize="10" fontWeight="bold">终点</text>
                     )}
                   </svg>
                 </div>
