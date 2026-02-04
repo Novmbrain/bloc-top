@@ -6,6 +6,7 @@ import { routing } from '@/i18n/routing'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ToastProvider } from '@/components/ui/toast'
 import { OfflineDownloadProvider } from '@/components/offline-download-provider'
+import { FaceImageProvider } from '@/components/face-image-provider'
 import OfflineIndicator from '@/components/offline-indicator'
 import SWUpdatePrompt from '@/components/sw-update-prompt'
 import { LocaleDetector } from '@/components/locale-detector'
@@ -82,6 +83,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <ThemeProvider>
         <ToastProvider>
           <OfflineDownloadProvider>
+          <FaceImageProvider>
           {/* 桌面端外层背景 - 移动端不可见 */}
           <div
             className="min-h-screen"
@@ -102,6 +104,7 @@ export default async function LocaleLayout({ children, params }: Props) {
               <SWUpdatePrompt />
             </div>
           </div>
+          </FaceImageProvider>
           </OfflineDownloadProvider>
         </ToastProvider>
       </ThemeProvider>

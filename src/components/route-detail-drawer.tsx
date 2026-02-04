@@ -12,8 +12,8 @@ import { ContextualHint } from '@/components/contextual-hint'
 import { TopoLineOverlay, type TopoLineOverlayRef } from '@/components/topo-line-overlay'
 import { MultiTopoLineOverlay, type MultiTopoLineOverlayRef, type MultiTopoRoute } from '@/components/multi-topo-line-overlay'
 import { getGradeColor } from '@/lib/tokens'
-import { getTopoImageUrl } from '@/lib/constants'
 import { TOPO_ANIMATION_CONFIG } from '@/lib/topo-constants'
+import { useFaceImage } from '@/hooks/use-face-image'
 import type { Route, Crag, BetaLink } from '@/types'
 
 interface RouteDetailDrawerProps {
@@ -41,9 +41,15 @@ export function RouteDetailDrawer({
   const [imageViewerOpen, setImageViewerOpen] = useState(false)
   const [betaListOpen, setBetaListOpen] = useState(false)
   const [betaSubmitOpen, setBetaSubmitOpen] = useState(false)
-  const [imageLoading, setImageLoading] = useState(true)
-  const [imageError, setImageError] = useState(false)
-  const prevImageUrlRef = useRef<string | null>(null)
+
+  // 统一图片缓存层: 替代手动的 imageLoading/imageError/prevImageUrlRef
+  const {
+    src: topoImageUrl,
+    isLoading: imageLoading,
+    isError: imageError,
+    onLoad: handleImageLoad,
+    onError: handleImageError,
+  } = useFaceImage(route)
 
   // 本地 Beta 数据状态，用于绕过 ISR 缓存实现即时更新
   const [localBetaLinks, setLocalBetaLinks] = useState<BetaLink[] | null>(null)
@@ -88,17 +94,9 @@ export function RouteDetailDrawer({
   // 是否使用多线路模式（受用户切换控制）
   const useMultiLineMode = hasMultiLines && showOtherRoutes
 
-  // 当线路变化时重置状态
+  // 当线路变化时重置非图片状态 (图片状态由 useFaceImage 自动管理)
   useEffect(() => {
     if (route) {
-      const newImageUrl = getTopoImageUrl(route)
-      // 同岩面线路共享同一张图片，URL 不变时跳过 loading 重置
-      // 否则 onLoad 不会重新触发，imageLoading 会卡在 true
-      if (newImageUrl !== prevImageUrlRef.current) {
-        setImageLoading(true)
-        setImageError(false)
-        prevImageUrlRef.current = newImageUrl
-      }
       setLocalBetaLinks(null)
       setDrawerAnimated(false)
     }
@@ -155,7 +153,6 @@ export function RouteDetailDrawer({
   // 使用本地数据（如果有）或 props 数据
   const betaLinks = localBetaLinks ?? route.betaLinks ?? []
   const betaCount = betaLinks.length
-  const topoImageUrl = getTopoImageUrl(route)
 
   return (
     <>
@@ -197,18 +194,15 @@ export function RouteDetailDrawer({
                   <div className="absolute inset-0 skeleton-shimmer" />
                 )}
                 <Image
-                  src={topoImageUrl}
+                  src={topoImageUrl!}
                   alt={route.name}
                   fill
                   className={`object-cover transition-all duration-300 group-active:scale-[0.98] ${
                     imageLoading ? 'opacity-0' : 'opacity-100'
                   }`}
                   sizes="(max-width: 768px) 100vw, 50vw"
-                  onLoad={() => setImageLoading(false)}
-                  onError={() => {
-                    setImageLoading(false)
-                    setImageError(true)
-                  }}
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
                 />
 
                 {/* Topo 线路叠加层 */}
@@ -453,7 +447,7 @@ export function RouteDetailDrawer({
         <ImageViewer
           isOpen={imageViewerOpen}
           onClose={() => setImageViewerOpen(false)}
-          src={topoImageUrl}
+          src={topoImageUrl!}
           alt={route.name}
           topSlot={
             <div className="absolute top-12 left-4 right-4 z-10 flex items-start justify-between">

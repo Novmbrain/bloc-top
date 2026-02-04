@@ -3,7 +3,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Image as ImageIcon } from 'lucide-react'
-import { getFaceTopoUrl } from '@/lib/constants'
+import { useFaceImageCache } from '@/hooks/use-face-image'
 
 interface FaceGroup {
   key: string
@@ -19,6 +19,11 @@ interface FaceThumbnailStripProps {
 
 /**
  * 岩面缩略图 - 独立管理加载/错误状态
+ *
+ * 设计决策: src 变化时不重置 status。
+ * 浏览器原生 <img> 在 src 变化时保持显示旧图直到新图加载完成,
+ * 对缩略图来说这是更好的 UX (避免多个缩略图同时闪烁 skeleton)。
+ * 新图加载成功 → onLoad → 'loaded'; 失败 → onError → 'error'。
  */
 const FaceThumbnail = memo(function FaceThumbnail({ src, alt }: { src: string; alt: string }) {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
@@ -58,6 +63,17 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
   onFaceSelect,
 }: FaceThumbnailStripProps) {
   const tCommon = useTranslations('Common')
+  const cache = useFaceImageCache()
+  // 递增值用于强制 useMemo 重算 (缓存失效时触发)
+  const [cacheVersion, setCacheVersion] = useState(0)
+
+  // 订阅当前岩场下所有岩面的缓存失效事件
+  useEffect(() => {
+    if (!selectedCrag) return
+    return cache.subscribeByPrefix(`${selectedCrag}/`, () => {
+      setCacheVersion(v => v + 1)
+    })
+  }, [selectedCrag, cache])
 
   // 从 API 获取 R2 上真实存在的 face 列表
   // 用 { cragId, faces } 单一状态避免 effect 内同步 setState
@@ -90,14 +106,16 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
   const r2Faces = facesState.cragId === selectedCrag ? facesState.faces : []
   const loading = selectedCrag !== '' && facesState.cragId !== selectedCrag
 
-  // 基于 API 数据生成 face groups
+  // 基于 API 数据生成 face groups (通过缓存层获取版本感知的 URL)
+  // cacheVersion 变化时强制重算 → 获取带新时间戳的 URL
   const faceGroups = useMemo<FaceGroup[]>(() => {
     return r2Faces.map(({ faceId, area }) => ({
       key: faceId,
       label: area,
-      image: getFaceTopoUrl(selectedCrag, area, faceId),
+      image: cache.getImageUrl({ cragId: selectedCrag, area, faceId }),
     }))
-  }, [r2Faces, selectedCrag])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cacheVersion is an intentional trigger dep for cache invalidation
+  }, [r2Faces, selectedCrag, cache, cacheVersion])
 
   const handleAllClick = useCallback(() => onFaceSelect(null), [onFaceSelect])
   const handleFaceClick = useCallback(

@@ -25,8 +25,8 @@ import { Textarea } from '@/components/ui/textarea'
 import type { Route, TopoPoint } from '@/types'
 import { bezierCurve, scalePoints, normalizePoint } from '@/lib/topo-utils'
 import { getGradeColor } from '@/lib/tokens'
-import { getFaceTopoUrl } from '@/lib/constants'
 import { useToast } from '@/components/ui/toast'
+import { useFaceImageCache } from '@/hooks/use-face-image'
 import { matchRouteByQuery } from '@/hooks/use-route-search'
 import { useCragRoutes } from '@/hooks/use-crag-routes'
 import { CragSelector } from '@/components/editor/crag-selector'
@@ -58,6 +58,7 @@ export default function RouteAnnotationPage() {
     crags, routes, setRoutes, selectedCragId, setSelectedCragId,
     isLoadingCrags, isLoadingRoutes, stats, updateCragAreas,
   } = useCragRoutes()
+  const faceImageCache = useFaceImageCache()
 
   // ============ R2 上已有的 face 列表 ============
   const [r2Faces, setR2Faces] = useState<R2FaceInfo[]>([])
@@ -161,7 +162,7 @@ export default function RouteAnnotationPage() {
         faceId,
         area,
         routes: [],
-        imageUrl: getFaceTopoUrl(selectedCragId, area, faceId),
+        imageUrl: faceImageCache.getImageUrl({ cragId: selectedCragId, area, faceId }),
       })
     })
 
@@ -178,7 +179,7 @@ export default function RouteAnnotationPage() {
       result = result.filter(f => f.area === selectedArea)
     }
     return result
-  }, [routes, r2Faces, selectedCragId, selectedArea])
+  }, [routes, r2Faces, selectedCragId, selectedArea, faceImageCache])
 
   // 按 area 筛选的线路
   const areaRoutes = useMemo(() => {
@@ -264,7 +265,7 @@ export default function RouteAnnotationPage() {
     setSelectedFaceId(autoFaceId)
 
     if (autoFaceId && selectedRoute.area) {
-      const url = getFaceTopoUrl(selectedRoute.cragId, selectedRoute.area, autoFaceId)
+      const url = faceImageCache.getImageUrl({ cragId: selectedRoute.cragId, area: selectedRoute.area, faceId: autoFaceId })
       // 仅当 URL 变化时才触发 loading，避免同岩面切换线路时 onLoad 不触发导致永久 loading
       setImageUrl(prev => {
         if (prev === url) return prev
@@ -276,7 +277,7 @@ export default function RouteAnnotationPage() {
       setImageUrl(null)
       setImageLoadError(false)
     }
-  }, [selectedRoute])
+  }, [selectedRoute, faceImageCache])
 
   // ============ 画布操作 ============
   const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -739,7 +740,7 @@ export default function RouteAnnotationPage() {
                       if (face.faceId === selectedFaceId) return
                       setSelectedFaceId(face.faceId)
                       setTopoLine([])  // 切换岩面时清空旧控制点
-                      const url = getFaceTopoUrl(selectedRoute.cragId, face.area, face.faceId)
+                      const url = faceImageCache.getImageUrl({ cragId: selectedRoute.cragId, area: face.area, faceId: face.faceId })
                       setImageUrl(url)
                       setIsImageLoading(true)
                       setImageLoadError(false)

@@ -21,8 +21,8 @@ import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
 import { Input } from '@/components/ui/input'
 import type { Route } from '@/types'
-import { getFaceTopoUrl } from '@/lib/constants'
 import { useToast } from '@/components/ui/toast'
+import { useFaceImageCache } from '@/hooks/use-face-image'
 import { useCragRoutes } from '@/hooks/use-crag-routes'
 import { CragSelector } from '@/components/editor/crag-selector'
 import { preloadImage } from '@/lib/editor-utils'
@@ -81,6 +81,7 @@ export default function FaceManagementPage() {
     crags, routes, setRoutes, selectedCragId, setSelectedCragId,
     isLoadingCrags, isLoadingRoutes, stats, updateCragAreas,
   } = useCragRoutes()
+  const faceImageCache = useFaceImageCache()
 
   // ============ R2 上已有的 face 列表 ============
   const [r2Faces, setR2Faces] = useState<R2FaceInfo[]>([])
@@ -189,7 +190,7 @@ export default function FaceManagementPage() {
         faceId,
         area,
         routes: [],
-        imageUrl: getFaceTopoUrl(selectedCragId, area, faceId),
+        imageUrl: faceImageCache.getImageUrl({ cragId: selectedCragId, area, faceId }),
       })
     })
 
@@ -203,7 +204,7 @@ export default function FaceManagementPage() {
     let result = Array.from(map.values())
     if (selectedArea) result = result.filter(f => f.area === selectedArea)
     return result
-  }, [routes, r2Faces, selectedCragId, selectedArea])
+  }, [routes, r2Faces, selectedCragId, selectedArea, faceImageCache])
 
   // 切换岩场时重置选择
   const handleSelectCrag = useCallback((id: string) => {
@@ -289,6 +290,8 @@ export default function FaceManagementPage() {
       if (!res.ok) throw new Error(data.error || '上传失败')
 
       await preloadImage(data.url)
+      // 缓存失效: 通知所有消费者重新加载该岩面图片
+      faceImageCache.invalidate(`${selectedCragId}/${uploadArea}/${faceId}`)
       showToast('照片上传成功！', 'success', 3000)
       setUploadedFile(null)
       setPreviewUrl(null)
@@ -320,7 +323,7 @@ export default function FaceManagementPage() {
     } finally {
       setIsUploading(false)
     }
-  }, [uploadedFile, selectedCragId, isCreating, newFaceId, selectedFace, newArea, customArea, persistedAreas, updateCragAreas, showToast])
+  }, [uploadedFile, selectedCragId, isCreating, newFaceId, selectedFace, newArea, customArea, persistedAreas, updateCragAreas, showToast, faceImageCache])
 
   const handleUpload = useCallback(async () => {
     if (!uploadedFile || !selectedCragId) return
@@ -370,6 +373,8 @@ export default function FaceManagementPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '删除失败')
 
+      // 缓存失效: 通知所有消费者该岩面已删除
+      faceImageCache.invalidate(`${selectedCragId}/${selectedFace.area}/${selectedFace.faceId}`)
       // 从本地状态移除
       setR2Faces(prev => prev.filter(f => f.faceId !== selectedFace.faceId))
       setSelectedFace(null)
@@ -386,7 +391,7 @@ export default function FaceManagementPage() {
     } finally {
       setIsDeleting(false)
     }
-  }, [selectedFace, selectedCragId, showToast])
+  }, [selectedFace, selectedCragId, showToast, faceImageCache])
 
   // ============ 重命名岩面 ============
   const handleRenameFace = useCallback(async () => {
@@ -415,8 +420,11 @@ export default function FaceManagementPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '重命名失败')
 
-      // 更新本地状态
+      // 缓存失效: 旧名称 + 新名称
       const oldFaceId = selectedFace.faceId
+      faceImageCache.invalidate(`${selectedCragId}/${selectedFace.area}/${oldFaceId}`)
+      faceImageCache.invalidate(`${selectedCragId}/${selectedFace.area}/${newFaceId}`)
+      // 更新本地状态
       setR2Faces(prev => prev.map(f =>
         f.faceId === oldFaceId ? { ...f, faceId: newFaceId } : f
       ))
@@ -426,7 +434,7 @@ export default function FaceManagementPage() {
       setSelectedFace(prev => prev ? {
         ...prev,
         faceId: newFaceId,
-        imageUrl: getFaceTopoUrl(selectedCragId, prev.area, newFaceId),
+        imageUrl: faceImageCache.getImageUrl({ cragId: selectedCragId, area: prev.area, faceId: newFaceId }),
       } : null)
       setIsRenaming(false)
 
@@ -440,7 +448,7 @@ export default function FaceManagementPage() {
     } finally {
       setIsSubmittingRename(false)
     }
-  }, [selectedFace, selectedCragId, renameValue, showToast, setRoutes])
+  }, [selectedFace, selectedCragId, renameValue, showToast, setRoutes, faceImageCache])
 
   // ============ 左栏：岩面列表 ============
   const leftPanel = (
