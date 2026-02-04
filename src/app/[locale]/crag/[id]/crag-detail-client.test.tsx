@@ -177,13 +177,16 @@ describe('CragDetailClient', () => {
   })
 
   describe('无接近方式', () => {
-    it('不显示前往方式卡片', () => {
+    it('仍显示前往方式卡片（含地图），但不显示 approach 文字', () => {
       const cragNoApproach: Crag = {
         ...mockCrag,
         approach: '',
       }
       render(<CragDetailClient crag={cragNoApproach} routes={mockRoutes} />)
-      expect(screen.queryByText('前往方式')).not.toBeInTheDocument()
+      // 卡片标题仍显示（因为地图始终需要显示）
+      expect(screen.getByText('前往方式')).toBeInTheDocument()
+      // 但 approach 文字内容不显示
+      expect(screen.queryByText('从停车场步行10分钟')).not.toBeInTheDocument()
     })
   })
 })
