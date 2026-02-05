@@ -3,11 +3,13 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Image as ImageIcon } from 'lucide-react'
+import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
 import { useFaceImageCache } from '@/hooks/use-face-image'
 
 interface FaceGroup {
   key: string
   label: string
+  area: string
   image: string
 }
 
@@ -75,6 +77,36 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
     })
   }, [selectedCrag, cache])
 
+  // Area 筛选状态 (null = "全部")，绑定到 crag，切换岩场自动重置
+  const [areaState, setAreaState] = useState<{ cragId: string; area: string | null }>({
+    cragId: '',
+    area: null,
+  })
+  const selectedArea = areaState.cragId === selectedCrag ? areaState.area : null
+
+  // 预览模式：内部 face 高亮状态（不影响线路列表），绑定到 crag
+  const [previewState, setPreviewState] = useState<{ cragId: string; faceId: string | null }>({
+    cragId: '',
+    faceId: null,
+  })
+  const previewFace = previewState.cragId === selectedCrag ? previewState.faceId : null
+  const setPreviewFace = useCallback(
+    (faceId: string | null) => setPreviewState({ cragId: selectedCrag, faceId }),
+    [selectedCrag]
+  )
+
+  // AC4: 切换 area 时重置 face 选中状态
+  const setSelectedArea = useCallback(
+    (area: string | null) => {
+      setAreaState({ cragId: selectedCrag, area })
+      setPreviewState({ cragId: selectedCrag, faceId: null })
+      if (selectedFace) {
+        onFaceSelect(null)
+      }
+    },
+    [selectedCrag, selectedFace, onFaceSelect]
+  )
+
   // 从 API 获取 R2 上真实存在的 face 列表
   // 用 { cragId, faces } 单一状态避免 effect 内同步 setState
   const [facesState, setFacesState] = useState<{
@@ -103,30 +135,81 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
   }, [selectedCrag])
 
   // 派生状态：crag 不匹配时视为 loading
-  const r2Faces = facesState.cragId === selectedCrag ? facesState.faces : []
+  const r2Faces = useMemo(
+    () => facesState.cragId === selectedCrag ? facesState.faces : [],
+    [facesState, selectedCrag]
+  )
   const loading = selectedCrag !== '' && facesState.cragId !== selectedCrag
+
+  // 提取唯一 area 列表 (保持原始顺序)
+  const uniqueAreas = useMemo(() => {
+    const seen = new Set<string>()
+    const areas: string[] = []
+    for (const { area } of r2Faces) {
+      if (!seen.has(area)) {
+        seen.add(area)
+        areas.push(area)
+      }
+    }
+    return areas
+  }, [r2Faces])
 
   // 基于 API 数据生成 face groups (通过缓存层获取版本感知的 URL)
   // cacheVersion 变化时强制重算 → 获取带新时间戳的 URL
-  const faceGroups = useMemo<FaceGroup[]>(() => {
+  const allFaceGroups = useMemo<FaceGroup[]>(() => {
     return r2Faces.map(({ faceId, area }) => ({
       key: faceId,
-      label: area,
+      label: faceId,
+      area,
       image: cache.getImageUrl({ cragId: selectedCrag, area, faceId }),
     }))
     // eslint-disable-next-line react-hooks/exhaustive-deps -- cacheVersion is an intentional trigger dep for cache invalidation
   }, [r2Faces, selectedCrag, cache, cacheVersion])
 
-  const handleAllClick = useCallback(() => onFaceSelect(null), [onFaceSelect])
+  // 按选中 area 过滤
+  const faceGroups = useMemo(() => {
+    if (!selectedArea) return allFaceGroups
+    return allFaceGroups.filter((g) => g.area === selectedArea)
+  }, [allFaceGroups, selectedArea])
+
+  // AC3: "全部" area 下选择 face 仅预览，不筛选线路列表
+  // 单 area 时 area chips 不显示，不算"全部"模式
+  const isPreviewMode = selectedArea === null && uniqueAreas.length > 1
+
+  // 视觉高亮的 face：预览模式用内部状态，筛选模式用父级 prop
+  const visualSelectedFace = isPreviewMode ? previewFace : selectedFace
+
+  // US-004: 单岩面区域自动选中
+  useEffect(() => {
+    if (isPreviewMode) return
+    if (faceGroups.length !== 1) return
+    if (selectedFace !== null) return
+    onFaceSelect(faceGroups[0].key)
+  }, [isPreviewMode, faceGroups, selectedFace, onFaceSelect])
+
+  const handleAllClick = useCallback(() => {
+    if (isPreviewMode) {
+      setPreviewFace(null)
+    } else {
+      onFaceSelect(null)
+    }
+  }, [isPreviewMode, setPreviewFace, onFaceSelect])
+
   const handleFaceClick = useCallback(
-    (key: string) => onFaceSelect(selectedFace === key ? null : key),
-    [onFaceSelect, selectedFace]
+    (key: string) => {
+      if (isPreviewMode) {
+        setPreviewFace(previewFace === key ? null : key)
+      } else {
+        onFaceSelect(selectedFace === key ? null : key)
+      }
+    },
+    [isPreviewMode, setPreviewFace, previewFace, onFaceSelect, selectedFace]
   )
 
   if (!selectedCrag) return null
 
   // 加载中显示 skeleton strip
-  if (loading && faceGroups.length === 0) {
+  if (loading && allFaceGroups.length === 0) {
     return (
       <div className="overflow-x-auto scrollbar-hide">
         <div className="flex gap-2 px-4 pb-2" style={{ minWidth: 'min-content' }}>
@@ -143,11 +226,37 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
     )
   }
 
-  if (faceGroups.length === 0) return null
+  if (allFaceGroups.length === 0) return null
+
+  // 只有多个 area 时才显示 area 筛选芯片
+  const showAreaChips = uniqueAreas.length > 1
 
   return (
-    <div className="overflow-x-auto scrollbar-hide">
-      <div className="flex gap-2 px-4 pb-2" style={{ minWidth: 'min-content' }}>
+    <div>
+      {/* Area 区域标签 */}
+      {showAreaChips && (
+        <div className="px-4 pb-1.5">
+          <FilterChipGroup>
+            <FilterChip
+              label={tCommon('all')}
+              selected={!selectedArea}
+              onClick={() => setSelectedArea(null)}
+            />
+            {uniqueAreas.map((area) => (
+              <FilterChip
+                key={area}
+                label={area}
+                selected={selectedArea === area}
+                onClick={() => setSelectedArea(area)}
+              />
+            ))}
+          </FilterChipGroup>
+        </div>
+      )}
+
+      {/* 岩面缩略图 */}
+      <div className="overflow-x-auto scrollbar-hide">
+        <div className="flex gap-2 px-4 pb-2" style={{ minWidth: 'min-content' }}>
         {/* "全部" 选项 */}
         <button
           onClick={handleAllClick}
@@ -157,13 +266,13 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
             className="w-16 h-12 flex items-center justify-center text-xs font-medium"
             style={{
               borderRadius: 'var(--theme-radius-md)',
-              backgroundColor: !selectedFace
+              backgroundColor: !visualSelectedFace
                 ? 'var(--theme-primary)'
                 : 'var(--theme-surface-variant)',
-              color: !selectedFace
+              color: !visualSelectedFace
                 ? 'var(--theme-on-primary)'
                 : 'var(--theme-on-surface-variant)',
-              border: !selectedFace
+              border: !visualSelectedFace
                 ? '2px solid var(--theme-primary)'
                 : '2px solid transparent',
             }}
@@ -173,7 +282,7 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
         </button>
 
         {faceGroups.map((group) => {
-          const isSelected = selectedFace === group.key
+          const isSelected = visualSelectedFace === group.key
           return (
             <button
               key={group.key}
@@ -205,6 +314,7 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
             </button>
           )
         })}
+        </div>
       </div>
     </div>
   )
