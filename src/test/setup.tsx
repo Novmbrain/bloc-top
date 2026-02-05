@@ -6,6 +6,23 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
 
+// Node 22+ 内置了空壳 localStorage/sessionStorage 全局对象，
+// 覆盖了 jsdom 提供的完整实现，导致 clear()/getItem() 等方法缺失。
+// 这里用标准 Storage API 显式替换。
+function createStorageMock(): Storage {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = String(value) },
+    removeItem: (key: string) => { delete store[key] },
+    clear: () => { store = {} },
+    get length() { return Object.keys(store).length },
+    key: (index: number) => Object.keys(store)[index] ?? null,
+  }
+}
+vi.stubGlobal('localStorage', createStorageMock())
+vi.stubGlobal('sessionStorage', createStorageMock())
+
 // 每个测试后自动清理 DOM
 afterEach(() => {
   cleanup()
