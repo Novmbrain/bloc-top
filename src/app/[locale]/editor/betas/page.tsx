@@ -94,6 +94,15 @@ export default function BetaEditorPage() {
     setShowRightPanel(true)
   }, [])
 
+  // ============ 同步 routes + selectedRoute 辅助 ============
+  const updateRouteAndSelected = useCallback(
+    (routeId: number, transform: (r: Route) => Route) => {
+      setRoutes(prev => prev.map(r => r.id === routeId ? transform(r) : r))
+      setSelectedRoute(prev => prev && prev.id === routeId ? transform(prev) : prev)
+    },
+    [setRoutes],
+  )
+
   // ============ 开始编辑 Beta ============
   const handleStartEdit = useCallback((beta: BetaLink) => {
     setEditingBetaId(beta.id)
@@ -128,36 +137,18 @@ export default function BetaEditorPage() {
       }
 
       // 更新本地状态
-      setRoutes(prev => prev.map(r => {
-        if (r.id !== selectedRoute.id) return r
-        const updatedBetas = (r.betaLinks || []).map(b => {
-          if (b.id !== betaId) return b
-          return {
-            ...b,
-            title: editForm.title.trim() || undefined,
-            author: editForm.author.trim() || undefined,
-            climberHeight: editForm.climberHeight ? parseInt(editForm.climberHeight, 10) : undefined,
-            climberReach: editForm.climberReach ? parseInt(editForm.climberReach, 10) : undefined,
-          }
-        })
-        return { ...r, betaLinks: updatedBetas }
+      const newValues = {
+        title: editForm.title.trim() || undefined,
+        author: editForm.author.trim() || undefined,
+        climberHeight: editForm.climberHeight ? parseInt(editForm.climberHeight, 10) : undefined,
+        climberReach: editForm.climberReach ? parseInt(editForm.climberReach, 10) : undefined,
+      }
+      updateRouteAndSelected(selectedRoute.id, r => ({
+        ...r,
+        betaLinks: (r.betaLinks || []).map(b =>
+          b.id === betaId ? { ...b, ...newValues } : b
+        ),
       }))
-
-      // 同步 selectedRoute
-      setSelectedRoute(prev => {
-        if (!prev) return prev
-        const updatedBetas = (prev.betaLinks || []).map(b => {
-          if (b.id !== betaId) return b
-          return {
-            ...b,
-            title: editForm.title.trim() || undefined,
-            author: editForm.author.trim() || undefined,
-            climberHeight: editForm.climberHeight ? parseInt(editForm.climberHeight, 10) : undefined,
-            climberReach: editForm.climberReach ? parseInt(editForm.climberReach, 10) : undefined,
-          }
-        })
-        return { ...prev, betaLinks: updatedBetas }
-      })
 
       setEditingBetaId(null)
       showToast('Beta 信息已更新', 'success', 3000)
@@ -166,7 +157,7 @@ export default function BetaEditorPage() {
     } finally {
       setIsSaving(false)
     }
-  }, [selectedRoute, editForm, setRoutes, showToast])
+  }, [selectedRoute, editForm, updateRouteAndSelected, showToast])
 
   // ============ 删除 Beta ============
   const handleDeleteBeta = useCallback(async (betaId: string) => {
@@ -184,14 +175,10 @@ export default function BetaEditorPage() {
       }
 
       // 更新本地状态
-      setRoutes(prev => prev.map(r => {
-        if (r.id !== selectedRoute.id) return r
-        return { ...r, betaLinks: (r.betaLinks || []).filter(b => b.id !== betaId) }
+      updateRouteAndSelected(selectedRoute.id, r => ({
+        ...r,
+        betaLinks: (r.betaLinks || []).filter(b => b.id !== betaId),
       }))
-      setSelectedRoute(prev => {
-        if (!prev) return prev
-        return { ...prev, betaLinks: (prev.betaLinks || []).filter(b => b.id !== betaId) }
-      })
 
       showToast('Beta 已删除', 'success', 3000)
     } catch (error) {
@@ -199,7 +186,7 @@ export default function BetaEditorPage() {
     } finally {
       setDeletingBetaId(null)
     }
-  }, [selectedRoute, setRoutes, showToast])
+  }, [selectedRoute, updateRouteAndSelected, showToast])
 
   // ============ 添加 Beta 成功回调 ============
   const handleBetaSubmitSuccess = useCallback(() => {
