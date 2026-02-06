@@ -579,7 +579,7 @@ export default function FaceManagementPage() {
               <div className="text-center py-12" style={{ color: 'var(--theme-on-surface-variant)' }}>
                 <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p className="font-medium">暂无岩面</p>
-                <p className="text-sm mt-1">点击下方按钮新建岩面</p>
+                <p className="text-sm mt-1">点击上方「新建岩面」按钮创建</p>
               </div>
             ) : (
               faceGroups.map(face => (
