@@ -1005,6 +1005,7 @@ export default function FaceManagementPage() {
                         <button
                           key={face.faceId}
                           onClick={() => { setSelectedFace(face); setIsRenaming(false) }}
+                          aria-selected={isActive}
                           className="flex-shrink-0 flex flex-col items-center gap-1 transition-all active:scale-95"
                         >
                           <div
