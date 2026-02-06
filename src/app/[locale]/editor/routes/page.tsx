@@ -531,16 +531,15 @@ export default function RouteAnnotationPage() {
     [editedRoute.grade, selectedRoute?.grade]
   )
 
-  const pathData = useMemo(() => {
-    if (topoLine.length < 2) return ''
-    const scaled = scalePoints(topoLine, VIEW_WIDTH, VIEW_HEIGHT)
-    return bezierCurve(scaled)
-  }, [topoLine])
-
   const scaledPoints = useMemo(
     () => scalePoints(topoLine, VIEW_WIDTH, VIEW_HEIGHT),
     [topoLine]
   )
+
+  const pathData = useMemo(() => {
+    if (scaledPoints.length < 2) return ''
+    return bezierCurve(scaledPoints)
+  }, [scaledPoints])
 
   // ============ 左栏 ============
   const leftPanel = (

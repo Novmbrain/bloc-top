@@ -77,10 +77,9 @@ export function FullscreenTopoEditor({
     [topoLine]
   )
   const fsPathData = useMemo(() => {
-    if (topoLine.length < 2) return ''
-    const scaled = scalePoints(topoLine, VIEW_WIDTH, VIEW_HEIGHT)
-    return bezierCurve(scaled)
-  }, [topoLine])
+    if (fsScaledPoints.length < 2) return ''
+    return bezierCurve(fsScaledPoints)
+  }, [fsScaledPoints])
 
   return (
     <div
