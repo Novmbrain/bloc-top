@@ -516,9 +516,7 @@ export function RouteDetailDrawer({
         onClose={() => setBetaSubmitOpen(false)}
         routeId={route.id}
         routeName={route.name}
-        onSuccess={() => {
-          fetchLatestBetas(true)
-        }}
+        onSuccess={() => fetchLatestBetas(true)}
       />
     </>
   )

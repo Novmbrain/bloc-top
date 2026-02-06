@@ -7,13 +7,14 @@ import { Drawer } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { detectPlatformFromUrl, isXiaohongshuUrl, extractUrlFromText, BETA_PLATFORMS } from '@/lib/beta-constants'
 import { useClimberBodyData } from '@/hooks/use-climber-body-data'
+import type { BetaLink } from '@/types'
 
 interface BetaSubmitDrawerProps {
   isOpen: boolean
   onClose: () => void
   routeId: number
   routeName: string
-  onSuccess?: () => void
+  onSuccess?: (beta: BetaLink) => void
 }
 
 export function BetaSubmitDrawer({
@@ -130,13 +131,14 @@ export function BetaSubmitDrawer({
         throw new Error(translatedError)
       }
 
+      const data = await response.json()
       setSuccess(true)
       // 提交成功后缓存昵称和身体数据
       if (nickname.trim()) localStorage.setItem('beta_nickname', nickname.trim())
       updateBodyData({ height, reach })
       setTimeout(() => {
         handleClose()
-        onSuccess?.()
+        onSuccess?.(data.beta as BetaLink)
       }, 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : t('submitError'))

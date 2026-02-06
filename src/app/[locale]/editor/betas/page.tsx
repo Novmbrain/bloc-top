@@ -188,24 +188,14 @@ export default function BetaEditorPage() {
     }
   }, [selectedRoute, updateRouteAndSelected, showToast])
 
-  // ============ 添加 Beta 成功回调 ============
-  const handleBetaSubmitSuccess = useCallback(() => {
-    // 重新加载线路数据以获取新 beta
-    if (!selectedCragId) return
-    fetch(`/api/crags/${selectedCragId}/routes`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.routes) {
-          setRoutes(data.routes)
-          // 更新 selectedRoute
-          if (selectedRoute) {
-            const updated = (data.routes as Route[]).find(r => r.id === selectedRoute.id)
-            if (updated) setSelectedRoute(updated)
-          }
-        }
-      })
-      .catch(() => {})
-  }, [selectedCragId, selectedRoute, setRoutes])
+  // ============ 添加 Beta 成功回调 (乐观更新) ============
+  const handleBetaSubmitSuccess = useCallback((newBeta: BetaLink) => {
+    if (!selectedRoute) return
+    updateRouteAndSelected(selectedRoute.id, r => ({
+      ...r,
+      betaLinks: [...(r.betaLinks || []), newBeta],
+    }))
+  }, [selectedRoute, updateRouteAndSelected])
 
   // ============ Beta 统计 (用于 CragSelector) ============
   const betaStats = useMemo(() => {
