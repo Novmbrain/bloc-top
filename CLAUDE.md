@@ -164,6 +164,7 @@ src/
 │   ├── use-locale-preference.ts # 语言偏好
 │   ├── use-platform-detect.ts  # 平台检测 (iOS/Android/Desktop)
 │   ├── use-contextual-hint.ts  # 上下文提示
+│   ├── use-media-query.ts      # 响应式媒体查询 (SSR 安全)
 │   ├── use-scroll-reveal.ts    # 滚动显示动画
 │   └── use-delayed-loading.ts  # 延迟加载 (避免骨架屏闪烁)
 ├── types/index.ts              # TypeScript 类型定义 (见下方 Core Data Types)
