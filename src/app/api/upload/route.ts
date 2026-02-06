@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { createModuleLogger } from '@/lib/logger'
 import { sanitizePathSegment } from '@/lib/request-utils'
+import { getDatabase } from '@/lib/db'
 
 const log = createModuleLogger('API:Upload')
 
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
     const faceId = formData.get('faceId') as string | null
     const area = formData.get('area') as string | null
     const checkOnly = formData.get('checkOnly') === 'true'
+    const clearTopoLines = formData.get('clearTopoLines') === 'true'
 
     // 验证必需参数：需要 cragId + (routeName 或 (faceId + area))
     if (!cragId || (!routeName && (!faceId || !area))) {
@@ -151,6 +153,17 @@ export async function POST(request: NextRequest) {
 
     await getS3Client().send(command)
 
+    // 可选：清除关联线路的 topoLine 标注
+    let topoLinesCleared = 0
+    if (clearTopoLines && faceId && cragId) {
+      const db = await getDatabase()
+      const result = await db.collection('routes').updateMany(
+        { cragId, faceId, topoLine: { $exists: true } },
+        { $unset: { topoLine: '' } }
+      )
+      topoLinesCleared = result.modifiedCount
+    }
+
     // 构建公开访问 URL（带时间戳解决缓存问题）
     // 使用时间戳而非全局 IMAGE_VERSION，确保用户立即看到新上传的图片
     const imageUrl = `https://img.bouldering.top/${key}?t=${Date.now()}`
@@ -158,13 +171,14 @@ export async function POST(request: NextRequest) {
     log.info('Image uploaded successfully', {
       action: 'POST /api/upload',
       duration: Date.now() - start,
-      metadata: { cragId, routeName, faceId, area, size: file.size },
+      metadata: { cragId, routeName, faceId, area, size: file.size, topoLinesCleared },
     })
 
     return NextResponse.json({
       success: true,
       url: imageUrl,
       message: '图片上传成功',
+      topoLinesCleared,
     })
   } catch (error) {
     log.error('Failed to upload image', error, {

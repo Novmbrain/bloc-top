@@ -30,8 +30,8 @@
         "npx tsc --noEmit passes"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "Modify upload/route.ts POST handler to accept and act on clearTopoLines param",
+      "passes": true,
+      "notes": "Completed: Added clearTopoLines FormData param, DB query with $exists check, returns topoLinesCleared count. All tests pass.",
       "dependsOn": []
     },
     {

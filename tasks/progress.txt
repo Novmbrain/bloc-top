@@ -10,3 +10,17 @@
 - TypeScript: PASS (npx tsc --noEmit)
 - ESLint: PASS (no new errors introduced)
 - Tests: PASS (52 files, 693 tests all passing)
+
+### Iteration 2 (Ralph Loop 1) — 2026-02-06
+**Task**: PWA-app-bwi.2 (US-002): 上传 API 支持可选清除 topoLine
+**Status**: COMPLETED
+**Changes**:
+- Modified `src/app/api/upload/route.ts`:
+  - Added `getDatabase` import from `@/lib/db`
+  - Read optional `clearTopoLines` FormData parameter
+  - After successful upload, if `clearTopoLines === 'true'` and faceId exists, clear topoLine on matching routes
+  - Added `topoLinesCleared` count to response JSON and log metadata
+**Verification**:
+- TypeScript: PASS
+- ESLint: PASS
+- Tests: PASS (52 files, 693 tests all passing)
