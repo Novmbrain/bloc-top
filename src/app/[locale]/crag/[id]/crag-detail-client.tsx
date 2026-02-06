@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
+import { useMediaQuery } from '@/hooks/use-media-query'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
@@ -29,6 +30,9 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
   const router = useRouter()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const isMobile = useMediaQuery('(max-width: 640px)')
+  const heroRef = useRef<HTMLDivElement>(null)
+  const [imageVisible, setImageVisible] = useState(true)
 
   // 生成封面图 URL
   const images = [1, 2].map((n) => getCragCoverUrl(crag.id, n))
@@ -49,6 +53,20 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
     return () => container.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // 监听 Hero 图片可见性（Mobile only）
+  useEffect(() => {
+    if (!isMobile) return
+    const hero = heroRef.current
+    if (!hero) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setImageVisible(entry.isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(hero)
+    return () => observer.disconnect()
+  }, [isMobile])
+
   // 计算难度范围
   const grades = routes
     .map((r) => r.grade)
@@ -68,15 +86,18 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
 
   return (
     <div
-      className="flex flex-col h-dvh overflow-hidden"
+      className={isMobile
+        ? "h-dvh overflow-y-auto"
+        : "flex flex-col h-dvh overflow-hidden"
+      }
       style={{
         backgroundColor: 'var(--theme-surface)',
         transition: 'var(--theme-transition)',
       }}
     >
-      {/* 封面图区域 */}
-      <div className="relative flex-shrink-0">
-        {/* 返回按钮 */}
+      {/* Hero 图片区域 */}
+      <div ref={heroRef} className={isMobile ? "relative" : "relative flex-shrink-0"}>
+        {/* 返回按钮（图片上方） */}
         <button
           onClick={() => router.back()}
           className="absolute top-12 left-4 z-10 w-10 h-10 rounded-full bg-black/50 backdrop-blur flex items-center justify-center"
@@ -84,53 +105,68 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
           <ChevronLeft className="w-6 h-6 text-white" />
         </button>
 
-        {/* 图片滑动查看 - 使用原生滚动 + CSS Scroll Snap */}
-        <div
-          ref={scrollContainerRef}
-          className="relative h-48 overflow-x-auto scrollbar-hide"
-          style={{
-            scrollSnapType: 'x mandatory',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          <div className="flex h-full">
-            {images.map((src, idx) => (
-              <div
-                key={idx}
-                className="w-full flex-shrink-0 h-48 relative"
-                style={{ scrollSnapAlign: 'start' }}
-              >
-                <Image
-                  src={src}
-                  alt={`${crag.name} ${idx + 1}`}
-                  fill
-                  priority={idx === 0}
-                  sizes="100vw"
-                  className="object-cover"
-                  draggable={false}
-                />
-              </div>
-            ))}
+        {isMobile ? (
+          /* Mobile: 单张图片，无轮播 */
+          <div className="relative h-48">
+            <Image
+              src={images[0]}
+              alt={crag.name}
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+              draggable={false}
+            />
           </div>
-
-          {/* 底部圆点指示器 */}
-          {images.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {images.map((_, idx) => (
+        ) : (
+          /* Desktop: 保留轮播 */
+          <div
+            ref={scrollContainerRef}
+            className="relative h-48 overflow-x-auto scrollbar-hide"
+            style={{
+              scrollSnapType: 'x mandatory',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            <div className="flex h-full">
+              {images.map((src, idx) => (
                 <div
                   key={idx}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    idx === currentIndex ? 'bg-white' : 'bg-white/50'
-                  }`}
-                />
+                  className="w-full flex-shrink-0 h-48 relative"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <Image
+                    src={src}
+                    alt={`${crag.name} ${idx + 1}`}
+                    fill
+                    priority={idx === 0}
+                    sizes="100vw"
+                    className="object-cover"
+                    draggable={false}
+                  />
+                </div>
               ))}
             </div>
-          )}
-        </div>
+
+            {/* 底部圆点指示器 */}
+            {images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                {images.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      idx === currentIndex ? 'bg-white' : 'bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 内容滚动区域 */}
-      <main className="flex-1 overflow-y-auto px-4 pb-24">
+      <main className={isMobile ? "px-4 pb-24" : "flex-1 overflow-y-auto px-4 pb-24"}>
         {/* 标题区域 */}
         <div className="py-4">
           <div className="flex flex-col mb-2">
@@ -238,6 +274,42 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
           delay={50}
         />
       </main>
+
+      {/* 迷你导航栏 — Mobile only, 图片滚出后滑入 */}
+      {isMobile && (
+        <div
+          className={`fixed top-0 inset-x-0 z-30 transition-transform duration-300 ${
+            imageVisible ? '-translate-y-full' : 'translate-y-0'
+          }`}
+        >
+          <div
+            className="h-14 flex items-center gap-3"
+            style={{
+              paddingTop: 'env(safe-area-inset-top)',
+              paddingLeft: '1rem',
+              paddingRight: '1rem',
+              backgroundColor: 'color-mix(in srgb, var(--theme-surface) 80%, transparent)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              borderBottom: '1px solid var(--theme-outline-variant)',
+            }}
+          >
+            <button
+              onClick={() => router.back()}
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'var(--theme-surface-variant)' }}
+            >
+              <ChevronLeft className="w-5 h-5" style={{ color: 'var(--theme-on-surface)' }} />
+            </button>
+            <span
+              className="truncate font-semibold text-base"
+              style={{ color: 'var(--theme-on-surface)' }}
+            >
+              {crag.name}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* 底部操作按钮 */}
       <div

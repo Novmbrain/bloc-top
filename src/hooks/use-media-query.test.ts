@@ -16,10 +16,10 @@ describe('useMediaQuery', () => {
       onchange: null,
       addListener: vi.fn(),
       removeListener: vi.fn(),
-      addEventListener: (_: string, cb: () => void) => listeners.add(cb),
-      removeEventListener: (_: string, cb: () => void) => listeners.delete(cb),
+      addEventListener: (_: string, cb: () => void) => { listeners.add(cb) },
+      removeEventListener: (_: string, cb: () => void) => { listeners.delete(cb) },
       dispatchEvent: vi.fn(),
-    }))
+    }) as unknown as MediaQueryList)
   })
 
   it('returns false when query does not match', () => {
