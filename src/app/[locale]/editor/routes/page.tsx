@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import {
-  ArrowLeft,
   Save,
   Check,
   Loader2,
@@ -21,6 +20,7 @@ import {
 import dynamic from 'next/dynamic'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
+import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import type { Route, TopoPoint } from '@/types'
@@ -1138,29 +1138,25 @@ export default function RouteAnnotationPage() {
   // ============ 渲染 ============
   return (
     <div className="min-h-screen pb-20 lg:pb-0" style={{ backgroundColor: 'var(--theme-surface)' }}>
-      <header
-        className="sticky top-0 z-40 px-4 lg:px-6 py-3 backdrop-blur-xl"
-        style={{
-          backgroundColor: 'color-mix(in srgb, var(--theme-surface) 85%, transparent)',
-          borderBottom: '1px solid var(--theme-outline-variant)',
+      <EditorPageHeader
+        title="线路标注"
+        icon={<Edit3 className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />}
+        isDetailMode={showEditorPanel}
+        onBackToList={() => {
+          if (isCreatingRoute) {
+            handleCancelCreate()
+            return
+          }
+          if (hasUnsavedChanges()) {
+            setPendingAction({ type: 'goBackMobile' })
+            setShowUnsavedDialog(true)
+            return
+          }
+          setShowEditorPanel(false)
+          setSelectedRoute(null)
         }}
-      >
-        <div className="flex items-center justify-between max-w-4xl lg:max-w-none mx-auto">
-          <Link
-            href="/editor"
-            className="flex items-center gap-2 p-2 -ml-2 rounded-xl transition-all duration-200 active:scale-95"
-            style={{ color: 'var(--theme-primary)' }}
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">返回</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Edit3 className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
-            <h1 className="text-lg font-bold" style={{ color: 'var(--theme-on-surface)' }}>线路标注</h1>
-          </div>
-          <div className="w-20" />
-        </div>
-      </header>
+        listLabel="线路列表"
+      />
 
       <div className="max-w-4xl lg:max-w-none mx-auto px-4 lg:px-6 py-4">
         {/* 桌面端双栏 */}
@@ -1177,39 +1173,11 @@ export default function RouteAnnotationPage() {
         <div className="lg:hidden">
           {!showEditorPanel ? (
             leftPanel
-          ) : isCreatingRoute ? (
+          ) : (
             <div className="space-y-4 animate-fade-in-up">
-              <button
-                onClick={handleCancelCreate}
-                className="flex items-center gap-2 p-2 -ml-2 rounded-xl transition-all duration-200 active:scale-95"
-                style={{ color: 'var(--theme-primary)' }}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm font-medium">返回线路列表</span>
-              </button>
               {rightPanel}
             </div>
-          ) : selectedRoute ? (
-            <div className="space-y-4 animate-fade-in-up">
-              <button
-                onClick={() => {
-                  if (hasUnsavedChanges()) {
-                    setPendingAction({ type: 'goBackMobile' })
-                    setShowUnsavedDialog(true)
-                    return
-                  }
-                  setShowEditorPanel(false)
-                  setSelectedRoute(null)
-                }}
-                className="flex items-center gap-2 p-2 -ml-2 rounded-xl transition-all duration-200 active:scale-95"
-                style={{ color: 'var(--theme-primary)' }}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm font-medium">返回线路列表</span>
-              </button>
-              {rightPanel}
-            </div>
-          ) : null}
+          )}
         </div>
       </div>
 
