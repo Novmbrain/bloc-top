@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { CheckCircle2, Circle, ChevronRight } from 'lucide-react'
 import type { Route } from '@/types'
 import { getGradeColor } from '@/lib/tokens'
@@ -14,8 +15,14 @@ export function RouteCard({
   isSelected: boolean
   onClick: () => void
 }) {
-  const hasTopo = route.topoLine && route.topoLine.length >= 2
-  const gradeColor = getGradeColor(route.grade)
+  const hasTopo = useMemo(
+    () => route.topoLine && route.topoLine.length >= 2,
+    [route.topoLine]
+  )
+  const gradeColor = useMemo(
+    () => getGradeColor(route.grade),
+    [route.grade]
+  )
 
   return (
     <button
