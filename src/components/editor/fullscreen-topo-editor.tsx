@@ -276,3 +276,5 @@ export function FullscreenTopoEditor({
     </div>
   )
 }
+
+export default FullscreenTopoEditor

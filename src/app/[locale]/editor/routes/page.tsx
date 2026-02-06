@@ -18,6 +18,7 @@ import {
   EyeOff,
   Plus,
 } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
 import { Input } from '@/components/ui/input'
@@ -33,11 +34,15 @@ import { useCragRoutes } from '@/hooks/use-crag-routes'
 import { CragSelector } from '@/components/editor/crag-selector'
 import { RouteCard } from '@/components/editor/route-card'
 import { AreaSelect } from '@/components/editor/area-select'
-import { FullscreenTopoEditor } from '@/components/editor/fullscreen-topo-editor'
 import { MultiTopoLineOverlay } from '@/components/multi-topo-line-overlay'
 import type { MultiTopoRoute } from '@/components/multi-topo-line-overlay'
 import { VIEW_WIDTH, VIEW_HEIGHT, GRADE_OPTIONS } from '@/lib/editor-utils'
 import { deriveAreas, getPersistedAreas } from '@/lib/editor-areas'
+
+const FullscreenTopoEditor = dynamic(
+  () => import('@/components/editor/fullscreen-topo-editor'),
+  { ssr: false }
+)
 
 interface R2FaceInfo {
   faceId: string
