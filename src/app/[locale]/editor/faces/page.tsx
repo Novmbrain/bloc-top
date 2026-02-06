@@ -939,9 +939,20 @@ export default function FaceManagementPage() {
         }}
       >
         <div className="flex items-center justify-between max-w-4xl lg:max-w-none mx-auto">
+          {/* 移动端详情模式: 返回列表; 其他: 返回编辑器 */}
+          {mobileShowDetail ? (
+            <button
+              onClick={() => { setMobileShowDetail(false); setSelectedFace(null); setIsCreating(false) }}
+              className="lg:hidden flex items-center gap-2 min-h-[44px] -ml-2 px-2 rounded-xl transition-all duration-200 active:scale-95"
+              style={{ color: 'var(--theme-primary)' }}
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">岩面列表</span>
+            </button>
+          ) : null}
           <Link
             href="/editor"
-            className="flex items-center gap-2 p-2 -ml-2 rounded-xl transition-all duration-200 active:scale-95"
+            className={`flex items-center gap-2 min-h-[44px] -ml-2 px-2 rounded-xl transition-all duration-200 active:scale-95 ${mobileShowDetail ? 'hidden lg:flex' : ''}`}
             style={{ color: 'var(--theme-primary)' }}
           >
             <ArrowLeft className="w-5 h-5" />
@@ -984,14 +995,6 @@ export default function FaceManagementPage() {
             leftPanel
           ) : (
             <div className="space-y-4 animate-fade-in-up">
-              <button
-                onClick={() => { setMobileShowDetail(false); setSelectedFace(null); setIsCreating(false) }}
-                className="flex items-center gap-2 p-2 -ml-2 rounded-xl transition-all duration-200 active:scale-95"
-                style={{ color: 'var(--theme-primary)' }}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm font-medium">返回岩面列表</span>
-              </button>
               {rightPanel}
             </div>
           )}
