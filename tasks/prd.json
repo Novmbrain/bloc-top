@@ -1,0 +1,80 @@
+{
+  "name": "Face Delete/Upload topoLine Cascade",
+  "description": "When deleting or overwriting face images in the editor, cascade-clear the associated routes' topoLine annotations. Enhance the editor UI to show affected routes and let users choose whether to keep or clear topoLine.",
+  "branchName": "ralph/face-topoline-cascade",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Delete face API cascades topoLine clear",
+      "description": "As a developer, when a face image is deleted via DELETE /api/faces, the associated routes' topoLine field should also be cleared alongside faceId, since topoLine coordinates are meaningless without the face image.",
+      "acceptanceCriteria": [
+        "In src/app/api/faces/route.ts DELETE handler, change $unset from { faceId: '' } to { faceId: '', topoLine: '' }",
+        "Update the comment on the $unset line to mention both faceId and topoLine",
+        "npm run lint passes",
+        "npx tsc --noEmit passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Completed: Changed $unset to include topoLine in route.ts:240. All tests pass.",
+      "dependsOn": []
+    },
+    {
+      "id": "US-002",
+      "title": "Upload API supports optional topoLine clear",
+      "description": "As a developer, when overwriting a face image via POST /api/upload, an optional clearTopoLines parameter allows the caller to specify whether to clear topoLine annotations for routes associated with that face.",
+      "acceptanceCriteria": [
+        "In src/app/api/upload/route.ts POST handler, read optional FormData field 'clearTopoLines' (string 'true'/'false')",
+        "After successful upload, if clearTopoLines === 'true' and faceId is provided, run $unset: { topoLine: '' } on routes matching { cragId, faceId }",
+        "Return the count of cleared routes in the response as 'topoLinesCleared'",
+        "npm run lint passes",
+        "npx tsc --noEmit passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Modify upload/route.ts POST handler to accept and act on clearTopoLines param",
+      "dependsOn": []
+    },
+    {
+      "id": "US-003",
+      "title": "Enhance delete confirmation to show affected routes",
+      "description": "As an editor, when deleting a face image, the confirmation dialog should display which routes have topoLine annotations on that face, so I know what data will be lost.",
+      "acceptanceCriteria": [
+        "In src/app/[locale]/editor/faces/page.tsx, before showing the delete confirmation dialog, fetch routes that match { cragId, faceId } and have a non-empty topoLine array",
+        "Display the list of affected route names in the confirmation dialog body",
+        "If no routes have topoLine, show a simpler confirmation without the route list",
+        "Use the existing shadcn/ui AlertDialog or similar pattern already in the editor",
+        "npm run lint passes",
+        "npx tsc --noEmit passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "UI enhancement in the editor faces page",
+      "dependsOn": [
+        "US-001"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "Enhance overwrite upload confirmation with topoLine choice",
+      "description": "As an editor, when overwriting a face image, if routes have topoLine annotations on that face, the confirmation dialog should show the affected routes and let me choose whether to keep or clear the topoLine annotations.",
+      "acceptanceCriteria": [
+        "In src/app/[locale]/editor/faces/page.tsx, the overwrite upload confirmation dialog fetches routes with topoLine for the target face",
+        "Display affected route names in the dialog",
+        "Add radio buttons: 'Keep existing annotations' (default) / 'Clear annotations'",
+        "Pass the user's choice as clearTopoLines parameter to the upload API call",
+        "If no routes have topoLine, skip the radio selection and proceed with simple confirmation",
+        "npm run lint passes",
+        "npx tsc --noEmit passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "UI enhancement in the editor faces page, depends on US-002 for the API parameter",
+      "dependsOn": [
+        "US-002"
+      ]
+    }
+  ],
+  "metadata": {
+    "updatedAt": "2026-02-06T01:21:00.000Z"
+  }
+}

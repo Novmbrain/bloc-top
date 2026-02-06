@@ -233,11 +233,11 @@ export async function DELETE(request: NextRequest) {
       Key: key,
     }))
 
-    // 2. 清除关联 routes 的 faceId
+    // 2. 清除关联 routes 的 faceId 和 topoLine
     const db = await getDatabase()
     const updateResult = await db.collection('routes').updateMany(
       { cragId, faceId },
-      { $unset: { faceId: '' } }
+      { $unset: { faceId: '', topoLine: '' } }
     )
 
     log.info('Face deleted', {

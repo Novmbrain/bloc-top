@@ -1,0 +1,12 @@
+## Ralph Loop Progress
+
+### Iteration 1 — 2026-02-06
+**Task**: PWA-app-bwi.1 (US-001): 删除岩面 API 级联清除 topoLine
+**Status**: COMPLETED
+**Changes**:
+- Modified `src/app/api/faces/route.ts` line 240: added `topoLine: ''` to `$unset` operator
+- When a face image is deleted, associated routes now have both `faceId` and `topoLine` cleared
+**Verification**:
+- TypeScript: PASS (npx tsc --noEmit)
+- ESLint: PASS (no new errors introduced)
+- Tests: PASS (52 files, 693 tests all passing)
