@@ -63,7 +63,7 @@ npm run db:seed:prod  # 数据迁移 (生产环境)
 npx shadcn@latest add <component>  # 添加 UI 组件
 
 # Claude Code 自定义命令
-/ship "描述"          # 端到端 Git 工作流 (commit → PR → CI → merge)
+/ship "描述"          # 端到端 Git 工作流 (commit → PR → Vercel 部署检查 → merge)
 /ship "#42"           # 关联已有 issue 的工作流
 ```
 
@@ -73,6 +73,7 @@ npx shadcn@latest add <component>  # 添加 UI 组件
 - **Database:** MongoDB Atlas (原生驱动)
 - **Styling:** Tailwind CSS v4 + shadcn/ui (new-york style)
 - **Theming:** next-themes (日间/暗夜/自动模式，Dracula 配色)
+- **I18n:** next-intl ^4.7.0 (中/英/法三语)
 - **PWA:** Serwist (service worker at `src/app/sw.ts`)
 - **Testing:** Vitest + Testing Library + Playwright (组件测试)
 - **CI/CD:** 本地 pre-push hook (质量检查) + Vercel (部署)
@@ -84,243 +85,291 @@ npx shadcn@latest add <component>  # 添加 UI 组件
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── page.tsx           # 首页 - 岩场列表
-│   ├── layout.tsx         # 根布局 (fonts, PWA prompts)
-│   ├── sw.ts              # Service Worker
-│   ├── crag/[id]/         # 岩场详情页
-│   ├── route/[id]/        # 线路详情页
-│   └── profile/           # 用户页面
+├── app/
+│   ├── layout.tsx              # 根布局 (fonts)
+│   ├── sw.ts                   # Service Worker (Serwist)
+│   ├── not-found.tsx
+│   ├── [locale]/               # ★ i18n 动态路由 (zh/en/fr)
+│   │   ├── layout.tsx          # 主布局 (ThemeProvider, Providers)
+│   │   ├── page.tsx            # 首页 - 岩场列表
+│   │   ├── crag/[id]/          # 岩场详情页
+│   │   ├── route/              # 线路列表/详情
+│   │   ├── intro/              # 介绍页
+│   │   ├── profile/            # 用户页面
+│   │   ├── editor/             # ★ 编辑器 (管理后台)
+│   │   │   ├── page.tsx        # 编辑器首页
+│   │   │   ├── routes/         # 线路编辑
+│   │   │   ├── faces/          # 岩面图片管理
+│   │   │   └── betas/          # Beta 视频管理
+│   │   └── offline/            # ★ 离线浏览
+│   │       ├── page.tsx        # 已下载岩场列表
+│   │       ├── crag/[id]/      # 离线岩场详情
+│   │       └── route/[id]/     # 离线线路详情
+│   └── api/                    # API Routes (见下方 API Routes 表)
+├── i18n/                       # ★ 国际化配置
+│   ├── navigation.ts           # createNavigation (Link, redirect, usePathname)
+│   ├── request.ts              # getRequestConfig (server-side i18n)
+│   └── routing.ts              # defineRouting (locales, defaultLocale)
 ├── components/
-│   ├── ui/                # shadcn/ui 组件
-│   │   ├── button.tsx, card.tsx, skeleton.tsx  # 基础组件
-│   │   ├── drawer.tsx     # 通用抽屉组件 (手势关闭)
-│   │   └── image-viewer.tsx # 全屏图片查看器 (双指缩放)
-│   ├── theme-provider.tsx # 主题上下文提供者
-│   ├── theme-switcher.tsx # 主题切换器组件
-│   ├── crag-card.tsx      # 岩场卡片
-│   ├── app-tabbar.tsx     # 底部导航栏 (毛玻璃效果)
-│   ├── filter-chip.tsx    # 筛选芯片组件 (单选/多选)
-│   ├── filter-drawer.tsx  # 筛选面板抽屉
-│   ├── route-detail-drawer.tsx  # 线路详情抽屉 (支持多线路切换)
-│   ├── topo-line-overlay.tsx    # Topo 线路 SVG 叠加层 (单线路)
-│   ├── multi-topo-line-overlay.tsx # Topo 多线路叠加层 (岩面共享模式)
-│   ├── beta-list-drawer.tsx     # Beta 视频列表抽屉
-│   ├── floating-search.tsx # 浮动搜索按钮
-│   ├── search-overlay.tsx # 搜索覆盖层
-│   ├── offline-indicator.tsx  # 离线状态提示 (顶部横幅)
-│   ├── sw-update-prompt.tsx   # SW 更新提示 (底部弹窗)
-│   ├── install-prompt.tsx # PWA 安装提示 (首页卡片)
-│   ├── amap-container.tsx # 高德地图容器组件
-│   ├── weather-strip.tsx  # 首页天气条 (攀岩适宜度)
-│   ├── weather-badge.tsx  # 卡片天气角标 (温度+图标)
-│   ├── weather-card.tsx   # 详情页天气卡 (完整信息+预报)
-│   ├── city-selector.tsx  # 城市选择器 (标题下拉菜单)
-│   └── empty-city.tsx     # 城市无数据空状态
-├── types/index.ts         # TypeScript 类型定义
-├── hooks/                 # 自定义 Hooks
-│   ├── use-route-search.ts # 线路搜索 Hook (首页搜索用)
-│   ├── use-city-selection.ts # 城市选择 Hook (localStorage + IP 定位)
-│   └── use-delayed-loading.ts # 延迟加载 Hook (避免骨架屏闪烁)
-├── test/                  # 测试工具
-│   ├── setup.tsx          # Vitest 全局设置 (mocks)
-│   └── utils.tsx          # 测试辅助函数
+│   ├── ui/                     # shadcn/ui 基础组件
+│   │   ├── button.tsx, skeleton.tsx, drawer.tsx, image-viewer.tsx
+│   │   ├── segmented-control.tsx, toast.tsx
+│   │   ├── input.tsx, textarea.tsx  # ★ IME 安全输入 (包装 composition-input.tsx)
+│   │   └── composition-input.tsx    # CompositionInput 底层实现
+│   ├── editor/                 # 编辑器专用组件
+│   │   ├── crag-selector.tsx, route-card.tsx, progress-ring.tsx
+│   │   └── fullscreen-topo-editor.tsx  # Topo 线路编辑器
+│   ├── face-image-provider.tsx # ★ FaceImageCache React 上下文
+│   ├── face-thumbnail-strip.tsx # 岩面缩略图条
+│   ├── offline-download-provider.tsx # 离线下载上下文
+│   ├── offline-cache-manager.tsx     # 离线缓存管理
+│   ├── download-button.tsx           # 岩场下载按钮
+│   ├── locale-detector.tsx     # 语言检测
+│   ├── locale-switcher.tsx     # 语言切换器
+│   ├── crag-card.tsx           # 岩场卡片
+│   ├── app-tabbar.tsx          # 底部导航栏 (毛玻璃效果)
+│   ├── filter-chip.tsx         # 筛选芯片 (单选/多选)
+│   ├── filter-drawer.tsx       # 筛选面板抽屉
+│   ├── route-detail-drawer.tsx # 线路详情抽屉 (支持多线路切换)
+│   ├── route-filter-bar.tsx    # 线路筛选栏
+│   ├── topo-line-overlay.tsx   # Topo 线路 SVG 叠加层
+│   ├── multi-topo-line-overlay.tsx # 多线路叠加层 (岩面共享模式)
+│   ├── beta-list-drawer.tsx    # Beta 视频列表抽屉
+│   ├── beta-submit-drawer.tsx  # Beta 视频提交抽屉
+│   ├── floating-search.tsx     # 浮动搜索按钮
+│   ├── floating-search-input.tsx # 浮动搜索输入框
+│   ├── search-overlay.tsx      # 搜索覆盖层
+│   ├── search-drawer.tsx       # 搜索抽屉
+│   ├── contextual-hint.tsx     # 上下文提示
+│   ├── grade-range-selector.tsx # 难度范围选择器
+│   ├── amap-container.tsx      # 高德地图容器
+│   ├── weather-strip.tsx       # 首页天气条 (攀岩适宜度)
+│   ├── weather-badge.tsx       # 卡片天气角标
+│   ├── weather-card.tsx        # 详情页天气卡
+│   ├── city-selector.tsx       # 城市选择器
+│   ├── offline-indicator.tsx   # 离线状态提示
+│   ├── sw-update-prompt.tsx    # SW 更新提示
+│   ├── install-prompt.tsx      # PWA 安装提示
+│   └── theme-provider.tsx, theme-switcher.tsx
+├── hooks/
+│   ├── use-face-image.ts       # ★ FaceImageCache hook
+│   ├── use-offline-download.ts # 离线下载 hook
+│   ├── use-offline-mode.ts     # 离线模式检测
+│   ├── use-route-search.ts     # 线路搜索
+│   ├── use-city-selection.ts   # 城市选择 (localStorage + IP 定位)
+│   ├── use-crag-routes.ts      # 岩场线路数据
+│   ├── use-weather.ts          # 天气数据
+│   ├── use-climber-body-data.ts # 攀岩者身体数据 (身高/臂展)
+│   ├── use-locale-preference.ts # 语言偏好
+│   ├── use-platform-detect.ts  # 平台检测 (iOS/Android/Desktop)
+│   ├── use-contextual-hint.ts  # 上下文提示
+│   ├── use-scroll-reveal.ts    # 滚动显示动画
+│   └── use-delayed-loading.ts  # 延迟加载 (避免骨架屏闪烁)
+├── types/index.ts              # TypeScript 类型定义 (见下方 Core Data Types)
+├── test/
+│   ├── setup.tsx               # Vitest 全局设置 (mocks)
+│   └── utils.tsx               # 测试辅助函数
 └── lib/
-    ├── utils.ts           # cn() 工具函数
-    ├── tokens.ts          # 设计令牌
-    ├── grade-utils.ts     # 难度等级工具
-    ├── cache-config.ts    # 统一缓存 TTL 配置 (ISR, SW, API, HTTP)
-    ├── rate-limit.ts      # 内存级 Rate Limiting (IP 限流)
-    ├── filter-constants.ts # 筛选配置常量 (难度分组, URL参数)
-    ├── beta-constants.ts   # Beta 平台配置 (小红书, 抖音等)
-    ├── weather-constants.ts # 天气配置 (图标, 适宜度阈值)
-    ├── weather-utils.ts   # 天气工具 (攀岩适宜度评估)
-    ├── city-config.ts     # 城市配置 (ID, 名称, 坐标, adcode)
-    ├── logger.ts          # 服务端统一日志工具
-    ├── client-logger.ts   # 客户端日志工具 (上报到服务端)
-    ├── mongodb.ts         # MongoDB 连接层
-    ├── db/index.ts        # 数据访问层 (CRUD, 带日志)
-    └── themes/            # 主题系统
-        ├── index.ts       # 主题类型和工具函数
-        ├── light.ts       # 日间主题 (Dracula Light)
-        └── dark.ts        # 暗夜主题 (Dracula)
+    ├── face-image-cache/       # ★ 岩面图片缓存层
+    │   ├── types.ts            # FaceImageCacheService 接口
+    │   ├── cache-service.ts    # 缓存实现 (URL 版本化)
+    │   └── index.ts            # 导出
+    ├── db/index.ts             # 数据访问层 (typed CRUD functions)
+    ├── mongodb.ts              # MongoDB 连接层 (exports getDatabase())
+    ├── constants.ts            # ★ 图片 URL 生成 (getTopoImageUrl, getFaceTopoUrl 等)
+    ├── utils.ts                # cn() 工具函数
+    ├── tokens.ts               # 设计令牌 (仅 gradeColors)
+    ├── grade-utils.ts          # 难度等级工具
+    ├── cache-config.ts         # 统一缓存 TTL 配置
+    ├── rate-limit.ts           # 内存级 Rate Limiting
+    ├── filter-constants.ts     # 筛选配置常量
+    ├── beta-constants.ts       # Beta 平台配置
+    ├── topo-constants.ts       # Topo 编辑器常量
+    ├── topo-utils.ts           # Topo 工具函数
+    ├── weather-constants.ts    # 天气配置
+    ├── weather-utils.ts        # 天气工具 (攀岩适宜度评估)
+    ├── city-config.ts          # 城市配置 (CityId, CityConfig)
+    ├── route-utils.ts          # 线路工具函数
+    ├── editor-utils.ts         # 编辑器工具函数
+    ├── editor-areas.ts         # 区域管理 (CRUD)
+    ├── offline-storage.ts      # 离线存储工具
+    ├── request-utils.ts        # 请求工具 (sanitizePathSegment 等)
+    ├── api-error-codes.ts      # API 错误码
+    ├── logger.ts               # 服务端日志
+    ├── client-logger.ts        # 客户端日志 (上报到 /api/log)
+    └── themes/                 # 主题系统 (Dracula)
 
-scripts/
-└── seed.ts                # 数据库迁移脚本
+messages/                       # ★ i18n 翻译文件
+├── zh.json                     # 中文 (默认)
+├── en.json                     # 英文
+└── fr.json                     # 法文
 
-playwright/                # Playwright 组件测试配置
-├── index.html             # 测试入口 HTML
-└── index.tsx              # 测试入口 (加载全局样式)
+scripts/                        # 数据库脚本
+├── seed.ts                     # 数据迁移
+└── ...                         # backup, check, migrate 等
 
 doc/
-└── PROJECT_OVERVIEW.md    # 项目技术文档 (详细)
-
-# 根目录配置文件
-vitest.config.ts           # Vitest 测试配置
-playwright-ct.config.ts    # Playwright 组件测试配置
+├── PROJECT_OVERVIEW.md         # 项目技术文档 (详细)
+├── PROJECT_INDEX.md            # 项目索引 (自动生成)
+└── FACE_IMAGE_CACHE_ARCHITECTURE.md  # 缓存架构文档
 ```
 
 ## Core Data Types
 
+定义在 `src/types/index.ts`：
+
 ```typescript
-interface Coordinates {
-  lng: number             // 经度
-  lat: number             // 纬度
-}
-
-interface ApproachPath {
-  id: string
-  name: string
-  points: Coordinates[]   // 路径点数组
-  color?: string          // 路径颜色
-  description?: string
-}
-
-interface Crag {
-  id: string              // 'yuan-tong-si', 'ba-jing-cun'
-  name: string            // 岩场名称
-  cityId: string          // 所属城市 ID ('luoyuan', 'xiamen')
-  location: string        // 地址
-  developmentTime: string // 开发时间
-  description: string     // 描述
-  approach: string        // 接近方式
-  coverImages?: string[]  // 封面图片
-  coordinates?: Coordinates     // 岩场坐标 (高德地图)
-  approachPaths?: ApproachPath[] // 接近路径 (KML导入)
-}
-
-// 城市配置类型
-type CityId = 'luoyuan' | 'xiamen'
-
-interface CityConfig {
-  id: CityId
-  name: string              // 显示名称
-  adcode: string            // 高德 adcode
-  coordinates: Coordinates  // 中心坐标
-  available: boolean        // 是否有数据可用
+interface TopoPoint {
+  x: number  // 0-1 归一化 X 坐标
+  y: number  // 0-1 归一化 Y 坐标
 }
 
 interface Route {
   id: number
-  name: string            // 线路名称
-  grade: string           // V0-V13 或 "？" (Hueco V-Scale 难度等级)
-  cragId: string          // 关联岩场
-  area: string            // 区域
+  name: string
+  grade: string           // V0-V13 或 "？" (Hueco V-Scale)
+  cragId: string
+  area: string
   faceId?: string         // 岩面 ID，同一 faceId 的线路共享图片
   setter?: string
-  FA?: string             // 首攀者
+  FA?: string
   description?: string
   image?: string
-  betaLinks?: BetaLink[]  // Beta 视频链接
+  betaLinks?: BetaLink[]
   topoLine?: TopoPoint[]  // Topo 线路标注 (归一化坐标)
 }
 
-// Beta 视频链接（目前仅支持小红书）
-type BetaPlatform = 'xiaohongshu'
+interface Crag {
+  id: string              // 'yuan-tong-si', 'ba-jing-cun'
+  name: string
+  cityId: string          // 所属城市 ID ('luoyuan', 'xiamen')
+  location: string
+  developmentTime: string
+  description: string
+  approach: string
+  coverImages?: string[]
+  coordinates?: Coordinates
+  approachPaths?: ApproachPath[]
+  areas?: string[]        // 持久化的区域列表
+}
 
 interface BetaLink {
   id: string
-  platform: BetaPlatform
-  noteId: string          // 小红书笔记 ID（用于去重）
+  platform: BetaPlatform  // 'xiaohongshu'
+  noteId: string
   url: string
-  originalUrl?: string    // 原始短链接
+  originalUrl?: string
   title?: string
   author?: string
-  climberHeight?: number  // 身高 (cm)
-  climberReach?: number   // 臂长 (cm)
+  climberHeight?: number
+  climberReach?: number
+  createdAt?: Date
+}
+
+// 其他类型 (详见 types/index.ts):
+// Coordinates, ApproachPath, Comment, BetaVideo, User, Feedback, VisitStats
+// GRADE_LEVELS, GradeLevel, ClimbingSuitability, WeatherLive, WeatherForecast
+// ClimbingCondition, WeatherData, DownloadStatus, DownloadProgress, OfflineCragMeta
+// TopoRoute, TopoData
+```
+
+城市配置类型定义在 `src/lib/city-config.ts`：
+
+```typescript
+type CityId = 'luoyuan' | 'xiamen'
+interface CityConfig {
+  id: CityId
+  name: string
+  shortName: string       // 简称 (空间紧张时)
+  adcode: string          // 高德 adcode
+  coordinates: Coordinates
+  available: boolean
 }
 ```
 
+## Internationalization (i18n)
+
+使用 `next-intl` 实现，所有页面路由在 `[locale]` 动态段下。
+
+**路由**: `src/i18n/routing.ts` 定义 locales (`zh`, `en`, `fr`) 和 defaultLocale (`zh`)
+
+**翻译文件**: `messages/{locale}.json`
+
+**使用方式**:
+```tsx
+// Server Component
+import { getTranslations } from 'next-intl/server'
+const t = await getTranslations('Home')
+
+// Client Component
+import { useTranslations } from 'next-intl'
+const t = useTranslations('Home')
+
+// 导航 (使用 i18n 版本的 Link)
+import { Link } from '@/i18n/navigation'
+<Link href="/crag/yuan-tong-si">岩场详情</Link>
+```
+
+## Face Image Cache
+
+岩面图片统一缓存层，位于 `src/lib/face-image-cache/`。使用 URL 版本化（`?t=timestamp`）刷新缓存，兼容 Next.js `<Image>`。
+
+- **Provider**: `<FaceImageProvider>` 包裹在 `[locale]/layout.tsx`
+- **Hook**: `useFaceImageCache()` 返回 `FaceImageCacheService`
+- **订阅**: `subscribe(faceKey, cb)` 精确匹配 | `subscribeByPrefix(prefix, cb)` 列表级
+- **失效**: 编辑器 CRUD 操作后调用 `faceImageCache.invalidate(faceKey)`
+
+> 架构详情见 `doc/FACE_IMAGE_CACHE_ARCHITECTURE.md`
+
 ## Design System
 
-使用 CSS 变量，定义在 `globals.css`，通过 `.dark` 类控制主题切换（next-themes class 模式）。
+使用 CSS 变量 (`globals.css`)，通过 `.dark` 类控制主题切换 (next-themes class 模式)。
 
 ### 主题变量 (`--theme-*`)
 
-```css
-/* 颜色 */
---theme-primary          /* 主色 */
---theme-on-primary       /* 主色上的文字 */
---theme-primary-container /* 浅色容器背景 */
---theme-on-primary-container /* 容器内文字 */
---theme-surface          /* 表面色/背景色 */
---theme-surface-variant  /* 表面变体色 */
---theme-on-surface       /* 表面上的文字 */
---theme-on-surface-variant /* 次级文字 */
---theme-outline          /* 边框色 */
---theme-outline-variant  /* 边框变体色 */
---theme-warning          /* 警告色 */
---theme-error            /* 错误色 */
---theme-success          /* 成功色 */
+| 类别 | 变量 |
+|------|------|
+| 颜色 | `primary`, `on-primary`, `primary-container`, `on-primary-container` |
+| 表面 | `surface`, `surface-variant`, `on-surface`, `on-surface-variant` |
+| 边框 | `outline`, `outline-variant` |
+| 状态 | `warning`, `error`, `success` |
+| 桌面 | `desktop-bg` |
+| 圆角 | `radius-sm/md/lg/xl/full` |
+| 阴影 | `shadow-sm/md/lg` |
+| 动画 | `transition` |
 
-/* 圆角 */
---theme-radius-sm/md/lg/xl/full
-
-/* 阴影 */
---theme-shadow-sm/md/lg
-
-/* 过渡动画 */
---theme-transition
-```
-
-### 通用令牌 (非主题相关)
+### 通用令牌
 
 ```css
-/* 间距 */
---space-xs/sm/md/lg/xl: 0.25-1.5rem
+--space-xs/sm/md/lg/xl: 0.25-1.5rem    /* 间距 */
 --space-page: 1rem
-
-/* 基础圆角 */
---radius-xs/sm/md/lg/xl: 0.25-1.75rem
-
-/* 阴影 (非主题感知) */
---elevation-1 到 --elevation-5
+--radius-xs/sm/md/lg/xl: 0.25-1.75rem  /* 基础圆角 */
+--elevation-1 到 --elevation-5          /* 阴影 */
+--app-shell-width: 480px               /* 桌面居中宽度 */
+--app-shell-padding: 16px
 ```
 
-### 主题定义
+### Dracula 配色 (暗夜模式)
 
-| 主题模式 | 值 | 特点 |
-|---------|-----|-----|
-| 日间 | `light` | 明亮清爽，紫色主色调 |
-| 暗夜 | `dark` | Dracula 配色，护眼舒适 |
-| 自动 | `system` | 跟随系统偏好 (默认) |
-
-**Dracula 配色方案** (暗夜模式)：
-- 背景: `#282A36` (深紫灰)
-- 前景: `#F8F8F2` (浅色文字)
-- 主色: `#BD93F9` (Dracula Purple)
-- 官方规范: https://draculatheme.com/contribute
+背景 `#282A36` | 前景 `#F8F8F2` | 主色 `#BD93F9` | 规范: https://draculatheme.com/contribute
 
 ### 使用方式
 
 ```tsx
-// 在组件中使用主题变量 (推荐 style 属性)
-<div style={{
+// 组件中使用主题变量 (推荐 style 属性)
+style={{
   backgroundColor: 'var(--theme-surface)',
   color: 'var(--theme-on-surface)',
   borderRadius: 'var(--theme-radius-xl)',
-  boxShadow: 'var(--theme-shadow-sm)',
-  transition: 'var(--theme-transition)',
-}}>
-  内容
-</div>
-
-// 半透明色使用 color-mix
-style={{
-  backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))',
 }}
 
-// 切换主题 (在组件中使用 next-themes)
+// 半透明色
+style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
+
+// 主题切换
 import { useTheme } from 'next-themes'
 const { theme, setTheme, resolvedTheme } = useTheme()
-
-// 设置主题模式
-setTheme('light')   // 日间模式
-setTheme('dark')    // 暗夜模式
-setTheme('system')  // 自动模式 (跟随系统)
-
-// resolvedTheme 返回实际应用的主题 ('light' 或 'dark')
-// 当 theme='system' 时，resolvedTheme 会根据系统偏好返回实际值
+// resolvedTheme: theme='system' 时返回实际 'light' 或 'dark'
 ```
 
 ## Input Component Rules (IME Composition)
@@ -349,159 +398,44 @@ import { Input } from '@/components/ui/input'
 // ✅ 使用 unstyled variant（自定义样式场景）
 <Input variant="unstyled" value={text} onChange={setText} />
 
-// ✅ 允许的例外（带注释说明）
-{/* eslint-disable-next-line no-restricted-syntax -- type="file" has no IME composition */}
-<input type="file" onChange={handleFile} />
-
 // ❌ 错误 — 会导致中文输入 bug
 <input value={text} onChange={e => setText(e.target.value)} />
 ```
 
-## Component Patterns
+## Key Component APIs
 
-### 提示组件模式 (参考 sw-update-prompt.tsx)
-
-```tsx
-// 固定定位底部弹窗 (使用主题变量)
-<div
-  className="fixed bottom-20 left-4 right-4 z-50 p-4 animate-fade-in-up"
-  style={{
-    backgroundColor: 'var(--theme-primary)',
-    color: 'var(--theme-on-primary)',
-    borderRadius: 'var(--theme-radius-xl)',
-    boxShadow: 'var(--theme-shadow-lg)',
-    transition: 'var(--theme-transition)',
-  }}
->
-  <div className="flex items-start gap-3">
-    <div
-      className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
-      style={{ backgroundColor: 'color-mix(in srgb, var(--theme-on-primary) 20%, transparent)' }}
-    >
-      <Icon className="w-5 h-5" />
-    </div>
-    <div className="flex-1">
-      <p className="font-medium">标题</p>
-      <p className="text-sm" style={{ opacity: 0.8 }}>描述</p>
-    </div>
-    <button onClick={onClose}>
-      <X className="w-5 h-5" />
-    </button>
-  </div>
-  <div className="flex gap-2 mt-3">
-    <button
-      className="flex-1 py-2 px-4 font-medium"
-      style={{
-        backgroundColor: 'var(--theme-on-primary)',
-        color: 'var(--theme-primary)',
-        borderRadius: 'var(--theme-radius-lg)',
-      }}
-    >
-      主要操作
-    </button>
-    <button
-      className="py-2 px-4 font-medium"
-      style={{
-        backgroundColor: 'color-mix(in srgb, var(--theme-on-primary) 20%, transparent)',
-        borderRadius: 'var(--theme-radius-lg)',
-      }}
-    >
-      次要操作
-    </button>
-  </div>
-</div>
-```
-
-### 顶部横幅模式 (参考 offline-indicator.tsx)
-
-```tsx
-<div
-  className="fixed top-0 left-0 right-0 z-50 px-4 py-2 flex items-center justify-center gap-2 animate-fade-in-up"
-  style={{
-    backgroundColor: 'var(--theme-warning)',
-    color: 'white',
-    transition: 'var(--theme-transition)',
-  }}
->
-  <Icon className="w-4 h-4" />
-  <span className="text-sm font-medium">提示信息</span>
-</div>
-```
-
-### 抽屉组件模式 (参考 drawer.tsx)
+### Drawer (抽屉组件)
 
 ```tsx
 import { Drawer } from '@/components/ui/drawer'
-import { ImageViewer } from '@/components/ui/image-viewer'
 
-// 抽屉高度选项: 'quarter' | 'half' | 'three-quarter' | 'full'
 <Drawer
   isOpen={isOpen}
   onClose={() => setIsOpen(false)}
-  height="three-quarter"
-  showHandle          // 显示拖拽手柄
-  title="抽屉标题"
-  showCloseButton     // 显示关闭按钮
+  height="three-quarter"    // 'quarter' | 'half' | 'three-quarter' | 'full'
+  showHandle                // 拖拽手柄
+  title="标题"
+  showCloseButton
 >
-  <div className="px-4 pb-4">
-    抽屉内容
-  </div>
+  <div className="px-4 pb-4">内容</div>
 </Drawer>
-
-// 图片查看器 (支持双指缩放)
-<ImageViewer
-  isOpen={imageOpen}
-  onClose={() => setImageOpen(false)}
-  src="/path/to/image.jpg"
-  alt="图片描述"
-/>
 ```
 
-**抽屉交互特性:**
-- 下滑手势关闭 (阈值 100px)
-- 背景遮罩点击关闭
-- ESC 键关闭
-- Body 滚动锁定
-- iOS 安全区域适配
+特性: 下滑手势关闭 (100px 阈值) | 遮罩点击关闭 | ESC 关闭 | Body 滚动锁定 | iOS 安全区适配
 
-### 地图组件模式 (参考 amap-container.tsx)
+### ImageViewer (全屏图片)
+
+```tsx
+import { ImageViewer } from '@/components/ui/image-viewer'
+<ImageViewer isOpen={open} onClose={close} src="/path.jpg" alt="描述" />
+```
+
+### AMapContainer (高德地图)
 
 ```tsx
 import AMapContainer from '@/components/amap-container'
-
-// 基础使用 - 显示岩场位置
-<AMapContainer
-  center={{ lng: 119.549, lat: 26.489 }}
-  name="圆通寺岩场"
-  zoom={15}
-  height="200px"
-/>
-
-// 带接近路径 - KML 导入后绘制
-<AMapContainer
-  center={crag.coordinates}
-  name={crag.name}
-  approachPaths={[
-    {
-      id: 'path-1',
-      name: '主要接近路径',
-      points: [
-        { lng: 119.545, lat: 26.485 },
-        { lng: 119.547, lat: 26.487 },
-        { lng: 119.549, lat: 26.489 },
-      ],
-      color: '#3366FF',
-    }
-  ]}
-/>
+<AMapContainer center={coordinates} name="岩场名" zoom={15} height="200px" approachPaths={paths} />
 ```
-
-**地图组件特性:**
-- 异步加载高德地图 API (避免首屏阻塞)
-- 岩场标记 + 名称标签
-- 接近路径绘制 (支持方向箭头)
-- 控制按钮: 重置视图 / 导航 / 全屏
-- 点击导航按钮跳转高德 App
 
 ## PWA Configuration
 
@@ -518,9 +452,9 @@ import AMapContainer from '@/components/amap-container'
 |------|---------|------|
 | **R2 Key 存储** (`Key` 参数) | **不编码**，使用原始 UTF-8 | `cragId/区域A/岩面1.jpg` |
 | **路径净化** (防注入) | `sanitizePathSegment()` | 保留中文，移除 `../` 等危险字符 |
-| **公共图片 URL** | `encodeURIComponent` | `img.bouldering.top/cragId/%E5%8C%BA%E5%9F%9FA/%E5%B2%A9%E9%9D%A21.jpg` |
-| **S3 `CopySource`** | 按段 `encodeURIComponent` | `bucket/cragId/%E5%8C%BA%E5%9F%9FA/%E5%B2%A9%E9%9D%A21.jpg` |
-| **URL 查询参数** | `encodeURIComponent` | `?cragId=xxx&area=%E5%8C%BA%E5%9F%9FA` |
+| **公共图片 URL** | `encodeURIComponent` | `img.bouldering.top/cragId/%E5%8C%BA%E5%9F%9FA/...` |
+| **S3 `CopySource`** | 按段 `encodeURIComponent` | `bucket/cragId/%E5%8C%BA%E5%9F%9FA/...` |
+| **URL 查询参数** | `encodeURIComponent` | `?area=%E5%8C%BA%E5%9F%9FA` |
 | **R2 列表解析** | `decodeURIComponent` (try-catch) | 兼容旧的双重编码 key |
 
 **核心原则**: Cloudflare 公共域名 (`img.bouldering.top`) 会自动解码 URL 路径，所以 R2 Key 必须存储为原始 Unicode。若存为 percent-encoded 字符串，CDN URL 解码后找不到对应 key → 404。
@@ -545,98 +479,63 @@ const key = `${cragId}/${encodeURIComponent(faceId)}.jpg`  // 会导致双重编
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| `GET` | `/api/beta?routeId=123` | 获取线路的 Beta 视频列表 |
-| `POST` | `/api/beta` | 提交 Beta 视频 (Rate Limited) |
-| `GET` | `/api/weather?lng=119&lat=26` | 获取天气数据 (含攀岩适宜度, 1h缓存) |
-| `GET` | `/api/geo` | IP 定位 → 推断城市 (首次访问智能选择) |
-| `POST` | `/api/log` | 客户端错误上报 (Vercel 日志可见) |
 | `GET` | `/api/crags` | 获取所有岩场列表 |
 | `GET` | `/api/crags/[id]/routes` | 获取指定岩场的线路列表 |
+| `PATCH` | `/api/crags/[id]/areas` | 更新岩场区域列表 |
+| `GET/POST` | `/api/routes` | 获取/创建线路 |
 | `GET/PATCH` | `/api/routes/[id]` | 获取/更新单条线路 (含 topoLine) |
-| `POST` | `/api/upload` | 上传 Topo 图片到 R2 (FormData: file, cragId, routeName) |
+| `GET/POST` | `/api/beta` | 获取/提交 Beta 视频 (Rate Limited) |
+| `GET/DELETE` | `/api/faces` | 岩面图片管理 |
+| `POST` | `/api/upload` | 上传 Topo 图片到 R2 (FormData) |
+| `POST` | `/api/revalidate` | ISR 按需重验证 |
+| `GET` | `/api/weather?lng=119&lat=26` | 天气数据 (含攀岩适宜度, 1h 缓存) |
+| `GET` | `/api/geo` | IP 定位 → 推断城市 |
+| `POST` | `/api/feedback` | 用户反馈/留言 |
+| `POST` | `/api/visit` | 访问统计上报 |
+| `POST` | `/api/log` | 客户端错误上报 |
 
 > 岩场/线路数据通过 Server Components 直接从 MongoDB 获取，无需 API 路由
 
 ## Import Aliases
 
-- `@/components` - React 组件
-- `@/components/ui` - shadcn/ui 组件
-- `@/lib` - 工具函数
-- `@/hooks` - 自定义 Hooks
-- `@/types` - 类型定义
-- `@/data` - 静态数据
+- `@/components` — React 组件
+- `@/components/ui` — shadcn/ui 组件
+- `@/lib` — 工具函数
+- `@/hooks` — 自定义 Hooks
+- `@/types` — 类型定义
+- `@/i18n` — 国际化工具
+- `@/data` — 静态数据
 
 ## Logging System
 
-统一的日志系统，日志可在 Vercel Dashboard 中查看。
-
-### 服务端日志 (`src/lib/logger.ts`)
-
 ```typescript
-import { logger, createModuleLogger } from '@/lib/logger'
-
-// 方式 1: 直接使用 logger
-logger.info('Message', { module: 'DB', action: 'getAllCrags', duration: 45 })
-logger.error('Failed', error, { module: 'API', action: 'POST /api/beta' })
-
-// 方式 2: 创建模块专用 logger (推荐)
+// 服务端 (推荐模块 logger)
+import { createModuleLogger } from '@/lib/logger'
 const log = createModuleLogger('Weather')
 log.info('Fetched weather', { action: 'GET /api/weather', duration: 120 })
 log.error('API failed', error, { action: 'fetchWeatherData' })
-```
 
-**日志格式:**
-```
-2025-01-19T10:30:45.123Z INFO  [DB](getAllCrags) Fetched 5 crags 45ms
-{"count":5}
-```
-
-### 客户端日志 (`src/lib/client-logger.ts`)
-
-客户端错误自动上报到 `/api/log`，Vercel Dashboard 可见。
-
-```typescript
-'use client'
+// 客户端 (自动上报到 /api/log → Vercel Dashboard 可见)
 import { clientLogger } from '@/lib/client-logger'
-
-// Error Boundary 中使用
-clientLogger.error('Unhandled error', error, {
-  component: 'ErrorBoundary',
-  action: 'render',
-})
-
-// 组件中使用
-clientLogger.warn('Unexpected response', {
-  component: 'SearchOverlay',
-  metadata: { code: 404 },
-})
+clientLogger.error('Unhandled error', error, { component: 'ErrorBoundary' })
 ```
 
-### 日志级别
+级别: `debug` (开发) | `info` (业务) | `warn` (可恢复) | `error` (需关注)
 
-| 级别 | 使用场景 | 示例 |
-|------|---------|------|
-| `debug` | 开发调试 (生产不输出) | 变量值、中间状态 |
-| `info` | 正常业务流程 | 数据获取成功 |
-| `warn` | 可恢复的异常 | API 超时重试、缓存未命中 |
-| `error` | 需要关注的错误 | 数据库错误、API 失败 |
-
-### Vercel 日志可见性
-
-```
-✅ 可见: API Routes, Server Components, Middleware 中的日志
-❌ 不可见: Client Components 中的 console (需通过 /api/log 上报)
-```
+Vercel 可见: API Routes + Server Components + Middleware。Client Components 需通过 `/api/log` 上报。
 
 ## Animations & Utilities
 
 定义在 `globals.css`:
-- `.animate-fade-in-up` - 淡入上移
-- `.animate-fade-in` - 淡入
-- `.animate-scale-in` - 缩放淡入
-- `.animate-drawer-in` - 抽屉底部滑入
-- `.skeleton-shimmer` - 骨架屏闪烁
-- `.scrollbar-hide` - 隐藏滚动条但保留滚动功能
+- `.animate-fade-in-up` — 淡入上移
+- `.animate-fade-in` — 淡入
+- `.animate-scale-in` — 缩放淡入
+- `.animate-drawer-in` — 抽屉底部滑入
+- `.animate-pulse-subtle` — 微脉冲 (状态指示器)
+- `.scroll-reveal` / `.scroll-reveal-left` / `.scroll-reveal-right` — 滚动触发动画
+- `.skeleton-shimmer` — 骨架屏闪烁
+- `.scrollbar-hide` — 隐藏滚动条但保留滚动功能
+- `.desktop-center-full` / `.desktop-center-padded` — 桌面居中
 
 ## Testing
 
@@ -648,8 +547,6 @@ clientLogger.warn('Unexpected response', {
 | 组件测试 | `*.test.tsx` | 与组件同目录 |
 | 浏览器测试 | `*.ct.tsx` | 与组件同目录 |
 
-示例：`src/lib/utils.ts` → `src/lib/utils.test.ts`
-
 ### 测试分层
 
 | 层级 | 工具 | 用途 |
@@ -658,137 +555,15 @@ clientLogger.warn('Unexpected response', {
 | 组件测试 | Vitest + Testing Library | 组件渲染、基础交互 |
 | 浏览器测试 | Playwright | 复杂交互 (拖拽、手势) |
 
-### 覆盖率目标
-
-当前覆盖率约 **34%**，主要覆盖核心工具函数和关键组件。
-
-> 查看详细报告：`npm run test:coverage` 后打开 `coverage/index.html`
-
-### 已测试模块
-
-**Lib (工具函数)**:
-- `grade-utils.ts`, `tokens.ts`, `filter-constants.ts`
-- `beta-constants.ts`, `rate-limit.ts`, `crag-theme.ts`
-- `themes/index.ts`, `utils.ts`
-
-**Components (组件)**:
-- `filter-chip.tsx`, `grade-range-selector.tsx`
-- `drawer.tsx`, `crag-card.tsx`, `search-overlay.tsx`
-
 ### CI 流水线（本地 pre-push hook）
 
 所有质量检查在本地 `git push` 时自动运行（`.husky/pre-push`）：
-1. 🔍 ESLint - 代码规范
-2. 📘 TypeScript - 类型检查
-3. 🧪 Vitest - 单元测试
-4. 🎭 Playwright - 组件测试
+1. ESLint — 代码规范
+2. TypeScript — 类型检查
+3. Vitest — 单元测试
+4. Playwright — 组件测试
 
 > 任一检查失败会阻止 push。跳过检查（不推荐）：`git push --no-verify`
-
-## Git Workflow
-
-### ⚠️ Claude 必须遵循的工作流
-
-**核心原则：一个 Issue = 一个分支 = 一个 PR，合并后立即切新分支**
-
-**每个新需求/功能/修复都必须**：
-1. **先创建 Issue** - 使用 `gh issue create` 描述需求
-2. **从最新 main 创建 feature 分支** - 命名格式 `feature/issue-{N}-{short-desc}`
-3. **完成开发后创建 PR** - 使用 `Closes #{N}` 链接 Issue
-4. **合并 PR** - 本地 CI 已通过，直接 `gh pr merge --rebase` 合并
-5. **PR 合并后切回 main** - 拉取最新代码，为下一个任务准备干净基础
-
-> 不要跳过任何步骤，即使是小改动也要遵循此流程。
-
-### ⚠️ 避免合并冲突的关键规则
-
-1. **禁止在同一 feature 分支上做多个不相关任务**
-   - 每个任务（修 bug、加功能、重构）必须有独立的 Issue + 独立的分支
-   - 如果在开发过程中发现额外需要做的事，创建新 Issue，当前 PR 合并后再开新分支处理
-
-2. **每个新分支必须从最新 main 创建**
-   ```bash
-   git checkout main && git pull origin main
-   git checkout -b feature/issue-{N}-{desc}
-   ```
-
-3. **PR 合并后立即清理**
-   ```bash
-   git checkout main && git pull origin main
-   git branch -d feature/issue-{N}-{desc}  # 删除本地旧分支
-   # 然后从 main 开新分支做下一个任务
-   ```
-
-4. **如果需要连续做多个任务**
-   ```
-   任务 A: main → feature/issue-1-xxx → PR → merge
-                                                ↓
-   任务 B:                             main (pull) → feature/issue-2-yyy → PR → merge
-                                                                                     ↓
-   任务 C:                                                                  main (pull) → feature/issue-3-zzz
-   ```
-   **绝对不要**：在 feature/issue-1-xxx 上继续追加任务 B 的 commit
-
-### Issue-First 开发流程
-
-```
-Issue 创建 → 从 main 创建分支 → 开发 → push (本地 CI) → PR → merge → 切回 main → (下一个 Issue)
-```
-
-### 分支策略
-
-| 分支 | 用途 |
-|------|------|
-| `main` | 生产分支，受保护，必须通过 PR 合并 |
-| `feature/issue-{N}-{desc}` | 功能分支，从 main 创建，合并后删除 |
-
-> 注意：不再使用 `dev` 分支，所有 feature 分支直接从 main 创建并合并回 main。
-
-### 完整工作流
-
-```bash
-# 1. 创建 Issue
-gh issue create --title "[Feature] 功能描述" --body "..."
-
-# 2. 从最新 main 创建 feature 分支
-git checkout main && git pull origin main
-git checkout -b feature/issue-42-add-favorites
-
-# 3. 开发并提交
-git add <files> && git commit -m "feat: add user favorites"
-git push origin feature/issue-42-add-favorites
-
-# 4. 创建 PR 并合并 (本地 CI 已在 push 时通过)
-gh pr create --base main --title "feat: add favorites" \
-  --body "Closes #42"
-gh pr merge --rebase
-
-# 5. PR 合并后清理 (开始下一个任务前必做)
-git checkout main && git pull origin main
-git branch -d feature/issue-42-add-favorites
-```
-
-### Branch Protection (main)
-
-- ✅ 必须通过 PR 合并（CI 在本地 pre-push 时已执行）
-- ✅ 禁止 force push
-- ❌ 不要求 code review (个人项目)
-- ❌ 不要求远程 CI 检查（已移除 GitHub Actions）
-
-### GitHub 模板文件
-
-| 文件 | 作用 |
-|------|------|
-| `.github/ISSUE_TEMPLATE/feature.md` | Feature 请求模板 |
-| `.github/ISSUE_TEMPLATE/bug.md` | Bug 报告模板 |
-| `.github/PULL_REQUEST_TEMPLATE.md` | PR 模板 (含 Issue 关联) |
-
-### Issue 关联关键词
-
-在 PR 描述中使用以下关键词自动关联 Issue：
-- `Closes #123` - 合并后关闭 Issue
-- `Fixes #123` - 合并后关闭 Issue
-- `Resolves #123` - 合并后关闭 Issue
 
 ## Documentation Rules
 

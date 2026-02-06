@@ -622,7 +622,7 @@ export default function FaceManagementPage() {
   )
 
   // ============ 右栏：详情/新建 ============
-  const canCreate = isCreating && newFaceId && newArea && /^[\u4e00-\u9fffa-z0-9-]+$/.test(newFaceId) && uploadedFile
+  const canCreate = isCreating && newFaceId.trim() && newArea.trim() && /^[\u4e00-\u9fffa-z0-9-]+$/.test(newFaceId) && uploadedFile
 
   const rightPanel = (
     <div className="h-full overflow-y-auto">

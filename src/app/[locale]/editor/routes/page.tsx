@@ -56,6 +56,7 @@ type PendingAction =
   | { type: 'switchArea'; payload: string | null }
   | { type: 'switchCrag'; payload: string }
   | { type: 'clearTopo' }
+  | { type: 'goBackMobile' }
 
 /**
  * 线路标注页面
@@ -149,6 +150,10 @@ export default function RouteAnnotationPage() {
         break
       case 'clearTopo':
         setTopoLine([])
+        break
+      case 'goBackMobile':
+        setShowEditorPanel(false)
+        setSelectedRoute(null)
         break
     }
   }, [setSelectedCragId])
@@ -439,12 +444,20 @@ export default function RouteAnnotationPage() {
       justSavedRef.current = false // Reset so pending action initializes properly
       executePendingAction(pendingAction)
     }
+    // Always close dialog on both success and failure:
+    // - Success: action executed, dialog no longer needed
+    // - Failure: edits are preserved in the form; user can see inline errors
+    //   (validation) or toast (network), fix issues, and save manually
     setPendingAction(null)
     setShowUnsavedDialog(false)
   }, [pendingAction, handleSave, executePendingAction])
 
   // ============ 新增线路逻辑 ============
   const handleStartCreate = useCallback(() => {
+    if (hasUnsavedChanges()) {
+      showToast('请先保存当前线路的更改', 'info', 3000)
+      return
+    }
     setIsCreatingRoute(true)
     setSelectedRoute(null)
     setShowEditorPanel(true)
@@ -453,7 +466,7 @@ export default function RouteAnnotationPage() {
       name: '', grade: '？', area: defaultArea, FA: '', setter: '', description: '',
     })
     setFormErrors({})
-  }, [selectedArea])
+  }, [selectedArea, areas, hasUnsavedChanges, showToast])
 
   function validateRouteForm(data: { name: string; area: string }): Record<string, string> {
     const errors: Record<string, string> = {}
@@ -499,7 +512,7 @@ export default function RouteAnnotationPage() {
     } finally {
       setIsSubmittingCreate(false)
     }
-  }, [selectedCragId, newRoute, setRoutes, showToast, areas, updateCragAreas])
+  }, [selectedCragId, newRoute, setRoutes, showToast, persistedAreas, updateCragAreas])
 
   const handleCancelCreate = useCallback(() => {
     setIsCreatingRoute(false)
@@ -1165,7 +1178,15 @@ export default function RouteAnnotationPage() {
           ) : selectedRoute ? (
             <div className="space-y-4 animate-fade-in-up">
               <button
-                onClick={() => { setShowEditorPanel(false); setSelectedRoute(null) }}
+                onClick={() => {
+                  if (hasUnsavedChanges()) {
+                    setPendingAction({ type: 'goBackMobile' })
+                    setShowUnsavedDialog(true)
+                    return
+                  }
+                  setShowEditorPanel(false)
+                  setSelectedRoute(null)
+                }}
                 className="flex items-center gap-2 p-2 -ml-2 rounded-xl transition-all duration-200 active:scale-95"
                 style={{ color: 'var(--theme-primary)' }}
               >

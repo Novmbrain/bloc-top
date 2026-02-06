@@ -139,6 +139,7 @@ export function AreaSelect({
           <button
             type="button"
             data-area-cancel=""
+            onMouseDown={(e) => e.preventDefault()}
             onClick={cancelCreate}
             className="shrink-0 text-sm whitespace-nowrap transition-colors"
             style={{ color: 'var(--theme-on-surface-variant)' }}

@@ -1,6 +1,6 @@
 # 罗源野抱 TOPO - 项目索引
 
-> 自动生成于 2026-02-01 | 福州罗源攀岩线路分享 PWA 应用
+> 更新于 2026-02-06 | 福州罗源攀岩线路分享 PWA 应用
 
 ---
 
@@ -31,7 +31,7 @@
 | 主题 | next-themes (Dracula 配色) |
 | PWA | Serwist (Service Worker) |
 | 测试 | Vitest + Testing Library + Playwright |
-| CI/CD | GitHub Actions + Vercel |
+| CI/CD | 本地 pre-push hook + Vercel |
 | 地图 | 高德地图 JS API 1.4.15 |
 | 国际化 | next-intl (`[locale]` 路由) |
 | 图片存储 | Cloudflare R2 (`img.bouldering.top`) |
@@ -41,29 +41,30 @@
 ## 目录结构
 
 ```
-src/                           # 174 文件
-├── app/              (39)     # Next.js App Router 页面 & API
+src/
+├── app/                       # Next.js App Router 页面 & API
 │   ├── [locale]/              #   国际化路由
 │   │   ├── crag/[id]/         #   岩场详情
-│   │   ├── route/[id]/        #   线路详情
-│   │   ├── editor/            #   Topo 编辑器 (faces, routes)
+│   │   ├── route/             #   线路列表
+│   │   ├── editor/            #   Topo 编辑器 (faces, routes, betas)
 │   │   ├── offline/           #   离线模式页面
 │   │   ├── intro/             #   介绍页
 │   │   └── profile/           #   用户页
-│   └── api/                   #   13 个 API 路由
-├── components/       (63)     # React 组件
-│   ├── ui/           (14)     #   shadcn/ui 基础组件
+│   └── api/                   #   14 个 API 路由
+├── components/                # React 组件
+│   ├── ui/           (15)     #   shadcn/ui 基础组件
 │   └── editor/        (4)     #   编辑器专用组件
-├── lib/              (46)     # 工具函数 & 数据库
+├── lib/                       # 工具函数 & 数据库
 │   ├── db/                    #   数据访问层
+│   ├── face-image-cache/      #   岩面图片缓存层
 │   └── themes/                #   主题定义
-├── hooks/            (20)     # 自定义 React Hooks
+├── hooks/            (13)     # 自定义 React Hooks
 ├── types/             (1)     # TypeScript 类型定义
 ├── i18n/              (3)     # 国际化配置
 └── test/              (2)     # 测试设置
 scripts/               (9)     # 数据库迁移脚本
 playwright/                    # Playwright 组件测试配置
-doc/                   (5)     # 项目文档
+doc/                   (9)     # 项目文档
 ```
 
 ---
@@ -80,6 +81,7 @@ doc/                   (5)     # 项目文档
 | `/[locale]/editor` | `TopoEditorPage` | 编辑器入口 |
 | `/[locale]/editor/faces` | `EditorFacesPage` | 岩面管理 - R2 上传 |
 | `/[locale]/editor/routes` | `EditorRoutesPage` | 线路标注 - Topo 绘制 |
+| `/[locale]/editor/betas` | `EditorBetasPage` | Beta 视频管理 |
 | `/[locale]/offline` | `OfflinePage` | 离线首页 - IndexedDB |
 | `/[locale]/offline/crag/[id]` | `OfflineCragDetailPage` | 离线岩场详情 |
 | `/[locale]/offline/route/[id]` | `OfflineRouteDetailPage` | 离线线路详情 |
@@ -108,6 +110,7 @@ doc/                   (5)     # 项目文档
 | POST | `/api/feedback` | 提交反馈 | ✅ 3/min |
 | POST | `/api/visit` | 记录访问 | - |
 | POST | `/api/log` | 客户端错误上报 | ✅ 20/min |
+| PATCH | `/api/crags/[id]/areas` | 更新岩场区域列表 | - |
 | POST | `/api/revalidate` | 手动触发 ISR 重验证 | - |
 
 ---
@@ -125,6 +128,8 @@ doc/                   (5)     # 项目文档
 | image-viewer.tsx | `ImageViewer` | `isOpen`, `onClose`, `src`, `alt`, `topSlot` |
 | segmented-control.tsx | `SegmentedControl<T>` | `options`, `value`, `onChange`, `size` |
 | skeleton.tsx | `Skeleton` | `className` |
+| input.tsx | `Input` | 输入框 (IME 兼容, unstyled variant) |
+| textarea.tsx | `Textarea` | 文本域 (IME 兼容) |
 | toast.tsx | `useToast()`, `ToastProvider` | — |
 
 ### 功能组件 (`src/components/`)
@@ -163,6 +168,11 @@ doc/                   (5)     # 项目文档
 | locale-detector.tsx | `LocaleDetector` | 语言检测 |
 | locale-switcher.tsx | `LocaleSwitcher`, `LocaleSegmented`, `LocaleSelect` | 语言切换 |
 | contextual-hint.tsx | `ContextualHint` | 上下文提示 |
+| face-image-provider.tsx | `FaceImageProvider` | 岩面图片缓存 Context Provider |
+| face-thumbnail-strip.tsx | `FaceThumbnailStrip` | 岩面缩略图条 (横滑) |
+| route-filter-bar.tsx | `RouteFilterBar` | 线路筛选栏 |
+| floating-search-input.tsx | `FloatingSearchInput` | 浮动搜索输入 |
+| grade-range-selector-vertical.tsx | `GradeRangeSelectorVertical` | 竖向难度选择器 |
 
 ### 编辑器组件 (`src/components/editor/`)
 
@@ -191,6 +201,7 @@ doc/                   (5)     # 项目文档
 | use-scroll-reveal.ts | `useScrollReveal()` | 滚动触发动画 (IntersectionObserver) |
 | use-weather.ts | `useWeather()` | 天气数据获取 |
 | use-crag-routes.ts | `useCragRoutes()` | 岩场线路数据 |
+| use-face-image.ts | `useFaceImageCache()` | 岩面图片缓存 Hook (订阅失效) |
 
 ---
 
@@ -227,6 +238,15 @@ doc/                   (5)     # 项目文档
 | crag-theme.ts | `getCragTheme()` | 岩场主题 (渐变/图标) |
 | offline-storage.ts | `saveCragOffline()`, `getCragOffline()` 等 | IndexedDB 离线存储 |
 | api-error-codes.ts | `API_ERROR_CODES`, `createErrorResponse()` | API 错误码 |
+| editor-areas.ts | `getAreasForCrag()`, `updateAreasAfterRename()` | 编辑器区域管理 |
+
+### 岩面图片缓存层 (`src/lib/face-image-cache/`)
+
+| 文件 | 主要导出 | 说明 |
+|------|---------|------|
+| types.ts | `FaceKey`, `CacheEntry` | 缓存类型定义 |
+| cache-service.ts | `FaceImageCacheService` | 缓存核心：URL 版本化、订阅失效 |
+| index.ts | `faceImageCache` | 单例导出 |
 
 ### 数据访问层 (`src/lib/db/`)
 
@@ -239,6 +259,7 @@ doc/                   (5)     # 项目文档
 | `getRoutesByCragId(cragId)` | 获取岩场线路 |
 | `updateRoute(id, data)` | 更新线路 |
 | `createRoute(data)` | 创建线路 |
+| `updateCragAreas(cragId, areas)` | 更新岩场区域列表 |
 | `createFeedback(data)` | 创建反馈 |
 | `recordVisit(data)` | 记录访问 |
 | `getVisitStats()` | 获取访问统计 |
@@ -288,7 +309,7 @@ doc/                   (5)     # 项目文档
 | 浏览器测试 | Playwright | `npm run test:ct` |
 | 覆盖率 | Vitest | `npm run test:coverage` |
 
-**已测试模块:** `grade-utils`, `tokens`, `filter-constants`, `beta-constants`, `rate-limit`, `crag-theme`, `themes/index`, `utils`, `weather-constants`, `weather-utils`, `topo-utils`, `topo-constants`, `constants`, `editor-utils`, `city-config`, `client-logger`, `offline-storage`, `request-utils`, `api-error-codes`, `route-utils`, `filter-chip`, `grade-range-selector`, `drawer`, `crag-card`, `search-overlay`, `composition-input`, `segmented-control`, `beta-list-drawer`, `beta-submit-drawer`, `city-selector`, `download-button`, `filter-drawer`, `locale-switcher`, `theme-switcher`, `weather-badge`, `weather-card`, `weather-strip`, `route-detail-drawer`
+**51 个测试文件**，覆盖模块：`grade-utils`, `tokens`, `filter-constants`, `beta-constants`, `rate-limit`, `crag-theme`, `themes/index`, `utils`, `weather-constants`, `weather-utils`, `topo-utils`, `topo-constants`, `constants`, `editor-utils`, `editor-areas`, `city-config`, `client-logger`, `offline-storage`, `request-utils`, `api-error-codes`, `route-utils`, `face-image-cache`, `filter-chip`, `grade-range-selector`, `drawer`, `crag-card`, `search-overlay`, `composition-input`, `input`, `textarea`, `segmented-control`, `beta-list-drawer`, `beta-submit-drawer`, `city-selector`, `download-button`, `filter-drawer`, `locale-switcher`, `theme-switcher`, `weather-badge`, `weather-card`, `weather-strip`, `route-detail-drawer`, `crag-detail-client`, `offline/page`，以及 hooks: `use-offline-mode`, `use-climber-body-data`, `use-route-search`, `use-weather`, `use-city-selection`, `use-contextual-hint`, `use-delayed-loading`, `use-platform-detect`
 
 ---
 
