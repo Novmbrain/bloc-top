@@ -118,6 +118,7 @@ src/
 │   │   └── composition-input.tsx    # CompositionInput 底层实现
 │   ├── editor/                 # 编辑器专用组件
 │   │   ├── crag-selector.tsx, route-card.tsx, progress-ring.tsx
+│   │   ├── editor-page-header.tsx      # 编辑器页面 Header (动态返回按钮)
 │   │   └── fullscreen-topo-editor.tsx  # Topo 线路编辑器
 │   ├── face-image-provider.tsx # ★ FaceImageCache React 上下文
 │   ├── face-thumbnail-strip.tsx # 岩面缩略图条
@@ -371,6 +372,21 @@ import { useTheme } from 'next-themes'
 const { theme, setTheme, resolvedTheme } = useTheme()
 // resolvedTheme: theme='system' 时返回实际 'light' 或 'dark'
 ```
+
+## Code Exploration Rules (Serena MCP)
+
+**所有代码探索场景必须优先使用 Serena MCP Server 工具**，无论是用户直接输入 prompt 还是通过 skill 触发。
+
+| 场景 | 使用工具 |
+|------|---------|
+| 浏览文件/目录 | `serena.read_file` / `serena.list_dir` |
+| 搜索代码模式 | `serena.search_for_pattern` |
+| 查看符号概览 | `serena.get_symbols_overview` |
+| 查找符号定义 | `serena.find_symbol` (支持 `include_body`, `depth`) |
+| 查找引用关系 | `serena.find_referencing_symbols` |
+| 查找文件 | `serena.find_file` |
+
+**注意**: 使用前需确保项目已激活 (`serena.activate_project`)。项目名称：`PWA-app`。
 
 ## Input Component Rules (IME Composition)
 
