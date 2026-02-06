@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import {
-  ArrowLeft,
   Upload,
   AlertCircle,
   Loader2,
@@ -16,8 +15,8 @@ import {
   Check,
   RefreshCw,
 } from 'lucide-react'
-import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
+import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { Input } from '@/components/ui/input'
 import type { Route } from '@/types'
 import { useToast } from '@/components/ui/toast'
@@ -918,53 +917,24 @@ export default function FaceManagementPage() {
   // ============ 渲染 ============
   return (
     <div className="min-h-screen pb-20 lg:pb-0" style={{ backgroundColor: 'var(--theme-surface)' }}>
-      {/* Header */}
-      <header
-        className="sticky top-0 z-40 px-4 lg:px-6 py-3 backdrop-blur-xl"
-        style={{
-          backgroundColor: 'color-mix(in srgb, var(--theme-surface) 85%, transparent)',
-          borderBottom: '1px solid var(--theme-outline-variant)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-4xl lg:max-w-none mx-auto">
-          {/* 移动端详情模式: 返回列表; 其他: 返回编辑器 */}
-          {mobileShowDetail ? (
-            <button
-              onClick={() => { setMobileShowDetail(false); setSelectedFace(null); setIsCreating(false) }}
-              className="lg:hidden flex items-center gap-2 min-h-[44px] -ml-2 px-2 rounded-xl transition-all duration-200 active:scale-95"
-              style={{ color: 'var(--theme-primary)' }}
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">岩面列表</span>
-            </button>
-          ) : null}
-          <Link
-            href="/editor"
-            className={`flex items-center gap-2 min-h-[44px] -ml-2 px-2 rounded-xl transition-all duration-200 active:scale-95 ${mobileShowDetail ? 'hidden lg:flex' : ''}`}
+      <EditorPageHeader
+        title="岩面管理"
+        icon={<ImageIcon className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />}
+        isDetailMode={mobileShowDetail}
+        onBackToList={() => { setMobileShowDetail(false); setSelectedFace(null); setIsCreating(false) }}
+        listLabel="岩面列表"
+        rightContent={selectedCragId ? (
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="p-2 rounded-xl transition-all duration-200 active:scale-95"
             style={{ color: 'var(--theme-primary)' }}
+            title="刷新岩面列表"
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">返回</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <ImageIcon className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
-            <h1 className="text-lg font-bold" style={{ color: 'var(--theme-on-surface)' }}>岩面管理</h1>
-          </div>
-          <div className="w-20 flex justify-end">
-            {selectedCragId && (
-              <button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="p-2 rounded-xl transition-all duration-200 active:scale-95"
-                style={{ color: 'var(--theme-primary)' }}
-                title="刷新岩面列表"
-              >
-                <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+            <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
+        ) : undefined}
+      />
 
       <div className="max-w-4xl lg:max-w-none mx-auto px-4 lg:px-6 py-4">
         {/* 桌面端双栏 */}
