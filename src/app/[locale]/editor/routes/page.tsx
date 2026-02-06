@@ -131,8 +131,12 @@ export default function RouteAnnotationPage() {
     for (const field of fields) {
       if ((editedRoute[field] ?? '') !== (selectedRoute[field] ?? '')) return true
     }
-    // Deep compare topoLine
-    if (JSON.stringify(topoLine) !== JSON.stringify(selectedRoute.topoLine || [])) return true
+    // Point-by-point comparison (faster than JSON.stringify)
+    const original = selectedRoute.topoLine || []
+    if (topoLine.length !== original.length) return true
+    for (let i = 0; i < topoLine.length; i++) {
+      if (topoLine[i].x !== original[i].x || topoLine[i].y !== original[i].y) return true
+    }
     return false
   }, [selectedRoute, editedRoute, topoLine])
 
@@ -304,6 +308,15 @@ export default function RouteAnnotationPage() {
       unmarked: areaRoutes.length - marked.length,
     }
   }, [areaRoutes])
+
+  // 预计算每个 area 的线路数量（避免 JSX 中 O(n*m) 的 inline filter）
+  const areaCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    routes.forEach(r => {
+      if (r.area) counts.set(r.area, (counts.get(r.area) || 0) + 1)
+    })
+    return counts
+  }, [routes])
 
   // ============ 同岩面的其他线路（用于多线路叠加） ============
   const sameFaceRoutes = useMemo<MultiTopoRoute[]>(() => {
@@ -575,22 +588,19 @@ export default function RouteAnnotationPage() {
                 >
                   全部 ({routes.length})
                 </button>
-                {areas.map(area => {
-                  const count = routes.filter(r => r.area === area).length
-                  return (
-                    <button
-                      key={area}
-                      onClick={() => handleAreaSwitch(area)}
-                      className="px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm"
-                      style={{
-                        backgroundColor: selectedArea === area ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
-                        color: selectedArea === area ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
-                      }}
-                    >
-                      {area} ({count})
-                    </button>
-                  )
-                })}
+                {areas.map(area => (
+                  <button
+                    key={area}
+                    onClick={() => handleAreaSwitch(area)}
+                    className="px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm"
+                    style={{
+                      backgroundColor: selectedArea === area ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+                      color: selectedArea === area ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
+                    }}
+                  >
+                    {area} ({areaCounts.get(area) || 0})
+                  </button>
+                ))}
               </div>
             )}
           </div>
