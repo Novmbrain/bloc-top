@@ -40,7 +40,7 @@ const CITIES_DATA = [
       lng: 118.089,          // 厦门市中心
       lat: 24.479,
     } as Coordinates,
-    available: false as boolean, // 数据待录入
+    available: true as boolean,
   },
 ] as const
 

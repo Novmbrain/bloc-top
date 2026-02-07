@@ -109,8 +109,8 @@ describe('城市配置', () => {
       expect(isCityAvailable('luoyuan')).toBe(true)
     })
 
-    it('无数据的城市返回 false', () => {
-      expect(isCityAvailable('xiamen')).toBe(false)
+    it('厦门已激活', () => {
+      expect(isCityAvailable('xiamen')).toBe(true)
     })
 
     it('不存在的城市返回 false', () => {
@@ -244,8 +244,8 @@ describe('城市配置', () => {
       const cityConfig = getCityById(selectedCityId as CityId)
       expect(cityConfig?.name).toBe('厦门')
 
-      // 厦门目前无数据
-      expect(isCityAvailable(selectedCityId as CityId)).toBe(false)
+      // 厦门已激活
+      expect(isCityAvailable(selectedCityId as CityId)).toBe(true)
     })
   })
 })
