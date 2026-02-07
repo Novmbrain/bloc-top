@@ -47,8 +47,8 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
     return allRoutes.filter((route) => cragIds.has(route.cragId))
   }, [allRoutes, filteredCrags])
 
-  // 获取天气数据 (用于卡片角标，不需要预报)
-  const { weather } = useWeather({ forecast: false })
+  // 获取天气数据 (用于卡片角标，不需要预报，使用城市 adcode)
+  const { weather } = useWeather({ adcode: city.adcode, forecast: false })
 
   // 不限制搜索结果数量，由 SearchDrawer 内部控制显示
   const { searchQuery, setSearchQuery, searchResults, clearSearch } =
@@ -91,14 +91,14 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
 
       {/* 岩场列表（可滚动区域） */}
       <main className="flex-1 overflow-y-auto pb-36">
-        {/* 天气条 - 仅在有数据时显示 */}
-        {city.available && <WeatherStrip />}
+        {/* 天气条 - 仅在有岩场数据时显示 */}
+        {filteredCrags.length > 0 && <WeatherStrip adcode={city.adcode} />}
 
-        {/* PWA 安装提示 - 仅在有数据时显示 */}
-        {city.available && <InstallPrompt />}
+        {/* PWA 安装提示 - 仅在有岩场数据时显示 */}
+        {filteredCrags.length > 0 && <InstallPrompt />}
 
         {/* 根据城市数据可用性显示内容 */}
-        {city.available ? (
+        {city.available && filteredCrags.length > 0 ? (
           <>
             <div className="space-y-3">
               {filteredCrags.map((crag, index) => (
@@ -124,8 +124,8 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
         )}
       </main>
 
-      {/* 浮动搜索框 - 仅在有数据时显示 */}
-      {city.available && (
+      {/* 浮动搜索框 - 仅在有岩场数据时显示 */}
+      {filteredCrags.length > 0 && (
         <FloatingSearch onClick={() => setIsSearchOpen(true)} placeholder={tSearch('placeholder')} />
       )}
 
