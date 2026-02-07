@@ -146,6 +146,7 @@ export interface WeatherForecast {
   nightWind: string         // 夜间风向
   dayPower: string          // 白天风力
   nightPower: string        // 夜间风力
+  climbing?: ClimbingCondition // 预报天攀岩适宜度
 }
 
 /**
