@@ -210,6 +210,34 @@ describe('WeatherCard', () => {
       expect(screen.getByText('14° / 22°')).toBeInTheDocument()
     })
 
+    it('应该在预报中显示适宜度图标', async () => {
+      const dataWithClimbing = {
+        ...mockWeatherData,
+        forecasts: mockWeatherData.forecasts?.map(f => ({
+          ...f,
+          climbing: {
+            level: 'good' as const,
+            label: '良好',
+            description: '天气不错',
+            factors: [],
+          },
+        })),
+      }
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(dataWithClimbing),
+      })
+
+      render(<WeatherCard />)
+
+      await waitFor(() => {
+        // good = 🔵, should appear for each forecast item
+        const icons = screen.getAllByText('🔵')
+        expect(icons.length).toBeGreaterThanOrEqual(3)
+      })
+    })
+
     it('无预报数据时不应渲染预报区域', async () => {
       const dataWithoutForecasts = {
         ...mockWeatherData,
