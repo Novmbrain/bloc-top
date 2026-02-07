@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { WeatherData, WeatherLive, WeatherForecast } from '@/types'
-import { evaluateClimbingCondition } from '@/lib/weather-utils'
-import { DEFAULT_WEATHER_COORDS } from '@/lib/weather-constants'
+import { evaluateClimbingCondition, evaluateForecastCondition } from '@/lib/weather-utils'
+import { DEFAULT_WEATHER_COORDS, BAD_WEATHER_KEYWORDS } from '@/lib/weather-constants'
 import { API_CACHE, HTTP_CACHE } from '@/lib/cache-config'
 import { createModuleLogger } from '@/lib/logger'
 
@@ -295,23 +295,39 @@ export async function GET(request: NextRequest) {
 
     // 5. 解析预报数据 (如果有)
     let forecasts: WeatherForecast[] | undefined
+    let todayHasRain = false
+
     if (forecastData?.forecasts?.[0]?.casts) {
-      forecasts = forecastData.forecasts[0].casts.map(cast => ({
-        date: cast.date,
-        week: cast.week,
-        dayWeather: cast.dayweather,
-        nightWeather: cast.nightweather,
-        dayTemp: parseInt(cast.daytemp, 10),
-        nightTemp: parseInt(cast.nighttemp, 10),
-        dayWind: cast.daywind,
-        nightWind: cast.nightwind,
-        dayPower: cast.daypower,
-        nightPower: cast.nightpower,
-      }))
+      forecasts = forecastData.forecasts[0].casts.map((cast, index) => {
+        const forecast: WeatherForecast = {
+          date: cast.date,
+          week: cast.week,
+          dayWeather: cast.dayweather,
+          nightWeather: cast.nightweather,
+          dayTemp: parseInt(cast.daytemp, 10),
+          nightTemp: parseInt(cast.nighttemp, 10),
+          dayWind: cast.daywind,
+          nightWind: cast.nightwind,
+          dayPower: cast.daypower,
+          nightPower: cast.nightpower,
+        }
+
+        // 为每天计算攀岩适宜度
+        forecast.climbing = evaluateForecastCondition(forecast)
+
+        // 检测今天的降雨预报
+        if (index === 0) {
+          todayHasRain = BAD_WEATHER_KEYWORDS.some(keyword =>
+            forecast.dayWeather.includes(keyword) || forecast.nightWeather.includes(keyword)
+          )
+        }
+
+        return forecast
+      })
     }
 
-    // 6. 评估攀岩适宜度
-    const climbing = evaluateClimbingCondition(live)
+    // 6. 评估攀岩适宜度 (含降雨提醒)
+    const climbing = evaluateClimbingCondition(live, { todayHasRain })
 
     // 7. 组装响应
     const weatherData: WeatherData = {
