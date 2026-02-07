@@ -7,14 +7,15 @@ import { getSuitabilityIcon } from '@/lib/weather-utils'
 import { useWeather } from '@/hooks/use-weather'
 
 interface WeatherStripProps {
+  adcode?: string
   lng?: number
   lat?: number
 }
 
-export function WeatherStrip({ lng, lat }: WeatherStripProps) {
+export function WeatherStrip({ adcode, lng, lat }: WeatherStripProps) {
   const t = useTranslations('Weather')
   const coordinates = lng !== undefined && lat !== undefined ? { lng, lat } : undefined
-  const { weather, loading, error } = useWeather({ coordinates })
+  const { weather, loading, error } = useWeather({ adcode, coordinates })
 
   // 加载中 - 显示骨架屏
   if (loading) {
