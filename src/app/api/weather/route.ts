@@ -210,29 +210,41 @@ export async function GET(request: NextRequest) {
 
     // 解析查询参数
     const { searchParams } = new URL(request.url)
-    const lng = parseFloat(searchParams.get('lng') || String(DEFAULT_WEATHER_COORDS.lng))
-    const lat = parseFloat(searchParams.get('lat') || String(DEFAULT_WEATHER_COORDS.lat))
+    const adcodeParam = searchParams.get('adcode')
+    const cityParam = searchParams.get('city')
     const includeForecast = searchParams.get('forecast') !== 'false'
 
-    // 验证坐标
-    if (isNaN(lng) || isNaN(lat)) {
-      return NextResponse.json(
-        { error: '无效的坐标参数' },
-        { status: 400 }
-      )
+    let adcode: string
+    let city: string
+
+    if (adcodeParam) {
+      // 直接使用 adcode，跳过逆地理编码
+      adcode = adcodeParam
+      city = cityParam || adcodeParam
+    } else {
+      // 通过坐标逆地理编码
+      const lng = parseFloat(searchParams.get('lng') || String(DEFAULT_WEATHER_COORDS.lng))
+      const lat = parseFloat(searchParams.get('lat') || String(DEFAULT_WEATHER_COORDS.lat))
+
+      if (isNaN(lng) || isNaN(lat)) {
+        return NextResponse.json(
+          { error: '无效的坐标参数' },
+          { status: 400 }
+        )
+      }
+
+      const geoResult = await getAdcodeFromCoords(lng, lat, apiKey)
+
+      if (!geoResult) {
+        return NextResponse.json(
+          { error: '无法获取位置信息' },
+          { status: 500 }
+        )
+      }
+
+      adcode = geoResult.adcode
+      city = geoResult.city
     }
-
-    // 1. 逆地理编码获取 adcode
-    const geoResult = await getAdcodeFromCoords(lng, lat, apiKey)
-
-    if (!geoResult) {
-      return NextResponse.json(
-        { error: '无法获取位置信息' },
-        { status: 500 }
-      )
-    }
-
-    const { adcode, city } = geoResult
 
     // 2. 检查缓存
     const cached = getCachedWeather(adcode)
