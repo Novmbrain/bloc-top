@@ -183,6 +183,9 @@ interface ForecastItemProps {
     nightWeather: string
     dayTemp: number
     nightTemp: number
+    climbing?: {
+      level: 'excellent' | 'good' | 'fair' | 'poor'
+    }
   }
   isFirst: boolean
   t: ReturnType<typeof useTranslations<'Weather'>>
@@ -202,12 +205,17 @@ function ForecastItem({ forecast, t }: ForecastItemProps) {
       className="flex flex-col items-center p-2 rounded-lg"
       style={{ backgroundColor: 'var(--theme-surface-variant)' }}
     >
-      <span
-        className="text-xs font-medium mb-1"
-        style={{ color: 'var(--theme-on-surface-variant)' }}
-      >
-        {dayLabel}
-      </span>
+      <div className="flex items-center gap-1 mb-1">
+        <span
+          className="text-xs font-medium"
+          style={{ color: 'var(--theme-on-surface-variant)' }}
+        >
+          {dayLabel}
+        </span>
+        {forecast.climbing && (
+          <span className="text-xs">{getSuitabilityIcon(forecast.climbing.level)}</span>
+        )}
+      </div>
       <span className="text-xl mb-1">{getWeatherIcon(forecast.dayWeather)}</span>
       <div className="flex items-center gap-1">
         <ThermometerSun className="w-3 h-3" style={{ color: 'var(--theme-on-surface-variant)' }} />
