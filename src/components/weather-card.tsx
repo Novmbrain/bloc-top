@@ -8,6 +8,7 @@ import { getSuitabilityIcon, isToday } from '@/lib/weather-utils'
 import { useWeather } from '@/hooks/use-weather'
 
 interface WeatherCardProps {
+  adcode?: string
   coordinates?: Coordinates
   delay?: number
 }
@@ -16,9 +17,9 @@ interface WeatherCardProps {
  * 详情页天气卡片
  * 显示完整天气信息，包含实况、适宜度评估和 3 日预报
  */
-export function WeatherCard({ coordinates, delay = 0 }: WeatherCardProps) {
+export function WeatherCard({ adcode, coordinates, delay = 0 }: WeatherCardProps) {
   const t = useTranslations('Weather')
-  const { weather, loading, error } = useWeather({ coordinates })
+  const { weather, loading, error } = useWeather({ adcode, coordinates })
 
   // 加载中 - 显示骨架屏
   if (loading) {
