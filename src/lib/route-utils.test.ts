@@ -22,11 +22,11 @@ describe('getSiblingRoutes', () => {
     expect(getSiblingRoutes(null, routes)).toEqual([])
   })
 
-  it('matches by faceId and filters for valid topoLine', () => {
+  it('matches by cragId + faceId and filters for valid topoLine', () => {
     const result = getSiblingRoutes(routes[0], routes)
     const ids = result.map((r) => r.id)
-    // id=1,2 share faceId=f1 with topoLine; id=5 has no topoLine; id=6 has faceId=f1 but different crag (still matches by faceId)
-    expect(ids).toEqual([1, 2, 6])
+    // id=1,2 share cragId=c1 + faceId=f1 with topoLine; id=5 has no topoLine; id=6 has faceId=f1 but different crag (excluded)
+    expect(ids).toEqual([1, 2])
   })
 
   it('falls back to cragId + area when no faceId', () => {
