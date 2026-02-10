@@ -10,7 +10,7 @@ export function getSiblingRoutes(route: Route | null, allRoutes: Route[]): Route
 
   if (route.faceId) {
     return allRoutes.filter(
-      (r) => r.faceId === route.faceId && r.topoLine && r.topoLine.length >= 2
+      (r) => r.cragId === route.cragId && r.faceId === route.faceId && r.topoLine && r.topoLine.length >= 2
     )
   }
 
