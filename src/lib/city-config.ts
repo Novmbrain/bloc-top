@@ -42,6 +42,17 @@ const CITIES_DATA = [
     } as Coordinates,
     available: true as boolean,
   },
+  {
+    id: 'changle',
+    name: '长乐',
+    shortName: '长乐',
+    adcode: '350112',        // 长乐区 adcode
+    coordinates: {
+      lng: 119.523,          // 长乐区中心（待更新为攀岩区域中心）
+      lat: 25.963,
+    } as Coordinates,
+    available: false as boolean,
+  },
 ] as const
 
 // ==================== 类型定义 ====================
