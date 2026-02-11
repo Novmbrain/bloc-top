@@ -319,13 +319,13 @@ export default function RouteAnnotationPage() {
 
   // ============ 同岩面的其他线路（用于多线路叠加） ============
   const sameFaceRoutes = useMemo<MultiTopoRoute[]>(() => {
-    if (!selectedRoute?.faceId || !showOtherRoutes) return []
-    const faceGroup = areaFaceGroups.find(f => f.faceId === selectedRoute.faceId)
+    if (!selectedFaceId || !showOtherRoutes) return []
+    const faceGroup = areaFaceGroups.find(f => f.faceId === selectedFaceId)
     if (!faceGroup) return []
     return faceGroup.routes
-      .filter(r => r.id !== selectedRoute.id && r.topoLine && r.topoLine.length >= 2)
+      .filter(r => r.id !== selectedRoute?.id && r.topoLine && r.topoLine.length >= 2)
       .map(r => ({ id: r.id, name: r.name, grade: r.grade, topoLine: r.topoLine!, topoTension: r.topoTension }))
-  }, [selectedRoute, areaFaceGroups, showOtherRoutes])
+  }, [selectedRoute, selectedFaceId, areaFaceGroups, showOtherRoutes])
 
   // ============ 切换岩场 ============
   const handleSelectCrag = useCallback((id: string) => {
