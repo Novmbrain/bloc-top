@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-罗源野抱 TOPO - 福州罗源攀岩线路分享 PWA 应用（野外抱石攀岩指南）
+寻岩记 (BlocTop) - 攀岩线路分享 PWA 应用（野外抱石指南）
 
 ## Node Version
 
@@ -213,7 +213,9 @@ scripts/                        # 数据库脚本
 doc/
 ├── PROJECT_OVERVIEW.md         # 项目技术文档 (详细)
 ├── PROJECT_INDEX.md            # 项目索引 (自动生成)
-└── FACE_IMAGE_CACHE_ARCHITECTURE.md  # 缓存架构文档
+├── FACE_IMAGE_CACHE_ARCHITECTURE.md  # 缓存架构文档
+└── data-flow/                  # 数据流文档
+    └── ROUTE_RENDERING.md      # Bloc 线路渲染数据流
 ```
 
 ## Core Data Types

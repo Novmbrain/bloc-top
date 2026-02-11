@@ -23,15 +23,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!crag) {
     return {
-      title: '岩场不存在 - 罗源野抱 TOPO',
+      title: '岩场不存在 - 寻岩记',
     }
   }
 
   return {
-    title: `${crag.name} - 罗源野抱 TOPO`,
+    title: `${crag.name} - 寻岩记`,
     description: crag.description.slice(0, 160),
     openGraph: {
-      title: `${crag.name} - 罗源攀岩`,
+      title: `${crag.name} - 寻岩记`,
       description: crag.description.slice(0, 160),
       type: 'article',
     },

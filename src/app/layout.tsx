@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: '寻岩记',
-  description: '福州罗源攀岩线路分享 - 野外抱石攀岩指南',
+  description: '攀岩线路分享 - 野外抱石指南',
   manifest: '/manifest.json',
   icons: {
     icon: [

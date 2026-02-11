@@ -316,7 +316,7 @@
     "authorHint": "有建议？来找我",
     "totalVisits": "累计",
     "visits": "次访问",
-    "version": "罗源野抱 TOPO v1.0.0",
+    "version": "寻岩记 v1.0.0",
     "wechat": "微信",
     "xiaohongshu": "小红书",
     "feedbackPlaceholder": "有什么想说的？",
@@ -332,8 +332,8 @@
     "editorPasswordConfirm": "进入编辑器"
   },
   "Intro": {
-    "heroTitle": "罗源野抱 TOPO",
-    "heroSubtitle": "福州罗源攀岩线路分享，你的野外抱石攀岩指南",
+    "heroTitle": "寻岩记",
+    "heroSubtitle": "攀岩线路分享，你的野外抱石指南",
     "scene1Title": "浏览岩场，选择目的地",
     "scene1Desc": "查看各个岩场信息，支持城市切换和天气适宜度参考，轻松规划攀岩行程",
     "scene2Title": "查看线路，了解走向",
@@ -350,8 +350,8 @@
     "backToHome": "返回首页"
   },
   "Metadata": {
-    "title": "罗源野抱 TOPO",
-    "description": "福州罗源攀岩线路分享 - 野外抱石攀岩指南"
+    "title": "寻岩记",
+    "description": "攀岩线路分享 - 野外抱石指南"
   },
   "Error": {
     "title": "出错了",

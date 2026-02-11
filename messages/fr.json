@@ -284,7 +284,7 @@
     "authorHint": "Des suggestions ? Contactez-moi",
     "totalVisits": "Total",
     "visits": "visites",
-    "version": "Luoyuan Bouldering TOPO v1.0.0",
+    "version": "BlocTop v1.0.0",
     "wechat": "WeChat",
     "xiaohongshu": "Xiaohongshu",
     "feedbackPlaceholder": "Quelque chose à dire ?",
@@ -300,8 +300,8 @@
     "editorPasswordConfirm": "Accéder à l'éditeur"
   },
   "Intro": {
-    "heroTitle": "Luoyuan Bouldering TOPO",
-    "heroSubtitle": "Votre guide de bloc en plein air pour Luoyuan, Fuzhou",
+    "heroTitle": "BlocTop",
+    "heroSubtitle": "Votre guide de bloc en plein air",
     "scene1Title": "Parcourir les sites, choisir votre destination",
     "scene1Desc": "Explorez les sites avec changement de ville et météo d'escalade pour planifier votre sortie",
     "scene2Title": "Voir les voies, consulter le topo",
@@ -318,8 +318,8 @@
     "backToHome": "Retour à l'accueil"
   },
   "Metadata": {
-    "title": "Luoyuan Bouldering TOPO",
-    "description": "Guide d'escalade pour Luoyuan, Fuzhou - Voies d'escalade en plein air"
+    "title": "BlocTop",
+    "description": "Guide de bloc en plein air - Partage de voies d'escalade"
   },
   "Error": {
     "title": "Une erreur est survenue",

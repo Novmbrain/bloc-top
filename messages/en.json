@@ -316,7 +316,7 @@
     "authorHint": "Got suggestions? Find me",
     "totalVisits": "Total",
     "visits": "visits",
-    "version": "Luoyuan Bouldering TOPO v1.0.0",
+    "version": "BlocTop v1.0.0",
     "wechat": "WeChat",
     "xiaohongshu": "Xiaohongshu",
     "feedbackPlaceholder": "Anything to say?",
@@ -332,8 +332,8 @@
     "editorPasswordConfirm": "Enter Editor"
   },
   "Intro": {
-    "heroTitle": "Luoyuan Bouldering TOPO",
-    "heroSubtitle": "Your outdoor bouldering guide for Luoyuan, Fuzhou",
+    "heroTitle": "BlocTop",
+    "heroSubtitle": "Your outdoor bouldering guide",
     "scene1Title": "Browse crags, pick your destination",
     "scene1Desc": "Explore crag info with city switching and weather suitability to plan your climbing trip",
     "scene2Title": "View routes, check the topo",
@@ -350,8 +350,8 @@
     "backToHome": "Back to Home"
   },
   "Metadata": {
-    "title": "Luoyuan Bouldering TOPO",
-    "description": "Bouldering guide for Luoyuan, Fuzhou - Outdoor climbing routes"
+    "title": "BlocTop",
+    "description": "Outdoor bouldering guide - Climbing route sharing"
   },
   "Error": {
     "title": "Something went wrong",
