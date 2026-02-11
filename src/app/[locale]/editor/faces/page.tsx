@@ -28,6 +28,9 @@ import { AreaSelect } from '@/components/editor/area-select'
 import { preloadImage } from '@/lib/editor-utils'
 import { deriveAreas, getPersistedAreas } from '@/lib/editor-areas'
 
+const FACE_ID_PATTERN = /^[\u4e00-\u9fffa-z0-9-]+$/
+const FACE_ID_CLEANUP = /[^\u4e00-\u9fffa-z0-9-]/g
+
 interface R2FaceInfo {
   faceId: string
   area: string
@@ -123,15 +126,18 @@ export default function FaceManagementPage() {
   const { showToast } = useToast()
 
   // ============ 从 R2 加载岩面列表 ============
-  const loadFaces = useCallback((cragId: string) => {
+  const loadFaces = useCallback((cragId: string, signal?: AbortSignal) => {
     setIsLoadingFaces(true)
-    return fetch(`/api/faces?cragId=${encodeURIComponent(cragId)}`)
+    return fetch(`/api/faces?cragId=${encodeURIComponent(cragId)}`, { signal })
       .then(res => res.json())
       .then(data => {
         if (data.success) setR2Faces(data.faces as R2FaceInfo[])
+        setIsLoadingFaces(false)
       })
-      .catch(() => { /* 静默失败，回退到仅 route 派生 */ })
-      .finally(() => setIsLoadingFaces(false))
+      .catch(err => {
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        setIsLoadingFaces(false)
+      })
   }, [])
 
   useEffect(() => {
@@ -140,9 +146,9 @@ export default function FaceManagementPage() {
       return
     }
     setR2Faces([])
-    let cancelled = false
-    loadFaces(selectedCragId).then(() => { if (cancelled) return })
-    return () => { cancelled = true }
+    const controller = new AbortController()
+    loadFaces(selectedCragId, controller.signal)
+    return () => controller.abort()
   }, [selectedCragId, loadFaces])
 
   // 刷新岩面列表
@@ -318,7 +324,7 @@ export default function FaceManagementPage() {
     if (isCreating) {
       const errors: Record<string, string> = {}
       if (!newFaceId.trim()) errors.faceId = '请输入岩面 ID'
-      else if (!/^[\u4e00-\u9fffa-z0-9-]+$/.test(newFaceId)) errors.faceId = '格式不正确'
+      else if (!FACE_ID_PATTERN.test(newFaceId)) errors.faceId = '格式不正确'
       if (!newArea.trim()) errors.area = '请选择区域'
       if (Object.keys(errors).length > 0) {
         setFaceFormErrors(errors)
@@ -399,7 +405,7 @@ export default function FaceManagementPage() {
       setIsRenaming(false)
       return
     }
-    if (!/^[\u4e00-\u9fffa-z0-9-]+$/.test(newFaceId)) {
+    if (!FACE_ID_PATTERN.test(newFaceId)) {
       showToast('名称只允许中文、小写字母、数字和连字符', 'error')
       return
     }
@@ -621,7 +627,7 @@ export default function FaceManagementPage() {
   )
 
   // ============ 右栏：详情/新建 ============
-  const canCreate = isCreating && newFaceId.trim() && newArea.trim() && /^[\u4e00-\u9fffa-z0-9-]+$/.test(newFaceId) && uploadedFile
+  const canCreate = isCreating && newFaceId.trim() && newArea.trim() && FACE_ID_PATTERN.test(newFaceId) && uploadedFile
 
   const rightPanel = (
     <div className="h-full overflow-y-auto">
@@ -661,7 +667,7 @@ export default function FaceManagementPage() {
                 value={newFaceId}
                 onChange={(v) => { setNewFaceId(v); setFaceFormErrors(prev => { const next = {...prev}; delete next.faceId; return next }) }}
                 onBlur={(e) => {
-                  const cleaned = e.target.value.toLowerCase().replace(/[^\u4e00-\u9fffa-z0-9-]/g, '')
+                  const cleaned = e.target.value.toLowerCase().replace(FACE_ID_CLEANUP, '')
                   setNewFaceId(cleaned)
                 }}
                 style={faceFormErrors.faceId ? { borderColor: 'var(--theme-error)' } : undefined}
@@ -763,7 +769,7 @@ export default function FaceManagementPage() {
                     value={renameValue}
                     onChange={(value) => setRenameValue(value)}
                     onBlur={(e) => {
-                      const cleaned = e.target.value.toLowerCase().replace(/[^\u4e00-\u9fffa-z0-9-]/g, '')
+                      const cleaned = e.target.value.toLowerCase().replace(FACE_ID_CLEANUP, '')
                       setRenameValue(cleaned)
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleRenameFace(); if (e.key === 'Escape') setIsRenaming(false) }}

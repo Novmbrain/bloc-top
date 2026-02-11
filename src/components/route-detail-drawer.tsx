@@ -2,12 +2,20 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
 import { MapPin, User, Wrench, Video, ImageIcon, ZoomIn, Eye, EyeOff } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
-import { BetaListDrawer } from '@/components/beta-list-drawer'
-import { BetaSubmitDrawer } from '@/components/beta-submit-drawer'
+
+const BetaListDrawer = dynamic(() =>
+  import('@/components/beta-list-drawer').then(m => ({ default: m.BetaListDrawer })),
+  { ssr: false }
+)
+const BetaSubmitDrawer = dynamic(() =>
+  import('@/components/beta-submit-drawer').then(m => ({ default: m.BetaSubmitDrawer })),
+  { ssr: false }
+)
 import { ContextualHint } from '@/components/contextual-hint'
 import { TopoLineOverlay, type TopoLineOverlayRef } from '@/components/topo-line-overlay'
 import { MultiTopoLineOverlay, type MultiTopoLineOverlayRef, type MultiTopoRoute } from '@/components/multi-topo-line-overlay'

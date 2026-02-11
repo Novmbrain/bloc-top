@@ -15,6 +15,8 @@ import { useCitySelection } from '@/hooks/use-city-selection'
 import { useWeather } from '@/hooks/use-weather'
 import type { Crag, Route } from '@/types'
 
+const EMPTY_ROUTES: Route[] = []
+
 interface HomePageClientProps {
   crags: Crag[]
   allRoutes: Route[]
@@ -49,6 +51,17 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
 
   // 获取天气数据 (用于卡片角标，不需要预报，使用城市 adcode)
   const { weather } = useWeather({ adcode: city.adcode, forecast: false })
+
+  // 预计算按 cragId 分组的线路 Map，避免渲染时重复 filter
+  const routesByCrag = useMemo(() => {
+    const map = new Map<string, Route[]>()
+    filteredRoutes.forEach(r => {
+      const arr = map.get(r.cragId) || []
+      arr.push(r)
+      map.set(r.cragId, arr)
+    })
+    return map
+  }, [filteredRoutes])
 
   // 不限制搜索结果数量，由 SearchDrawer 内部控制显示
   const { searchQuery, setSearchQuery, searchResults, clearSearch } =
@@ -105,7 +118,7 @@ export default function HomePageClient({ crags, allRoutes }: HomePageClientProps
                 <CragCard
                   key={crag.id}
                   crag={crag}
-                  routes={(filteredRoutes || []).filter((r) => r.cragId === crag.id)}
+                  routes={routesByCrag.get(crag.id) || EMPTY_ROUTES}
                   index={index}
                   weather={weather}
                 />

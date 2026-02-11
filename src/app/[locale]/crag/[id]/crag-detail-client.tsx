@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useMemo } from 'react'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -68,21 +68,20 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
   }, [isMobile])
 
   // 计算难度范围
-  const grades = routes
-    .map((r) => r.grade)
-    .filter((g) => g !== '？')
-    .sort((a, b) => {
-      const numA = parseInt(a.replace('V', ''))
-      const numB = parseInt(b.replace('V', ''))
-      return numA - numB
-    })
-
-  const gradeRange =
-    grades.length > 0
-      ? grades[0] === grades[grades.length - 1]
-        ? grades[0]
-        : `${grades[0]} - ${grades[grades.length - 1]}`
-      : '暂无'
+  const gradeRange = useMemo(() => {
+    const grades = routes
+      .map((r) => r.grade)
+      .filter((g) => g !== '？')
+      .sort((a, b) => {
+        const numA = parseInt(a.replace('V', ''))
+        const numB = parseInt(b.replace('V', ''))
+        return numA - numB
+      })
+    if (grades.length === 0) return '暂无'
+    return grades[0] === grades[grades.length - 1]
+      ? grades[0]
+      : `${grades[0]} - ${grades[grades.length - 1]}`
+  }, [routes])
 
   return (
     <div

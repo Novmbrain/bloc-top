@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { getDatabase } from '@/lib/mongodb'
 import { createModuleLogger } from '@/lib/logger'
 import type { Crag, Route, Feedback, VisitStats } from '@/types'
@@ -41,7 +42,7 @@ function toRoute(doc: WithId<Document>): Route {
 /**
  * 获取所有岩场
  */
-export async function getAllCrags(): Promise<Crag[]> {
+async function _getAllCrags(): Promise<Crag[]> {
   const start = Date.now()
 
   try {
@@ -66,6 +67,7 @@ export async function getAllCrags(): Promise<Crag[]> {
     throw error
   }
 }
+export const getAllCrags = cache(_getAllCrags)
 
 /**
  * 根据城市 ID 获取岩场列表
@@ -101,7 +103,7 @@ export async function getCragsByCityId(cityId: string): Promise<Crag[]> {
 /**
  * 根据 ID 获取单个岩场
  */
-export async function getCragById(id: string): Promise<Crag | null> {
+async function _getCragById(id: string): Promise<Crag | null> {
   const start = Date.now()
 
   try {
@@ -131,13 +133,14 @@ export async function getCragById(id: string): Promise<Crag | null> {
     throw error
   }
 }
+export const getCragById = cache(_getCragById)
 
 // ============ Route 相关操作 ============
 
 /**
  * 获取所有线路
  */
-export async function getAllRoutes(): Promise<Route[]> {
+async function _getAllRoutes(): Promise<Route[]> {
   const start = Date.now()
 
   try {
@@ -161,11 +164,12 @@ export async function getAllRoutes(): Promise<Route[]> {
     throw error
   }
 }
+export const getAllRoutes = cache(_getAllRoutes)
 
 /**
  * 根据 ID 获取单条线路
  */
-export async function getRouteById(id: number): Promise<Route | null> {
+async function _getRouteById(id: number): Promise<Route | null> {
   const start = Date.now()
 
   try {
@@ -195,11 +199,12 @@ export async function getRouteById(id: number): Promise<Route | null> {
     throw error
   }
 }
+export const getRouteById = cache(_getRouteById)
 
 /**
  * 获取指定岩场的所有线路
  */
-export async function getRoutesByCragId(cragId: string): Promise<Route[]> {
+async function _getRoutesByCragId(cragId: string): Promise<Route[]> {
   const start = Date.now()
 
   try {
@@ -225,6 +230,7 @@ export async function getRoutesByCragId(cragId: string): Promise<Route[]> {
     throw error
   }
 }
+export const getRoutesByCragId = cache(_getRoutesByCragId)
 
 /**
  * 获取指定岩场的线路数量 (轻量查询，用于 stale 检测)

@@ -16,6 +16,8 @@ import { RouteDetailDrawer } from '@/components/route-detail-drawer'
 import { AppTabbar } from '@/components/app-tabbar'
 import type { Route, Crag } from '@/types'
 
+const MAX_ANIMATED_CARDS = 10
+
 interface RouteListClientProps {
   routes: Route[]
   crags: Crag[]
@@ -272,13 +274,15 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
                   key={route.id}
                   onClick={() => handleRouteClick(route)}
                   className={`w-full flex items-center p-3 transition-all active:scale-[0.98] text-left ${
-                    !hasInitialRender ? 'animate-fade-in-up' : ''
+                    !hasInitialRender && index < MAX_ANIMATED_CARDS ? 'animate-fade-in-up' : ''
                   }`}
                   style={{
                     backgroundColor: 'var(--theme-surface)',
                     borderRadius: 'var(--theme-radius-xl)',
                     boxShadow: 'var(--theme-shadow-sm)',
-                    ...(hasInitialRender ? {} : { animationDelay: `${index * 30}ms` }),
+                    contentVisibility: 'auto' as React.CSSProperties['contentVisibility'],
+                    containIntrinsicSize: '0 72px',
+                    ...(!hasInitialRender && index < MAX_ANIMATED_CARDS ? { animationDelay: `${index * 30}ms` } : {}),
                   }}
                 >
                   {/* 难度标签 */}

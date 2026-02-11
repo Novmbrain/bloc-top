@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import useSWR from 'swr'
 import type { WeatherData, Coordinates } from '@/types'
 
 interface UseWeatherOptions {
@@ -12,50 +12,38 @@ interface UseWeatherOptions {
   forecast?: boolean
 }
 
+const fetcher = (url: string) => fetch(url).then(res => {
+  if (!res.ok) throw new Error('Weather API failed')
+  return res.json()
+})
+
 /**
  * 天气数据获取 Hook
- * 统一封装天气 API 调用，避免在多个组件中重复获取逻辑
+ * 使用 SWR 实现请求去重和跨组件缓存共享
  */
 export function useWeather({ adcode, coordinates, forecast = true }: UseWeatherOptions = {}) {
-  const [weather, setWeather] = useState<WeatherData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const params = new URLSearchParams()
+  if (adcode) {
+    params.set('adcode', adcode)
+  } else if (coordinates) {
+    params.set('lng', String(coordinates.lng))
+    params.set('lat', String(coordinates.lat))
+  }
+  if (!forecast) {
+    params.set('forecast', 'false')
+  }
 
-  useEffect(() => {
-    async function fetchWeather() {
-      try {
-        setLoading(true)
-        setError(false)
+  // 只有有查询参数时才发起请求
+  const key = params.toString() ? `/api/weather?${params.toString()}` : null
 
-        const params = new URLSearchParams()
-        if (adcode) {
-          params.set('adcode', adcode)
-        } else if (coordinates) {
-          params.set('lng', String(coordinates.lng))
-          params.set('lat', String(coordinates.lat))
-        }
-        if (!forecast) {
-          params.set('forecast', 'false')
-        }
+  const { data, error, isLoading } = useSWR<WeatherData>(key, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 60000, // 1 分钟内相同 key 去重
+  })
 
-        const response = await fetch(`/api/weather?${params.toString()}`)
-
-        if (!response.ok) {
-          throw new Error('Weather API failed')
-        }
-
-        const data: WeatherData = await response.json()
-        setWeather(data)
-      } catch (err) {
-        console.error('[useWeather] Failed to fetch weather:', err)
-        setError(true)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchWeather()
-  }, [adcode, coordinates?.lng, coordinates?.lat, forecast])
-
-  return { weather, loading, error }
+  return {
+    weather: data ?? null,
+    loading: isLoading,
+    error: !!error,
+  }
 }

@@ -3,15 +3,30 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import type { Crag, Route } from '@/types'
 
+interface FaceInfo {
+  faceId: string
+  area: string
+}
+
+interface UseCragRoutesOptions {
+  /** 是否同时加载 R2 岩面数据 */
+  includeFaces?: boolean
+}
+
 /**
  * 共用 hook：加载岩场列表 + 线路列表
+ * 可选并行加载 R2 faces 数据
  */
-export function useCragRoutes() {
+export function useCragRoutes(options?: UseCragRoutesOptions) {
+  const includeFaces = options?.includeFaces ?? false
+
   const [crags, setCrags] = useState<Crag[]>([])
   const [routes, setRoutes] = useState<Route[]>([])
   const [selectedCragId, setSelectedCragId] = useState<string | null>(null)
   const [isLoadingCrags, setIsLoadingCrags] = useState(true)
   const [isLoadingRoutes, setIsLoadingRoutes] = useState(false)
+  const [r2Faces, setR2Faces] = useState<FaceInfo[]>([])
+  const [isLoadingFaces, setIsLoadingFaces] = useState(false)
 
   // 加载岩场列表
   useEffect(() => {
@@ -34,30 +49,47 @@ export function useCragRoutes() {
     loadCrags()
   }, [])
 
-  // 加载岩场线路
+  // 加载岩场线路（可选并行加载 faces）
   useEffect(() => {
     if (!selectedCragId) {
       setRoutes([])
+      if (includeFaces) setR2Faces([])
       return
     }
 
     setRoutes([])
-    async function loadRoutes() {
+    if (includeFaces) setR2Faces([])
+
+    let cancelled = false
+
+    async function loadData() {
       setIsLoadingRoutes(true)
-      try {
-        const response = await fetch(`/api/crags/${selectedCragId}/routes`)
-        if (response.ok) {
-          const data = await response.json()
-          setRoutes(data.routes || [])
-        }
-      } catch (error) {
-        console.error('Failed to load routes:', error)
-      } finally {
-        setIsLoadingRoutes(false)
+      if (includeFaces) setIsLoadingFaces(true)
+
+      const promises: Promise<void>[] = [
+        fetch(`/api/crags/${selectedCragId}/routes`)
+          .then(res => res.json())
+          .then(data => { if (!cancelled) setRoutes(data.routes || []) })
+          .catch(err => console.error('Failed to load routes:', err))
+          .finally(() => { if (!cancelled) setIsLoadingRoutes(false) }),
+      ]
+
+      if (includeFaces) {
+        promises.push(
+          fetch(`/api/faces?cragId=${encodeURIComponent(selectedCragId!)}`)
+            .then(res => res.json())
+            .then(data => { if (!cancelled && data.success) setR2Faces(data.faces || []) })
+            .catch(() => { /* silent fallback */ })
+            .finally(() => { if (!cancelled) setIsLoadingFaces(false) })
+        )
       }
+
+      await Promise.all(promises)
     }
-    loadRoutes()
-  }, [selectedCragId])
+
+    loadData()
+    return () => { cancelled = true }
+  }, [selectedCragId, includeFaces])
 
   // 统计数据
   const stats = useMemo(() => {
@@ -94,5 +126,6 @@ export function useCragRoutes() {
     isLoadingRoutes,
     stats,
     updateCragAreas,
+    ...(includeFaces ? { r2Faces, setR2Faces, isLoadingFaces } : {}),
   }
 }
