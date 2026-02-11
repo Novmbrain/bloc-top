@@ -2,7 +2,7 @@
 
 import { useRef, useCallback, useEffect, useMemo, useState, forwardRef, useImperativeHandle } from 'react'
 import type { TopoPoint } from '@/types'
-import { bezierCurve, scalePoints } from '@/lib/topo-utils'
+import { catmullRomCurve, scalePoints } from '@/lib/topo-utils'
 import { getGradeColor } from '@/lib/tokens'
 import {
   TOPO_VIEW_WIDTH,
@@ -21,6 +21,7 @@ export interface MultiTopoRoute {
   name: string
   grade: string
   topoLine: TopoPoint[]
+  topoTension?: number
 }
 
 export interface MultiTopoLineOverlayProps {
@@ -87,7 +88,7 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
 
         const scaledPoints = scalePoints(route.topoLine, TOPO_VIEW_WIDTH, TOPO_VIEW_HEIGHT)
         map.set(route.id, {
-          path: bezierCurve(scaledPoints),
+          path: catmullRomCurve(scaledPoints, 0.5, route.topoTension ?? 0),
           start: scaledPoints[0],
         })
       })

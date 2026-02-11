@@ -162,6 +162,20 @@ export async function PATCH(
       }
     }
 
+    // 验证 topoTension
+    if (body.topoTension !== undefined) {
+      if (body.topoTension === null) {
+        updates.topoTension = undefined
+      } else if (typeof body.topoTension !== 'number' || !Number.isFinite(body.topoTension) || body.topoTension < 0 || body.topoTension > 1) {
+        return NextResponse.json(
+          { success: false, error: 'topoTension 必须是 0-1 之间的数字' },
+          { status: 400 }
+        )
+      } else {
+        updates.topoTension = body.topoTension
+      }
+    }
+
     // 检查是否有需要更新的字段
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(

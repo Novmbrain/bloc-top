@@ -93,6 +93,7 @@ export function RouteDetailDrawer({
         name: r.name,
         grade: r.grade,
         topoLine: r.topoLine!,
+        topoTension: r.topoTension,
       }))
   }, [siblingRoutes])
 
@@ -227,6 +228,7 @@ export function RouteDetailDrawer({
                       ref={drawerOverlayRef}
                       points={route.topoLine!}
                       color={routeColor}
+                      tension={route.topoTension}
                       animated
                     />
                   )
@@ -497,6 +499,7 @@ export function RouteDetailDrawer({
                 ref={fullscreenOverlayRef}
                 points={route.topoLine!}
                 color={routeColor}
+                tension={route.topoTension}
                 animated
                 objectFit="contain"
               />

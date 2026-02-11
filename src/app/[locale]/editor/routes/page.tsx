@@ -24,7 +24,7 @@ import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import type { Route, TopoPoint } from '@/types'
-import { bezierCurve, scalePoints, normalizePoint } from '@/lib/topo-utils'
+import { catmullRomCurve, scalePoints, normalizePoint } from '@/lib/topo-utils'
 import { getGradeColor } from '@/lib/tokens'
 import { useToast } from '@/components/ui/toast'
 import { useFaceImageCache } from '@/hooks/use-face-image'
@@ -90,6 +90,7 @@ export default function RouteAnnotationPage() {
   // ============ 编辑状态 ============
   const [editedRoute, setEditedRoute] = useState<Partial<Route>>({})
   const [topoLine, setTopoLine] = useState<TopoPoint[]>([])
+  const [topoTension, setTopoTension] = useState(0)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [isImageLoading, setIsImageLoading] = useState(false)
   const [imageLoadError, setImageLoadError] = useState(false)
@@ -137,8 +138,10 @@ export default function RouteAnnotationPage() {
     for (let i = 0; i < topoLine.length; i++) {
       if (topoLine[i].x !== original[i].x || topoLine[i].y !== original[i].y) return true
     }
+    // Tension comparison
+    if (topoTension !== (selectedRoute.topoTension ?? 0)) return true
     return false
-  }, [selectedRoute, editedRoute, topoLine])
+  }, [selectedRoute, editedRoute, topoLine, topoTension])
 
   const executePendingAction = useCallback((action: PendingAction) => {
     switch (action.type) {
@@ -159,6 +162,7 @@ export default function RouteAnnotationPage() {
         break
       case 'clearTopo':
         setTopoLine([])
+        setTopoTension(0)
         break
       case 'goBackMobile':
         setShowEditorPanel(false)
@@ -197,6 +201,7 @@ export default function RouteAnnotationPage() {
 
   const handleConfirmClearTopo = useCallback(() => {
     setTopoLine([])
+    setTopoTension(0)
     setShowClearTopoDialog(false)
   }, [])
 
@@ -325,7 +330,7 @@ export default function RouteAnnotationPage() {
     if (!faceGroup) return []
     return faceGroup.routes
       .filter(r => r.id !== selectedRoute.id && r.topoLine && r.topoLine.length >= 2)
-      .map(r => ({ id: r.id, name: r.name, grade: r.grade, topoLine: r.topoLine! }))
+      .map(r => ({ id: r.id, name: r.name, grade: r.grade, topoLine: r.topoLine!, topoTension: r.topoTension }))
   }, [selectedRoute, areaFaceGroups, showOtherRoutes])
 
   // ============ 切换岩场 ============
@@ -355,6 +360,7 @@ export default function RouteAnnotationPage() {
       description: selectedRoute.description,
     })
     setTopoLine(selectedRoute.topoLine || [])
+    setTopoTension(selectedRoute.topoTension ?? 0)
     setFormErrors({})
     setShowEditorPanel(true)
 
@@ -398,6 +404,7 @@ export default function RouteAnnotationPage() {
 
   const handleClearPoints = useCallback(() => {
     setTopoLine([])
+    setTopoTension(0)
   }, [])
 
   // ============ 保存逻辑 ============
@@ -423,6 +430,7 @@ export default function RouteAnnotationPage() {
           ...editedRoute,
           faceId: selectedFaceId,
           topoLine: topoLine.length >= 2 ? topoLine : null,
+          topoTension: topoLine.length >= 2 && topoTension > 0 ? topoTension : null,
         }),
       })
 
@@ -453,7 +461,7 @@ export default function RouteAnnotationPage() {
     } finally {
       setIsSaving(false)
     }
-  }, [selectedRoute, editedRoute, topoLine, selectedFaceId, setRoutes, showToast, persistedAreas, selectedCragId, updateCragAreas])
+  }, [selectedRoute, editedRoute, topoLine, topoTension, selectedFaceId, setRoutes, showToast, persistedAreas, selectedCragId, updateCragAreas])
 
   const handleSaveAndExecute = useCallback(async () => {
     if (!pendingAction) return
@@ -551,8 +559,8 @@ export default function RouteAnnotationPage() {
 
   const pathData = useMemo(() => {
     if (scaledPoints.length < 2) return ''
-    return bezierCurve(scaledPoints)
-  }, [scaledPoints])
+    return catmullRomCurve(scaledPoints, 0.5, topoTension)
+  }, [scaledPoints, topoTension])
 
   // ============ 左栏 ============
   const leftPanel = (
@@ -1037,6 +1045,26 @@ export default function RouteAnnotationPage() {
                     <Maximize className="w-4 h-4" /> 全屏
                   </button>
                 </div>
+
+                {/* Tension 滑块 (≥2 个点才显示) */}
+                {topoLine.length >= 2 && (
+                  <div className="flex items-center gap-3 mt-3 px-1">
+                    <span className="text-xs whitespace-nowrap" style={{ color: 'var(--theme-on-surface-variant)' }}>平滑</span>
+                    {/* eslint-disable-next-line no-restricted-syntax -- range slider, no IME */}
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={topoTension}
+                      onChange={(e) => setTopoTension(Number(e.target.value))}
+                      className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
+                      style={{ accentColor: 'var(--theme-primary)' }}
+                      aria-label="曲线张力"
+                    />
+                    <span className="text-xs whitespace-nowrap" style={{ color: 'var(--theme-on-surface-variant)' }}>折线</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1187,9 +1215,11 @@ export default function RouteAnnotationPage() {
           imageUrl={imageUrl}
           topoLine={topoLine}
           routeColor={routeColor}
+          tension={topoTension}
           onAddPoint={(point) => setTopoLine(prev => [...prev, point])}
           onRemoveLastPoint={handleRemoveLastPoint}
           onClearPoints={handleClearPoints}
+          onTensionChange={setTopoTension}
           onClose={() => setIsFullscreenEdit(false)}
         />
       )}
