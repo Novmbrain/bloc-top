@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
-import { X, Trash2, Undo2, Minus, Plus, RotateCcw } from 'lucide-react'
+import { X, Trash2, Undo2, Minus, Plus, RotateCcw, Check } from 'lucide-react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
 import type { TopoPoint } from '@/types'
@@ -31,26 +31,49 @@ export function FullscreenTopoEditor({
   onRemoveLastPoint: () => void
   onClearPoints: () => void
   onTensionChange?: (tension: number) => void
-  onClose: () => void
+  onClose: (confirmed: boolean) => void
 }) {
   const imgContainerRef = useRef<HTMLDivElement>(null)
   const pointerDownRef = useRef<{ x: number; y: number; time: number } | null>(null)
   const transformRef = useRef<ReactZoomPanPinchRef>(null)
   const [scale, setScale] = useState(1)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const initialTopoLineRef = useRef<TopoPoint[]>(topoLine)
+  const initialTensionRef = useRef<number>(tension ?? 0)
+
+  const hasTopoChanges = useCallback((): boolean => {
+    const orig = initialTopoLineRef.current
+    if (topoLine.length !== orig.length) return true
+    for (let i = 0; i < topoLine.length; i++) {
+      if (topoLine[i].x !== orig[i].x || topoLine[i].y !== orig[i].y) return true
+    }
+    if ((tension ?? 0) !== initialTensionRef.current) return true
+    return false
+  }, [topoLine, tension])
+
+  const handleRequestClose = useCallback(() => {
+    if (hasTopoChanges()) setShowExitConfirm(true)
+    else onClose(true)
+  }, [hasTopoChanges, onClose])
 
   // Body 滚动锁定 + ESC 关闭
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        if (showExitConfirm) { setShowExitConfirm(false); return }
+        if (showClearConfirm) { setShowClearConfirm(false); return }
+        handleRequestClose()
+      }
     }
     window.addEventListener('keydown', handleKey)
     return () => {
       document.body.style.overflow = prev
       window.removeEventListener('keydown', handleKey)
     }
-  }, [onClose])
+  }, [handleRequestClose, showExitConfirm, showClearConfirm])
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     pointerDownRef.current = { x: e.clientX, y: e.clientY, time: Date.now() }
@@ -99,7 +122,7 @@ export function FullscreenTopoEditor({
         }}
       >
         <button
-          onClick={onClose}
+          onClick={handleRequestClose}
           className="p-2 rounded-full transition-all active:scale-90"
           style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
         >
@@ -125,7 +148,7 @@ export function FullscreenTopoEditor({
             <Undo2 className="w-5 h-5 text-white" />
           </button>
           <button
-            onClick={onClearPoints}
+            onClick={() => { if (topoLine.length > 0) setShowClearConfirm(true) }}
             disabled={topoLine.length === 0}
             className="p-2 rounded-full transition-all active:scale-90"
             style={{
@@ -134,6 +157,13 @@ export function FullscreenTopoEditor({
             }}
           >
             <Trash2 className="w-5 h-5 text-white" />
+          </button>
+          <button
+            onClick={() => onClose(true)}
+            className="p-2 rounded-full transition-all active:scale-90"
+            style={{ backgroundColor: 'rgba(74,222,128,0.25)' }}
+          >
+            <Check className="w-5 h-5 text-green-400" />
           </button>
         </div>
       </div>
@@ -299,6 +329,93 @@ export function FullscreenTopoEditor({
           </button>
         </div>
       </div>
+
+      {/* 退出确认对话框 */}
+      {showExitConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setShowExitConfirm(false)}
+        >
+          <div
+            className="mx-4 w-full max-w-sm p-6 rounded-xl"
+            style={{ backgroundColor: 'var(--theme-surface)', boxShadow: 'var(--theme-shadow-lg)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--theme-on-surface)' }}>
+              标注已修改
+            </h3>
+            <p className="text-sm mb-6" style={{ color: 'var(--theme-on-surface-variant)' }}>
+              退出后未确认的标注改动将丢失。
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowExitConfirm(false); onClose(false) }}
+                className="flex-1 py-2.5 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: 'var(--theme-on-surface)',
+                  border: '1.5px solid var(--theme-outline)',
+                }}
+              >
+                丢弃
+              </button>
+              <button
+                onClick={() => { setShowExitConfirm(false); onClose(true) }}
+                className="flex-1 py-2.5 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
+                style={{
+                  backgroundColor: 'var(--theme-primary)',
+                  color: 'var(--theme-on-primary)',
+                }}
+              >
+                保留改动
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 清空确认对话框 */}
+      {showClearConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setShowClearConfirm(false)}
+        >
+          <div
+            className="mx-4 w-full max-w-sm p-6 rounded-xl"
+            style={{ backgroundColor: 'var(--theme-surface)', boxShadow: 'var(--theme-shadow-lg)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold mb-6" style={{ color: 'var(--theme-on-surface)' }}>
+              确定清空所有标注点？
+            </h3>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="flex-1 py-2.5 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: 'var(--theme-on-surface)',
+                  border: '1.5px solid var(--theme-outline)',
+                }}
+              >
+                取消
+              </button>
+              <button
+                onClick={() => { onClearPoints(); setShowClearConfirm(false) }}
+                className="flex-1 py-2.5 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
+                style={{
+                  backgroundColor: 'var(--theme-error)',
+                  color: 'white',
+                }}
+              >
+                确定
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

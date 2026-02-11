@@ -10,8 +10,6 @@ import {
   Sparkles,
   Mountain,
   Edit3,
-  Maximize,
-  Trash2,
   AlertCircle,
   Eye,
   EyeOff,
@@ -24,7 +22,7 @@ import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import type { Route, TopoPoint } from '@/types'
-import { catmullRomCurve, scalePoints, normalizePoint } from '@/lib/topo-utils'
+import { catmullRomCurve, scalePoints } from '@/lib/topo-utils'
 import { getGradeColor } from '@/lib/tokens'
 import { useToast } from '@/components/ui/toast'
 import { useFaceImageCache } from '@/hooks/use-face-image'
@@ -60,7 +58,6 @@ type PendingAction =
   | { type: 'switchRoute'; payload: Route }
   | { type: 'switchArea'; payload: string | null }
   | { type: 'switchCrag'; payload: string }
-  | { type: 'clearTopo' }
   | { type: 'goBackMobile' }
 
 /**
@@ -116,11 +113,9 @@ export default function RouteAnnotationPage() {
   // ============ 脏检查状态 ============
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false)
-  const [showClearTopoDialog, setShowClearTopoDialog] = useState(false)
-
   // ============ Refs ============
-  const containerRef = useRef<HTMLDivElement>(null)
   const justSavedRef = useRef(false)
+  const topoSnapshotRef = useRef<{ line: TopoPoint[]; tension: number } | null>(null)
 
   // ============ Toast ============
   const { showToast } = useToast()
@@ -160,10 +155,6 @@ export default function RouteAnnotationPage() {
         setSelectedFaceId(null)
         setShowEditorPanel(false)
         break
-      case 'clearTopo':
-        setTopoLine([])
-        setTopoTension(0)
-        break
       case 'goBackMobile':
         setShowEditorPanel(false)
         setSelectedRoute(null)
@@ -194,15 +185,18 @@ export default function RouteAnnotationPage() {
     setShowEditorPanel(false)
   }, [selectedArea, hasUnsavedChanges])
 
-  const handleClearPointsWithConfirm = useCallback(() => {
-    if (topoLine.length === 0) return
-    setShowClearTopoDialog(true)
-  }, [topoLine.length])
+  const handleOpenFullscreen = useCallback(() => {
+    topoSnapshotRef.current = { line: [...topoLine], tension: topoTension }
+    setIsFullscreenEdit(true)
+  }, [topoLine, topoTension])
 
-  const handleConfirmClearTopo = useCallback(() => {
-    setTopoLine([])
-    setTopoTension(0)
-    setShowClearTopoDialog(false)
+  const handleFullscreenClose = useCallback((confirmed: boolean) => {
+    if (!confirmed && topoSnapshotRef.current) {
+      setTopoLine(topoSnapshotRef.current.line)
+      setTopoTension(topoSnapshotRef.current.tension)
+    }
+    topoSnapshotRef.current = null
+    setIsFullscreenEdit(false)
   }, [])
 
   const handleDiscardAndExecute = useCallback(() => {
@@ -389,15 +383,6 @@ export default function RouteAnnotationPage() {
   }, [selectedRoute, faceImageCache])
 
   // ============ 画布操作 ============
-  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    const point = normalizePoint(x, y, rect.width, rect.height)
-    setTopoLine((prev) => [...prev, point])
-  }, [])
-
   const handleRemoveLastPoint = useCallback(() => {
     setTopoLine((prev) => prev.slice(0, -1))
   }, [])
@@ -912,7 +897,7 @@ export default function RouteAnnotationPage() {
             <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--theme-outline-variant)' }}>
               <div>
                 <h3 className="font-semibold" style={{ color: 'var(--theme-on-surface)' }}>Topo 标注</h3>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--theme-on-surface-variant)' }}>点击图片添加控制点</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--theme-on-surface-variant)' }}>{topoLine.length >= 2 ? `${topoLine.length} 个控制点` : '尚未标注'}</p>
               </div>
               <div className="flex items-center gap-2">
                 {sameFaceRoutes.length > 0 && (
@@ -948,10 +933,8 @@ export default function RouteAnnotationPage() {
             ) : (
               <div className="p-4">
                 <div
-                  ref={containerRef}
-                  className="relative rounded-xl overflow-hidden cursor-crosshair"
+                  className="relative rounded-xl overflow-hidden"
                   style={{ boxShadow: 'var(--theme-shadow-md)' }}
-                  onClick={handleCanvasClick}
                 >
                   {isImageLoading && (
                     <div className="absolute inset-0 flex items-center justify-center z-10" style={{ backgroundColor: 'var(--theme-surface-variant)' }}>
@@ -987,7 +970,7 @@ export default function RouteAnnotationPage() {
                     />
                   )}
 
-                  {/* 当前线路 SVG 叠加层（带编号控制点，用于编辑） */}
+                  {/* 当前线路 SVG 叠加层（只读预览） */}
                   <svg
                     className="absolute inset-0 w-full h-full pointer-events-none"
                     viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
@@ -997,18 +980,14 @@ export default function RouteAnnotationPage() {
                       <path d={pathData} stroke={routeColor} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" fill="none" />
                     )}
                     {scaledPoints.map((point, index) => (
-                      <g key={index}>
-                        <circle
-                          cx={point.x} cy={point.y}
-                          r={index === 0 ? 6 : index === scaledPoints.length - 1 ? 5 : 4}
-                          fill={index === 0 ? routeColor : 'white'}
-                          stroke={index === 0 ? 'white' : routeColor}
-                          strokeWidth={index === 0 ? 1.5 : 2}
-                        />
-                        <text x={point.x} y={point.y + 2.5} textAnchor="middle" fontSize="7" fontWeight="bold" fill={index === 0 ? 'white' : routeColor}>
-                          {index + 1}
-                        </text>
-                      </g>
+                      <circle
+                        key={index}
+                        cx={point.x} cy={point.y}
+                        r={index === 0 ? 6 : index === scaledPoints.length - 1 ? 5 : 4}
+                        fill={index === 0 ? routeColor : 'white'}
+                        stroke={index === 0 ? 'white' : routeColor}
+                        strokeWidth={index === 0 ? 1.5 : 2}
+                      />
                     ))}
                     {scaledPoints.length > 0 && (
                       <text x={scaledPoints[0].x - 12} y={scaledPoints[0].y + 18} fill={routeColor} fontSize="10" fontWeight="bold">起点</text>
@@ -1019,52 +998,18 @@ export default function RouteAnnotationPage() {
                   </svg>
                 </div>
 
-                {/* 操作按钮 */}
-                <div className="flex gap-2 mt-4">
-                  <button
-                    className="flex-1 py-2.5 px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
-                    style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)', boxShadow: 'var(--theme-shadow-sm)' }}
-                    onClick={handleRemoveLastPoint}
-                    disabled={topoLine.length === 0}
-                  >
-                    <Trash2 className="w-4 h-4" /> 撤销
-                  </button>
-                  <button
-                    className="flex-1 py-2.5 px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
-                    style={{ backgroundColor: 'var(--theme-error)', color: 'white', opacity: topoLine.length === 0 ? 0.5 : 1 }}
-                    onClick={handleClearPointsWithConfirm}
-                    disabled={topoLine.length === 0}
-                  >
-                    <Trash2 className="w-4 h-4" /> 清空
-                  </button>
-                  <button
-                    className="py-2.5 px-4 rounded-xl font-medium flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-[0.98]"
-                    style={{ backgroundColor: 'var(--theme-primary)', color: 'var(--theme-on-primary)', boxShadow: 'var(--theme-shadow-sm)' }}
-                    onClick={() => setIsFullscreenEdit(true)}
-                  >
-                    <Maximize className="w-4 h-4" /> 全屏
-                  </button>
-                </div>
-
-                {/* Tension 滑块 (≥2 个点才显示) */}
-                {topoLine.length >= 2 && (
-                  <div className="flex items-center gap-3 mt-3 px-1">
-                    <span className="text-xs whitespace-nowrap" style={{ color: 'var(--theme-on-surface-variant)' }}>平滑</span>
-                    {/* eslint-disable-next-line no-restricted-syntax -- range slider, no IME */}
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      value={topoTension}
-                      onChange={(e) => setTopoTension(Number(e.target.value))}
-                      className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
-                      style={{ accentColor: 'var(--theme-primary)' }}
-                      aria-label="曲线张力"
-                    />
-                    <span className="text-xs whitespace-nowrap" style={{ color: 'var(--theme-on-surface-variant)' }}>折线</span>
-                  </div>
-                )}
+                {/* 标注按钮 */}
+                <button
+                  className="w-full py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 mt-4 transition-all duration-200 active:scale-[0.98]"
+                  style={topoLine.length === 0
+                    ? { backgroundColor: 'var(--theme-primary)', color: 'var(--theme-on-primary)', boxShadow: 'var(--theme-shadow-sm)' }
+                    : { backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)', border: '1.5px solid var(--theme-outline-variant)', boxShadow: 'var(--theme-shadow-sm)' }
+                  }
+                  onClick={handleOpenFullscreen}
+                >
+                  <Edit3 className="w-4 h-4" />
+                  {topoLine.length === 0 ? '开始标注' : '编辑标注'}
+                </button>
               </div>
             )}
           </div>
@@ -1220,7 +1165,7 @@ export default function RouteAnnotationPage() {
           onRemoveLastPoint={handleRemoveLastPoint}
           onClearPoints={handleClearPoints}
           onTensionChange={setTopoTension}
-          onClose={() => setIsFullscreenEdit(false)}
+          onClose={handleFullscreenClose}
         />
       )}
 
@@ -1267,48 +1212,6 @@ export default function RouteAnnotationPage() {
                 }}
               >
                 {isSaving ? '保存中...' : '保存并切换'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 清空 Topo 确认对话框 */}
-      {showClearTopoDialog && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-          onClick={() => setShowClearTopoDialog(false)}
-        >
-          <div
-            className="mx-4 w-full max-w-sm p-6 rounded-xl"
-            style={{ backgroundColor: 'var(--theme-surface)', boxShadow: 'var(--theme-shadow-lg)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-bold mb-6" style={{ color: 'var(--theme-on-surface)' }}>
-              确定清空所有标注点？
-            </h3>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowClearTopoDialog(false)}
-                className="flex-1 py-2.5 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
-                style={{
-                  backgroundColor: 'transparent',
-                  color: 'var(--theme-on-surface)',
-                  border: '1.5px solid var(--theme-outline)',
-                }}
-              >
-                取消
-              </button>
-              <button
-                onClick={handleConfirmClearTopo}
-                className="flex-1 py-2.5 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
-                style={{
-                  backgroundColor: 'var(--theme-error)',
-                  color: 'white',
-                }}
-              >
-                确定
               </button>
             </div>
           </div>
