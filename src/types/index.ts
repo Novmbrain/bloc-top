@@ -42,6 +42,12 @@ export interface ApproachPath {
   description?: string   // 路径描述
 }
 
+// 岩场致谢人员
+export interface CragCredit {
+  name: string              // 人名
+  contribution: string      // 贡献描述
+}
+
 // 岩场数据类型
 export interface Crag {
   id: string
@@ -55,6 +61,7 @@ export interface Crag {
   coordinates?: Coordinates     // 岩场坐标 (用于地图标记)
   approachPaths?: ApproachPath[] // 接近路径 (用于 KML 导入)
   areas?: string[]               // 持久化的区域列表
+  credits?: CragCredit[]         // 致谢人员列表
 }
 
 // 评论数据类型

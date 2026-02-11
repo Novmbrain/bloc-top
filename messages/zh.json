@@ -41,7 +41,9 @@
     "mapLoading": "地图加载中...",
     "mapReset": "重置视图",
     "mapNavigate": "导航前往",
-    "mapFullscreen": "全屏查看"
+    "mapFullscreen": "全屏查看",
+    "credits": "致谢",
+    "creditsFooter": "感谢所有为这片岩场付出的人"
   },
   "RouteList": {
     "title": "线路列表",

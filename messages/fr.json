@@ -41,7 +41,9 @@
     "mapLoading": "Chargement de la carte...",
     "mapReset": "Réinitialiser la vue",
     "mapNavigate": "Naviguer",
-    "mapFullscreen": "Plein écran"
+    "mapFullscreen": "Plein écran",
+    "credits": "Remerciements",
+    "creditsFooter": "Merci à tous ceux qui ont contribué à ce site"
   },
   "RouteList": {
     "title": "Liste des voies",

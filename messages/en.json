@@ -41,7 +41,9 @@
     "mapLoading": "Loading map...",
     "mapReset": "Reset view",
     "mapNavigate": "Navigate",
-    "mapFullscreen": "Fullscreen"
+    "mapFullscreen": "Fullscreen",
+    "credits": "Credits",
+    "creditsFooter": "Thanks to everyone who contributed to this crag"
   },
   "RouteList": {
     "title": "Route List",

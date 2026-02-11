@@ -5,8 +5,9 @@ import { useMediaQuery } from '@/hooks/use-media-query'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
-import { FileText, Car, ChevronLeft } from 'lucide-react'
+import { FileText, Car, ChevronLeft, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Drawer } from '@/components/ui/drawer'
 import { getCragCoverUrl } from '@/lib/constants'
 import AMapContainer from '@/components/amap-container'
 import { WeatherCard } from '@/components/weather-card'
@@ -33,6 +34,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
   const isMobile = useMediaQuery('(max-width: 640px)')
   const heroRef = useRef<HTMLDivElement>(null)
   const [imageVisible, setImageVisible] = useState(true)
+  const [isCreditsOpen, setIsCreditsOpen] = useState(false)
 
   // 生成封面图 URL
   const images = [1, 2].map((n) => getCragCoverUrl(crag.id, n))
@@ -169,12 +171,27 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
         {/* 标题区域 */}
         <div className="py-4">
           <div className="flex flex-col mb-2">
-            <h1
-              className="text-3xl font-bold tracking-wide leading-tight"
-              style={{ color: 'var(--theme-on-surface)' }}
-            >
-              {crag.name}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1
+                className="text-3xl font-bold tracking-wide leading-tight"
+                style={{ color: 'var(--theme-on-surface)' }}
+              >
+                {crag.name}
+              </h1>
+              {crag.credits && crag.credits.length > 0 && (
+                <button
+                  onClick={() => setIsCreditsOpen(true)}
+                  className="w-8 h-8 flex items-center justify-center flex-shrink-0 transition-all active:scale-90"
+                  style={{
+                    backgroundColor: 'color-mix(in srgb, var(--theme-primary) 12%, transparent)',
+                    borderRadius: 'var(--theme-radius-full)',
+                  }}
+                  aria-label={t('credits')}
+                >
+                  <Heart className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
+                </button>
+              )}
+            </div>
             <div
               className="w-10 h-0.5 mt-1"
               style={{ background: 'linear-gradient(to right, var(--theme-primary), transparent)' }}
@@ -308,6 +325,48 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             </span>
           </div>
         </div>
+      )}
+
+      {/* 致谢抽屉 */}
+      {crag.credits && crag.credits.length > 0 && (
+        <Drawer
+          isOpen={isCreditsOpen}
+          onClose={() => setIsCreditsOpen(false)}
+          height="half"
+          showHandle
+          title={t('credits')}
+        >
+          <div className="px-4 pb-6">
+            <div className="space-y-4">
+              {crag.credits.map((credit, index) => (
+                <div key={index} className="animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: 'var(--theme-on-surface)' }}
+                  >
+                    {credit.name}
+                  </p>
+                  <p
+                    className="text-xs mt-0.5"
+                    style={{ color: 'var(--theme-on-surface-variant)' }}
+                  >
+                    {credit.contribution}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* 底部感谢语 */}
+            <div className="mt-6 pt-4" style={{ borderTop: '1px solid var(--theme-outline-variant)' }}>
+              <p
+                className="text-xs text-center"
+                style={{ color: 'var(--theme-on-surface-variant)' }}
+              >
+                {t('creditsFooter')}
+              </p>
+            </div>
+          </div>
+        </Drawer>
       )}
 
       {/* 底部操作按钮 */}
