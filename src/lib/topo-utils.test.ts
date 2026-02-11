@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  bezierCurve,
+  catmullRomCurve,
   scalePoints,
   normalizePoint,
   generateRouteColor,
@@ -8,42 +8,51 @@ import {
 } from './topo-utils'
 
 describe('topo-utils', () => {
-  describe('bezierCurve', () => {
+  describe('catmullRomCurve', () => {
     it('should return empty string for less than 2 points', () => {
-      expect(bezierCurve([])).toBe('')
-      expect(bezierCurve([{ x: 0, y: 0 }])).toBe('')
+      expect(catmullRomCurve([])).toBe('')
+      expect(catmullRomCurve([{ x: 0, y: 0 }])).toBe('')
     })
 
     it('should return straight line for 2 points', () => {
-      const result = bezierCurve([
+      const result = catmullRomCurve([
         { x: 0, y: 0 },
         { x: 100, y: 100 },
       ])
       expect(result).toBe('M 0 0 L 100 100')
     })
 
-    it('should return quadratic bezier curve for 3 points', () => {
-      const result = bezierCurve([
+    it('should use cubic bezier C commands for 3+ points', () => {
+      const result = catmullRomCurve([
         { x: 0, y: 0 },
         { x: 50, y: 100 },
         { x: 100, y: 0 },
       ])
       expect(result).toContain('M 0 0')
-      expect(result).toContain('Q') // 二次贝塞尔曲线
-      expect(result).toContain('T') // 平滑连接
+      expect(result).toContain('C') // 三次贝塞尔曲线
+      expect(result).not.toContain('Q') // 不再使用二次贝塞尔
     })
 
-    it('should calculate correct midpoint for curve endpoint', () => {
-      const result = bezierCurve([
+    it('should pass through all input points (interpolation guarantee)', () => {
+      const points = [
         { x: 0, y: 0 },
         { x: 50, y: 100 },
-        { x: 100, y: 0 },
-      ])
-      // 中点应该是 (50+100)/2=75, (100+0)/2=50
-      expect(result).toContain('75 50')
+        { x: 100, y: 50 },
+        { x: 150, y: 0 },
+      ]
+      const result = catmullRomCurve(points)
+
+      // 起点是 M 命令
+      expect(result).toContain('M 0 0')
+
+      // 每个后续点应出现在 C 命令的终点位置
+      // C cp1x cp1y cp2x cp2y endX endY
+      for (let i = 1; i < points.length; i++) {
+        expect(result).toContain(`${points[i].x} ${points[i].y}`)
+      }
     })
 
-    it('should handle multiple control points', () => {
+    it('should generate correct number of C segments', () => {
       const points = [
         { x: 0, y: 0 },
         { x: 25, y: 50 },
@@ -51,21 +60,86 @@ describe('topo-utils', () => {
         { x: 75, y: 50 },
         { x: 100, y: 0 },
       ]
-      const result = bezierCurve(points)
+      const result = catmullRomCurve(points)
 
-      // 应该有 3 个 Q 命令 (点数-2)
-      const qCount = (result.match(/Q/g) || []).length
-      expect(qCount).toBe(3)
+      // 应该有 n-1 个 C 命令（points.length - 1 个段）
+      const cCount = (result.match(/ C /g) || []).length
+      expect(cCount).toBe(4)
     })
 
-    it('should round coordinates in Q commands', () => {
-      const result = bezierCurve([
-        { x: 0.123, y: 0.456 },
-        { x: 50.789, y: 100.111 },
-        { x: 100.999, y: 0.001 },
-      ])
-      // Q 命令中的坐标应该被取整
-      expect(result).toContain('Q 51 100')
+    it('should degenerate to polyline when tension=1', () => {
+      const points = [
+        { x: 0, y: 0 },
+        { x: 50, y: 100 },
+        { x: 100, y: 0 },
+      ]
+      const result = catmullRomCurve(points, 0.5, 1)
+
+      // tension=1 时，切线为零，控制点与端点重合
+      // C 命令的 cp1 ≈ P1, cp2 ≈ P2 → 近似直线
+      // 解析每个 C 段验证控制点接近端点
+      const segments = result.split(' C ').slice(1)
+      for (const seg of segments) {
+        const nums = seg.split(' ').map(Number)
+        // cp1x, cp1y, cp2x, cp2y, endX, endY
+        const [cp1x, cp1y, cp2x, cp2y, endX, endY] = nums
+        // cp2 应接近终点
+        expect(cp2x).toBeCloseTo(endX, 5)
+        expect(cp2y).toBeCloseTo(endY, 5)
+      }
+    })
+
+    it('should handle coincident points without error', () => {
+      // 两个相同的点不应导致除零
+      const points = [
+        { x: 50, y: 50 },
+        { x: 50, y: 50 },
+        { x: 100, y: 100 },
+      ]
+      const result = catmullRomCurve(points)
+      expect(result).toBeDefined()
+      expect(result).toContain('M 50 50')
+      // 不应包含 NaN 或 Infinity
+      expect(result).not.toContain('NaN')
+      expect(result).not.toContain('Infinity')
+    })
+
+    it('should support different alpha values', () => {
+      const points = [
+        { x: 0, y: 0 },
+        { x: 50, y: 100 },
+        { x: 100, y: 0 },
+      ]
+      // uniform (alpha=0), centripetal (alpha=0.5), chordal (alpha=1)
+      const uniform = catmullRomCurve(points, 0)
+      const centripetal = catmullRomCurve(points, 0.5)
+      const chordal = catmullRomCurve(points, 1)
+
+      // 所有变体都应穿过终点
+      expect(uniform).toContain('100 0')
+      expect(centripetal).toContain('100 0')
+      expect(chordal).toContain('100 0')
+
+      // 不同 alpha 应产生不同的控制点
+      expect(uniform).not.toBe(centripetal)
+      expect(centripetal).not.toBe(chordal)
+    })
+
+    it('should produce smooth curve for rectangle corner points', () => {
+      // 这是旧算法最大的痛点：标注矩形四角，曲线不穿过角点
+      const rectangle = [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 100 },
+      ]
+      const result = catmullRomCurve(rectangle)
+
+      // 每个角点都必须精确出现在路径中
+      expect(result).toContain('M 0 0')
+      expect(result).toContain('100 0')
+      expect(result).toContain('100 100')
+      expect(result).toContain('0 100')
     })
   })
 

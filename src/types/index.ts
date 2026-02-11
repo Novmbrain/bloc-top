@@ -24,6 +24,7 @@ export interface Route {
   image?: string
   betaLinks?: BetaLink[] // Beta 视频链接
   topoLine?: TopoPoint[] // Topo 线路标注 (归一化坐标)
+  topoTension?: number   // Catmull-Rom 曲线张力 0-1 (0=平滑, 1=折线, 默认 0)
 }
 
 // 岩场坐标类型

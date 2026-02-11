@@ -5,28 +5,32 @@ import { X, Trash2, Undo2, Minus, Plus, RotateCcw } from 'lucide-react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
 import type { TopoPoint } from '@/types'
-import { bezierCurve, scalePoints } from '@/lib/topo-utils'
+import { catmullRomCurve, scalePoints } from '@/lib/topo-utils'
 import { VIEW_WIDTH, VIEW_HEIGHT } from '@/lib/editor-utils'
 
 /**
  * 全屏 Topo 编辑覆盖层
- * 支持双指缩放 + 平移 + 点击添加标记点
+ * 支持双指缩放 + 平移 + 点击添加标记点 + 曲线张力调节
  */
 export function FullscreenTopoEditor({
   imageUrl,
   topoLine,
   routeColor,
+  tension = 0,
   onAddPoint,
   onRemoveLastPoint,
   onClearPoints,
+  onTensionChange,
   onClose,
 }: {
   imageUrl: string
   topoLine: TopoPoint[]
   routeColor: string
+  tension?: number
   onAddPoint: (point: TopoPoint) => void
   onRemoveLastPoint: () => void
   onClearPoints: () => void
+  onTensionChange?: (tension: number) => void
   onClose: () => void
 }) {
   const imgContainerRef = useRef<HTMLDivElement>(null)
@@ -78,8 +82,8 @@ export function FullscreenTopoEditor({
   )
   const fsPathData = useMemo(() => {
     if (fsScaledPoints.length < 2) return ''
-    return bezierCurve(fsScaledPoints)
-  }, [fsScaledPoints])
+    return catmullRomCurve(fsScaledPoints, 0.5, tension)
+  }, [fsScaledPoints, tension])
 
   return (
     <div
@@ -239,38 +243,61 @@ export function FullscreenTopoEditor({
         )}
       </div>
 
-      {/* 底部缩放控制栏 */}
+      {/* 底部控制栏 */}
       <div
-        className="flex items-center justify-center gap-4 px-4 py-3 flex-shrink-0"
+        className="flex flex-col gap-2 px-4 py-3 flex-shrink-0"
         style={{
           backgroundColor: 'rgba(0,0,0,0.8)',
           paddingBottom: 'max(env(safe-area-inset-bottom), 12px)',
         }}
       >
-        <button
-          onClick={() => transformRef.current?.zoomOut()}
-          className="p-2 rounded-full transition-all active:scale-90"
-          style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-        >
-          <Minus className="w-5 h-5 text-white" />
-        </button>
-        <span className="text-white text-sm font-medium min-w-[60px] text-center">
-          {Math.round(scale * 100)}%
-        </span>
-        <button
-          onClick={() => transformRef.current?.zoomIn()}
-          className="p-2 rounded-full transition-all active:scale-90"
-          style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-        >
-          <Plus className="w-5 h-5 text-white" />
-        </button>
-        <button
-          onClick={() => transformRef.current?.resetTransform()}
-          className="p-2 rounded-full transition-all active:scale-90"
-          style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-        >
-          <RotateCcw className="w-5 h-5 text-white" />
-        </button>
+        {/* Tension 滑块 (≥2 个点才显示) */}
+        {topoLine.length >= 2 && onTensionChange && (
+          <div className="flex items-center gap-3 px-2">
+            <span className="text-xs text-white/60 whitespace-nowrap">平滑</span>
+            {/* eslint-disable-next-line no-restricted-syntax -- range slider, no IME */}
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={tension}
+              onChange={(e) => onTensionChange(Number(e.target.value))}
+              className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
+              style={{ accentColor: routeColor }}
+              aria-label="曲线张力"
+            />
+            <span className="text-xs text-white/60 whitespace-nowrap">折线</span>
+          </div>
+        )}
+
+        {/* 缩放控制 */}
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={() => transformRef.current?.zoomOut()}
+            className="p-2 rounded-full transition-all active:scale-90"
+            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+          >
+            <Minus className="w-5 h-5 text-white" />
+          </button>
+          <span className="text-white text-sm font-medium min-w-[60px] text-center">
+            {Math.round(scale * 100)}%
+          </span>
+          <button
+            onClick={() => transformRef.current?.zoomIn()}
+            className="p-2 rounded-full transition-all active:scale-90"
+            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+          >
+            <Plus className="w-5 h-5 text-white" />
+          </button>
+          <button
+            onClick={() => transformRef.current?.resetTransform()}
+            className="p-2 rounded-full transition-all active:scale-90"
+            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+          >
+            <RotateCcw className="w-5 h-5 text-white" />
+          </button>
+        </div>
       </div>
     </div>
   )

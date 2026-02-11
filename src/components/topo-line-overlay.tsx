@@ -2,7 +2,7 @@
 
 import { useRef, useCallback, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react'
 import type { TopoPoint } from '@/types'
-import { bezierCurve, scalePoints } from '@/lib/topo-utils'
+import { catmullRomCurve, scalePoints } from '@/lib/topo-utils'
 import {
   TOPO_VIEW_WIDTH,
   TOPO_VIEW_HEIGHT,
@@ -31,6 +31,8 @@ export interface TopoLineOverlayProps {
    * 默认为 'cover'
    */
   objectFit?: 'cover' | 'contain'
+  /** Catmull-Rom 曲线张力 0-1 (0=平滑, 1=折线, 默认 0) */
+  tension?: number
 }
 
 export interface TopoLineOverlayRef {
@@ -66,6 +68,7 @@ export const TopoLineOverlay = forwardRef<TopoLineOverlayRef, TopoLineOverlayPro
       onAnimationStart,
       onAnimationEnd,
       objectFit = 'cover',
+      tension = 0,
     },
     ref
   ) {
@@ -78,8 +81,8 @@ export const TopoLineOverlay = forwardRef<TopoLineOverlayRef, TopoLineOverlayPro
       [points]
     )
 
-    // 生成贝塞尔曲线路径
-    const pathData = useMemo(() => bezierCurve(scaledPoints), [scaledPoints])
+    // 生成 Catmull-Rom 样条曲线路径
+    const pathData = useMemo(() => catmullRomCurve(scaledPoints, 0.5, tension), [scaledPoints, tension])
 
     // 起点
     const startPoint = scaledPoints[0]
