@@ -1,5 +1,4 @@
 import type { ClimbingSuitability } from '@/types'
-import { getCityById, DEFAULT_CITY_ID } from './city-config'
 
 /**
  * 天气图标映射
@@ -202,10 +201,6 @@ export { API_CACHE } from './cache-config'
 export { API_CACHE as WEATHER_CACHE_TTL_CONFIG } from './cache-config'
 
 /**
- * 默认天气查询坐标（从城市配置读取，不再硬编码）
+ * 默认天气查询坐标（罗源野外抱石区域中心）
  */
-export const DEFAULT_WEATHER_COORDS = (() => {
-  const city = getCityById(DEFAULT_CITY_ID)
-  // fallback 坐标与 city-config.ts 中罗源坐标保持一致
-  return city?.coordinates ?? { lng: 119.549, lat: 26.489 }
-})()
+export const DEFAULT_WEATHER_COORDS = { lng: 119.549, lat: 26.489 }

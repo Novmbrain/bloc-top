@@ -6,9 +6,8 @@ import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
-import { CITIES, getCityName } from '@/lib/city-config'
-import type { Crag } from '@/types'
-import type { CityId } from '@/lib/city-config'
+import { findCityName } from '@/lib/city-utils'
+import type { Crag, CityConfig } from '@/types'
 
 /**
  * 岩场管理列表页
@@ -18,18 +17,28 @@ export default function CragListPage() {
   useBreakAppShellLimit()
 
   const [crags, setCrags] = useState<Crag[]>([])
+  const [cities, setCities] = useState<CityConfig[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeCity, setActiveCity] = useState<CityId | 'all'>('all')
+  const [activeCity, setActiveCity] = useState<string>('all')
 
-  // 加载岩场列表
+  // 加载岩场列表 + 城市数据
   useEffect(() => {
     const controller = new AbortController()
-    async function fetchCrags() {
+    async function fetchData() {
       try {
-        const res = await fetch('/api/crags', { signal: controller.signal })
-        const data = await res.json()
-        if (data.success) {
-          setCrags(data.crags)
+        const [cragsRes, citiesRes] = await Promise.all([
+          fetch('/api/crags', { signal: controller.signal }),
+          fetch('/api/cities', { signal: controller.signal }),
+        ])
+        const [cragsData, citiesData] = await Promise.all([
+          cragsRes.json(),
+          citiesRes.json(),
+        ])
+        if (cragsData.success) {
+          setCrags(cragsData.crags)
+        }
+        if (citiesData.success) {
+          setCities(citiesData.cities)
         }
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return
@@ -37,15 +46,15 @@ export default function CragListPage() {
         if (!controller.signal.aborted) setLoading(false)
       }
     }
-    fetchCrags()
+    fetchData()
     return () => controller.abort()
   }, [])
 
   // 有数据的城市列表
   const cityTabs = useMemo(() => {
     const cityIds = new Set(crags.map((c) => c.cityId))
-    return CITIES.filter((city) => cityIds.has(city.id))
-  }, [crags])
+    return cities.filter((city) => cityIds.has(city.id))
+  }, [crags, cities])
 
   // 按城市筛选
   const filteredCrags = useMemo(() => {
@@ -165,7 +174,7 @@ export default function CragListPage() {
                   className="text-xs mb-2"
                   style={{ color: 'var(--theme-primary)' }}
                 >
-                  {getCityName(crag.cityId as CityId)}
+                  {findCityName(cities, crag.cityId)}
                   {crag.areas && crag.areas.length > 0 && (
                     <span style={{ color: 'var(--theme-on-surface-variant)' }}>
                       {' '}· {crag.areas.length} 个区域

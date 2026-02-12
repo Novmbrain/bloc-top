@@ -9,7 +9,6 @@ import {
   parseWindPower,
   DEFAULT_WEATHER_COORDS,
 } from './weather-constants'
-import { getCityById, DEFAULT_CITY_ID } from './city-config'
 
 describe('weather-constants', () => {
   describe('getWeatherIcon', () => {
@@ -202,17 +201,9 @@ describe('weather-constants', () => {
   })
 
   describe('DEFAULT_WEATHER_COORDS 常量', () => {
-    it('应该从城市配置中读取坐标', () => {
-      // 默认城市是罗源，坐标应该与 city-config 中的一致
+    it('应该是罗源的坐标', () => {
       expect(DEFAULT_WEATHER_COORDS.lng).toBeCloseTo(119.549, 2)
       expect(DEFAULT_WEATHER_COORDS.lat).toBeCloseTo(26.489, 2)
-    })
-
-    it('坐标应该与 city-config 中默认城市的坐标精确匹配', () => {
-      const defaultCity = getCityById(DEFAULT_CITY_ID)
-      expect(defaultCity).toBeDefined()
-      expect(DEFAULT_WEATHER_COORDS.lng).toBe(defaultCity!.coordinates.lng)
-      expect(DEFAULT_WEATHER_COORDS.lat).toBe(defaultCity!.coordinates.lat)
     })
 
     it('经纬度应该在有效范围内', () => {

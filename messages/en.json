@@ -363,7 +363,11 @@
     "editorPasswordTitle": "Enter editor password",
     "editorPasswordPlaceholder": "Enter password",
     "editorPasswordWrong": "Wrong password, try again",
-    "editorPasswordConfirm": "Enter Editor"
+    "editorPasswordConfirm": "Enter Editor",
+    "preferences": "Preferences",
+    "about": "About",
+    "accountSecurity": "Account & Security",
+    "accountSecurityHint": "Password, Passkey, login management"
   },
   "Intro": {
     "heroTitle": "BlocTop",

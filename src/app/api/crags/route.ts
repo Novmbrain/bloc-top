@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllCrags, getCragsByCityId, createCrag } from '@/lib/db'
-import { isValidCityId } from '@/lib/city-config'
+import { getAllCrags, getCragsByCityId, createCrag, getAllCities } from '@/lib/db'
+import { isCityValid } from '@/lib/city-utils'
 import { getAuth } from '@/lib/auth'
 import { createModuleLogger } from '@/lib/logger'
 
@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const cityId = searchParams.get('cityId')
 
-    const crags = cityId && isValidCityId(cityId)
+    const cities = await getAllCities()
+    const crags = cityId && isCityValid(cities, cityId)
       ? await getCragsByCityId(cityId)
       : await getAllCrags()
 

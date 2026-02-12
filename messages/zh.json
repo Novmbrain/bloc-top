@@ -363,7 +363,11 @@
     "editorPasswordTitle": "输入编辑器密码",
     "editorPasswordPlaceholder": "请输入密码",
     "editorPasswordWrong": "密码错误，请重试",
-    "editorPasswordConfirm": "进入编辑器"
+    "editorPasswordConfirm": "进入编辑器",
+    "preferences": "偏好设置",
+    "about": "关于",
+    "accountSecurity": "账号与安全",
+    "accountSecurityHint": "密码、Passkey、登录管理"
   },
   "Intro": {
     "heroTitle": "寻岩记",

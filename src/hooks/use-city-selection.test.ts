@@ -1,8 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { useCitySelection } from './use-city-selection'
+import type { CityConfig } from '@/types'
 
 const mockFetch = vi.fn()
+
+const mockCities: CityConfig[] = [
+  {
+    id: 'luoyuan',
+    name: '罗源',
+    shortName: '罗源',
+    adcode: '350123',
+    coordinates: { lng: 119.549, lat: 26.489 },
+    available: true,
+  },
+  {
+    id: 'xiamen',
+    name: '厦门',
+    shortName: '厦门',
+    adcode: '350200',
+    coordinates: { lng: 118.089, lat: 24.479 },
+    available: true,
+  },
+]
 
 describe('useCitySelection', () => {
   beforeEach(() => {
@@ -19,7 +39,7 @@ describe('useCitySelection', () => {
   })
 
   it('should return default city on first load', async () => {
-    const { result } = renderHook(() => useCitySelection())
+    const { result } = renderHook(() => useCitySelection({ cities: mockCities }))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -34,7 +54,7 @@ describe('useCitySelection', () => {
     localStorage.setItem('selected-city', 'xiamen')
     localStorage.setItem('city-first-visit', 'true')
 
-    const { result } = renderHook(() => useCitySelection())
+    const { result } = renderHook(() => useCitySelection({ cities: mockCities }))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -44,7 +64,7 @@ describe('useCitySelection', () => {
   })
 
   it('should set isFirstVisit on first visit', async () => {
-    const { result } = renderHook(() => useCitySelection())
+    const { result } = renderHook(() => useCitySelection({ cities: mockCities }))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -56,7 +76,7 @@ describe('useCitySelection', () => {
   it('should not set isFirstVisit if already visited', async () => {
     localStorage.setItem('city-first-visit', 'true')
 
-    const { result } = renderHook(() => useCitySelection())
+    const { result } = renderHook(() => useCitySelection({ cities: mockCities }))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -66,7 +86,7 @@ describe('useCitySelection', () => {
   })
 
   it('should update city when setCity is called', async () => {
-    const { result } = renderHook(() => useCitySelection())
+    const { result } = renderHook(() => useCitySelection({ cities: mockCities }))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -81,7 +101,7 @@ describe('useCitySelection', () => {
   })
 
   it('should dismiss first visit hint', async () => {
-    const { result } = renderHook(() => useCitySelection())
+    const { result } = renderHook(() => useCitySelection({ cities: mockCities }))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -99,7 +119,7 @@ describe('useCitySelection', () => {
   it('should handle geo API failure gracefully', async () => {
     mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-    const { result } = renderHook(() => useCitySelection())
+    const { result } = renderHook(() => useCitySelection({ cities: mockCities }))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -114,7 +134,7 @@ describe('useCitySelection', () => {
     localStorage.setItem('city-first-visit', 'true')
     sessionStorage.setItem('session-visit-recorded', 'true')
 
-    const { result } = renderHook(() => useCitySelection())
+    const { result } = renderHook(() => useCitySelection({ cities: mockCities }))
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)

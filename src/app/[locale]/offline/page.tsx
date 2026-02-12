@@ -14,21 +14,36 @@ import { WifiOff, CloudDownload, RefreshCw, Mountain, ChevronRight } from 'lucid
 import { Button } from '@/components/ui/button'
 import { AppTabbar } from '@/components/app-tabbar'
 import { getAllOfflineCrags, type OfflineCragData } from '@/lib/offline-storage'
-import { PREFECTURES, getPrefectureByDistrictId, isValidCityId, type PrefectureConfig } from '@/lib/city-config'
+import { findPrefectureByDistrictId, isCityValid } from '@/lib/city-utils'
+import type { CityConfig, PrefectureConfig } from '@/types'
 
 export default function OfflinePage() {
   const t = useTranslations('OfflinePage')
   const locale = useLocale()
   const router = useRouter()
   const [offlineCrags, setOfflineCrags] = useState<OfflineCragData[]>([])
+  const [cities, setCities] = useState<CityConfig[]>([])
+  const [prefectures, setPrefectures] = useState<PrefectureConfig[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isOnline, setIsOnline] = useState(false)
 
-  // 加载离线数据
+  // 加载离线数据 + 城市配置
   useEffect(() => {
-    async function loadOfflineData() {
+    async function loadData() {
       try {
-        const crags = await getAllOfflineCrags()
+        const [crags] = await Promise.all([
+          getAllOfflineCrags(),
+          // 尝试获取城市数据（离线时可能失败，使用空数组 fallback）
+          fetch('/api/cities')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+              if (data?.success) {
+                setCities(data.cities)
+                setPrefectures(data.prefectures)
+              }
+            })
+            .catch(() => {}),
+        ])
         setOfflineCrags(crags)
       } catch (error) {
         console.error('Failed to load offline crags:', error)
@@ -36,7 +51,7 @@ export default function OfflinePage() {
         setIsLoading(false)
       }
     }
-    loadOfflineData()
+    loadData()
   }, [])
 
   // 监听网络状态
@@ -72,8 +87,8 @@ export default function OfflinePage() {
 
     for (const crag of offlineCrags) {
       const cityId = crag.crag.cityId
-      if (cityId && isValidCityId(cityId)) {
-        const prefecture = getPrefectureByDistrictId(cityId)
+      if (cityId && isCityValid(cities, cityId)) {
+        const prefecture = findPrefectureByDistrictId(prefectures, cityId)
         if (prefecture) {
           if (!prefectureMap.has(prefecture.id)) {
             prefectureMap.set(prefecture.id, [])
@@ -85,7 +100,7 @@ export default function OfflinePage() {
       ungrouped.push(crag)
     }
 
-    for (const pref of PREFECTURES) {
+    for (const pref of prefectures) {
       const crags = prefectureMap.get(pref.id)
       if (crags && crags.length > 0) {
         groups.push({ prefecture: pref, crags })
@@ -93,7 +108,7 @@ export default function OfflinePage() {
     }
 
     return { groups, ungrouped }
-  }, [offlineCrags])
+  }, [offlineCrags, cities, prefectures])
 
   const showPrefectureHeaders = cragsByPrefecture.groups.length >= 2
 

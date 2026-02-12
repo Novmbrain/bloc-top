@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import { getDatabase } from '@/lib/mongodb'
 import { createModuleLogger } from '@/lib/logger'
-import type { Crag, Route, Feedback, VisitStats } from '@/types'
+import type { Crag, Route, Feedback, VisitStats, CityConfig, PrefectureConfig } from '@/types'
 import type { WithId, Document } from 'mongodb'
 
 // 创建数据库模块专用 logger
@@ -34,6 +34,24 @@ function toRoute(doc: WithId<Document>): Route {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { _id, createdAt, updatedAt, ...rest } = doc
   return { id: _id as unknown as number, ...rest } as Route
+}
+
+/**
+ * 将 MongoDB 文档转换为 CityConfig 类型
+ */
+function toCity(doc: WithId<Document>): CityConfig {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { _id, createdAt, updatedAt, ...rest } = doc
+  return { id: _id as unknown as string, ...rest } as CityConfig
+}
+
+/**
+ * 将 MongoDB 文档转换为 PrefectureConfig 类型
+ */
+function toPrefecture(doc: WithId<Document>): PrefectureConfig {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { _id, createdAt, updatedAt, ...rest } = doc
+  return { id: _id as unknown as string, ...rest } as PrefectureConfig
 }
 
 
@@ -642,6 +660,292 @@ export async function getVisitStats(): Promise<VisitStats> {
   } catch (error) {
     log.error('Failed to fetch visit stats', error, {
       action: 'getVisitStats',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+
+// ============ City 相关操作 ============
+
+/**
+ * 获取所有城市（按 sortOrder 排序）
+ */
+async function _getAllCities(): Promise<CityConfig[]> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const docs = await db
+      .collection('cities')
+      .find({})
+      .sort({ sortOrder: 1, _id: 1 })
+      .toArray()
+
+    log.info(`Fetched ${docs.length} cities`, {
+      action: 'getAllCities',
+      duration: Date.now() - start,
+    })
+
+    return docs.map(toCity)
+  } catch (error) {
+    log.error('Failed to fetch cities', error, {
+      action: 'getAllCities',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+export const getAllCities = cache(_getAllCities)
+
+/**
+ * 获取所有地级市（按 sortOrder 排序）
+ */
+async function _getAllPrefectures(): Promise<PrefectureConfig[]> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const docs = await db
+      .collection('prefectures')
+      .find({})
+      .sort({ sortOrder: 1, _id: 1 })
+      .toArray()
+
+    log.info(`Fetched ${docs.length} prefectures`, {
+      action: 'getAllPrefectures',
+      duration: Date.now() - start,
+    })
+
+    return docs.map(toPrefecture)
+  } catch (error) {
+    log.error('Failed to fetch prefectures', error, {
+      action: 'getAllPrefectures',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+export const getAllPrefectures = cache(_getAllPrefectures)
+
+/**
+ * 创建城市
+ */
+export async function createCity(
+  data: Omit<CityConfig, 'sortOrder'> & { sortOrder?: number }
+): Promise<CityConfig> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+
+    const existing = await db.collection('cities').findOne({ _id: toMongoId(data.id) })
+    if (existing) {
+      throw new Error(`城市 ID "${data.id}" 已存在`)
+    }
+
+    const { id, ...fields } = data
+    const doc = {
+      _id: toMongoId(id),
+      ...fields,
+      sortOrder: fields.sortOrder ?? 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    await db.collection('cities').insertOne(doc)
+
+    log.info(`Created city: ${id}`, {
+      action: 'createCity',
+      duration: Date.now() - start,
+      metadata: { cityId: id, name: data.name },
+    })
+
+    return { ...data, id, sortOrder: doc.sortOrder }
+  } catch (error) {
+    log.error('Failed to create city', error, {
+      action: 'createCity',
+      duration: Date.now() - start,
+      metadata: { cityId: data.id },
+    })
+    throw error
+  }
+}
+
+/**
+ * 更新城市
+ */
+export async function updateCity(
+  id: string,
+  updates: Partial<Omit<CityConfig, 'id'>>
+): Promise<CityConfig | null> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+
+    const result = await db.collection('cities').findOneAndUpdate(
+      { _id: toMongoId(id) },
+      { $set: { ...updates, updatedAt: new Date() } },
+      { returnDocument: 'after' }
+    )
+
+    if (!result) {
+      log.info(`City not found for update: ${id}`, {
+        action: 'updateCity',
+        duration: Date.now() - start,
+      })
+      return null
+    }
+
+    log.info(`Updated city: ${id}`, {
+      action: 'updateCity',
+      duration: Date.now() - start,
+      metadata: { cityId: id, fields: Object.keys(updates) },
+    })
+
+    return toCity(result)
+  } catch (error) {
+    log.error(`Failed to update city: ${id}`, error, {
+      action: 'updateCity',
+      duration: Date.now() - start,
+      metadata: { cityId: id },
+    })
+    throw error
+  }
+}
+
+/**
+ * 删除城市
+ */
+export async function deleteCity(id: string): Promise<boolean> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const result = await db.collection('cities').deleteOne({ _id: toMongoId(id) })
+
+    log.info(`Deleted city: ${id} (matched: ${result.deletedCount})`, {
+      action: 'deleteCity',
+      duration: Date.now() - start,
+    })
+
+    return result.deletedCount > 0
+  } catch (error) {
+    log.error(`Failed to delete city: ${id}`, error, {
+      action: 'deleteCity',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+
+/**
+ * 创建地级市
+ */
+export async function createPrefecture(
+  data: Omit<PrefectureConfig, 'sortOrder'> & { sortOrder?: number }
+): Promise<PrefectureConfig> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+
+    const existing = await db.collection('prefectures').findOne({ _id: toMongoId(data.id) })
+    if (existing) {
+      throw new Error(`地级市 ID "${data.id}" 已存在`)
+    }
+
+    const { id, ...fields } = data
+    const doc = {
+      _id: toMongoId(id),
+      ...fields,
+      sortOrder: fields.sortOrder ?? 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    await db.collection('prefectures').insertOne(doc)
+
+    log.info(`Created prefecture: ${id}`, {
+      action: 'createPrefecture',
+      duration: Date.now() - start,
+      metadata: { prefectureId: id, name: data.name },
+    })
+
+    return { ...data, id, sortOrder: doc.sortOrder }
+  } catch (error) {
+    log.error('Failed to create prefecture', error, {
+      action: 'createPrefecture',
+      duration: Date.now() - start,
+      metadata: { prefectureId: data.id },
+    })
+    throw error
+  }
+}
+
+/**
+ * 更新地级市
+ */
+export async function updatePrefecture(
+  id: string,
+  updates: Partial<Omit<PrefectureConfig, 'id'>>
+): Promise<PrefectureConfig | null> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+
+    const result = await db.collection('prefectures').findOneAndUpdate(
+      { _id: toMongoId(id) },
+      { $set: { ...updates, updatedAt: new Date() } },
+      { returnDocument: 'after' }
+    )
+
+    if (!result) {
+      log.info(`Prefecture not found for update: ${id}`, {
+        action: 'updatePrefecture',
+        duration: Date.now() - start,
+      })
+      return null
+    }
+
+    log.info(`Updated prefecture: ${id}`, {
+      action: 'updatePrefecture',
+      duration: Date.now() - start,
+      metadata: { prefectureId: id, fields: Object.keys(updates) },
+    })
+
+    return toPrefecture(result)
+  } catch (error) {
+    log.error(`Failed to update prefecture: ${id}`, error, {
+      action: 'updatePrefecture',
+      duration: Date.now() - start,
+      metadata: { prefectureId: id },
+    })
+    throw error
+  }
+}
+
+/**
+ * 删除地级市
+ */
+export async function deletePrefecture(id: string): Promise<boolean> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const result = await db.collection('prefectures').deleteOne({ _id: toMongoId(id) })
+
+    log.info(`Deleted prefecture: ${id} (matched: ${result.deletedCount})`, {
+      action: 'deletePrefecture',
+      duration: Date.now() - start,
+    })
+
+    return result.deletedCount > 0
+  } catch (error) {
+    log.error(`Failed to delete prefecture: ${id}`, error, {
+      action: 'deletePrefecture',
       duration: Date.now() - start,
     })
     throw error

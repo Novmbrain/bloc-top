@@ -102,6 +102,97 @@ const routes = [
   { _id: 79, name: '海阔天空', grade: '？', cragId: 'ba-jing-cun', area: '罗源县八井村', createdAt: new Date(), updatedAt: new Date() },
 ]
 
+// 城市数据
+const cities = [
+  {
+    _id: 'luoyuan',
+    name: '罗源',
+    shortName: '罗源',
+    adcode: '350123',
+    coordinates: { lng: 119.549, lat: 26.489 },
+    available: true,
+    prefectureId: 'fuzhou',
+    sortOrder: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    _id: 'xiamen',
+    name: '厦门',
+    shortName: '厦门',
+    adcode: '350200',
+    coordinates: { lng: 118.089, lat: 24.479 },
+    available: true,
+    prefectureId: 'xiamen',
+    sortOrder: 1,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    _id: 'changle',
+    name: '长乐',
+    shortName: '长乐',
+    adcode: '350112',
+    coordinates: { lng: 119.523, lat: 25.963 },
+    available: true,
+    prefectureId: 'fuzhou',
+    sortOrder: 2,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+]
+
+// 地级市数据
+const prefecturesData = [
+  {
+    _id: 'fuzhou',
+    name: '福州',
+    shortName: '福州',
+    districts: ['luoyuan', 'changle'],
+    defaultDistrict: 'luoyuan',
+    sortOrder: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    _id: 'xiamen',
+    name: '厦门',
+    shortName: '厦门',
+    districts: ['xiamen'],
+    defaultDistrict: 'xiamen',
+    sortOrder: 1,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+]
+
+async function seedCities(db: ReturnType<MongoClient['db']>) {
+  console.log('\n🏙️  Upsert 城市数据...')
+  for (const city of cities) {
+    await db.collection('cities').updateOne(
+      { _id: city._id as Document['_id'] },
+      { $set: city },
+      { upsert: true }
+    )
+  }
+  console.log(`✓ Upsert ${cities.length} 个城市`)
+
+  console.log('\n🗺️  Upsert 地级市数据...')
+  for (const pref of prefecturesData) {
+    await db.collection('prefectures').updateOne(
+      { _id: pref._id as Document['_id'] },
+      { $set: pref },
+      { upsert: true }
+    )
+  }
+  console.log(`✓ Upsert ${prefecturesData.length} 个地级市`)
+
+  // 创建索引
+  await db.collection('cities').createIndex({ sortOrder: 1 })
+  await db.collection('prefectures').createIndex({ sortOrder: 1 })
+  console.log('✓ 城市/地级市索引创建完成')
+}
+
 async function seed() {
   const uri = process.env.MONGODB_URI
   const dbName = process.env.MONGODB_DB_NAME
@@ -146,6 +237,9 @@ async function seed() {
     await db.collection('routes').createIndex({ cragId: 1 })
     await db.collection('routes').createIndex({ grade: 1 })
     console.log('✓ 索引创建完成')
+
+    // 种子城市/地级市数据
+    await seedCities(db)
 
     // 验证数据
     console.log('\n🔍 验证数据...')

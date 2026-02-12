@@ -55,8 +55,7 @@ describe('WeatherBadge', () => {
       const { container } = render(<WeatherBadge temperature={25} weather="晴" />)
 
       const badge = container.firstChild as HTMLElement
-      expect(badge).toHaveClass('backdrop-blur-sm')
-      expect(badge).toHaveClass('bg-black/50')
+      expect(badge).toHaveClass('glass-light')
     })
 
     it('应该是圆角胶囊形状', () => {

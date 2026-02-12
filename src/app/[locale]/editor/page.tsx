@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Image as ImageIcon, Edit3, Play, Mountain } from 'lucide-react'
+import { ArrowLeft, Image as ImageIcon, Edit3, Play, Mountain, MapPin } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
 
@@ -37,6 +37,13 @@ export default function TopoEditorPage() {
       title: 'Beta 管理',
       description: '管理用户提交的 Beta 视频',
       detail: '选择线路 → 查看 Beta → 编辑或删除',
+    },
+    {
+      href: '/editor/cities' as const,
+      icon: MapPin,
+      title: '城市管理',
+      description: '管理城市和地级市配置',
+      detail: '新增城市 → 设置地级市 → 切换可用状态',
     },
   ]
 

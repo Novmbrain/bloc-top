@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
-import { getCragsByCityId, getRoutesByCityId } from '@/lib/db'
-import { isValidCityId, DEFAULT_CITY_ID, CITY_COOKIE_NAME } from '@/lib/city-config'
+import { getCragsByCityId, getRoutesByCityId, getAllCities, getAllPrefectures } from '@/lib/db'
+import { isCityValid, DEFAULT_CITY_ID, CITY_COOKIE_NAME } from '@/lib/city-utils'
 import HomePageClient from './home-client'
 
 /**
@@ -11,10 +11,16 @@ import HomePageClient from './home-client'
  * 缓解措施：PWA SW NetworkFirst 策略 + React cache() 请求内去重。
  */
 export default async function HomePage() {
+  // 并行获取城市配置（cache() 去重，同一请求只查一次 DB）
+  const [cities, prefectures] = await Promise.all([
+    getAllCities(),
+    getAllPrefectures(),
+  ])
+
   // 从 cookie 读取城市，无效值兜底默认城市
   const cookieStore = await cookies()
   const rawCity = cookieStore.get(CITY_COOKIE_NAME)?.value
-  const cityId = rawCity && isValidCityId(rawCity) ? rawCity : DEFAULT_CITY_ID
+  const cityId = rawCity && isCityValid(cities, rawCity) ? rawCity : DEFAULT_CITY_ID
 
   // 并行获取城市级数据
   const [crags, allRoutes] = await Promise.all([
@@ -28,5 +34,13 @@ export default async function HomePage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const lightRoutes = allRoutes.map(({ description, image, setter, ...rest }) => rest)
 
-  return <HomePageClient crags={crags} allRoutes={lightRoutes} serverCityId={cityId} />
+  return (
+    <HomePageClient
+      crags={crags}
+      allRoutes={lightRoutes}
+      serverCityId={cityId}
+      cities={cities}
+      prefectures={prefectures}
+    />
+  )
 }

@@ -2,17 +2,18 @@
  * CitySelector 组件测试
  * 测试两级城市选择器（地级市→区/县）的渲染、交互和无障碍特性
  *
- * 注意：组件内部使用 PREFECTURES 常量（来自 city-config.ts）渲染下拉菜单，
- * 而非 cities prop。测试环境中 next-intl mock 返回翻译 key 作为文本。
+ * 组件通过 props 接收 cities 和 prefectures 数据（来自 DB）。
+ * 测试环境中 next-intl mock 返回翻译 key 作为文本。
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@/test/utils'
 import { CitySelector } from './city-selector'
-import type { CityConfig, CityId } from '@/lib/city-config'
+import type { CityConfig, PrefectureConfig } from '@/types'
 
-// Mock 城市数据（仅用于 props 传入，组件内部渲染使用 PREFECTURES + getCityById）
+// ==================== 测试数据 ====================
+
 const luoyuanCity: CityConfig = {
-  id: 'luoyuan' as CityId,
+  id: 'luoyuan',
   name: '罗源',
   shortName: '罗源',
   adcode: '350123',
@@ -21,7 +22,7 @@ const luoyuanCity: CityConfig = {
 }
 
 const xiamenCity: CityConfig = {
-  id: 'xiamen' as CityId,
+  id: 'xiamen',
   name: '厦门',
   shortName: '厦门',
   adcode: '350200',
@@ -29,12 +30,41 @@ const xiamenCity: CityConfig = {
   available: true,
 }
 
-const mockCities: CityConfig[] = [luoyuanCity, xiamenCity]
+const changleCity: CityConfig = {
+  id: 'changle',
+  name: '长乐',
+  shortName: '长乐',
+  adcode: '350112',
+  coordinates: { lng: 119.523, lat: 25.963 },
+  available: false, // 测试不可用状态
+}
+
+const mockCities: CityConfig[] = [luoyuanCity, xiamenCity, changleCity]
+
+const mockPrefectures: PrefectureConfig[] = [
+  {
+    id: 'fuzhou',
+    name: '福州',
+    shortName: '福州',
+    districts: ['luoyuan', 'changle'],
+    defaultDistrict: 'luoyuan',
+  },
+  {
+    id: 'xiamen',
+    name: '厦门',
+    shortName: '厦门',
+    districts: ['xiamen'],
+    defaultDistrict: 'xiamen',
+  },
+]
+
+// ==================== 测试 ====================
 
 describe('CitySelector', () => {
   const defaultProps = {
     currentCity: luoyuanCity,
     cities: mockCities,
+    prefectures: mockPrefectures,
     onCityChange: vi.fn(),
   }
 
@@ -133,7 +163,7 @@ describe('CitySelector', () => {
       fireEvent.click(screen.getByRole('button'))
 
       await waitFor(() => {
-        // 长乐 (changle) 在 CITIES 中 available: false
+        // 长乐 (changle) 在 mockCities 中 available: false
         expect(screen.getByText('comingSoon')).toBeInTheDocument()
       })
     })

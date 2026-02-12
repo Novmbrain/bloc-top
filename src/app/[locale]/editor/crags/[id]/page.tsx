@@ -16,11 +16,9 @@ import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { AppTabbar } from '@/components/app-tabbar'
 import { useToast } from '@/components/ui/toast'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
-import { CITIES } from '@/lib/city-config'
 import { getCragCoverUrl } from '@/lib/constants'
 import { pinyin } from 'pinyin-pro'
-import type { Crag, Coordinates } from '@/types'
-import type { CityId } from '@/lib/city-config'
+import type { Crag, Coordinates, CityConfig, PrefectureConfig } from '@/types'
 
 // ==================== Slug 生成 ====================
 
@@ -55,13 +53,33 @@ export default function CragEditPage() {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [isSlugManual, setIsSlugManual] = useState(false)
-  const [cityId, setCityId] = useState<CityId | ''>('')
+  const [cityId, setCityId] = useState('')
+  const [isCustomCity, setIsCustomCity] = useState(false)
+  const [customCityId, setCustomCityId] = useState('')
   const [location, setLocation] = useState('')
   const [lng, setLng] = useState('')
   const [lat, setLat] = useState('')
   const [description, setDescription] = useState('')
   const [approach, setApproach] = useState('')
   const [coverImages, setCoverImages] = useState<string[]>([])
+
+  // ============ 城市数据 ============
+
+  const [cities, setCities] = useState<CityConfig[]>([])
+  const [prefectures, setPrefectures] = useState<PrefectureConfig[]>([])
+
+  // 加载城市配置
+  useEffect(() => {
+    fetch('/api/cities')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          setCities(data.cities)
+          setPrefectures(data.prefectures)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // ============ 加载/保存状态 ============
 
@@ -87,7 +105,19 @@ export default function CragEditPage() {
         const crag: Crag = data.crag
         setName(crag.name)
         setSlug(crag.id)
-        setCityId(crag.cityId as CityId)
+        // 如果 cityId 不在已知城市列表中，切换到自定义模式
+        // 注意：cities 可能尚未加载完，先设 cityId，后续 cities 到位后 select 会自动匹配
+        setCityId(crag.cityId)
+        if (crag.cityId) {
+          // 延迟检查是否需要切换到自定义模式
+          fetch('/api/cities').then(r => r.json()).then(d => {
+            if (d.success && !d.cities.some((c: CityConfig) => c.id === crag.cityId)) {
+              setIsCustomCity(true)
+              setCustomCityId(crag.cityId)
+              setCityId('')
+            }
+          }).catch(() => {})
+        }
         setLocation(crag.location)
         setDescription(crag.description)
         setApproach(crag.approach)
@@ -126,6 +156,9 @@ export default function CragEditPage() {
   // ============ 保存逻辑 ============
 
   const handleSave = useCallback(async () => {
+    // 解析最终使用的 cityId
+    const finalCityId = isCustomCity ? customCityId.trim() : cityId
+
     // 表单验证
     if (!name.trim()) {
       showToast('请输入岩场名称', 'error')
@@ -135,8 +168,8 @@ export default function CragEditPage() {
       showToast('请输入或生成岩场 ID', 'error')
       return
     }
-    if (!cityId) {
-      showToast('请选择所属城市', 'error')
+    if (!finalCityId) {
+      showToast(isCustomCity ? '请输入城市 ID' : '请选择所属城市', 'error')
       return
     }
     if (!location.trim()) {
@@ -173,7 +206,7 @@ export default function CragEditPage() {
           body: JSON.stringify({
             id: slug,
             name: name.trim(),
-            cityId,
+            cityId: finalCityId,
             location: location.trim(),
             description: description.trim(),
             approach: approach.trim(),
@@ -193,7 +226,7 @@ export default function CragEditPage() {
         // 编辑模式: PATCH /api/crags/{id}
         const updates: Record<string, unknown> = {
           name: name.trim(),
-          cityId,
+          cityId: finalCityId,
           location: location.trim(),
           description: description.trim(),
           approach: approach.trim(),
@@ -223,7 +256,7 @@ export default function CragEditPage() {
       setIsSaving(false)
     }
   }, [
-    name, slug, cityId, location, description, approach,
+    name, slug, cityId, customCityId, isCustomCity, location, description, approach,
     lng, lat, isCreateMode, rawId, showToast, router,
   ])
 
@@ -301,9 +334,7 @@ export default function CragEditPage() {
     )
   }
 
-  // ============ 可用城市列表 (仅 available 的城市) ============
-
-  const availableCities = CITIES.filter((c) => c.available)
+  // ============ 城市列表 (编辑器显示全部城市) ============
 
   return (
     <div
@@ -420,22 +451,75 @@ export default function CragEditPage() {
             >
               所属城市 *
             </label>
-            <select
-              value={cityId}
-              onChange={(e) => setCityId(e.target.value as CityId)}
-              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
-              style={{
-                backgroundColor: 'var(--theme-surface)',
-                color: 'var(--theme-on-surface)',
-              }}
-            >
-              <option value="">请选择城市</option>
-              {availableCities.map((city) => (
-                <option key={city.id} value={city.id}>
-                  {city.name}
-                </option>
-              ))}
-            </select>
+
+            {!isCustomCity ? (
+              <div className="space-y-2">
+                <select
+                  value={cityId}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    if (val === '__custom__') {
+                      setIsCustomCity(true)
+                      setCityId('')
+                    } else {
+                      setCityId(val)
+                    }
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
+                  style={{
+                    backgroundColor: 'var(--theme-surface)',
+                    color: 'var(--theme-on-surface)',
+                  }}
+                >
+                  <option value="">请选择城市</option>
+                  {prefectures.length > 0
+                    ? prefectures.map((pref) => (
+                        <optgroup key={pref.id} label={pref.name}>
+                          {pref.districts.map((districtId) => {
+                            const city = cities.find((c) => c.id === districtId)
+                            return city ? (
+                              <option key={city.id} value={city.id}>
+                                {city.name}
+                              </option>
+                            ) : null
+                          })}
+                        </optgroup>
+                      ))
+                    : cities.map((city) => (
+                        <option key={city.id} value={city.id}>
+                          {city.name}
+                        </option>
+                      ))
+                  }
+                  <option value="__custom__">+ 新增城市...</option>
+                </select>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Input
+                  value={customCityId}
+                  onChange={setCustomCityId}
+                  placeholder="城市 ID（如 fuqing、nanping）"
+                />
+                <p
+                  className="text-xs"
+                  style={{ color: 'var(--theme-on-surface-variant)' }}
+                >
+                  输入小写拼音作为城市标识符
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomCity(false)
+                    setCustomCityId('')
+                  }}
+                  className="text-xs font-medium transition-colors"
+                  style={{ color: 'var(--theme-primary)' }}
+                >
+                  返回选择已有城市
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

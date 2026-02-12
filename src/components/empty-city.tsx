@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { MapPin, Construction } from 'lucide-react'
-import type { CityConfig } from '@/lib/city-config'
+import type { CityConfig } from '@/types'
 
 interface EmptyCityProps {
   city: CityConfig

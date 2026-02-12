@@ -109,7 +109,8 @@ src/
 │   │   │   ├── page.tsx        # 编辑器首页
 │   │   │   ├── routes/         # 线路编辑
 │   │   │   ├── faces/          # 岩面图片管理
-│   │   │   └── betas/          # Beta 视频管理
+│   │   │   ├── betas/          # Beta 视频管理
+│   │   │   └── cities/         # 城市/地级市管理
 │   │   └── offline/            # ★ 离线浏览
 │   │       ├── page.tsx        # 已下载岩场列表
 │   │       ├── crag/[id]/      # 离线岩场详情
@@ -205,7 +206,7 @@ src/
     ├── topo-utils.ts           # Topo 工具函数
     ├── weather-constants.ts    # 天气配置
     ├── weather-utils.ts        # 天气工具 (攀岩适宜度评估)
-    ├── city-config.ts          # 城市配置 (CityId, CityConfig)
+    ├── city-utils.ts           # 城市工具函数 (纯同步，接收数据参数)
     ├── route-utils.ts          # 线路工具函数
     ├── editor-utils.ts         # 编辑器工具函数
     ├── editor-areas.ts         # 区域管理 (CRUD)
@@ -294,18 +295,37 @@ interface BetaLink {
 // TopoRoute, TopoData
 ```
 
-城市配置类型定义在 `src/lib/city-config.ts`：
+城市/地级市配置存储在 MongoDB（`cities`/`prefectures` 集合），类型定义在 `src/types/index.ts`：
 
 ```typescript
-type CityId = 'luoyuan' | 'xiamen'
+type CityId = string
 interface CityConfig {
-  id: CityId
+  id: string
   name: string
   shortName: string       // 简称 (空间紧张时)
   adcode: string          // 高德 adcode
   coordinates: Coordinates
   available: boolean
+  prefectureId?: string   // 所属地级市
+  sortOrder?: number
 }
+interface PrefectureConfig {
+  id: string
+  name: string
+  shortName: string
+  districts: string[]     // 下辖区/县 ID 列表（有序）
+  defaultDistrict: string // IP 定位命中市级 adcode 时默认选中的区
+  sortOrder?: number
+}
+```
+
+城市工具函数（纯同步）在 `src/lib/city-utils.ts`，接收数据数组作为参数：
+```typescript
+findCityById(cities, id)  // 按 ID 查找城市
+findCityName(cities, id)  // 获取城市名称
+isCityValid(cities, id)   // 验证 ID 有效性
+findCityByAdcode(cities, prefectures, adcode)  // adcode → 城市
+findNearestCity(cities, coords)  // 最近城市
 ```
 
 ## Internationalization (i18n)
@@ -529,6 +549,11 @@ const key = `${cragId}/${encodeURIComponent(faceId)}.jpg`  // 会导致双重编
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | `GET/POST` | `/api/auth/[...all]` | ★ better-auth catch-all (登录/注册/session/passkey) |
+| `GET` | `/api/cities` | 获取城市和地级市列表 (5min 缓存) |
+| `POST` | `/api/cities` | 创建城市 (admin) |
+| `PATCH/DELETE` | `/api/cities/[id]` | 更新/删除城市 (admin) |
+| `GET/POST` | `/api/prefectures` | 地级市列表/创建 (admin) |
+| `PATCH/DELETE` | `/api/prefectures/[id]` | 更新/删除地级市 (admin) |
 | `GET` | `/api/crags` | 获取所有岩场列表 |
 | `GET` | `/api/crags/[id]/routes` | 获取指定岩场的线路列表 |
 | `PATCH` | `/api/crags/[id]/areas` | 更新岩场区域列表 |

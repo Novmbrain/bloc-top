@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCityByAdcode, DEFAULT_CITY_ID, type CityId } from '@/lib/city-config'
+import { getAllCities, getAllPrefectures } from '@/lib/db'
+import { findCityByAdcode, DEFAULT_CITY_ID } from '@/lib/city-utils'
 import { createModuleLogger } from '@/lib/logger'
 import { getClientIp } from '@/lib/request-utils'
 
@@ -113,9 +114,14 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // 4. 匹配支持的城市
-    const matchedCity = getCityByAdcode(adcode)
-    const cityId: CityId = matchedCity?.id ?? DEFAULT_CITY_ID
+    // 4. 从 DB 获取城市和地级市数据，匹配支持的城市
+    const [cities, prefectures] = await Promise.all([
+      getAllCities(),
+      getAllPrefectures(),
+    ])
+
+    const matchedCity = findCityByAdcode(cities, prefectures, adcode)
+    const cityId = matchedCity?.id ?? DEFAULT_CITY_ID
 
     log.info(`IP location successful: ${data.province} ${cityName}`, {
       action: 'GET /api/geo',
@@ -148,4 +154,3 @@ export async function GET(request: NextRequest) {
     })
   }
 }
-

@@ -331,7 +331,11 @@
     "editorPasswordTitle": "Entrez le mot de passe",
     "editorPasswordPlaceholder": "Entrez le mot de passe",
     "editorPasswordWrong": "Mot de passe incorrect, réessayez",
-    "editorPasswordConfirm": "Accéder à l'éditeur"
+    "editorPasswordConfirm": "Accéder à l'éditeur",
+    "preferences": "Préférences",
+    "about": "À propos",
+    "accountSecurity": "Compte & Sécurité",
+    "accountSecurityHint": "Mot de passe, Passkey, gestion de connexion"
   },
   "Intro": {
     "heroTitle": "BlocTop",

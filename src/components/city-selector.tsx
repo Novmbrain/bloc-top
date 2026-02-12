@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronDown, ChevronRight, Check, MapPin } from 'lucide-react'
-import { PREFECTURES, getPrefectureByDistrictId, getCityById } from '@/lib/city-config'
-import type { CityConfig, CityId } from '@/lib/city-config'
+import { findPrefectureByDistrictId, findCityById } from '@/lib/city-utils'
+import type { CityConfig, PrefectureConfig } from '@/types'
 
 // ==================== 类型 ====================
 
@@ -13,8 +13,10 @@ interface CitySelectorProps {
   currentCity: CityConfig
   /** 所有可选城市 */
   cities: CityConfig[]
+  /** 所有地级市配置 */
+  prefectures: PrefectureConfig[]
   /** 城市切换回调 */
-  onCityChange: (cityId: CityId) => void
+  onCityChange: (cityId: string) => void
   /** 是否显示首次访问提示 */
   showHint?: boolean
   /** 关闭提示回调 */
@@ -32,12 +34,12 @@ interface CitySelectorProps {
  */
 export function CitySelector({
   currentCity,
-  cities: _cities,
+  cities,
+  prefectures,
   onCityChange,
   showHint = false,
   onDismissHint,
 }: CitySelectorProps) {
-  void _cities // props interface unchanged; data now comes from PREFECTURES
   const t = useTranslations('CitySelector')
   const [isOpen, setIsOpen] = useState(false)
   const [expandedPrefecture, setExpandedPrefecture] = useState<string | null>(null)
@@ -62,7 +64,7 @@ export function CitySelector({
     setIsOpen(willOpen)
     // 打开下拉时，自动展开当前选中区域的父级地级市
     if (willOpen) {
-      const pref = getPrefectureByDistrictId(currentCity.id)
+      const pref = findPrefectureByDistrictId(prefectures, currentCity.id)
       if (pref && pref.districts.length > 1) {
         setExpandedPrefecture(pref.id)
       } else {
@@ -74,13 +76,13 @@ export function CitySelector({
     }
   }
 
-  const handleSelect = (cityId: CityId) => {
+  const handleSelect = (cityId: string) => {
     onCityChange(cityId)
     setIsOpen(false)
   }
 
   // 标题显示：地级市 · 区名（避免 "厦门 · 厦门"）
-  const prefecture = getPrefectureByDistrictId(currentCity.id)
+  const prefecture = findPrefectureByDistrictId(prefectures, currentCity.id)
   const titleText =
     prefecture && prefecture.name !== currentCity.name
       ? `${prefecture.name} · ${currentCity.name}`
@@ -127,14 +129,14 @@ export function CitySelector({
             borderRadius: 'var(--theme-radius-lg)',
           }}
         >
-          {PREFECTURES.map((pref) => {
+          {prefectures.map((pref) => {
             const isSingleDistrict = pref.districts.length === 1
             const isExpanded = expandedPrefecture === pref.id
 
             if (isSingleDistrict) {
               // 单区地级市：直接选中
               const districtId = pref.districts[0]
-              const city = getCityById(districtId)
+              const city = findCityById(cities, districtId)
               if (!city) return null
               const isSelected = districtId === currentCity.id
 
@@ -204,7 +206,7 @@ export function CitySelector({
                 {/* 展开的子区域列表 */}
                 {isExpanded &&
                   pref.districts.map((districtId) => {
-                    const city = getCityById(districtId)
+                    const city = findCityById(cities, districtId)
                     if (!city) return null
                     const isSelected = districtId === currentCity.id
 

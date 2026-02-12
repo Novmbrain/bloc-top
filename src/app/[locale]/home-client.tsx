@@ -14,7 +14,7 @@ import { EmptyCity } from '@/components/empty-city'
 import { useRouteSearch } from '@/hooks/use-route-search'
 import { useCitySelection } from '@/hooks/use-city-selection'
 import { useWeather } from '@/hooks/use-weather'
-import type { Crag, Route } from '@/types'
+import type { Crag, Route, CityConfig, PrefectureConfig } from '@/types'
 
 const EMPTY_ROUTES: Route[] = []
 
@@ -22,9 +22,17 @@ interface HomePageClientProps {
   crags: Crag[]
   allRoutes: Route[]
   serverCityId: string
+  cities: CityConfig[]
+  prefectures: PrefectureConfig[]
 }
 
-export default function HomePageClient({ crags, allRoutes, serverCityId }: HomePageClientProps) {
+export default function HomePageClient({
+  crags,
+  allRoutes,
+  serverCityId,
+  cities,
+  prefectures,
+}: HomePageClientProps) {
   const t = useTranslations('HomePage')
   const tSearch = useTranslations('Search')
   const router = useRouter()
@@ -34,15 +42,14 @@ export default function HomePageClient({ crags, allRoutes, serverCityId }: HomeP
   const {
     cityId,
     city,
-    cities,
     setCity,
     isLoading,
     isFirstVisit,
     dismissFirstVisitHint,
-  } = useCitySelection()
+  } = useCitySelection({ cities })
 
   // 城市切换后刷新服务端数据
-  const handleCityChange = (id: typeof cityId) => {
+  const handleCityChange = (id: string) => {
     setCity(id)
     // cookie 已在 setCity 中同步，触发服务端重新渲染
     router.refresh()
@@ -98,6 +105,7 @@ export default function HomePageClient({ crags, allRoutes, serverCityId }: HomeP
             <CitySelector
               currentCity={city}
               cities={cities}
+              prefectures={prefectures}
               onCityChange={handleCityChange}
               showHint={isFirstVisit}
               onDismissHint={dismissFirstVisitHint}

@@ -1,3 +1,38 @@
+// ==================== 城市/地级市配置类型 ====================
+
+/**
+ * 城市 ID 类型（迁移到 MongoDB 后改为 string，不再自动推导）
+ */
+export type CityId = string
+
+/**
+ * 城市配置接口
+ */
+export interface CityConfig {
+  id: string
+  name: string              // 显示名称
+  shortName: string         // 简称（用于 UI 空间紧张时）
+  adcode: string            // 高德 adcode（用于天气 API）
+  coordinates: Coordinates  // 中心坐标（用于地图、IP 定位匹配）
+  available: boolean        // 是否有数据可用
+  prefectureId?: string     // 所属地级市 ID
+  sortOrder?: number        // 显示排序
+}
+
+/**
+ * 地级市配置接口
+ */
+export interface PrefectureConfig {
+  id: string
+  name: string
+  shortName: string
+  /** 该地级市下的区/县 CityId 列表（有序） */
+  districts: string[]
+  /** IP 定位命中市级 adcode 时默认选中的区 */
+  defaultDistrict: string
+  sortOrder?: number        // 显示排序
+}
+
 // ==================== Topo 编辑器类型 ====================
 
 /**

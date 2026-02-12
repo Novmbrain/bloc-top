@@ -16,6 +16,7 @@ vi.mock('@/lib/db', () => ({
   getAllCrags: vi.fn(),
   getCragsByCityId: vi.fn(),
   createCrag: vi.fn(),
+  getAllCities: vi.fn(),
 }))
 
 // Mock auth module (POST handler imports getAuth)
@@ -35,10 +36,11 @@ vi.mock('@/lib/logger', () => ({
 
 // Import after mocks
 import { GET } from './route'
-import { getAllCrags, getCragsByCityId } from '@/lib/db'
+import { getAllCrags, getCragsByCityId, getAllCities } from '@/lib/db'
 
 const mockGetAllCrags = vi.mocked(getAllCrags)
 const mockGetCragsByCityId = vi.mocked(getCragsByCityId)
+const mockGetAllCities = vi.mocked(getAllCities)
 
 // Test data
 const luoyuanCrag: Crag = {
@@ -70,6 +72,11 @@ function createRequest(url: string): NextRequest {
 describe('GET /api/crags', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // getAllCities 返回测试城市列表，供 isCityValid 验证使用
+    mockGetAllCities.mockResolvedValue([
+      { id: 'luoyuan', name: '罗源', shortName: '罗源', adcode: '350123', coordinates: { lng: 119.549, lat: 26.489 }, available: true },
+      { id: 'xiamen', name: '厦门', shortName: '厦门', adcode: '350200', coordinates: { lng: 118.089, lat: 24.479 }, available: true },
+    ])
   })
 
   it('无参数时返回所有岩场', async () => {
