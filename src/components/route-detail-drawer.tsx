@@ -364,9 +364,8 @@ export function RouteDetailDrawer({
           {/* FA 和定线者信息 */}
           {(route.FA || route.setter) && (
             <div
-              className="flex flex-wrap gap-4 p-3 mb-4"
+              className="flex flex-wrap gap-4 p-3 mb-4 glass-light"
               style={{
-                backgroundColor: 'var(--theme-surface-variant)',
                 borderRadius: 'var(--theme-radius-lg)',
               }}
             >
@@ -438,15 +437,12 @@ export function RouteDetailDrawer({
           {/* Beta 按钮 */}
           <button
             onClick={() => setBetaListOpen(true)}
-            className="w-full py-3 px-4 flex items-center justify-between transition-transform active:scale-[0.98]"
+            className="w-full py-3 px-4 flex items-center justify-between transition-transform active:scale-[0.98] glass-light"
             style={{
-              backgroundColor: betaCount > 0
-                ? 'color-mix(in srgb, var(--theme-primary) 10%, var(--theme-surface))'
-                : 'var(--theme-surface-variant)',
               borderRadius: 'var(--theme-radius-xl)',
               border: betaCount > 0
                 ? '1px solid color-mix(in srgb, var(--theme-primary) 30%, transparent)'
-                : '1px solid var(--theme-outline-variant)',
+                : undefined,
             }}
           >
             <div className="flex items-center gap-3">

@@ -231,11 +231,9 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
 
         {/* 前往方式卡片（含地图） */}
         <div
-          className="p-3 mb-2 animate-fade-in-up"
+          className="glass p-3 mb-2 animate-fade-in-up"
           style={{
-            backgroundColor: 'var(--theme-surface)',
             borderRadius: 'var(--theme-radius-xl)',
-            boxShadow: 'var(--theme-shadow-sm)',
             animationDelay: '25ms',
             transition: 'var(--theme-transition)',
           }}
@@ -299,15 +297,11 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
           }`}
         >
           <div
-            className="h-14 flex items-center gap-3"
+            className="h-14 flex items-center gap-3 glass-heavy"
             style={{
               paddingTop: 'env(safe-area-inset-top)',
               paddingLeft: '1rem',
               paddingRight: '1rem',
-              backgroundColor: 'color-mix(in srgb, var(--theme-surface) 80%, transparent)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              borderBottom: '1px solid var(--theme-outline-variant)',
             }}
           >
             <button
@@ -402,11 +396,9 @@ interface InfoCardProps {
 function InfoCard({ icon, iconBg, title, content, delay = 0 }: InfoCardProps) {
   return (
     <div
-      className="p-3 mb-2 animate-fade-in-up"
+      className="glass p-3 mb-2 animate-fade-in-up"
       style={{
-        backgroundColor: 'var(--theme-surface)',
         borderRadius: 'var(--theme-radius-xl)',
-        boxShadow: 'var(--theme-shadow-sm)',
         animationDelay: `${delay}ms`,
         transition: 'var(--theme-transition)',
       }}

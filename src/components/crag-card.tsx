@@ -38,12 +38,12 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
     <Link
       href={`/crag/${crag.id}`}
       className="group relative block overflow-hidden rounded-2xl p-4
-                 shadow-sm hover:shadow-xl transition-all duration-300
+                 glass hover:shadow-xl transition-all duration-300
                  active:scale-[0.97] active:shadow-md
                  animate-fade-in-up touch-manipulation"
       style={{
         animationDelay: `${index * 80}ms`,
-        background: theme.gradient,
+        borderLeft: `3px solid ${theme.accentColor}`,
       }}
     >
       {/* 垂直布局容器 */}
@@ -51,7 +51,10 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
         {/* 顶部行: 标题 + 操作按钮 */}
         <div className="flex items-start justify-between gap-2">
           {/* 岩场名称 */}
-          <h3 className="text-[22px] font-bold text-white leading-tight">
+          <h3
+            className="text-[22px] font-bold leading-tight"
+            style={{ color: 'var(--theme-on-surface)' }}
+          >
             {crag.name}
           </h3>
 
@@ -67,11 +70,7 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
                 onDownload={offlineDownload.downloadCrag}
                 onDelete={offlineDownload.deleteCrag}
                 updateInfo={offlineDownload.getUpdateInfo(crag.id)}
-                className="!w-8 !h-8 !rounded-lg"
-                style={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                  boxShadow: 'none',
-                }}
+                className="!w-8 !h-8 !rounded-lg glass-light"
               />
             )}
 
@@ -80,10 +79,7 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
               <WeatherBadge
                 temperature={weather.live.temperature}
                 weather={weather.live.weather}
-                className="!h-7 !rounded-lg"
-                style={{
-                  backgroundColor: 'rgba(12, 12, 12, 0.8)',
-                }}
+                className="!h-7 !rounded-lg glass-light"
               />
             )}
           </div>
@@ -93,11 +89,10 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
         <div className="flex items-center gap-2">
           {/* 线路数量标签 */}
           <div
-            className="flex items-center gap-1.5 h-[26px] px-2.5 rounded-md"
-            style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+            className="flex items-center gap-1.5 h-[26px] px-2.5 rounded-md glass-light"
           >
-            <GitBranch className="w-3.5 h-3.5 text-white" />
-            <span className="text-xs text-white font-medium">
+            <GitBranch className="w-3.5 h-3.5" style={{ color: 'var(--theme-on-surface)' }} />
+            <span className="text-xs font-medium" style={{ color: 'var(--theme-on-surface)' }}>
               {routeCount} 条线路
             </span>
           </div>
@@ -106,7 +101,7 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
           <div
             className="h-[26px] px-2.5 rounded-md flex items-center"
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: 'color-mix(in srgb, white 85%, transparent)',
               color: '#0C0C0C',
             }}
           >
@@ -117,10 +112,10 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
         {/* 位置信息行 */}
         {crag.location && (
           <div className="flex items-center gap-1">
-            <MapPin className="w-3 h-3" style={{ color: 'rgba(255, 255, 255, 0.67)' }} />
+            <MapPin className="w-3 h-3" style={{ color: 'var(--theme-on-surface-variant)' }} />
             <span
               className="text-[11px] truncate"
-              style={{ color: 'rgba(255, 255, 255, 0.67)' }}
+              style={{ color: 'var(--theme-on-surface-variant)' }}
             >
               {crag.location}
             </span>

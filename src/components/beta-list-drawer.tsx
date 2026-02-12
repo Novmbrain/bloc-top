@@ -135,8 +135,7 @@ export function BetaListDrawer({
         {betaLinks.length === 0 ? (
           <div className="text-center py-8">
             <div
-              className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'var(--theme-surface-variant)' }}
+              className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center glass-light"
             >
               <ExternalLink
                 className="w-8 h-8"
@@ -170,9 +169,8 @@ export function BetaListDrawer({
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all active:scale-95 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all active:scale-95 disabled:opacity-50 glass-light"
                 style={{
-                  backgroundColor: 'var(--theme-surface-variant)',
                   color: 'var(--theme-on-surface-variant)',
                   borderRadius: 'var(--theme-radius-lg)',
                 }}
@@ -188,11 +186,9 @@ export function BetaListDrawer({
                 <button
                   key={beta.id}
                   onClick={() => handleLinkClick(beta.url)}
-                  className="w-full flex items-center gap-3 p-3 transition-all active:scale-[0.98] animate-fade-in-up"
+                  className="w-full flex items-center gap-3 p-3 transition-all active:scale-[0.98] animate-fade-in-up glass"
                   style={{
-                    backgroundColor: 'var(--theme-surface)',
                     borderRadius: 'var(--theme-radius-xl)',
-                    boxShadow: 'var(--theme-shadow-sm)',
                     animationDelay: `${index * 50}ms`,
                   }}
                 >
@@ -258,11 +254,9 @@ export function BetaListDrawer({
                   {/* 复制链接按钮 */}
                   <button
                     onClick={(e) => handleCopyLink(beta.url, beta.id, e)}
-                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
+                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95 ${copiedId !== beta.id ? 'glass-light' : ''}`}
                     style={{
-                      backgroundColor: copiedId === beta.id
-                        ? 'var(--theme-success, #22c55e)'
-                        : 'var(--theme-surface-variant)',
+                      ...(copiedId === beta.id ? { backgroundColor: 'var(--theme-success, #22c55e)' } : {}),
                     }}
                     title={tCommon('copyLink')}
                   >

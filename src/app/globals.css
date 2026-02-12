@@ -237,6 +237,102 @@
   }
 }
 
+/* ============================
+   毛玻璃设计系统 - Glass Design System
+   ============================ */
+
+:root {
+  /* Blur Radius — 桌面端 */
+  --glass-blur-xs: 4px;
+  --glass-blur-sm: 8px;
+  --glass-blur-md: 12px;
+  --glass-blur-lg: 20px;
+
+  /* Glass 表面 — 使用 color-mix 保持主题兼容 */
+  --glass-surface: color-mix(in srgb, var(--theme-surface) 72%, transparent);
+  --glass-surface-heavy: color-mix(in srgb, var(--theme-surface) 85%, transparent);
+  --glass-surface-light: color-mix(in srgb, var(--theme-surface) 55%, transparent);
+
+  /* Glass 边框 */
+  --glass-border: 1px solid color-mix(in srgb, var(--theme-outline) 25%, transparent);
+  --glass-border-strong: 1px solid color-mix(in srgb, var(--theme-outline) 40%, transparent);
+
+  /* Glass 阴影 */
+  --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --glass-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+/* 移动端性能优化：降低 blur 值 */
+@media (max-width: 767px) {
+  :root {
+    --glass-blur-xs: 3px;
+    --glass-blur-sm: 5px;
+    --glass-blur-md: 8px;
+    --glass-blur-lg: 12px;
+  }
+}
+
+/* 暗色模式 Glass 调整 */
+.dark {
+  --glass-surface: color-mix(in srgb, var(--theme-surface) 75%, transparent);
+  --glass-surface-heavy: color-mix(in srgb, var(--theme-surface) 88%, transparent);
+  --glass-surface-light: color-mix(in srgb, var(--theme-surface) 58%, transparent);
+
+  --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15);
+  --glass-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================
+   Glass 工具类
+   ============================ */
+
+/* 标准毛玻璃 — 用于卡片、内容区 */
+.glass {
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--glass-surface);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* 轻量毛玻璃 — 用于标签、芯片、次要 UI */
+.glass-light {
+  -webkit-backdrop-filter: blur(var(--glass-blur-xs));
+  backdrop-filter: blur(var(--glass-blur-xs));
+  background: var(--glass-surface-light);
+  border: var(--glass-border);
+}
+
+/* 重度毛玻璃 — 用于导航栏、抽屉、弹窗 */
+.glass-heavy {
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  backdrop-filter: blur(var(--glass-blur-lg));
+  background: var(--glass-surface-heavy);
+  border: var(--glass-border-strong);
+  box-shadow: var(--glass-shadow-lg);
+}
+
+/* 中度毛玻璃 — 用于浮动搜索栏等 */
+.glass-md {
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--glass-surface);
+  border: var(--glass-border-strong);
+  box-shadow: var(--glass-shadow);
+}
+
+/* @supports 回退 */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .glass-light,
+  .glass-heavy,
+  .glass-md {
+    background: var(--theme-surface);
+    border: 1px solid var(--theme-outline);
+    box-shadow: var(--theme-shadow-md);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -279,12 +375,14 @@
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    var(--theme-surface-variant) 25%,
-    var(--theme-outline-variant) 50%,
-    var(--theme-surface-variant) 75%
+    var(--glass-surface-light) 25%,
+    var(--glass-surface) 50%,
+    var(--glass-surface-light) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
+  -webkit-backdrop-filter: blur(var(--glass-blur-xs));
+  backdrop-filter: blur(var(--glass-blur-xs));
 }
 
 /* 渐入缩放动画 */

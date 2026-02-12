@@ -61,9 +61,8 @@ export function SearchOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-50"
+      className="fixed inset-0 z-50 glass-heavy"
       style={{
-        backgroundColor: 'var(--theme-surface)',
         transition: 'var(--theme-transition)',
       }}
     >
@@ -71,7 +70,6 @@ export function SearchOverlay({
       <div
         className="sticky top-0 pt-12 px-4 pb-3"
         style={{
-          backgroundColor: 'var(--theme-surface)',
           borderBottom: '1px solid var(--theme-outline-variant)',
         }}
       >
@@ -87,8 +85,8 @@ export function SearchOverlay({
               placeholder={t('placeholder')}
               value={searchQuery}
               onChange={(value) => onSearchChange(value)}
+              className="glass-light"
               style={{
-                backgroundColor: 'var(--theme-surface-variant)',
                 borderRadius: 'var(--theme-radius-full)',
               }}
             />
@@ -120,11 +118,9 @@ export function SearchOverlay({
             <button
               key={route.id}
               onClick={() => handleRouteClick(route)}
-              className="w-full flex items-center p-3 transition-all active:scale-[0.98] animate-fade-in-up text-left"
+              className="w-full flex items-center p-3 transition-all active:scale-[0.98] animate-fade-in-up text-left glass"
               style={{
-                backgroundColor: 'var(--theme-surface)',
                 borderRadius: 'var(--theme-radius-xl)',
-                boxShadow: 'var(--theme-shadow-sm)',
                 animationDelay: `${index * 20}ms`,
               }}
             >

@@ -86,11 +86,11 @@ export default function CragListPage() {
           <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setActiveCity('all')}
-              className="shrink-0 px-4 py-2 text-sm font-medium transition-all duration-200"
+              className={`shrink-0 px-4 py-2 text-sm font-medium transition-all duration-200 ${activeCity === 'all' ? '' : 'glass-light'}`}
               style={{
                 backgroundColor: activeCity === 'all'
                   ? 'var(--theme-primary)'
-                  : 'var(--theme-surface-variant)',
+                  : undefined,
                 color: activeCity === 'all'
                   ? 'var(--theme-on-primary)'
                   : 'var(--theme-on-surface-variant)',
@@ -103,11 +103,11 @@ export default function CragListPage() {
               <button
                 key={city.id}
                 onClick={() => setActiveCity(city.id)}
-                className="shrink-0 px-4 py-2 text-sm font-medium transition-all duration-200"
+                className={`shrink-0 px-4 py-2 text-sm font-medium transition-all duration-200 ${activeCity === city.id ? '' : 'glass-light'}`}
                 style={{
                   backgroundColor: activeCity === city.id
                     ? 'var(--theme-primary)'
-                    : 'var(--theme-surface-variant)',
+                    : undefined,
                   color: activeCity === city.id
                     ? 'var(--theme-on-primary)'
                     : 'var(--theme-on-surface-variant)',
@@ -147,11 +147,9 @@ export default function CragListPage() {
               <Link
                 key={crag.id}
                 href={`/editor/crags/${crag.id}`}
-                className="group block p-5 transition-all duration-300 active:scale-[0.98] hover:scale-[1.02] animate-fade-in-up"
+                className="glass group block p-5 transition-all duration-300 active:scale-[0.98] hover:scale-[1.02] animate-fade-in-up"
                 style={{
-                  backgroundColor: 'var(--theme-surface-variant)',
                   borderRadius: 'var(--theme-radius-xl)',
-                  boxShadow: 'var(--theme-shadow-md)',
                   animationDelay: `${i * 50}ms`,
                   animationFillMode: 'both',
                 }}

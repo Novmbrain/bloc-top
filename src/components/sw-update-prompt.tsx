@@ -60,12 +60,11 @@ export default function SWUpdatePrompt() {
 
   return (
     <div
-      className="fixed bottom-20 left-4 right-4 desktop-center-padded z-50 p-4 animate-fade-in-up"
+      className="fixed bottom-20 left-4 right-4 desktop-center-padded z-50 p-4 animate-fade-in-up glass-heavy"
       style={{
-        backgroundColor: 'var(--theme-primary)',
+        background: 'color-mix(in srgb, var(--theme-primary) 85%, transparent)',
         color: 'var(--theme-on-primary)',
         borderRadius: 'var(--theme-radius-xl)',
-        boxShadow: 'var(--theme-shadow-lg)',
         transition: 'var(--theme-transition)',
       }}
     >

@@ -112,7 +112,7 @@ describe('FilterChip', () => {
       expect(button).toHaveStyle({ backgroundColor: '#FF9800' })
     })
 
-    it('未选中时应忽略自定义颜色', () => {
+    it('未选中时应忽略自定义颜色并使用 glass-light', () => {
       render(
         <FilterChip
           label="V5"
@@ -123,7 +123,8 @@ describe('FilterChip', () => {
       )
 
       const button = screen.getByRole('button')
-      expect(button).toHaveStyle({ backgroundColor: 'var(--theme-surface-variant)' })
+      expect(button).toHaveClass('glass-light')
+      expect(button).not.toHaveStyle({ backgroundColor: '#FF9800' })
     })
   })
 

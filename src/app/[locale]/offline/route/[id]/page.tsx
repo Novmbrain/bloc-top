@@ -234,9 +234,8 @@ export default function OfflineRouteDetailPage() {
             </div>
             {route.FA && (
               <div
-                className="flex items-center gap-1 px-2 py-1"
+                className="glass-light flex items-center gap-1 px-2 py-1"
                 style={{
-                  backgroundColor: 'var(--theme-surface-variant)',
                   borderRadius: 'var(--theme-radius-full)',
                 }}
               >
@@ -248,9 +247,8 @@ export default function OfflineRouteDetailPage() {
             )}
             {route.setter && route.setter !== 'TODO' && (
               <div
-                className="px-2 py-1"
+                className="glass-light px-2 py-1"
                 style={{
-                  backgroundColor: 'var(--theme-surface-variant)',
                   borderRadius: 'var(--theme-radius-full)',
                 }}
               >

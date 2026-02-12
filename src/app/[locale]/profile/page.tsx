@@ -303,11 +303,9 @@ export default function ProfilePage() {
           <div className="mb-6">
             <Link
               href="/intro"
-              className="w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
+              className="glass w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
               style={{
-                backgroundColor: 'var(--theme-surface)',
                 borderRadius: 'var(--theme-radius-xl)',
-                boxShadow: 'var(--theme-shadow-sm)',
               }}
             >
               <div
@@ -331,11 +329,9 @@ export default function ProfilePage() {
           <div className="mb-6">
             <button
               onClick={() => setAuthorDrawerOpen(true)}
-              className="w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
+              className="glass w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
               style={{
-                backgroundColor: 'var(--theme-surface)',
                 borderRadius: 'var(--theme-radius-xl)',
-                boxShadow: 'var(--theme-shadow-sm)',
               }}
             >
               <div
@@ -357,11 +353,9 @@ export default function ProfilePage() {
 
           {/* 岩友访问统计 - 始终显示，使用缓存数据 */}
           <div
-            className="mb-6 p-4 flex items-center gap-4"
+            className="glass mb-6 p-4 flex items-center gap-4"
             style={{
-              backgroundColor: 'var(--theme-surface)',
               borderRadius: 'var(--theme-radius-xl)',
-              boxShadow: 'var(--theme-shadow-sm)',
             }}
           >
             <div
@@ -394,11 +388,9 @@ export default function ProfilePage() {
           <div className="mb-6">
             {isLoggedIn ? (
               <div
-                className="p-4"
+                className="glass p-4"
                 style={{
-                  backgroundColor: 'var(--theme-surface)',
                   borderRadius: 'var(--theme-radius-xl)',
-                  boxShadow: 'var(--theme-shadow-sm)',
                 }}
               >
                 {/* 登录状态 */}
@@ -521,8 +513,7 @@ export default function ProfilePage() {
                         return (
                           <div
                             key={pk.id}
-                            className="flex items-center gap-2.5 p-2 rounded-lg"
-                            style={{ backgroundColor: 'var(--theme-surface-variant)' }}
+                            className="glass-light flex items-center gap-2.5 p-2 rounded-lg"
                           >
                             <span className="text-lg leading-none" role="img" aria-label={provider.name}>
                               {provider.icon}
@@ -590,11 +581,9 @@ export default function ProfilePage() {
               /* 未登录状态 */
               <Link
                 href="/login"
-                className="w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
+                className="glass w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
                 style={{
-                  backgroundColor: 'var(--theme-surface)',
                   borderRadius: 'var(--theme-radius-xl)',
-                  boxShadow: 'var(--theme-shadow-sm)',
                 }}
               >
                 <div
@@ -675,9 +664,8 @@ export default function ProfilePage() {
             {/* 微信 */}
             <button
               onClick={() => copyToClipboard(AUTHOR.wechat, 'wechat')}
-              className="w-full flex items-center gap-3 p-3 transition-all active:scale-[0.98]"
+              className="glass-light w-full flex items-center gap-3 p-3 transition-all active:scale-[0.98]"
               style={{
-                backgroundColor: 'var(--theme-surface-variant)',
                 borderRadius: 'var(--theme-radius-lg)',
               }}
             >
@@ -707,9 +695,8 @@ export default function ProfilePage() {
             {/* 小红书 */}
             <button
               onClick={() => copyToClipboard(AUTHOR.xiaohongshu, 'xiaohongshu')}
-              className="w-full flex items-center gap-3 p-3 transition-all active:scale-[0.98]"
+              className="glass-light w-full flex items-center gap-3 p-3 transition-all active:scale-[0.98]"
               style={{
-                backgroundColor: 'var(--theme-surface-variant)',
                 borderRadius: 'var(--theme-radius-lg)',
               }}
             >

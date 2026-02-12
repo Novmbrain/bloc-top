@@ -202,8 +202,8 @@ export function DownloadButton({
         'relative flex items-center justify-center w-8 h-8 rounded-full',
         'transition-all duration-200',
         'focus:outline-none focus-visible:ring-2',
-        status === 'idle' && 'bg-white/20 hover:bg-white/30 active:scale-95',
-        status === 'downloading' && 'bg-white/20 cursor-wait',
+        status === 'idle' && 'hover:opacity-80 active:scale-95',
+        status === 'downloading' && 'cursor-wait',
         status === 'completed' && 'bg-green-500/80',
         status === 'failed' && 'bg-red-500/80 hover:bg-red-500',
         status === 'stale' && 'bg-amber-500/80 hover:bg-amber-500 active:scale-95',
@@ -222,14 +222,14 @@ export function DownloadButton({
       }
     >
       {status === 'idle' && (
-        <Download className="w-4 h-4 text-white" />
+        <Download className="w-4 h-4" style={{ color: 'var(--theme-on-surface)' }} />
       )}
 
       {status === 'downloading' && (
-        <div className="relative flex items-center justify-center">
+        <div className="relative flex items-center justify-center" style={{ color: 'var(--theme-on-surface)' }}>
           <CircularProgress progress={progressPercent} size={20} strokeWidth={2} />
           <span
-            className="absolute text-[8px] font-bold text-white"
+            className="absolute font-bold"
             style={{ fontSize: '7px' }}
           >
             {progressPercent}

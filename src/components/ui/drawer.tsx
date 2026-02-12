@@ -196,7 +196,8 @@ export function Drawer({
         onClick={handleOverlayClick}
         style={{
           backgroundColor: isClosing ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(2px)',
+          WebkitBackdropFilter: 'blur(var(--glass-blur-xs))',
+          backdropFilter: 'blur(var(--glass-blur-xs))',
           transition: isClosing ? `background-color 0.28s ${SPRING_EASING}` : undefined,
         }}
       />
@@ -204,16 +205,14 @@ export function Drawer({
       {/* 抽屉主体 */}
       <div
         ref={drawerRef}
-        className={`absolute bottom-0 left-0 right-0 desktop-center-full overflow-hidden flex flex-col ${
+        className={`absolute bottom-0 left-0 right-0 desktop-center-full overflow-hidden flex flex-col glass-heavy ${
           isClosing ? '' : 'animate-drawer-in'
         }`}
         style={{
           height: HEIGHT_MAP[height],
           maxHeight: 'calc(100vh - env(safe-area-inset-top) - 20px)',
-          backgroundColor: 'var(--theme-surface)',
           borderTopLeftRadius: 'var(--theme-radius-xl)',
           borderTopRightRadius: 'var(--theme-radius-xl)',
-          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.15)',
           transform: isClosing ? 'translateY(100%)' : undefined,
           transition: isClosing ? `transform 0.28s ${SPRING_EASING}` : `transform 0.28s ${SPRING_EASING}`,
         }}
@@ -245,8 +244,7 @@ export function Drawer({
             {showCloseButton && (
               <button
                 onClick={handleClose}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                style={{ backgroundColor: 'var(--theme-surface-variant)' }}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors glass-light"
                 aria-label="关闭"
               >
                 <X className="w-4 h-4" style={{ color: 'var(--theme-on-surface)' }} />

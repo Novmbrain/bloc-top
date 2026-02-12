@@ -83,7 +83,9 @@ function ToastItem({
         'animate-fade-in-up'
       )}
       style={{
-        backgroundColor: bgColor,
+        background: `color-mix(in srgb, ${bgColor} 85%, transparent)`,
+        WebkitBackdropFilter: 'blur(var(--glass-blur-sm))',
+        backdropFilter: 'blur(var(--glass-blur-sm))',
         color: 'white',
         minWidth: '200px',
         maxWidth: 'calc(100vw - 32px)',

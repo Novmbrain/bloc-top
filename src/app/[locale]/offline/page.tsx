@@ -187,9 +187,8 @@ export default function OfflinePage() {
           </div>
         ) : (
           <div
-            className="text-center py-8 px-4"
+            className="glass-light text-center py-8 px-4"
             style={{
-              backgroundColor: 'var(--theme-surface-variant)',
               borderRadius: 'var(--theme-radius-xl)',
             }}
           >
@@ -263,11 +262,9 @@ function CragCard({
   return (
     <button
       onClick={() => router.push(`/${locale}/route?crag=${cragData.cragId}`)}
-      className="w-full p-4 flex items-center gap-3 text-left"
+      className="glass w-full p-4 flex items-center gap-3 text-left"
       style={{
-        backgroundColor: 'var(--theme-surface)',
         borderRadius: 'var(--theme-radius-xl)',
-        boxShadow: 'var(--theme-shadow-sm)',
       }}
     >
       <div

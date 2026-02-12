@@ -26,20 +26,17 @@ export function CragSelector({
 
   return (
     <div
-      className="relative z-20 mb-4 p-4 animate-fade-in-up"
+      className="glass-light relative z-20 mb-4 p-4 animate-fade-in-up"
       style={{
-        backgroundColor: 'var(--theme-surface-variant)',
         borderRadius: 'var(--theme-radius-xl)',
       }}
     >
       <div className="flex items-center gap-4">
         <div className="flex-1 relative">
           <button
-            className="w-full p-3 rounded-xl flex items-center justify-between gap-2 transition-all duration-200 active:scale-[0.99]"
+            className="glass w-full p-3 rounded-xl flex items-center justify-between gap-2 transition-all duration-200 active:scale-[0.99]"
             style={{
-              backgroundColor: 'var(--theme-surface)',
               color: 'var(--theme-on-surface)',
-              boxShadow: 'var(--theme-shadow-sm)',
             }}
             onClick={() => setShowDropdown(!showDropdown)}
             disabled={isLoading}
@@ -69,12 +66,9 @@ export function CragSelector({
 
           {showDropdown && (
             <div
-              className="absolute top-full left-0 right-0 mt-2 z-50 overflow-hidden animate-scale-in"
+              className="glass-heavy absolute top-full left-0 right-0 mt-2 z-50 overflow-hidden animate-scale-in"
               style={{
-                backgroundColor: 'var(--theme-surface)',
                 borderRadius: 'var(--theme-radius-xl)',
-                boxShadow: 'var(--theme-shadow-lg)',
-                border: '1px solid var(--theme-outline-variant)',
               }}
             >
               {crags.map((crag) => (

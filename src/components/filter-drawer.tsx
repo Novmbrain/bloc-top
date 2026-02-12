@@ -133,11 +133,8 @@ export function FilterDrawer({
           <button
             onClick={handleClear}
             disabled={!hasFilters}
-            className="flex items-center justify-center gap-2 py-3 px-4 font-medium transition-all active:scale-[0.98]"
+            className="flex items-center justify-center gap-2 py-3 px-4 font-medium transition-all active:scale-[0.98] glass-light"
             style={{
-              backgroundColor: hasFilters
-                ? 'var(--theme-surface-variant)'
-                : 'var(--theme-surface)',
               color: hasFilters
                 ? 'var(--theme-on-surface)'
                 : 'var(--theme-outline)',

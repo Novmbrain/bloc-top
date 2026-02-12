@@ -25,11 +25,9 @@ export function WeatherCard({ adcode, coordinates, delay = 0 }: WeatherCardProps
   if (loading) {
     return (
       <div
-        className="p-3 mb-2 animate-fade-in-up"
+        className="glass p-3 mb-2 animate-fade-in-up"
         style={{
-          backgroundColor: 'var(--theme-surface)',
           borderRadius: 'var(--theme-radius-xl)',
-          boxShadow: 'var(--theme-shadow-sm)',
           animationDelay: `${delay}ms`,
         }}
       >
@@ -55,11 +53,9 @@ export function WeatherCard({ adcode, coordinates, delay = 0 }: WeatherCardProps
 
   return (
     <div
-      className="p-3 mb-2 animate-fade-in-up"
+      className="glass p-3 mb-2 animate-fade-in-up"
       style={{
-        backgroundColor: 'var(--theme-surface)',
         borderRadius: 'var(--theme-radius-xl)',
-        boxShadow: 'var(--theme-shadow-sm)',
         animationDelay: `${delay}ms`,
         transition: 'var(--theme-transition)',
       }}
@@ -84,8 +80,7 @@ export function WeatherCard({ adcode, coordinates, delay = 0 }: WeatherCardProps
 
       {/* 当前天气 */}
       <div
-        className="p-3 rounded-xl mb-3"
-        style={{ backgroundColor: 'var(--theme-surface-variant)' }}
+        className="glass-light p-3 rounded-xl mb-3"
       >
         <div className="flex items-center justify-between mb-2">
           {/* 温度 + 天气 */}
@@ -203,8 +198,7 @@ function ForecastItem({ forecast, t }: ForecastItemProps) {
 
   return (
     <div
-      className="flex flex-col items-center p-2 rounded-lg"
-      style={{ backgroundColor: 'var(--theme-surface-variant)' }}
+      className="glass-light flex flex-col items-center p-2 rounded-lg"
     >
       <div className="flex items-center gap-1 mb-1">
         <span

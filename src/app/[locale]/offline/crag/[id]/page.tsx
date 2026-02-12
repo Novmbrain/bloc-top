@@ -305,9 +305,8 @@ export default function OfflineCragDetailPage() {
 
         {/* 天气卡片 - 离线不可用提示 */}
         <div
-          className="p-4 mb-2 animate-fade-in-up"
+          className="glass-light p-4 mb-2 animate-fade-in-up"
           style={{
-            backgroundColor: 'var(--theme-surface-variant)',
             borderRadius: 'var(--theme-radius-xl)',
             animationDelay: '25ms',
           }}
@@ -363,11 +362,9 @@ interface InfoCardProps {
 function InfoCard({ icon, iconBg, title, content, delay = 0 }: InfoCardProps) {
   return (
     <div
-      className="p-3 mb-2 animate-fade-in-up"
+      className="glass p-3 mb-2 animate-fade-in-up"
       style={{
-        backgroundColor: 'var(--theme-surface)',
         borderRadius: 'var(--theme-radius-xl)',
-        boxShadow: 'var(--theme-shadow-sm)',
         animationDelay: `${delay}ms`,
         transition: 'var(--theme-transition)',
       }}

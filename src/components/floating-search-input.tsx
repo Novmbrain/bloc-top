@@ -25,12 +25,9 @@ export function FloatingSearchInput({
   return (
     <div className="fixed bottom-20 left-4 right-4 desktop-center-padded z-40">
       <div
-        className="relative h-12 flex items-center"
+        className="relative h-12 flex items-center glass-md"
         style={{
-          backgroundColor: 'var(--theme-surface)',
-          border: '1px solid var(--theme-outline)',
           borderRadius: 'var(--theme-radius-full)',
-          boxShadow: 'var(--theme-shadow-lg)',
           transition: 'var(--theme-transition)',
         }}
       >

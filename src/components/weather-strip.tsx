@@ -21,9 +21,8 @@ export function WeatherStrip({ adcode, lng, lat }: WeatherStripProps) {
   if (loading) {
     return (
       <div
-        className="flex items-center gap-2 py-2 px-3 mb-3 animate-pulse"
+        className="glass-light flex items-center gap-2 py-2 px-3 mb-3 animate-pulse"
         style={{
-          backgroundColor: 'var(--theme-surface-variant)',
           borderRadius: 'var(--theme-radius-lg)',
         }}
       >
@@ -48,9 +47,8 @@ export function WeatherStrip({ adcode, lng, lat }: WeatherStripProps) {
 
   return (
     <div
-      className="flex items-center gap-3 py-2 px-3 mb-3 animate-fade-in"
+      className="glass flex items-center gap-3 py-2 px-3 mb-3 animate-fade-in"
       style={{
-        backgroundColor: 'color-mix(in srgb, var(--theme-primary) 8%, var(--theme-surface))',
         borderRadius: 'var(--theme-radius-lg)',
         transition: 'var(--theme-transition)',
       }}

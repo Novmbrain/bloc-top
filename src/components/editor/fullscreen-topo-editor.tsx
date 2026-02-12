@@ -136,7 +136,7 @@ export function FullscreenTopoEditor({
         <button
           onClick={handleRequestClose}
           className="pointer-events-auto p-2.5 rounded-full transition-all active:scale-90"
-          style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(12px)' }}
+          style={{ backgroundColor: 'rgba(0,0,0,0.45)', WebkitBackdropFilter: 'blur(12px)', backdropFilter: 'blur(12px)' }}
         >
           <X className="w-5 h-5 text-white" />
         </button>

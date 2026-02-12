@@ -116,15 +116,15 @@ describe('CragCard', () => {
     })
   })
 
-  describe('渐变背景', () => {
-    it('卡片使用渐变背景', () => {
+  describe('毛玻璃卡片', () => {
+    it('卡片使用 glass 类和强调色左边框', () => {
       render(<CragCard crag={mockCrag} routes={mockRoutes} />)
-      // 渐变背景应用在 Link 元素上
       const link = screen.getByRole('link')
-      expect(link.getAttribute('style')).toContain('linear-gradient')
+      expect(link).toHaveClass('glass')
+      expect(link.getAttribute('style')).toContain('border-left')
     })
 
-    it('不再渲染图片元素（统一使用渐变）', () => {
+    it('不再渲染图片元素（统一使用毛玻璃）', () => {
       render(<CragCard crag={mockCragWithImage} routes={mockRoutes} />)
       // 即使有 coverImages，也不应该渲染 img 元素
       expect(screen.queryByRole('img')).not.toBeInTheDocument()

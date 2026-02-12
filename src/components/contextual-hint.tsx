@@ -26,6 +26,8 @@ export function ContextualHint({ hintKey, message, icon }: ContextualHintProps) 
       style={{
         backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)',
         borderRadius: 'var(--theme-radius-lg)',
+        WebkitBackdropFilter: 'blur(var(--glass-blur-xs))',
+        backdropFilter: 'blur(var(--glass-blur-xs))',
       }}
     >
       {icon && (

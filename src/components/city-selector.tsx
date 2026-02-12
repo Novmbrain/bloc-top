@@ -122,12 +122,9 @@ export function CitySelector({
       {/* 下拉菜单 */}
       {isOpen && (
         <div
-          className="absolute top-full left-0 mt-2 min-w-[160px] py-1 z-50 animate-fade-in"
+          className="glass-heavy absolute top-full left-0 mt-2 min-w-[160px] py-1 z-50 animate-fade-in"
           style={{
-            backgroundColor: 'var(--theme-surface)',
             borderRadius: 'var(--theme-radius-lg)',
-            boxShadow: 'var(--theme-shadow-lg)',
-            border: '1px solid var(--theme-outline-variant)',
           }}
         >
           {PREFECTURES.map((pref) => {
@@ -163,9 +160,8 @@ export function CitySelector({
                     </span>
                     {!city.available && (
                       <span
-                        className="text-xs px-1.5 py-0.5"
+                        className="text-xs px-1.5 py-0.5 glass-light"
                         style={{
-                          backgroundColor: 'var(--theme-surface-variant)',
                           borderRadius: 'var(--theme-radius-sm)',
                         }}
                       >
@@ -232,9 +228,8 @@ export function CitySelector({
                           <span className="text-sm">{city.name}</span>
                           {!city.available && (
                             <span
-                              className="text-xs px-1.5 py-0.5"
+                              className="text-xs px-1.5 py-0.5 glass-light"
                               style={{
-                                backgroundColor: 'var(--theme-surface-variant)',
                                 borderRadius: 'var(--theme-radius-sm)',
                               }}
                             >

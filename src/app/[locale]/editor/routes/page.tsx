@@ -573,9 +573,9 @@ export default function RouteAnnotationPage() {
               <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
                 <button
                   onClick={() => handleAreaSwitch(null)}
-                  className="px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm"
+                  className={`px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm ${selectedArea === null ? '' : 'glass-light'}`}
                   style={{
-                    backgroundColor: selectedArea === null ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+                    backgroundColor: selectedArea === null ? 'var(--theme-primary)' : undefined,
                     color: selectedArea === null ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
                   }}
                 >
@@ -585,9 +585,9 @@ export default function RouteAnnotationPage() {
                   <button
                     key={area}
                     onClick={() => handleAreaSwitch(area)}
-                    className="px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm"
+                    className={`px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm ${selectedArea === area ? '' : 'glass-light'}`}
                     style={{
-                      backgroundColor: selectedArea === area ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+                      backgroundColor: selectedArea === area ? 'var(--theme-primary)' : undefined,
                       color: selectedArea === area ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
                     }}
                   >
@@ -625,9 +625,9 @@ export default function RouteAnnotationPage() {
               <button
                 key={filter.key}
                 onClick={() => setFilterMode(filter.key)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95"
+                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 ${filterMode === filter.key ? '' : 'glass-light'}`}
                 style={{
-                  backgroundColor: filterMode === filter.key ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+                  backgroundColor: filterMode === filter.key ? 'var(--theme-primary)' : undefined,
                   color: filterMode === filter.key ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
                 }}
               >
@@ -702,7 +702,7 @@ export default function RouteAnnotationPage() {
             <h2 className="text-lg font-bold" style={{ color: 'var(--theme-on-surface)' }}>新增线路</h2>
           </div>
 
-          <div className="p-4" style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-xl)' }}>
+          <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>名称 *</label>
@@ -766,8 +766,8 @@ export default function RouteAnnotationPage() {
           <div className="flex gap-3">
             <button
               onClick={handleCancelCreate}
-              className="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
-              style={{ backgroundColor: 'var(--theme-surface-variant)', color: 'var(--theme-on-surface)' }}
+              className="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98] glass-light"
+              style={{ color: 'var(--theme-on-surface)' }}
             >
               取消
             </button>
@@ -822,7 +822,7 @@ export default function RouteAnnotationPage() {
           </div>
 
           {/* 岩面选择器 */}
-          <div className="p-4" style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-xl)' }}>
+          <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
             <label className="block text-xs font-medium mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
               选择岩面 {selectedFaceId && <span style={{ color: 'var(--theme-primary)' }}>· {selectedFaceId}</span>}
             </label>
@@ -893,7 +893,7 @@ export default function RouteAnnotationPage() {
           </div>
 
           {/* Topo 画布 */}
-          <div className="overflow-hidden" style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-xl)' }}>
+          <div className="glass-light overflow-hidden" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
             <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--theme-outline-variant)' }}>
               <div>
                 <h3 className="font-semibold" style={{ color: 'var(--theme-on-surface)' }}>Topo 标注</h3>
@@ -1015,7 +1015,7 @@ export default function RouteAnnotationPage() {
           </div>
 
           {/* 线路信息编辑 */}
-          <div className="p-4" style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-xl)' }}>
+          <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
             <h3 className="font-semibold mb-4" style={{ color: 'var(--theme-on-surface)' }}>线路信息</h3>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               <div>

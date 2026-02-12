@@ -158,9 +158,8 @@ export function InstallPrompt() {
   if (platformInfo.supportsNativePrompt && deferredPrompt) {
     return (
       <div
-        className="p-4 mb-4 animate-fade-in-up"
+        className="p-4 mb-4 animate-fade-in-up glass"
         style={{
-          backgroundColor: 'color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface))',
           borderRadius: 'var(--theme-radius-xl)',
           transition: 'var(--theme-transition)',
         }}
@@ -208,9 +207,8 @@ export function InstallPrompt() {
   if (platformInfo.isIOSSafari) {
     return (
       <div
-        className="p-4 mb-4 animate-fade-in-up"
+        className="p-4 mb-4 animate-fade-in-up glass"
         style={{
-          backgroundColor: 'color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface))',
           borderRadius: 'var(--theme-radius-xl)',
           transition: 'var(--theme-transition)',
         }}
@@ -321,9 +319,8 @@ export function InstallPrompt() {
   if (platformInfo.isIOSNotSafari) {
     return (
       <div
-        className="p-4 mb-4 animate-fade-in-up"
+        className="p-4 mb-4 animate-fade-in-up glass"
         style={{
-          backgroundColor: 'color-mix(in srgb, var(--theme-warning) 15%, var(--theme-surface))',
           borderRadius: 'var(--theme-radius-xl)',
           transition: 'var(--theme-transition)',
         }}
