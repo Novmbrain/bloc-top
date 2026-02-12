@@ -114,11 +114,9 @@ export default function SecuritySetupPage() {
 
           {/* Password Setup Card */}
           <div
-            className="p-4 mb-4"
+            className="glass p-4 mb-4"
             style={{
-              backgroundColor: 'var(--theme-surface)',
               borderRadius: 'var(--theme-radius-xl)',
-              boxShadow: 'var(--theme-shadow-sm)',
             }}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -178,11 +176,9 @@ export default function SecuritySetupPage() {
 
           {/* Passkey Setup Card */}
           <div
-            className="p-4 mb-8"
+            className="glass p-4 mb-8"
             style={{
-              backgroundColor: 'var(--theme-surface)',
               borderRadius: 'var(--theme-radius-xl)',
-              boxShadow: 'var(--theme-shadow-sm)',
             }}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -201,9 +197,8 @@ export default function SecuritySetupPage() {
             {!passkeyAdded ? (
               <button
                 onClick={handleSetupPasskey}
-                className="w-full flex items-center justify-center gap-2 p-3 text-sm font-medium transition-all active:scale-[0.98]"
+                className="glass-light w-full flex items-center justify-center gap-2 p-3 text-sm font-medium transition-all active:scale-[0.98]"
                 style={{
-                  backgroundColor: 'var(--theme-surface-variant)',
                   color: 'var(--theme-on-surface)',
                   borderRadius: 'var(--theme-radius-lg)',
                 }}

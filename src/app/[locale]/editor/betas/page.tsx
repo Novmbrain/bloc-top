@@ -232,9 +232,9 @@ export default function BetaEditorPage() {
               <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
                 <button
                   onClick={() => { setSelectedArea(null); setSelectedRoute(null); setShowRightPanel(false) }}
-                  className="px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm"
+                  className={`px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm ${selectedArea === null ? '' : 'glass-light'}`}
                   style={{
-                    backgroundColor: selectedArea === null ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+                    backgroundColor: selectedArea === null ? 'var(--theme-primary)' : undefined,
                     color: selectedArea === null ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
                   }}
                 >
@@ -246,9 +246,9 @@ export default function BetaEditorPage() {
                     <button
                       key={area}
                       onClick={() => { setSelectedArea(area); setSelectedRoute(null); setShowRightPanel(false) }}
-                      className="px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm"
+                      className={`px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 font-medium text-sm ${selectedArea === area ? '' : 'glass-light'}`}
                       style={{
-                        backgroundColor: selectedArea === area ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+                        backgroundColor: selectedArea === area ? 'var(--theme-primary)' : undefined,
                         color: selectedArea === area ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
                       }}
                     >
@@ -369,9 +369,8 @@ export default function BetaEditorPage() {
 
             {(!selectedRoute.betaLinks || selectedRoute.betaLinks.length === 0) ? (
               <div
-                className="text-center py-8"
+                className="text-center py-8 glass-light"
                 style={{
-                  backgroundColor: 'var(--theme-surface-variant)',
                   borderRadius: 'var(--theme-radius-xl)',
                   color: 'var(--theme-on-surface-variant)',
                 }}

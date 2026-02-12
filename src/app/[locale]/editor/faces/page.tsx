@@ -471,9 +471,9 @@ export default function FaceManagementPage() {
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-3 px-1">
             <button
               onClick={() => setSelectedArea(null)}
-              className="px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 text-sm font-medium"
+              className={`px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 text-sm font-medium ${!selectedArea ? '' : 'glass-light'}`}
               style={{
-                backgroundColor: !selectedArea ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+                backgroundColor: !selectedArea ? 'var(--theme-primary)' : undefined,
                 color: !selectedArea ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
               }}
             >
@@ -483,9 +483,9 @@ export default function FaceManagementPage() {
               <button
                 key={area}
                 onClick={() => setSelectedArea(area)}
-                className="px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 text-sm font-medium"
+                className={`px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 active:scale-95 text-sm font-medium ${selectedArea === area ? '' : 'glass-light'}`}
                 style={{
-                  backgroundColor: selectedArea === area ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+                  backgroundColor: selectedArea === area ? 'var(--theme-primary)' : undefined,
                   color: selectedArea === area ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
                 }}
               >
@@ -557,9 +557,9 @@ export default function FaceManagementPage() {
           {/* 新建按钮 */}
           <button
             onClick={() => { setIsCreating(true); setSelectedFace(null); setMobileShowDetail(true); setFaceFormErrors({}) }}
-            className="w-full mb-2 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
+            className={`w-full mb-2 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] ${isCreating ? '' : 'glass-light'}`}
             style={{
-              backgroundColor: isCreating ? 'var(--theme-primary)' : 'var(--theme-surface-variant)',
+              backgroundColor: isCreating ? 'var(--theme-primary)' : undefined,
               color: isCreating ? 'var(--theme-on-primary)' : 'var(--theme-on-surface)',
             }}
           >
@@ -587,14 +587,13 @@ export default function FaceManagementPage() {
                   onClick={() => { setSelectedFace(face); setIsCreating(false); setIsRenaming(false); setMobileShowDetail(true) }}
                   className={`
                     w-full text-left p-3 transition-all duration-200 active:scale-[0.98]
-                    ${selectedFace?.faceId === face.faceId && !isCreating ? 'ring-2' : ''}
+                    ${selectedFace?.faceId === face.faceId && !isCreating ? 'ring-2' : 'glass'}
                   `}
                   style={{
                     backgroundColor: selectedFace?.faceId === face.faceId && !isCreating
                       ? 'color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface))'
-                      : 'var(--theme-surface)',
+                      : undefined,
                     borderRadius: 'var(--theme-radius-xl)',
-                    boxShadow: 'var(--theme-shadow-sm)',
                     // @ts-expect-error -- CSS custom properties
                     '--tw-ring-color': 'var(--theme-primary)',
                   }}
@@ -639,7 +638,7 @@ export default function FaceManagementPage() {
       ) : isCreating ? (
         /* 新建岩面 */
         <div className="space-y-4 animate-fade-in-up">
-          <div className="p-4" style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-xl)' }}>
+          <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
             <h3 className="font-semibold mb-4" style={{ color: 'var(--theme-on-surface)' }}>新建岩面</h3>
 
             {/* Area 选择 */}
@@ -689,7 +688,7 @@ export default function FaceManagementPage() {
           </div>
 
           {/* 图片上传区 */}
-          <div className="p-4" style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-xl)' }}>
+          <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
             <h3 className="font-semibold mb-3" style={{ color: 'var(--theme-on-surface)' }}>岩面照片</h3>
             {!previewUrl ? (
               <div
@@ -761,7 +760,7 @@ export default function FaceManagementPage() {
           </div>
 
           {/* 岩面信息 */}
-          <div className="p-4" style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-xl)' }}>
+          <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
             <div className="flex items-center justify-between mb-3 gap-2">
               {isRenaming ? (
                 <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -847,7 +846,7 @@ export default function FaceManagementPage() {
           </button>
 
           {/* 更换照片 */}
-          <div className="p-4" style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-xl)' }}>
+          <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
             <h3 className="font-semibold mb-3" style={{ color: 'var(--theme-on-surface)' }}>更换照片</h3>
             {!previewUrl ? (
               <div
@@ -1026,8 +1025,8 @@ export default function FaceManagementPage() {
               </div>
               {affectedRoutes.length > 0 && (
                 <div
-                  className="mb-5 p-3 space-y-2"
-                  style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-lg)' }}
+                  className="glass-light mb-5 p-3 space-y-2"
+                  style={{ borderRadius: 'var(--theme-radius-lg)' }}
                 >
                   <p className="text-xs font-medium" style={{ color: 'var(--theme-warning)' }}>
                     以下 {affectedRoutes.length} 条线路有 Topo 路线标注：
@@ -1072,8 +1071,8 @@ export default function FaceManagementPage() {
               )}
               <div className="flex gap-3">
                 <button
-                  className="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
-                  style={{ backgroundColor: 'var(--theme-surface-variant)', color: 'var(--theme-on-surface)' }}
+                  className="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98] glass-light"
+                  style={{ color: 'var(--theme-on-surface)' }}
                   onClick={() => { setShowOverwriteConfirm(false); setClearTopoOnUpload(false) }}
                 >
                   取消
@@ -1115,8 +1114,8 @@ export default function FaceManagementPage() {
               </div>
               {affectedRoutes.length > 0 && (
                 <div
-                  className="mb-5 p-3 space-y-1.5"
-                  style={{ backgroundColor: 'var(--theme-surface-variant)', borderRadius: 'var(--theme-radius-lg)' }}
+                  className="glass-light mb-5 p-3 space-y-1.5"
+                  style={{ borderRadius: 'var(--theme-radius-lg)' }}
                 >
                   <p className="text-xs font-medium mb-2" style={{ color: 'var(--theme-error)' }}>
                     以下 {affectedRoutes.length} 条线路的 Topo 路线标注将被清除：
@@ -1140,8 +1139,8 @@ export default function FaceManagementPage() {
               )}
               <div className="flex gap-3">
                 <button
-                  className="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
-                  style={{ backgroundColor: 'var(--theme-surface-variant)', color: 'var(--theme-on-surface)' }}
+                  className="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98] glass-light"
+                  style={{ color: 'var(--theme-on-surface)' }}
                   onClick={() => setShowDeleteConfirm(false)}
                   disabled={isDeleting}
                 >

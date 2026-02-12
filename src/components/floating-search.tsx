@@ -16,12 +16,9 @@ export function FloatingSearch({
     <div className="fixed bottom-20 left-4 right-4 desktop-center-padded z-40">
       <button
         onClick={onClick}
-        className="w-full h-12 flex items-center gap-3 px-4 active:scale-[0.98]"
+        className="w-full h-12 flex items-center gap-3 px-4 active:scale-[0.98] glass-md"
         style={{
-          backgroundColor: 'var(--theme-surface)',
-          border: '1px solid var(--theme-outline)',
           borderRadius: 'var(--theme-radius-full)',
-          boxShadow: 'var(--theme-shadow-lg)',
           transition: 'var(--theme-transition)',
         }}
       >

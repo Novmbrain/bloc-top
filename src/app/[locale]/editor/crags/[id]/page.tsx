@@ -329,9 +329,8 @@ export default function CragEditPage() {
 
         {/* ==================== 1. 基本信息 ==================== */}
         <div
-          className="p-4 space-y-3"
+          className="glass-light p-4 space-y-3"
           style={{
-            backgroundColor: 'var(--theme-surface-variant)',
             borderRadius: 'var(--theme-radius-xl)',
           }}
         >
@@ -442,9 +441,8 @@ export default function CragEditPage() {
 
         {/* ==================== 2. 位置 ==================== */}
         <div
-          className="p-4 space-y-3"
+          className="glass-light p-4 space-y-3"
           style={{
-            backgroundColor: 'var(--theme-surface-variant)',
             borderRadius: 'var(--theme-radius-xl)',
           }}
         >
@@ -519,9 +517,8 @@ export default function CragEditPage() {
 
         {/* ==================== 3. 详情 ==================== */}
         <div
-          className="p-4 space-y-3"
+          className="glass-light p-4 space-y-3"
           style={{
-            backgroundColor: 'var(--theme-surface-variant)',
             borderRadius: 'var(--theme-radius-xl)',
           }}
         >
@@ -568,9 +565,8 @@ export default function CragEditPage() {
         {/* ==================== 4. 封面图管理 (仅编辑模式) ==================== */}
         {!isCreateMode && (
           <div
-            className="p-4 space-y-3"
+            className="glass-light p-4 space-y-3"
             style={{
-              backgroundColor: 'var(--theme-surface-variant)',
               borderRadius: 'var(--theme-radius-xl)',
             }}
           >

@@ -94,10 +94,9 @@ export function RouteFilterBar({
           </p>
           <button
             onClick={onToggleSort}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors"
+            className="flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors glass-light"
             style={{
               color: 'var(--theme-on-surface-variant)',
-              backgroundColor: 'var(--theme-surface-variant)',
               borderRadius: 'var(--theme-radius-full)',
             }}
             aria-label={sortDirection === 'asc' ? sortAscHint : sortDescHint}

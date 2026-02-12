@@ -235,12 +235,12 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
           className="flex-shrink-0 flex flex-col items-center gap-1 transition-all active:scale-95"
         >
           <div
-            className="w-16 h-12 flex items-center justify-center text-xs font-medium"
+            className={`w-16 h-12 flex items-center justify-center text-xs font-medium ${!selectedFace ? '' : 'glass-light'}`}
             style={{
               borderRadius: 'var(--theme-radius-md)',
               backgroundColor: !selectedFace
                 ? 'var(--theme-primary)'
-                : 'var(--theme-surface-variant)',
+                : undefined,
               color: !selectedFace
                 ? 'var(--theme-on-primary)'
                 : 'var(--theme-on-surface-variant)',

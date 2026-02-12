@@ -61,7 +61,9 @@ export default function OfflineIndicator() {
     <div
       className="fixed top-0 left-0 right-0 desktop-center-full z-50 animate-fade-in-up"
       style={{
-        backgroundColor: 'var(--theme-warning)',
+        background: 'color-mix(in srgb, var(--theme-warning) 85%, transparent)',
+        WebkitBackdropFilter: 'blur(var(--glass-blur-sm))',
+        backdropFilter: 'blur(var(--glass-blur-sm))',
         color: 'white',
         transition: 'var(--theme-transition)',
       }}

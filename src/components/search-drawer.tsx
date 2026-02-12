@@ -114,9 +114,8 @@ export function SearchDrawer({
               placeholder={t('placeholder')}
               value={searchQuery}
               onChange={(value) => onSearchChange(value)}
-              className="h-11"
+              className="h-11 glass-light"
               style={{
-                backgroundColor: 'var(--theme-surface-variant)',
                 borderRadius: 'var(--theme-radius-full)',
               }}
             />
@@ -147,11 +146,9 @@ export function SearchDrawer({
                     <button
                       key={route.id}
                       onClick={() => handleRouteClick(route)}
-                      className="w-full flex items-center p-3 transition-all active:scale-[0.98] animate-fade-in-up text-left"
+                      className="w-full flex items-center p-3 transition-all active:scale-[0.98] animate-fade-in-up text-left glass"
                       style={{
-                        backgroundColor: 'var(--theme-surface)',
                         borderRadius: 'var(--theme-radius-xl)',
-                        boxShadow: 'var(--theme-shadow-sm)',
                         animationDelay: `${index * 30}ms`,
                       }}
                     >

@@ -47,9 +47,8 @@ export default function TopoEditorPage() {
     >
       {/* Header */}
       <header
-        className="sticky top-0 z-40 px-4 lg:px-6 py-3 backdrop-blur-xl"
+        className="glass-heavy sticky top-0 z-40 px-4 lg:px-6 py-3"
         style={{
-          backgroundColor: 'color-mix(in srgb, var(--theme-surface) 85%, transparent)',
           borderBottom: '1px solid var(--theme-outline-variant)',
         }}
       >
@@ -84,11 +83,9 @@ export default function TopoEditorPage() {
             <Link
               key={card.href}
               href={card.href}
-              className="group block p-6 transition-all duration-300 active:scale-[0.98] hover:scale-[1.02]"
+              className="glass group block p-6 transition-all duration-300 active:scale-[0.98] hover:scale-[1.02]"
               style={{
-                backgroundColor: 'var(--theme-surface-variant)',
                 borderRadius: 'var(--theme-radius-xl)',
-                boxShadow: 'var(--theme-shadow-md)',
               }}
             >
               <div

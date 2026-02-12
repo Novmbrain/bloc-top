@@ -240,9 +240,8 @@ export default function LoginPage() {
               {/* Passkey button */}
               <button
                 onClick={handlePasskeyLogin}
-                className="w-full flex items-center justify-center gap-2 p-3.5 font-medium transition-all active:scale-[0.98]"
+                className="glass w-full flex items-center justify-center gap-2 p-3.5 font-medium transition-all active:scale-[0.98]"
                 style={{
-                  backgroundColor: 'var(--theme-surface-variant)',
                   color: 'var(--theme-on-surface)',
                   borderRadius: 'var(--theme-radius-lg)',
                 }}

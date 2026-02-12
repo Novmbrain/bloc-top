@@ -29,13 +29,13 @@ export function FilterChip({
         'active:scale-95',
         selected
           ? 'text-[var(--theme-on-primary)]'
-          : 'text-[var(--theme-on-surface-variant)] hover:bg-[var(--theme-outline-variant)]',
+          : 'glass-light text-[var(--theme-on-surface-variant)] hover:bg-[var(--theme-outline-variant)]',
         className
       )}
       style={{
         backgroundColor: selected
           ? (color || 'var(--theme-primary)')
-          : 'var(--theme-surface-variant)',
+          : undefined,
         borderRadius: 'var(--theme-radius-full)',
         boxShadow: selected ? 'var(--theme-shadow-sm)' : undefined,
         transition: 'var(--theme-transition)',

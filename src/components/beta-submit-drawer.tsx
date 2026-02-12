@@ -204,9 +204,8 @@ export function BetaSubmitDrawer({
               value={url}
               onChange={handleUrlChange}
               placeholder={t('urlPlaceholder')}
-              className="w-full pl-10 pr-4 py-3 text-sm outline-none"
+              className="w-full pl-10 pr-4 py-3 text-sm outline-none glass-light"
               style={{
-                backgroundColor: 'var(--theme-surface-variant)',
                 borderRadius: 'var(--theme-radius-lg)',
                 color: 'var(--theme-on-surface)',
               }}
@@ -246,9 +245,8 @@ export function BetaSubmitDrawer({
               value={nickname}
               onChange={setNickname}
               placeholder={t('nicknamePlaceholder')}
-              className="w-full pl-10 pr-4 py-3 text-sm outline-none"
+              className="w-full pl-10 pr-4 py-3 text-sm outline-none glass-light"
               style={{
-                backgroundColor: 'var(--theme-surface-variant)',
                 borderRadius: 'var(--theme-radius-lg)',
                 color: 'var(--theme-on-surface)',
               }}
@@ -278,9 +276,8 @@ export function BetaSubmitDrawer({
                 value={height}
                 onChange={(e) => setHeight(e.target.value)}
                 placeholder={t('heightPlaceholder')}
-                className="w-full pl-9 pr-10 py-3 text-sm outline-none"
+                className="w-full pl-9 pr-10 py-3 text-sm outline-none glass-light"
                 style={{
-                  backgroundColor: 'var(--theme-surface-variant)',
                   borderRadius: 'var(--theme-radius-lg)',
                   color: 'var(--theme-on-surface)',
                 }}
@@ -307,9 +304,8 @@ export function BetaSubmitDrawer({
                 value={reach}
                 onChange={(e) => setReach(e.target.value)}
                 placeholder={t('reachPlaceholder')}
-                className="w-full pl-9 pr-10 py-3 text-sm outline-none"
+                className="w-full pl-9 pr-10 py-3 text-sm outline-none glass-light"
                 style={{
-                  backgroundColor: 'var(--theme-surface-variant)',
                   borderRadius: 'var(--theme-radius-lg)',
                   color: 'var(--theme-on-surface)',
                 }}

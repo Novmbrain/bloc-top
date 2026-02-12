@@ -21,12 +21,12 @@ export function WeatherBadge({ temperature, weather, className, style }: Weather
     <div
       className={cn(
         'flex items-center gap-1 px-2 py-1',
-        'bg-black/50 backdrop-blur-sm rounded-full',
+        'glass-light rounded-full',
         className
       )}
       style={style}
     >
-      <span className="text-white text-sm font-medium">{temperature}°</span>
+      <span className="text-sm font-medium" style={{ color: 'var(--theme-on-surface)' }}>{temperature}°</span>
       <span className="text-sm">{icon}</span>
     </div>
   )

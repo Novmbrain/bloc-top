@@ -31,14 +31,13 @@ export function RouteCard({
         group relative w-full text-left overflow-hidden
         transition-all duration-300 ease-out
         active:scale-[0.98]
-        ${isSelected ? 'ring-2 ring-offset-2' : ''}
+        ${isSelected ? 'ring-2 ring-offset-2' : 'glass'}
       `}
       style={{
         backgroundColor: isSelected
           ? 'color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface))'
-          : 'var(--theme-surface)',
+          : undefined,
         borderRadius: 'var(--theme-radius-xl)',
-        boxShadow: isSelected ? 'var(--theme-shadow-md)' : 'var(--theme-shadow-sm)',
         // @ts-expect-error -- CSS custom properties for ring
         '--tw-ring-color': gradeColor,
         '--tw-ring-offset-color': 'var(--theme-surface)',
@@ -59,12 +58,12 @@ export function RouteCard({
           className={`
             relative w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
             transition-all duration-300
-            ${hasTopo ? 'animate-pulse-subtle' : ''}
+            ${hasTopo ? 'animate-pulse-subtle' : 'glass-light'}
           `}
           style={{
             backgroundColor: hasTopo
               ? 'color-mix(in srgb, var(--theme-success) 15%, var(--theme-surface))'
-              : 'var(--theme-surface-variant)',
+              : undefined,
           }}
         >
           {hasTopo ? (

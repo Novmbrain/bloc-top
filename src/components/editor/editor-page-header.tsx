@@ -29,9 +29,8 @@ export function EditorPageHeader({
 }: EditorPageHeaderProps) {
   return (
     <header
-      className="sticky top-0 z-40 px-4 lg:px-6 py-3 backdrop-blur-xl"
+      className="glass-heavy sticky top-0 z-40 px-4 lg:px-6 py-3"
       style={{
-        backgroundColor: 'color-mix(in srgb, var(--theme-surface) 85%, transparent)',
         borderBottom: '1px solid var(--theme-outline-variant)',
       }}
     >
