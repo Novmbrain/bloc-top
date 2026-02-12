@@ -33,6 +33,15 @@ export interface PrefectureConfig {
   sortOrder?: number        // 显示排序
 }
 
+/**
+ * 城市选择状态（支持地级市聚合浏览）
+ * - type: 'city' → 选中单个区/县
+ * - type: 'prefecture' → 选中整个地级市（聚合其下所有区/县）
+ */
+export type CitySelection =
+  | { type: 'city'; id: string }
+  | { type: 'prefecture'; id: string }
+
 // ==================== Topo 编辑器类型 ====================
 
 /**

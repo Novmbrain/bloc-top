@@ -5,7 +5,7 @@
  * 数据由服务端组件从 DB 获取后通过 props 传递给客户端。
  */
 
-import type { CityConfig, PrefectureConfig, Coordinates } from '@/types'
+import type { CityConfig, PrefectureConfig, Coordinates, CitySelection } from '@/types'
 
 // ==================== 常量 ====================
 
@@ -92,4 +92,41 @@ export function findNearestCity(cities: CityConfig[], coords: Coordinates): City
   }
 
   return nearest
+}
+
+// ==================== CitySelection 序列化 ====================
+
+/**
+ * 解析 cookie/localStorage 中的选择值，兼容旧格式纯字符串
+ *
+ * - JSON 格式 `{"type":"city","id":"luoyuan"}` → 直接返回
+ * - 旧格式纯字符串 `"luoyuan"` → 包装为 `{ type: 'city', id: 'luoyuan' }`
+ * - 空值 → fallback 为默认城市
+ */
+export function parseCitySelection(raw: string | undefined): CitySelection {
+  if (!raw) return { type: 'city', id: DEFAULT_CITY_ID }
+
+  // cookie 值可能经过 encodeURIComponent 编码，先尝试解码
+  let decoded = raw
+  try {
+    decoded = decodeURIComponent(raw)
+  } catch {
+    // 解码失败（非合法编码）→ 使用原值
+  }
+
+  try {
+    const parsed = JSON.parse(decoded)
+    if (parsed && typeof parsed === 'object' && parsed.type && parsed.id) {
+      return parsed as CitySelection
+    }
+  } catch {
+    // JSON.parse 失败 → 当作旧格式纯字符串
+  }
+
+  return { type: 'city', id: decoded }
+}
+
+/** 序列化选择对象为字符串（存入 cookie/localStorage） */
+export function serializeCitySelection(selection: CitySelection): string {
+  return JSON.stringify(selection)
 }

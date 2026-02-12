@@ -4,19 +4,21 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronDown, ChevronRight, Check, MapPin } from 'lucide-react'
 import { findPrefectureByDistrictId, findCityById } from '@/lib/city-utils'
-import type { CityConfig, PrefectureConfig } from '@/types'
+import type { CityConfig, PrefectureConfig, CitySelection } from '@/types'
 
 // ==================== 类型 ====================
 
 interface CitySelectorProps {
-  /** 当前选中的城市 */
+  /** 当前选中的城市（兼容字段，用于标题显示） */
   currentCity: CityConfig
+  /** 当前选择状态（区分城市/地级市） */
+  currentSelection: CitySelection
   /** 所有可选城市 */
   cities: CityConfig[]
   /** 所有地级市配置 */
   prefectures: PrefectureConfig[]
-  /** 城市切换回调 */
-  onCityChange: (cityId: string) => void
+  /** 选择切换回调（支持城市和地级市） */
+  onSelectionChange: (selection: CitySelection) => void
   /** 是否显示首次访问提示 */
   showHint?: boolean
   /** 关闭提示回调 */
@@ -29,14 +31,17 @@ interface CitySelectorProps {
  * 城市选择器组件
  *
  * 支持两级选择：地级市 → 区/县
- * - 单区地级市（如厦门）：点击直接选中
- * - 多区地级市（如福州）：点击展开子区域列表
+ * - 单区地级市（如厦门）：点击直接选中该区
+ * - 多区地级市（如福州）：
+ *   - 点击名称 → 选中整个地级市（聚合浏览）
+ *   - 点击箭头 → 展开子区域列表
  */
 export function CitySelector({
   currentCity,
+  currentSelection,
   cities,
   prefectures,
-  onCityChange,
+  onSelectionChange,
   showHint = false,
   onDismissHint,
 }: CitySelectorProps) {
@@ -64,11 +69,16 @@ export function CitySelector({
     setIsOpen(willOpen)
     // 打开下拉时，自动展开当前选中区域的父级地级市
     if (willOpen) {
-      const pref = findPrefectureByDistrictId(prefectures, currentCity.id)
-      if (pref && pref.districts.length > 1) {
-        setExpandedPrefecture(pref.id)
+      if (currentSelection.type === 'city') {
+        const pref = findPrefectureByDistrictId(prefectures, currentSelection.id)
+        if (pref && pref.districts.length > 1) {
+          setExpandedPrefecture(pref.id)
+        } else {
+          setExpandedPrefecture(null)
+        }
       } else {
-        setExpandedPrefecture(null)
+        // 地级市选中时，展开该地级市
+        setExpandedPrefecture(currentSelection.id)
       }
     }
     if (showHint && onDismissHint) {
@@ -76,17 +86,33 @@ export function CitySelector({
     }
   }
 
-  const handleSelect = (cityId: string) => {
-    onCityChange(cityId)
+  const handleSelectCity = (cityId: string) => {
+    onSelectionChange({ type: 'city', id: cityId })
     setIsOpen(false)
   }
 
-  // 标题显示：地级市 · 区名（避免 "厦门 · 厦门"）
-  const prefecture = findPrefectureByDistrictId(prefectures, currentCity.id)
-  const titleText =
-    prefecture && prefecture.name !== currentCity.name
+  const handleSelectPrefecture = (prefId: string) => {
+    onSelectionChange({ type: 'prefecture', id: prefId })
+    setIsOpen(false)
+  }
+
+  // 标题显示逻辑
+  const getTitleText = () => {
+    if (currentSelection.type === 'prefecture') {
+      // 地级市选中 → 显示地级市名
+      const pref = prefectures.find((p) => p.id === currentSelection.id)
+      return pref?.name ?? currentCity.name
+    }
+    // 区/县选中 → 显示 "地级市 · 区名"（避免 "厦门 · 厦门"）
+    const prefecture = findPrefectureByDistrictId(prefectures, currentCity.id)
+    return prefecture && prefecture.name !== currentCity.name
       ? `${prefecture.name} · ${currentCity.name}`
       : currentCity.name
+  }
+
+  // 获取地级市翻译 key
+  const getPrefTranslationKey = (prefId: string) =>
+    `prefecture${prefId.charAt(0).toUpperCase()}${prefId.slice(1)}` as Parameters<typeof t>[0]
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -99,7 +125,7 @@ export function CitySelector({
           className="text-4xl font-bold tracking-wide leading-tight"
           style={{ color: 'var(--theme-on-surface)' }}
         >
-          {titleText}
+          {getTitleText()}
         </h1>
         <ChevronDown
           className="w-6 h-6 mt-1 transition-transform duration-200"
@@ -134,16 +160,17 @@ export function CitySelector({
             const isExpanded = expandedPrefecture === pref.id
 
             if (isSingleDistrict) {
-              // 单区地级市：直接选中
+              // 单区地级市：直接选中区/县
               const districtId = pref.districts[0]
               const city = findCityById(cities, districtId)
               if (!city) return null
-              const isSelected = districtId === currentCity.id
+              const isSelected =
+                currentSelection.type === 'city' && currentSelection.id === districtId
 
               return (
                 <button
                   key={pref.id}
-                  onClick={() => handleSelect(districtId)}
+                  onClick={() => handleSelectCity(districtId)}
                   disabled={!city.available && !isSelected}
                   className="w-full px-4 py-2.5 flex items-center justify-between text-left transition-colors"
                   style={{
@@ -158,7 +185,7 @@ export function CitySelector({
                 >
                   <span className="flex items-center gap-2">
                     <span className="font-medium">
-                      {t(`prefecture${pref.id.charAt(0).toUpperCase()}${pref.id.slice(1)}` as Parameters<typeof t>[0])}
+                      {t(getPrefTranslationKey(pref.id))}
                     </span>
                     {!city.available && (
                       <span
@@ -181,39 +208,67 @@ export function CitySelector({
               )
             }
 
-            // 多区地级市：展开/折叠
+            // 多区地级市：分双操作区域
+            const isPrefSelected =
+              currentSelection.type === 'prefecture' && currentSelection.id === pref.id
+
             return (
               <div key={pref.id}>
-                <button
-                  onClick={() =>
-                    setExpandedPrefecture(isExpanded ? null : pref.id)
-                  }
-                  className="w-full px-4 py-2.5 flex items-center justify-between text-left transition-colors"
-                  style={{ color: 'var(--theme-on-surface)' }}
+                {/* 地级市行：左侧名称区 + 右侧箭头区 */}
+                <div
+                  className="flex items-center transition-colors"
+                  style={{
+                    backgroundColor: isPrefSelected
+                      ? 'color-mix(in srgb, var(--theme-primary) 12%, transparent)'
+                      : 'transparent',
+                  }}
                 >
-                  <span className="font-medium">
-                    {t(`prefecture${pref.id.charAt(0).toUpperCase()}${pref.id.slice(1)}` as Parameters<typeof t>[0])}
-                  </span>
-                  <ChevronRight
-                    className="w-4 h-4 transition-transform duration-200"
-                    style={{
-                      color: 'var(--theme-on-surface-variant)',
-                      transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                    }}
-                  />
-                </button>
+                  {/* 左侧：点击选中整个地级市 */}
+                  <button
+                    onClick={() => handleSelectPrefecture(pref.id)}
+                    className="flex-1 px-4 py-2.5 flex items-center gap-2 text-left transition-colors"
+                    style={{ color: 'var(--theme-on-surface)' }}
+                  >
+                    <span className="font-medium">
+                      {t(getPrefTranslationKey(pref.id))}
+                    </span>
+                    {isPrefSelected && (
+                      <Check
+                        className="w-4 h-4"
+                        style={{ color: 'var(--theme-primary)' }}
+                      />
+                    )}
+                  </button>
+
+                  {/* 右侧：展开/折叠箭头 */}
+                  <button
+                    onClick={() =>
+                      setExpandedPrefecture(isExpanded ? null : pref.id)
+                    }
+                    className="px-3 py-2.5 transition-colors"
+                    style={{ color: 'var(--theme-on-surface-variant)' }}
+                  >
+                    <ChevronRight
+                      className="w-4 h-4 transition-transform duration-200"
+                      style={{
+                        transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                      }}
+                    />
+                  </button>
+                </div>
 
                 {/* 展开的子区域列表 */}
                 {isExpanded &&
                   pref.districts.map((districtId) => {
                     const city = findCityById(cities, districtId)
                     if (!city) return null
-                    const isSelected = districtId === currentCity.id
+                    const isSelected =
+                      currentSelection.type === 'city' && currentSelection.id === districtId
 
                     return (
                       <button
                         key={districtId}
-                        onClick={() => handleSelect(districtId)}
+                        onClick={() => handleSelectCity(districtId)}
                         disabled={!city.available && !isSelected}
                         className="w-full pl-8 pr-4 py-2 flex items-center justify-between text-left transition-colors"
                         style={{

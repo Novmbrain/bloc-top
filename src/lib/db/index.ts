@@ -382,6 +382,76 @@ async function _getRoutesByCityId(cityId: string): Promise<Route[]> {
 export const getRoutesByCityId = cache(_getRoutesByCityId)
 
 /**
+ * 根据地级市 ID 获取所有岩场（聚合该地级市下所有区/县）
+ */
+async function _getCragsByPrefectureId(prefectureId: string): Promise<Crag[]> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const prefDoc = await db.collection('prefectures').findOne({ _id: toMongoId(prefectureId) })
+    if (!prefDoc) return []
+
+    const districts = prefDoc.districts as string[]
+    const docs = await db
+      .collection('crags')
+      .find({ cityId: { $in: districts } })
+      .sort({ cityId: 1, createdAt: -1 })
+      .toArray()
+
+    log.info(`Fetched ${docs.length} crags for prefecture: ${prefectureId}`, {
+      action: 'getCragsByPrefectureId',
+      duration: Date.now() - start,
+      metadata: { prefectureId, districts },
+    })
+
+    return docs.map(toCrag)
+  } catch (error) {
+    log.error(`Failed to fetch crags for prefecture: ${prefectureId}`, error, {
+      action: 'getCragsByPrefectureId',
+      duration: Date.now() - start,
+      metadata: { prefectureId },
+    })
+    throw error
+  }
+}
+export const getCragsByPrefectureId = cache(_getCragsByPrefectureId)
+
+/**
+ * 根据地级市 ID 获取所有线路（聚合该地级市下所有岩场的线路）
+ */
+async function _getRoutesByPrefectureId(prefectureId: string): Promise<Route[]> {
+  const start = Date.now()
+
+  try {
+    const crags = await getCragsByPrefectureId(prefectureId)
+    const cragIds = crags.map((c) => c.id)
+
+    const db = await getDatabase()
+    const docs = await db
+      .collection('routes')
+      .find({ cragId: { $in: cragIds } })
+      .toArray()
+
+    log.info(`Fetched ${docs.length} routes for prefecture: ${prefectureId}`, {
+      action: 'getRoutesByPrefectureId',
+      duration: Date.now() - start,
+      metadata: { prefectureId, cragCount: cragIds.length },
+    })
+
+    return docs.map(toRoute)
+  } catch (error) {
+    log.error(`Failed to fetch routes for prefecture: ${prefectureId}`, error, {
+      action: 'getRoutesByPrefectureId',
+      duration: Date.now() - start,
+      metadata: { prefectureId },
+    })
+    throw error
+  }
+}
+export const getRoutesByPrefectureId = cache(_getRoutesByPrefectureId)
+
+/**
  * 获取指定岩场的线路数量 (轻量查询，用于 stale 检测)
  */
 export async function getRouteCountByCragId(cragId: string): Promise<number> {

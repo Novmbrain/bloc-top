@@ -1,8 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { DEFAULT_CITY_ID, CITY_COOKIE_NAME, isCityValid } from '@/lib/city-utils'
-import type { CityConfig } from '@/types'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import {
+  DEFAULT_CITY_ID,
+  CITY_COOKIE_NAME,
+  isCityValid,
+  parseCitySelection,
+  serializeCitySelection,
+} from '@/lib/city-utils'
+import type { CityConfig, CitySelection, PrefectureConfig } from '@/types'
 
 // ==================== 常量 ====================
 
@@ -21,24 +27,29 @@ const FIRST_VISIT_KEY = 'city-first-visit'
 const SESSION_VISIT_KEY = 'session-visit-recorded' // sessionStorage: 单会话去重
 
 /** 同步写入 cookie，供服务端 Server Component 读取 */
-function setCityCookie(id: string) {
-  document.cookie = `${CITY_COOKIE_NAME}=${id}; path=/; max-age=31536000; samesite=lax`
+function setCityCookie(value: string) {
+  document.cookie = `${CITY_COOKIE_NAME}=${encodeURIComponent(value)}; path=/; max-age=31536000; samesite=lax`
 }
 
 // ==================== 类型 ====================
 
 interface UseCitySelectionOptions {
   cities: CityConfig[]
+  prefectures: PrefectureConfig[]
 }
 
 interface UseCitySelectionReturn {
-  /** 当前选中的城市 ID */
+  /** 当前选择状态（城市或地级市） */
+  selection: CitySelection
+  /** 兼容字段：当前有效的城市 ID（地级市模式下取 defaultDistrict） */
   cityId: string
-  /** 当前选中的城市配置 */
+  /** 兼容字段：当前有效的城市配置 */
   city: CityConfig
   /** 所有可用城市 */
   cities: CityConfig[]
-  /** 切换城市 */
+  /** 切换选择（支持城市和地级市） */
+  setSelection: (sel: CitySelection) => void
+  /** 兼容方法：切换城市（包装为 { type: 'city', id }） */
   setCity: (id: string) => void
   /** 是否正在加载（首次智能选择中） */
   isLoading: boolean
@@ -54,27 +65,30 @@ interface UseCitySelectionReturn {
  * 城市选择 Hook
  *
  * 功能：
- * 1. 首次访问时通过 IP 定位智能选择城市
- * 2. 用户选择后存入 localStorage 持久化
- * 3. 提供首次访问标记，用于显示切换提示
- *
- * @param options.cities 城市列表（从服务端 props 传入）
+ * 1. 支持区/县级和地级市级两种选择粒度
+ * 2. 首次访问时通过 IP 定位智能选择城市
+ * 3. 用户选择后存入 localStorage 持久化（JSON 格式，兼容旧纯字符串）
+ * 4. 提供首次访问标记，用于显示切换提示
  */
-export function useCitySelection({ cities }: UseCitySelectionOptions): UseCitySelectionReturn {
-  const [cityId, setCityId] = useState<string>(DEFAULT_CITY_ID)
+export function useCitySelection({ cities, prefectures }: UseCitySelectionOptions): UseCitySelectionReturn {
+  const [selection, setSelectionState] = useState<CitySelection>({ type: 'city', id: DEFAULT_CITY_ID })
   const [isLoading, setIsLoading] = useState(true)
   const [isFirstVisit, setIsFirstVisit] = useState(false)
 
   // 初始化：读取 localStorage 或智能检测
   useEffect(() => {
     async function init() {
-      const storedCity = localStorage.getItem(STORAGE_KEY)
+      const storedRaw = localStorage.getItem(STORAGE_KEY)
       const visited = localStorage.getItem(FIRST_VISIT_KEY)
       const sessionVisited = sessionStorage.getItem(SESSION_VISIT_KEY)
 
-      // 优化：老用户 + 本会话已记录 → 跳过 geo API 调用
-      const hasValidCachedCity = storedCity && isCityValid(cities, storedCity)
-      const needGeoApi = !sessionVisited || !hasValidCachedCity
+      // 解析存储值（自动兼容旧格式纯字符串）
+      const storedSelection = parseCitySelection(storedRaw ?? undefined)
+
+      // 验证缓存的选择是否有效
+      const hasValidCached = storedRaw && isSelectionValid(storedSelection, cities, prefectures)
+
+      const needGeoApi = !sessionVisited || !hasValidCached
 
       let geoData: { cityId?: string; province?: string } | null = null
 
@@ -101,42 +115,58 @@ export function useCitySelection({ cities }: UseCitySelectionOptions): UseCitySe
         localStorage.setItem(FIRST_VISIT_KEY, 'true')
       }
 
-      // 处理城市选择
-      if (hasValidCachedCity) {
-        setCityId(storedCity)
-        setCityCookie(storedCity)
+      // 处理选择
+      if (hasValidCached) {
+        setSelectionState(storedSelection)
+        setCityCookie(serializeCitySelection(storedSelection))
       } else if (geoData?.cityId && isCityValid(cities, geoData.cityId)) {
-        setCityId(geoData.cityId)
-        localStorage.setItem(STORAGE_KEY, geoData.cityId)
-        setCityCookie(geoData.cityId)
+        const geoSelection: CitySelection = { type: 'city', id: geoData.cityId }
+        setSelectionState(geoSelection)
+        localStorage.setItem(STORAGE_KEY, serializeCitySelection(geoSelection))
+        setCityCookie(serializeCitySelection(geoSelection))
       }
 
       setIsLoading(false)
     }
 
     init()
-  }, [cities])
+  }, [cities, prefectures])
 
-  // 切换城市
-  const setCity = useCallback((id: string) => {
-    setCityId(id)
-    localStorage.setItem(STORAGE_KEY, id)
-    setCityCookie(id)
+  // 切换选择
+  const setSelection = useCallback((sel: CitySelection) => {
+    setSelectionState(sel)
+    const serialized = serializeCitySelection(sel)
+    localStorage.setItem(STORAGE_KEY, serialized)
+    setCityCookie(serialized)
     setIsFirstVisit(false)
   }, [])
+
+  // 兼容方法：切换单个城市
+  const setCity = useCallback((id: string) => {
+    setSelection({ type: 'city', id })
+  }, [setSelection])
 
   // 关闭首次访问提示
   const dismissFirstVisitHint = useCallback(() => {
     setIsFirstVisit(false)
   }, [])
 
-  // 获取当前城市配置（防御空数组：cities 从 DB 加载前可能为空）
+  // 计算兼容 cityId：地级市模式下取 defaultDistrict
+  const cityId = useMemo(() => {
+    if (selection.type === 'city') return selection.id
+    const pref = prefectures.find((p) => p.id === selection.id)
+    return pref?.defaultDistrict ?? DEFAULT_CITY_ID
+  }, [selection, prefectures])
+
+  // 获取当前城市配置（防御空数组）
   const city = cities.find((c) => c.id === cityId) ?? cities[0] ?? FALLBACK_CITY
 
   return {
+    selection,
     cityId,
     city,
     cities,
+    setSelection,
     setCity,
     isLoading,
     isFirstVisit,
@@ -145,6 +175,16 @@ export function useCitySelection({ cities }: UseCitySelectionOptions): UseCitySe
 }
 
 // ==================== 辅助函数 ====================
+
+/** 验证选择是否有效 */
+function isSelectionValid(
+  sel: CitySelection,
+  cities: CityConfig[],
+  prefectures: PrefectureConfig[],
+): boolean {
+  if (sel.type === 'city') return isCityValid(cities, sel.id)
+  return prefectures.some((p) => p.id === sel.id)
+}
 
 function recordVisit(province?: string): void {
   fetch('/api/visit', {

@@ -8,7 +8,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@/test/utils'
 import { CitySelector } from './city-selector'
-import type { CityConfig, PrefectureConfig } from '@/types'
+import type { CityConfig, PrefectureConfig, CitySelection } from '@/types'
 
 // ==================== 测试数据 ====================
 
@@ -61,11 +61,14 @@ const mockPrefectures: PrefectureConfig[] = [
 // ==================== 测试 ====================
 
 describe('CitySelector', () => {
+  const citySelection: CitySelection = { type: 'city', id: 'luoyuan' }
+
   const defaultProps = {
     currentCity: luoyuanCity,
+    currentSelection: citySelection,
     cities: mockCities,
     prefectures: mockPrefectures,
-    onCityChange: vi.fn(),
+    onSelectionChange: vi.fn(),
   }
 
   beforeEach(() => {
@@ -81,10 +84,27 @@ describe('CitySelector', () => {
     })
 
     it('地级市名等于区名时只显示一次', () => {
-      render(<CitySelector {...defaultProps} currentCity={xiamenCity} />)
+      render(
+        <CitySelector
+          {...defaultProps}
+          currentCity={xiamenCity}
+          currentSelection={{ type: 'city', id: 'xiamen' }}
+        />
+      )
 
       // 厦门市 → 厦门区，名称相同，不重复
       expect(screen.getByText('厦门')).toBeInTheDocument()
+    })
+
+    it('地级市选中时显示地级市名', () => {
+      render(
+        <CitySelector
+          {...defaultProps}
+          currentSelection={{ type: 'prefecture', id: 'fuzhou' }}
+        />
+      )
+
+      expect(screen.getByText('福州')).toBeInTheDocument()
     })
 
     it('应该渲染为可点击的按钮', () => {
@@ -121,7 +141,7 @@ describe('CitySelector', () => {
       fireEvent.click(screen.getByRole('button'))
 
       await waitFor(() => {
-        // currentCity=luoyuan → 福州应自动展开，显示所有子区域
+        // currentSelection=city:luoyuan → 福州应自动展开，显示所有子区域
         expect(screen.getByText('罗源')).toBeInTheDocument()
         expect(screen.getByText('长乐')).toBeInTheDocument()
       })
@@ -203,9 +223,9 @@ describe('CitySelector', () => {
 
   describe('城市选择', () => {
     it('单区地级市点击直接选中', async () => {
-      const onCityChange = vi.fn()
+      const onSelectionChange = vi.fn()
       render(
-        <CitySelector {...defaultProps} onCityChange={onCityChange} />
+        <CitySelector {...defaultProps} onSelectionChange={onSelectionChange} />
       )
 
       fireEvent.click(screen.getByRole('button'))
@@ -214,43 +234,71 @@ describe('CitySelector', () => {
         expect(screen.getByText('prefectureXiamen')).toBeInTheDocument()
       })
 
-      // 厦门是单区地级市，点击直接选中
+      // 厦门是单区地级市，点击直接选中为 city 类型
       fireEvent.click(screen.getByText('prefectureXiamen'))
 
-      expect(onCityChange).toHaveBeenCalledWith('xiamen')
+      expect(onSelectionChange).toHaveBeenCalledWith({ type: 'city', id: 'xiamen' })
     })
 
-    it('多区地级市需展开后选择区域', async () => {
-      const onCityChange = vi.fn()
+    it('多区地级市点击名称应选中整个地级市', async () => {
+      const onSelectionChange = vi.fn()
       render(
         <CitySelector
           {...defaultProps}
           currentCity={xiamenCity}
-          onCityChange={onCityChange}
+          currentSelection={{ type: 'city', id: 'xiamen' }}
+          onSelectionChange={onSelectionChange}
         />
       )
 
       fireEvent.click(screen.getByRole('button'))
 
-      // 先点击福州展开子区域
       await waitFor(() => {
         expect(screen.getByText('prefectureFuzhou')).toBeInTheDocument()
       })
+
+      // 点击福州名称 → 选中整个地级市
       fireEvent.click(screen.getByText('prefectureFuzhou'))
 
-      // 再选择罗源
+      expect(onSelectionChange).toHaveBeenCalledWith({ type: 'prefecture', id: 'fuzhou' })
+    })
+
+    it('展开后选择区域应选中单个城市', async () => {
+      const onSelectionChange = vi.fn()
+      render(
+        <CitySelector
+          {...defaultProps}
+          currentCity={xiamenCity}
+          currentSelection={{ type: 'city', id: 'xiamen' }}
+          onSelectionChange={onSelectionChange}
+        />
+      )
+
+      fireEvent.click(screen.getByRole('button'))
+
+      // 点击福州的箭头展开
+      await waitFor(() => {
+        expect(screen.getByText('prefectureFuzhou')).toBeInTheDocument()
+      })
+
+      // 找到福州行的箭头按钮（ChevronRight）
+      const fuzhouRow = screen.getByText('prefectureFuzhou').closest('div')
+      const arrowButton = fuzhouRow?.parentElement?.querySelector('button:last-child')
+      if (arrowButton) fireEvent.click(arrowButton)
+
+      // 选择罗源
       await waitFor(() => {
         expect(screen.getByText('罗源')).toBeInTheDocument()
       })
       fireEvent.click(screen.getByText('罗源'))
 
-      expect(onCityChange).toHaveBeenCalledWith('luoyuan')
+      expect(onSelectionChange).toHaveBeenCalledWith({ type: 'city', id: 'luoyuan' })
     })
 
     it('选择城市后应关闭下拉菜单', async () => {
-      const onCityChange = vi.fn()
+      const onSelectionChange = vi.fn()
       render(
-        <CitySelector {...defaultProps} onCityChange={onCityChange} />
+        <CitySelector {...defaultProps} onSelectionChange={onSelectionChange} />
       )
 
       fireEvent.click(screen.getByRole('button'))

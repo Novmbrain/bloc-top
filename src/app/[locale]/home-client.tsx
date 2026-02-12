@@ -10,17 +10,18 @@ import { AppTabbar } from '@/components/app-tabbar'
 import { InstallPrompt } from '@/components/install-prompt'
 import { CitySelector } from '@/components/city-selector'
 import { EmptyCity } from '@/components/empty-city'
+import { findCityName } from '@/lib/city-utils'
 import { useRouteSearch } from '@/hooks/use-route-search'
 import { useCitySelection } from '@/hooks/use-city-selection'
 import { useWeather } from '@/hooks/use-weather'
-import type { Crag, Route, CityConfig, PrefectureConfig } from '@/types'
+import type { Crag, Route, CityConfig, PrefectureConfig, CitySelection } from '@/types'
 
 const EMPTY_ROUTES: Route[] = []
 
 interface HomePageClientProps {
   crags: Crag[]
   allRoutes: Route[]
-  serverCityId: string
+  serverSelection: CitySelection
   cities: CityConfig[]
   prefectures: PrefectureConfig[]
 }
@@ -28,7 +29,7 @@ interface HomePageClientProps {
 export default function HomePageClient({
   crags,
   allRoutes,
-  serverCityId,
+  serverSelection,
   cities,
   prefectures,
 }: HomePageClientProps) {
@@ -39,31 +40,34 @@ export default function HomePageClient({
 
   // 城市选择
   const {
+    selection,
     cityId,
     city,
-    setCity,
+    setSelection,
     isLoading,
     isFirstVisit,
     dismissFirstVisitHint,
-  } = useCitySelection({ cities })
+  } = useCitySelection({ cities, prefectures })
 
-  // 城市切换后刷新服务端数据
-  const handleCityChange = (id: string) => {
-    setCity(id)
-    // cookie 已在 setCity 中同步，触发服务端重新渲染
+  // 选择切换后刷新服务端数据
+  const handleSelectionChange = (sel: CitySelection) => {
+    setSelection(sel)
     router.refresh()
   }
 
-  // 首次 hydration 后，如果客户端城市与服务端不一致，自动刷新
+  // 首次 hydration 后，如果客户端选择与服务端不一致，自动刷新
   const hasCheckedRef = useRef(false)
   useEffect(() => {
     if (!isLoading && !hasCheckedRef.current) {
       hasCheckedRef.current = true
-      if (cityId !== serverCityId) {
+      if (
+        selection.type !== serverSelection.type ||
+        selection.id !== serverSelection.id
+      ) {
         router.refresh()
       }
     }
-  }, [isLoading, cityId, serverCityId, router])
+  }, [isLoading, selection, serverSelection, router])
 
   // 获取天气数据 (用于卡片角标，不需要预报，使用城市 adcode)
   const { weather } = useWeather({ adcode: city?.adcode, forecast: false })
@@ -79,6 +83,25 @@ export default function HomePageClient({
     return map
   }, [allRoutes])
 
+  // 地级市模式：按区/县分组展示
+  const cragGroups = useMemo(() => {
+    if (selection.type !== 'prefecture') return null
+    const pref = prefectures.find((p) => p.id === selection.id)
+    if (!pref) return null
+
+    const groups: { districtId: string; districtName: string; crags: Crag[] }[] = []
+    for (const districtId of pref.districts) {
+      const districtCrags = crags.filter((c) => c.cityId === districtId)
+      if (districtCrags.length === 0) continue
+      groups.push({
+        districtId,
+        districtName: findCityName(cities, districtId),
+        crags: districtCrags,
+      })
+    }
+    return groups
+  }, [selection, prefectures, crags, cities])
+
   // 不限制搜索结果数量，由 SearchDrawer 内部控制显示
   const { searchQuery, setSearchQuery, searchResults, clearSearch } =
     useRouteSearch(allRoutes, { limit: 0 })
@@ -87,6 +110,23 @@ export default function HomePageClient({
     setIsSearchOpen(false)
     setTimeout(() => clearSearch(), 300)
   }
+
+  // 渲染岩场卡片列表（复用于两种模式）
+  const renderCragCards = (cragList: Crag[], startIndex = 0) =>
+    cragList.map((crag, i) => (
+      <CragCard
+        key={crag.id}
+        crag={crag}
+        routes={routesByCrag.get(crag.id) || EMPTY_ROUTES}
+        index={startIndex + i}
+        weather={weather}
+      />
+    ))
+
+  // 判断是否有可用数据（地级市模式用 cragGroups，城市模式用 city.available）
+  const hasData = selection.type === 'prefecture'
+    ? crags.length > 0
+    : city.available && crags.length > 0
 
   return (
     <div
@@ -103,9 +143,10 @@ export default function HomePageClient({
             {/* 城市选择器 */}
             <CitySelector
               currentCity={city}
+              currentSelection={selection}
               cities={cities}
               prefectures={prefectures}
-              onCityChange={handleCityChange}
+              onSelectionChange={handleSelectionChange}
               showHint={isFirstVisit}
               onDismissHint={dismissFirstVisitHint}
             />
@@ -124,20 +165,40 @@ export default function HomePageClient({
         {/* PWA 安装提示 - 仅在有岩场数据时显示 */}
         {crags.length > 0 && <InstallPrompt />}
 
-        {/* 根据城市数据可用性显示内容 */}
-        {city.available && crags.length > 0 ? (
+        {/* 根据数据可用性显示内容 */}
+        {hasData ? (
           <>
-            <div className="space-y-3">
-              {crags.map((crag, index) => (
-                <CragCard
-                  key={crag.id}
-                  crag={crag}
-                  routes={routesByCrag.get(crag.id) || EMPTY_ROUTES}
-                  index={index}
-                  weather={weather}
-                />
-              ))}
-            </div>
+            {/* 地级市模式：按区/县分组 */}
+            {cragGroups ? (
+              <div className="space-y-3">
+                {cragGroups.map((group, groupIdx) => {
+                  const startIdx = cragGroups
+                    .slice(0, groupIdx)
+                    .reduce((sum, g) => sum + g.crags.length, 0)
+                  return (
+                    <div key={group.districtId}>
+                      {/* 分组标题 - 仅在多个分组时显示 */}
+                      {cragGroups.length > 1 && (
+                        <h2
+                          className="text-sm font-semibold mt-4 mb-2 first:mt-0"
+                          style={{ color: 'var(--theme-on-surface-variant)' }}
+                        >
+                          {group.districtName}
+                        </h2>
+                      )}
+                      <div className="space-y-3">
+                        {renderCragCards(group.crags, startIdx)}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              /* 城市模式：平铺 */
+              <div className="space-y-3">
+                {renderCragCards(crags)}
+              </div>
+            )}
 
             {/* 底部提示 */}
             <div className="text-center py-4">

@@ -15,6 +15,8 @@ import {
   findPrefectureByDistrictId,
   findCityByAdcode,
   findNearestCity,
+  parseCitySelection,
+  serializeCitySelection,
 } from './city-utils'
 import type { CityConfig, PrefectureConfig } from '@/types'
 
@@ -171,6 +173,63 @@ describe('城市工具函数', () => {
 
     it('无匹配返回 undefined', () => {
       expect(findCityByAdcode(testCities, testPrefectures, '999999')).toBeUndefined()
+    })
+  })
+
+  describe('parseCitySelection', () => {
+    it('解析 JSON 格式的城市选择', () => {
+      const result = parseCitySelection('{"type":"city","id":"luoyuan"}')
+      expect(result).toEqual({ type: 'city', id: 'luoyuan' })
+    })
+
+    it('解析 JSON 格式的地级市选择', () => {
+      const result = parseCitySelection('{"type":"prefecture","id":"fuzhou"}')
+      expect(result).toEqual({ type: 'prefecture', id: 'fuzhou' })
+    })
+
+    it('旧格式纯字符串自动升级为 city 类型', () => {
+      const result = parseCitySelection('luoyuan')
+      expect(result).toEqual({ type: 'city', id: 'luoyuan' })
+    })
+
+    it('空值返回默认城市', () => {
+      expect(parseCitySelection(undefined)).toEqual({ type: 'city', id: DEFAULT_CITY_ID })
+      expect(parseCitySelection('')).toEqual({ type: 'city', id: DEFAULT_CITY_ID })
+    })
+
+    it('无效 JSON 当作纯字符串处理', () => {
+      const result = parseCitySelection('{invalid}')
+      expect(result).toEqual({ type: 'city', id: '{invalid}' })
+    })
+
+    it('缺少 type/id 字段的 JSON 当作纯字符串处理', () => {
+      const result = parseCitySelection('{"name":"test"}')
+      expect(result).toEqual({ type: 'city', id: '{"name":"test"}' })
+    })
+
+    it('URL 编码的 JSON 能正确解析', () => {
+      const encoded = encodeURIComponent('{"type":"prefecture","id":"fuzhou"}')
+      const result = parseCitySelection(encoded)
+      expect(result).toEqual({ type: 'prefecture', id: 'fuzhou' })
+    })
+  })
+
+  describe('serializeCitySelection', () => {
+    it('序列化城市选择', () => {
+      const result = serializeCitySelection({ type: 'city', id: 'luoyuan' })
+      expect(result).toBe('{"type":"city","id":"luoyuan"}')
+    })
+
+    it('序列化地级市选择', () => {
+      const result = serializeCitySelection({ type: 'prefecture', id: 'fuzhou' })
+      expect(result).toBe('{"type":"prefecture","id":"fuzhou"}')
+    })
+
+    it('序列化后可被 parseCitySelection 还原', () => {
+      const original = { type: 'prefecture' as const, id: 'fuzhou' }
+      const serialized = serializeCitySelection(original)
+      const parsed = parseCitySelection(serialized)
+      expect(parsed).toEqual(original)
     })
   })
 

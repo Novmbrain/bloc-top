@@ -6,7 +6,7 @@
  *   npx tsx scripts/migrate-coordinates.ts production
  */
 
-import { MongoClient } from 'mongodb'
+import { MongoClient, Document } from 'mongodb'
 import * as dotenv from 'dotenv'
 import path from 'path'
 
@@ -36,7 +36,7 @@ async function main() {
   try {
     await client.connect()
     const db = client.db(dbName)
-    const crags = db.collection('crags')
+    const crags = db.collection<Document & { _id: string }>('crags')
 
     // 先列出所有岩场的当前坐标状态
     const allCrags = await crags.find({}, { projection: { _id: 1, name: 1, coordinates: 1 } }).toArray()
