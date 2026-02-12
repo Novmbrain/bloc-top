@@ -3,20 +3,18 @@
 import { useState, useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { Palette, Heart, Copy, Check, User, Send, Users, Globe, LogIn, LogOut, Edit3, Fingerprint, Mountain, Trash2, KeyRound } from 'lucide-react'
+import { Settings, Heart, Copy, Check, User, Send, Users, LogIn, Mountain, Info, ChevronRight } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
 import { ThemeSwitcher } from '@/components/theme-switcher'
 import { LocaleSegmented } from '@/components/locale-switcher'
 import { OfflineCacheSection } from '@/components/offline-cache-manager'
+import { SecurityDrawer } from '@/components/security-drawer'
 import { Drawer } from '@/components/ui/drawer'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageViewer } from '@/components/ui/image-viewer'
-import { useToast } from '@/components/ui/toast'
-import { useSession, signOut, authClient } from '@/lib/auth-client'
-import { usePasskeyManagement } from '@/hooks/use-passkey-management'
-import { getPasskeyProvider } from '@/lib/passkey-providers'
-import { Input } from '@/components/ui/input'
+import { useSession } from '@/lib/auth-client'
+
 // 访问统计缓存 key
 const VISITS_CACHE_KEY = 'total_visits_cache'
 
@@ -33,95 +31,55 @@ const AUTHOR = {
 export default function ProfilePage() {
   const t = useTranslations('Profile')
   const tAuth = useTranslations('Auth')
-  const tCommon = useTranslations('Common')
   const tIntro = useTranslations('Intro')
-  const { showToast } = useToast()
 
   // Auth state
   const { data: session } = useSession()
   const isLoggedIn = !!session
   const isAdmin = (session?.user as { role?: string } | undefined)?.role === 'admin'
-  const { passkeys, isLoading: passkeysLoading, addPasskey, deletePasskey } = usePasskeyManagement()
 
-  // 作者抽屉状态
+  // Drawer states
+  const [securityDrawerOpen, setSecurityDrawerOpen] = useState(false)
   const [authorDrawerOpen, setAuthorDrawerOpen] = useState(false)
 
-  // 图片查看器状态
+  // Image viewer state
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerImage, setViewerImage] = useState('')
   const [viewerAlt, setViewerAlt] = useState('')
 
-  // 复制状态
+  // Author drawer state
   const [copiedField, setCopiedField] = useState<string | null>(null)
-
-  // 头像加载状态
   const [avatarLoaded, setAvatarLoaded] = useState(false)
-
-  // 留言状态
   const [feedbackContent, setFeedbackContent] = useState('')
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
 
-  // Password management state
-  const [passwordExpanded, setPasswordExpanded] = useState(false)
-  const [pwNewPassword, setPwNewPassword] = useState('')
-  const [pwConfirmPassword, setPwConfirmPassword] = useState('')
-  const [pwCurrentPassword, setPwCurrentPassword] = useState('')
-  const [isSettingPassword, setIsSettingPassword] = useState(false)
-  // Check if user has a credential (password) account
-  const [hasPassword, setHasPassword] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    if (!session) return
-    // Check accounts to see if user has a credential type
-    authClient.listAccounts().then((res) => {
-      const accounts = res.data
-      if (accounts) {
-        setHasPassword(accounts.some((a: { providerId?: string; provider?: string }) => a.providerId === 'credential' || a.provider === 'credential'))
-      }
-    }).catch(() => {
-      // Silently fail — password section will show "set password" by default
-    })
-  }, [session])
-
-  // 访问统计状态
+  // Visit stats
   const [totalVisits, setTotalVisits] = useState<number | null>(null)
 
-  // 获取访问统计
   useEffect(() => {
-    // 先显示缓存数据
     const cached = localStorage.getItem(VISITS_CACHE_KEY)
-    if (cached) {
-      setTotalVisits(parseInt(cached, 10))
-    }
+    if (cached) setTotalVisits(parseInt(cached, 10))
 
-    // 然后请求最新数据
-    async function fetchVisitStats() {
-      try {
-        const response = await fetch('/api/visit')
-        if (response.ok) {
-          const data = await response.json()
+    fetch('/api/visit')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data) {
           setTotalVisits(data.total)
           localStorage.setItem(VISITS_CACHE_KEY, String(data.total))
         }
-      } catch {
-        // 静默失败，保留缓存数据显示
-      }
-    }
-    fetchVisitStats()
+      })
+      .catch(() => {})
   }, [])
 
-  // 打开图片查看器
   const openViewer = useCallback((src: string, alt: string) => {
     setViewerImage(src)
     setViewerAlt(alt)
     setViewerOpen(true)
   }, [])
 
-  // 提交留言
   const submitFeedback = useCallback(async () => {
     if (!feedbackContent.trim() || feedbackSubmitting) return
-
     setFeedbackSubmitting(true)
     try {
       const response = await fetch('/api/feedback', {
@@ -129,27 +87,24 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: feedbackContent.trim() }),
       })
-
       if (response.ok) {
         setFeedbackSubmitted(true)
         setFeedbackContent('')
         setTimeout(() => setFeedbackSubmitted(false), 3000)
       }
     } catch {
-      // 静默失败
+      // Silent fail
     } finally {
       setFeedbackSubmitting(false)
     }
   }, [feedbackContent, feedbackSubmitting])
 
-  // 复制到剪贴板
   const copyToClipboard = useCallback(async (text: string, field: string) => {
     try {
       await navigator.clipboard.writeText(text)
       setCopiedField(field)
       setTimeout(() => setCopiedField(null), 2000)
     } catch {
-      // 降级方案
       const textArea = document.createElement('textarea')
       textArea.value = text
       textArea.style.position = 'fixed'
@@ -163,99 +118,6 @@ export default function ProfilePage() {
     }
   }, [])
 
-  // Auth actions
-  const handleLogout = useCallback(async () => {
-    await signOut()
-    showToast(tAuth('logout'), 'success')
-  }, [showToast, tAuth])
-
-  const handleAddPasskey = useCallback(async () => {
-    try {
-      const result = await addPasskey()
-      if (result?.error) {
-        showToast(tAuth('passkeyFailed'), 'error')
-      } else {
-        showToast(tAuth('passkeyAdded'), 'success')
-      }
-    } catch {
-      showToast(tAuth('passkeyFailed'), 'error')
-    }
-  }, [addPasskey, showToast, tAuth])
-
-  const handleDeletePasskey = useCallback(async (id: string) => {
-    try {
-      await deletePasskey(id)
-      showToast(tAuth('passkeyDeleted'), 'success')
-    } catch {
-      showToast(tAuth('passkeyFailed'), 'error')
-    }
-  }, [deletePasskey, showToast, tAuth])
-
-  const handleSetPassword = useCallback(async () => {
-    if (!pwNewPassword || !pwConfirmPassword || isSettingPassword) return
-    if (pwNewPassword.length < 8) {
-      showToast(tAuth('passwordTooShort'), 'error')
-      return
-    }
-    if (pwNewPassword !== pwConfirmPassword) {
-      showToast(tAuth('passwordMismatch'), 'error')
-      return
-    }
-    setIsSettingPassword(true)
-    try {
-      const res = await fetch('/api/auth/set-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword: pwNewPassword }),
-      })
-      if (res.ok) {
-        showToast(tAuth('passwordSetSuccess'), 'success')
-        setHasPassword(true)
-        setPasswordExpanded(false)
-        setPwNewPassword('')
-        setPwConfirmPassword('')
-      } else {
-        showToast(tAuth('passwordSetFailed'), 'error')
-      }
-    } catch {
-      showToast(tAuth('passwordSetFailed'), 'error')
-    } finally {
-      setIsSettingPassword(false)
-    }
-  }, [pwNewPassword, pwConfirmPassword, isSettingPassword, showToast, tAuth])
-
-  const handleChangePassword = useCallback(async () => {
-    if (!pwCurrentPassword || !pwNewPassword || !pwConfirmPassword || isSettingPassword) return
-    if (pwNewPassword.length < 8) {
-      showToast(tAuth('passwordTooShort'), 'error')
-      return
-    }
-    if (pwNewPassword !== pwConfirmPassword) {
-      showToast(tAuth('passwordMismatch'), 'error')
-      return
-    }
-    setIsSettingPassword(true)
-    try {
-      const { error } = await authClient.changePassword({
-        currentPassword: pwCurrentPassword,
-        newPassword: pwNewPassword,
-      })
-      if (error) {
-        showToast(tAuth('passwordChangeFailed'), 'error')
-      } else {
-        showToast(tAuth('passwordChanged'), 'success')
-        setPasswordExpanded(false)
-        setPwCurrentPassword('')
-        setPwNewPassword('')
-        setPwConfirmPassword('')
-      }
-    } catch {
-      showToast(tAuth('passwordChangeFailed'), 'error')
-    } finally {
-      setIsSettingPassword(false)
-    }
-  }, [pwCurrentPassword, pwNewPassword, pwConfirmPassword, isSettingPassword, showToast, tAuth])
-
   return (
     <>
       <div
@@ -265,332 +127,49 @@ export default function ProfilePage() {
           transition: 'var(--theme-transition)',
         }}
       >
-        {/* 头部 */}
+        {/* Header */}
         <header className="pt-12 px-4 pb-6">
           <h1 className="text-2xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
             {t('title')}
           </h1>
         </header>
 
-        {/* 内容区 */}
         <main className="flex-1 px-4 pb-24">
-          {/* 外观设置区块 */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Palette className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
-              <span className="text-sm font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-                {t('appearance')}
-              </span>
-            </div>
-            <ThemeSwitcher />
-          </div>
-
-          {/* 语言设置区块 */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Globe className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
-              <span className="text-sm font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-                {t('language')}
-              </span>
-            </div>
-            <LocaleSegmented />
-          </div>
-
-          {/* 离线缓存管理区块 */}
-          <OfflineCacheSection />
-
-          {/* App 介绍按钮 */}
-          <div className="mb-6">
-            <Link
-              href="/intro"
-              className="glass w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
-              style={{
-                borderRadius: 'var(--theme-radius-xl)',
-              }}
-            >
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
-              >
-                <Mountain className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-base font-medium" style={{ color: 'var(--theme-on-surface)' }}>
-                  {tIntro('profileEntry')}
-                </p>
-                <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  {tIntro('profileEntryHint')}
-                </p>
-              </div>
-            </Link>
-          </div>
-
-          {/* 关于作者按钮 */}
-          <div className="mb-6">
-            <button
-              onClick={() => setAuthorDrawerOpen(true)}
-              className="glass w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
-              style={{
-                borderRadius: 'var(--theme-radius-xl)',
-              }}
-            >
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
-              >
-                <User className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-base font-medium" style={{ color: 'var(--theme-on-surface)' }}>
-                  {t('author')}
-                </p>
-                <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  {t('authorHint')}
-                </p>
-              </div>
-            </button>
-          </div>
-
-          {/* 岩友访问统计 - 始终显示，使用缓存数据 */}
-          <div
-            className="glass mb-6 p-4 flex items-center gap-4"
-            style={{
-              borderRadius: 'var(--theme-radius-xl)',
-            }}
-          >
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'color-mix(in srgb, var(--theme-success) 15%, var(--theme-surface))' }}
-            >
-              <Users className="w-5 h-5" style={{ color: 'var(--theme-success)' }} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                {t('totalVisits')}
-              </p>
-              <p className="text-xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
-                {totalVisits !== null ? (
-                  <>
-                    {totalVisits.toLocaleString()}
-                    <span className="text-sm font-normal ml-1" style={{ color: 'var(--theme-on-surface-variant)' }}>{t('visits')}</span>
-                  </>
-                ) : (
-                  <span
-                    className="inline-block w-16 h-6 rounded skeleton-shimmer"
-                    style={{ backgroundColor: 'var(--theme-surface-variant)' }}
-                  />
-                )}
-              </p>
-            </div>
-          </div>
-
-          {/* 账号区块 */}
+          {/* === Profile Hero === */}
           <div className="mb-6">
             {isLoggedIn ? (
-              <div
-                className="glass p-4"
-                style={{
-                  borderRadius: 'var(--theme-radius-xl)',
-                }}
+              <button
+                onClick={() => setSecurityDrawerOpen(true)}
+                className="glass w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
+                style={{ borderRadius: 'var(--theme-radius-xl)' }}
               >
-                {/* 登录状态 */}
-                <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: 'color-mix(in srgb, var(--theme-success) 15%, var(--theme-surface))' }}
-                  >
-                    <User className="w-5 h-5" style={{ color: 'var(--theme-success)' }} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium" style={{ color: 'var(--theme-on-surface)' }}>
-                      {tAuth('loggedInAs')}
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                      {session.user.email}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 密码管理 */}
-                <div className="mb-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <KeyRound className="w-3.5 h-3.5" style={{ color: 'var(--theme-primary)' }} />
-                    <span className="text-xs font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-                      {hasPassword ? tAuth('hasPassword') : tAuth('noPassword')}
-                    </span>
-                  </div>
-
-                  {!passwordExpanded ? (
-                    <button
-                      onClick={() => setPasswordExpanded(true)}
-                      className="text-xs font-medium"
-                      style={{ color: 'var(--theme-primary)' }}
-                    >
-                      {hasPassword ? tAuth('changePassword') : tAuth('setPassword')}
-                    </button>
-                  ) : (
-                    <div className="space-y-2">
-                      {hasPassword && (
-                        <Input
-                          value={pwCurrentPassword}
-                          onChange={setPwCurrentPassword}
-                          placeholder={tAuth('currentPassword')}
-                          variant="form"
-                          type="password"
-                          autoComplete="current-password"
-                        />
-                      )}
-                      <Input
-                        value={pwNewPassword}
-                        onChange={setPwNewPassword}
-                        placeholder={tAuth('newPassword')}
-                        variant="form"
-                        type="password"
-                        autoComplete="new-password"
-                      />
-                      <Input
-                        value={pwConfirmPassword}
-                        onChange={setPwConfirmPassword}
-                        placeholder={tAuth('confirmPassword')}
-                        variant="form"
-                        type="password"
-                        autoComplete="new-password"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setPasswordExpanded(false)
-                            setPwCurrentPassword('')
-                            setPwNewPassword('')
-                            setPwConfirmPassword('')
-                          }}
-                          className="flex-1 p-2 text-xs font-medium transition-all active:scale-[0.98]"
-                          style={{
-                            color: 'var(--theme-on-surface-variant)',
-                            borderRadius: 'var(--theme-radius-lg)',
-                          }}
-                        >
-                          {tCommon('cancel')}
-                        </button>
-                        <button
-                          onClick={hasPassword ? handleChangePassword : handleSetPassword}
-                          disabled={isSettingPassword}
-                          className="flex-1 p-2 text-xs font-medium transition-all active:scale-[0.98] disabled:opacity-40"
-                          style={{
-                            backgroundColor: 'var(--theme-primary)',
-                            color: 'var(--theme-on-primary)',
-                            borderRadius: 'var(--theme-radius-lg)',
-                          }}
-                        >
-                          {hasPassword ? tAuth('changePassword') : tAuth('setPassword')}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Passkey 管理 */}
-                <div className="mb-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Fingerprint className="w-3.5 h-3.5" style={{ color: 'var(--theme-primary)' }} />
-                    <span className="text-xs font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-                      {tAuth('registeredPasskeys')}
-                    </span>
-                  </div>
-                  {passkeysLoading ? (
-                    <div
-                      className="h-8 rounded skeleton-shimmer"
-                      style={{ backgroundColor: 'var(--theme-surface-variant)' }}
-                    />
-                  ) : passkeys.length === 0 ? (
-                    <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                      {tAuth('noPasskeys')}
-                    </p>
-                  ) : (
-                    <div className="space-y-1.5">
-                      {passkeys.map((pk) => {
-                        const provider = getPasskeyProvider(pk.aaguid)
-                        return (
-                          <div
-                            key={pk.id}
-                            className="glass-light flex items-center gap-2.5 p-2 rounded-lg"
-                          >
-                            <span className="text-lg leading-none" role="img" aria-label={provider.name}>
-                              {provider.icon}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate" style={{ color: 'var(--theme-on-surface)' }}>
-                                {pk.name || provider.name}
-                              </p>
-                              <p className="text-[10px]" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                                {new Date(pk.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <button
-                              onClick={() => handleDeletePasskey(pk.id)}
-                              className="p-1.5 rounded-full transition-all active:scale-90 shrink-0"
-                              style={{ color: 'var(--theme-error)' }}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                  <button
-                    onClick={handleAddPasskey}
-                    className="mt-2 text-xs font-medium"
-                    style={{ color: 'var(--theme-primary)' }}
-                  >
-                    + {tAuth('addDevice')}
-                  </button>
-                </div>
-
-                {/* 编辑器入口 (admin only) */}
-                {isAdmin && (
-                  <Link
-                    href="/editor"
-                    className="w-full flex items-center gap-3 p-3 mb-3 transition-all active:scale-[0.98]"
-                    style={{
-                      backgroundColor: 'color-mix(in srgb, var(--theme-primary) 10%, var(--theme-surface))',
-                      borderRadius: 'var(--theme-radius-lg)',
-                    }}
-                  >
-                    <Edit3 className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
-                    <span className="text-sm font-medium" style={{ color: 'var(--theme-primary)' }}>
-                      {t('editorEntry')}
-                    </span>
-                  </Link>
-                )}
-
-                {/* 退出登录 */}
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 p-2.5 text-sm transition-all active:scale-[0.98]"
-                  style={{
-                    color: 'var(--theme-on-surface-variant)',
-                    borderRadius: 'var(--theme-radius-lg)',
-                  }}
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
                 >
-                  <LogOut className="w-4 h-4" />
-                  {tAuth('logout')}
-                </button>
-              </div>
+                  <User className="w-6 h-6" style={{ color: 'var(--theme-primary)' }} />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-base font-medium" style={{ color: 'var(--theme-on-surface)' }}>
+                    {session.user.email}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                    {t('accountSecurityHint')}
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 shrink-0" style={{ color: 'var(--theme-on-surface-variant)' }} />
+              </button>
             ) : (
-              /* 未登录状态 */
               <Link
                 href="/login"
                 className="glass w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
-                style={{
-                  borderRadius: 'var(--theme-radius-xl)',
-                }}
+                style={{ borderRadius: 'var(--theme-radius-xl)' }}
               >
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
                 >
-                  <LogIn className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
+                  <LogIn className="w-6 h-6" style={{ color: 'var(--theme-primary)' }} />
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-base font-medium" style={{ color: 'var(--theme-on-surface)' }}>
@@ -600,23 +179,144 @@ export default function ProfilePage() {
                     {tAuth('firstTimeHint')}
                   </p>
                 </div>
+                <ChevronRight className="w-5 h-5 shrink-0" style={{ color: 'var(--theme-on-surface-variant)' }} />
               </Link>
             )}
           </div>
 
-          {/* 版本信息 */}
-          <div className="mt-8 text-center">
+          {/* === Preferences === */}
+          <div className="flex items-center gap-2 mb-3">
+            <Settings className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
+            <span className="text-sm font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
+              {t('preferences')}
+            </span>
+          </div>
+          <div
+            className="glass mb-6"
+            style={{ borderRadius: 'var(--theme-radius-xl)' }}
+          >
+            <div className="p-4">
+              <ThemeSwitcher />
+            </div>
+            <div className="mx-4" style={{ borderBottom: '1px solid var(--glass-border)' }} />
+            <div className="p-4">
+              <LocaleSegmented />
+            </div>
+          </div>
+
+          {/* === Data & Storage === */}
+          <OfflineCacheSection />
+
+          {/* === About === */}
+          <div className="flex items-center gap-2 mb-3">
+            <Info className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
+            <span className="text-sm font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
+              {t('about')}
+            </span>
+          </div>
+          <div
+            className="glass mb-6"
+            style={{ borderRadius: 'var(--theme-radius-xl)' }}
+          >
+            {/* App intro */}
+            <Link
+              href="/intro"
+              className="w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
+              >
+                <Mountain className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-medium" style={{ color: 'var(--theme-on-surface)' }}>
+                  {tIntro('profileEntry')}
+                </p>
+                <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                  {tIntro('profileEntryHint')}
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--theme-on-surface-variant)' }} />
+            </Link>
+
+            <div className="mx-4" style={{ borderBottom: '1px solid var(--glass-border)' }} />
+
+            {/* Author */}
+            <button
+              onClick={() => setAuthorDrawerOpen(true)}
+              className="w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
+              >
+                <User className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-medium" style={{ color: 'var(--theme-on-surface)' }}>
+                  {t('author')}
+                </p>
+                <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                  {t('authorHint')}
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--theme-on-surface-variant)' }} />
+            </button>
+
+            <div className="mx-4" style={{ borderBottom: '1px solid var(--glass-border)' }} />
+
+            {/* Visit stats */}
+            <div className="flex items-center gap-4 p-4">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-success) 15%, var(--theme-surface))' }}
+              >
+                <Users className="w-5 h-5" style={{ color: 'var(--theme-success)' }} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                  {t('totalVisits')}
+                </p>
+              </div>
+              <div className="text-right">
+                {totalVisits !== null ? (
+                  <p className="text-lg font-bold" style={{ color: 'var(--theme-on-surface)' }}>
+                    {totalVisits.toLocaleString()}
+                    <span className="text-xs font-normal ml-1" style={{ color: 'var(--theme-on-surface-variant)' }}>{t('visits')}</span>
+                  </p>
+                ) : (
+                  <span
+                    className="inline-block w-12 h-5 rounded skeleton-shimmer"
+                    style={{ backgroundColor: 'var(--theme-surface-variant)' }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Version */}
+          <div className="mt-4 text-center">
             <p className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
               {t('version')}
             </p>
           </div>
         </main>
 
-        {/* 底部导航栏 */}
         <AppTabbar />
       </div>
 
-      {/* 作者信息抽屉 */}
+      {/* Security Drawer */}
+      {isLoggedIn && session && (
+        <SecurityDrawer
+          isOpen={securityDrawerOpen}
+          onClose={() => setSecurityDrawerOpen(false)}
+          session={{ user: { email: session.user.email, role: (session.user as { role?: string }).role } }}
+          isAdmin={isAdmin}
+        />
+      )}
+
+      {/* Author Drawer */}
       <Drawer
         isOpen={authorDrawerOpen}
         onClose={() => setAuthorDrawerOpen(false)}
@@ -624,14 +324,12 @@ export default function ProfilePage() {
         showHandle
       >
         <div className="px-4 pb-6">
-          {/* 作者头像和信息 */}
+          {/* Author avatar & info */}
           <div className="flex flex-col items-center mb-6">
             <button
               onClick={() => openViewer(AUTHOR.avatarUrl, t('avatarAlt'))}
               className="relative w-24 h-24 rounded-2xl overflow-hidden mb-4 transition-transform active:scale-95"
-              style={{
-                boxShadow: 'var(--theme-shadow-md)',
-              }}
+              style={{ boxShadow: 'var(--theme-shadow-md)' }}
             >
               {!avatarLoaded && (
                 <div className="absolute inset-0 skeleton-shimmer" />
@@ -645,29 +343,20 @@ export default function ProfilePage() {
                 sizes="96px"
               />
             </button>
-            <h2
-              className="text-xl font-bold mb-1"
-              style={{ color: 'var(--theme-on-surface)' }}
-            >
+            <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--theme-on-surface)' }}>
               {AUTHOR.name}
             </h2>
-            <p
-              className="text-sm"
-              style={{ color: 'var(--theme-on-surface-variant)' }}
-            >
+            <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
               {AUTHOR.bio}
             </p>
           </div>
 
-          {/* 联系方式 */}
+          {/* Contact */}
           <div className="space-y-3 mb-4">
-            {/* 微信 */}
             <button
               onClick={() => copyToClipboard(AUTHOR.wechat, 'wechat')}
               className="glass-light w-full flex items-center gap-3 p-3 transition-all active:scale-[0.98]"
-              style={{
-                borderRadius: 'var(--theme-radius-lg)',
-              }}
+              style={{ borderRadius: 'var(--theme-radius-lg)' }}
             >
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center"
@@ -692,13 +381,10 @@ export default function ProfilePage() {
               )}
             </button>
 
-            {/* 小红书 */}
             <button
               onClick={() => copyToClipboard(AUTHOR.xiaohongshu, 'xiaohongshu')}
               className="glass-light w-full flex items-center gap-3 p-3 transition-all active:scale-[0.98]"
-              style={{
-                borderRadius: 'var(--theme-radius-lg)',
-              }}
+              style={{ borderRadius: 'var(--theme-radius-lg)' }}
             >
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center"
@@ -724,7 +410,7 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {/* 留言区域 */}
+          {/* Feedback */}
           <div className="mb-4">
             <div className="relative">
               <Textarea
@@ -761,7 +447,7 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* 赞赏按钮 */}
+          {/* Donate */}
           <button
             onClick={() => openViewer(AUTHOR.donateUrl, t('donateAlt'))}
             className="w-full flex items-center justify-center gap-2 p-4 transition-all active:scale-[0.98]"
@@ -778,7 +464,7 @@ export default function ProfilePage() {
         </div>
       </Drawer>
 
-      {/* 图片查看器 */}
+      {/* Image Viewer */}
       <ImageViewer
         isOpen={viewerOpen}
         onClose={() => setViewerOpen(false)}
