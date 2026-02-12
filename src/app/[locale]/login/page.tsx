@@ -100,6 +100,8 @@ export default function LoginPage() {
       if (error) {
         console.error('[Login] Passkey error:', error)
         showToast(t('passkeyFailed'), 'error')
+      } else {
+        window.location.href = '/'
       }
     } catch {
       showToast(t('passkeyFailed'), 'error')

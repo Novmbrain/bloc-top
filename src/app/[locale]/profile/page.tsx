@@ -15,6 +15,7 @@ import { ImageViewer } from '@/components/ui/image-viewer'
 import { useToast } from '@/components/ui/toast'
 import { useSession, signOut, authClient } from '@/lib/auth-client'
 import { usePasskeyManagement } from '@/hooks/use-passkey-management'
+import { getPasskeyProvider } from '@/lib/passkey-providers'
 import { Input } from '@/components/ui/input'
 // 访问统计缓存 key
 const VISITS_CACHE_KEY = 'total_visits_cache'
@@ -515,29 +516,35 @@ export default function ProfilePage() {
                     </p>
                   ) : (
                     <div className="space-y-1.5">
-                      {passkeys.map((pk) => (
-                        <div
-                          key={pk.id}
-                          className="flex items-center justify-between p-2 rounded-lg"
-                          style={{ backgroundColor: 'var(--theme-surface-variant)' }}
-                        >
-                          <div>
-                            <p className="text-xs font-medium" style={{ color: 'var(--theme-on-surface)' }}>
-                              {pk.name || 'Passkey'}
-                            </p>
-                            <p className="text-[10px]" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                              {new Date(pk.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleDeletePasskey(pk.id)}
-                            className="p-1.5 rounded-full transition-all active:scale-90"
-                            style={{ color: 'var(--theme-error)' }}
+                      {passkeys.map((pk) => {
+                        const provider = getPasskeyProvider(pk.aaguid)
+                        return (
+                          <div
+                            key={pk.id}
+                            className="flex items-center gap-2.5 p-2 rounded-lg"
+                            style={{ backgroundColor: 'var(--theme-surface-variant)' }}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
+                            <span className="text-lg leading-none" role="img" aria-label={provider.name}>
+                              {provider.icon}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate" style={{ color: 'var(--theme-on-surface)' }}>
+                                {pk.name || provider.name}
+                              </p>
+                              <p className="text-[10px]" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                                {new Date(pk.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleDeletePasskey(pk.id)}
+                              className="p-1.5 rounded-full transition-all active:scale-90 shrink-0"
+                              style={{ color: 'var(--theme-error)' }}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                   <button

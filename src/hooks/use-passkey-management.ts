@@ -5,6 +5,9 @@ interface PasskeyInfo {
   id: string
   name?: string | null
   createdAt: Date
+  aaguid?: string | null
+  deviceType?: string | null
+  backedUp?: boolean | null
 }
 
 export function usePasskeyManagement() {
