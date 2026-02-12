@@ -8,7 +8,6 @@ import { FloatingSearch } from '@/components/floating-search'
 import { SearchDrawer } from '@/components/search-drawer'
 import { AppTabbar } from '@/components/app-tabbar'
 import { InstallPrompt } from '@/components/install-prompt'
-import { WeatherStrip } from '@/components/weather-strip'
 import { CitySelector } from '@/components/city-selector'
 import { EmptyCity } from '@/components/empty-city'
 import { useRouteSearch } from '@/hooks/use-route-search'
@@ -67,7 +66,7 @@ export default function HomePageClient({
   }, [isLoading, cityId, serverCityId, router])
 
   // 获取天气数据 (用于卡片角标，不需要预报，使用城市 adcode)
-  const { weather } = useWeather({ adcode: city.adcode, forecast: false })
+  const { weather } = useWeather({ adcode: city?.adcode, forecast: false })
 
   // 预计算按 cragId 分组的线路 Map，避免渲染时重复 filter
   const routesByCrag = useMemo(() => {
@@ -122,9 +121,6 @@ export default function HomePageClient({
 
       {/* 岩场列表（可滚动区域） */}
       <main className="flex-1 overflow-y-auto pb-36">
-        {/* 天气条 - 仅在有岩场数据时显示 */}
-        {crags.length > 0 && <WeatherStrip adcode={city.adcode} />}
-
         {/* PWA 安装提示 - 仅在有岩场数据时显示 */}
         {crags.length > 0 && <InstallPrompt />}
 

@@ -6,6 +6,16 @@ import type { CityConfig } from '@/types'
 
 // ==================== 常量 ====================
 
+/** 防御性回退：DB 无数据时使用硬编码默认城市，避免 undefined 崩溃 */
+const FALLBACK_CITY: CityConfig = {
+  id: DEFAULT_CITY_ID,
+  name: '罗源',
+  shortName: '罗源',
+  adcode: '350123',
+  coordinates: { lng: 119.549, lat: 26.489 },
+  available: true,
+}
+
 const STORAGE_KEY = 'selected-city'
 const FIRST_VISIT_KEY = 'city-first-visit'
 const SESSION_VISIT_KEY = 'session-visit-recorded' // sessionStorage: 单会话去重
@@ -120,8 +130,8 @@ export function useCitySelection({ cities }: UseCitySelectionOptions): UseCitySe
     setIsFirstVisit(false)
   }, [])
 
-  // 获取当前城市配置
-  const city = cities.find((c) => c.id === cityId) ?? cities[0]
+  // 获取当前城市配置（防御空数组：cities 从 DB 加载前可能为空）
+  const city = cities.find((c) => c.id === cityId) ?? cities[0] ?? FALLBACK_CITY
 
   return {
     cityId,
