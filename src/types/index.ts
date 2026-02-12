@@ -54,7 +54,7 @@ export interface Crag {
   name: string
   cityId: string              // 所属城市 ID (如 'luoyuan', 'xiamen')
   location: string
-  developmentTime: string
+  developmentTime?: string
   description: string
   approach: string
   coverImages?: string[]
