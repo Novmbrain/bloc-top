@@ -153,7 +153,7 @@ export default function CragListPage() {
                   borderRadius: 'var(--theme-radius-xl)',
                   boxShadow: 'var(--theme-shadow-md)',
                   animationDelay: `${i * 50}ms`,
-                  animationFillMode: 'backwards',
+                  animationFillMode: 'both',
                 }}
               >
                 <h3
