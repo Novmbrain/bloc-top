@@ -8,6 +8,13 @@ import type { TopoPoint } from '@/types'
 import { catmullRomCurve, scalePoints } from '@/lib/topo-utils'
 import { VIEW_WIDTH, VIEW_HEIGHT } from '@/lib/editor-utils'
 
+/** 曲线张力预设 */
+const TENSION_PRESETS = [
+  { value: 0, label: '平滑' },
+  { value: 0.5, label: '适中' },
+  { value: 1, label: '折线' },
+] as const
+
 /**
  * 全屏 Topo 编辑覆盖层
  * 支持双指缩放 + 平移 + 点击添加标记点 + 曲线张力调节
@@ -41,6 +48,14 @@ export function FullscreenTopoEditor({
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const initialTopoLineRef = useRef<TopoPoint[]>(topoLine)
   const initialTensionRef = useRef<number>(tension ?? 0)
+
+  // 找到最接近当前 tension 的预设索引
+  const activeTensionIndex = useMemo(() =>
+    TENSION_PRESETS.reduce((closest, preset, i) =>
+      Math.abs(preset.value - (tension ?? 0)) < Math.abs(TENSION_PRESETS[closest].value - (tension ?? 0)) ? i : closest
+    , 0),
+    [tension]
+  )
 
   const hasTopoChanges = useCallback((): boolean => {
     const orig = initialTopoLineRef.current
@@ -110,65 +125,24 @@ export function FullscreenTopoEditor({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col"
+      className="fixed inset-0 z-[100] flex flex-col"
       style={{ backgroundColor: '#000' }}
     >
-      {/* 顶部栏 */}
+      {/* 顶部 — 极简，仅关闭按钮 */}
       <div
-        className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-        style={{
-          backgroundColor: 'rgba(0,0,0,0.8)',
-          paddingTop: 'max(env(safe-area-inset-top), 12px)',
-        }}
+        className="absolute top-0 left-0 right-0 z-10 flex items-center px-4 py-3 pointer-events-none"
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <button
           onClick={handleRequestClose}
-          className="p-2 rounded-full transition-all active:scale-90"
-          style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+          className="pointer-events-auto p-2.5 rounded-full transition-all active:scale-90"
+          style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(12px)' }}
         >
           <X className="w-5 h-5 text-white" />
         </button>
-
-        <div className="flex items-center gap-2 text-white text-sm">
-          <span className="px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
-            {topoLine.length} 个点
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onRemoveLastPoint}
-            disabled={topoLine.length === 0}
-            className="p-2 rounded-full transition-all active:scale-90"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              opacity: topoLine.length === 0 ? 0.4 : 1,
-            }}
-          >
-            <Undo2 className="w-5 h-5 text-white" />
-          </button>
-          <button
-            onClick={() => { if (topoLine.length > 0) setShowClearConfirm(true) }}
-            disabled={topoLine.length === 0}
-            className="p-2 rounded-full transition-all active:scale-90"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              opacity: topoLine.length === 0 ? 0.4 : 1,
-            }}
-          >
-            <Trash2 className="w-5 h-5 text-white" />
-          </button>
-          <button
-            onClick={() => onClose(true)}
-            className="p-2 rounded-full transition-all active:scale-90"
-            style={{ backgroundColor: 'rgba(74,222,128,0.25)' }}
-          >
-            <Check className="w-5 h-5 text-green-400" />
-          </button>
-        </div>
       </div>
 
-      {/* 缩放画布 */}
+      {/* 全屏缩放画布 */}
       <div
         className="flex-1 relative overflow-hidden"
         onPointerDown={handlePointerDown}
@@ -273,67 +247,152 @@ export function FullscreenTopoEditor({
         )}
       </div>
 
-      {/* 底部控制栏 */}
+      {/* ══════ 底部浮动工具面板 (Palette) ══════ */}
       <div
-        className="flex flex-col gap-2 px-4 py-3 flex-shrink-0"
-        style={{
-          backgroundColor: 'rgba(0,0,0,0.8)',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 12px)',
-        }}
+        className="absolute bottom-0 left-0 right-0 z-10 px-3 pointer-events-none"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
       >
-        {/* Tension 滑块 (≥2 个点才显示) */}
-        {topoLine.length >= 2 && onTensionChange && (
-          <div className="flex items-center gap-3 px-2">
-            <span className="text-xs text-white/60 whitespace-nowrap">平滑</span>
-            {/* eslint-disable-next-line no-restricted-syntax -- range slider, no IME */}
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={tension}
-              onChange={(e) => onTensionChange(Number(e.target.value))}
-              className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
-              style={{ accentColor: routeColor }}
-              aria-label="曲线张力"
-            />
-            <span className="text-xs text-white/60 whitespace-nowrap">折线</span>
-          </div>
-        )}
+        <div
+          className="pointer-events-auto rounded-2xl overflow-hidden backdrop-blur-2xl animate-fade-in-up"
+          style={{
+            backgroundColor: 'rgba(22, 22, 26, 0.88)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            boxShadow: '0 -2px 20px rgba(0,0,0,0.4)',
+          }}
+        >
+          {/* 第一行: 操作按钮 + 状态 + 完成 */}
+          <div className="flex items-center px-3 py-2.5">
+            {/* 左侧: 撤销 + 清空 */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={onRemoveLastPoint}
+                disabled={topoLine.length === 0}
+                className="p-2 rounded-xl transition-all active:scale-90"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  opacity: topoLine.length === 0 ? 0.3 : 1,
+                }}
+              >
+                <Undo2 className="w-4 h-4 text-white" />
+              </button>
+              <button
+                onClick={() => { if (topoLine.length > 0) setShowClearConfirm(true) }}
+                disabled={topoLine.length === 0}
+                className="p-2 rounded-xl transition-all active:scale-90"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  opacity: topoLine.length === 0 ? 0.3 : 1,
+                }}
+              >
+                <Trash2 className="w-4 h-4 text-white" />
+              </button>
+            </div>
 
-        {/* 缩放控制 */}
-        <div className="flex items-center justify-center gap-4">
-          <button
-            onClick={() => transformRef.current?.zoomOut()}
-            className="p-2 rounded-full transition-all active:scale-90"
-            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+            {/* 中间: 点数状态 */}
+            <div className="flex-1 flex justify-center">
+              <span
+                className="px-3 py-1 rounded-full text-xs font-medium"
+                style={{
+                  backgroundColor: topoLine.length > 0
+                    ? `color-mix(in srgb, ${routeColor} 15%, transparent)`
+                    : 'rgba(255,255,255,0.06)',
+                  color: topoLine.length > 0
+                    ? routeColor
+                    : 'rgba(255,255,255,0.4)',
+                }}
+              >
+                {topoLine.length} 个点
+              </span>
+            </div>
+
+            {/* 右侧: 完成 CTA */}
+            <button
+              onClick={() => onClose(true)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-medium text-sm transition-all active:scale-95"
+              style={{
+                backgroundColor: 'rgba(74,222,128,0.18)',
+                color: '#4ade80',
+              }}
+            >
+              <Check className="w-4 h-4" />
+              完成
+            </button>
+          </div>
+
+          {/* 第二行: 张力分段选择器 (≥2 个点时显示) */}
+          {topoLine.length >= 2 && onTensionChange && (
+            <div
+              className="flex items-center justify-center gap-3 px-4 py-2.5"
+              style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <span className="text-[11px] text-white/35 whitespace-nowrap">弯度</span>
+              <div
+                className="relative flex rounded-lg p-0.5"
+                style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+              >
+                {/* 滑动指示器 */}
+                <div
+                  className="absolute top-0.5 bottom-0.5 rounded-md transition-transform duration-200 ease-out"
+                  style={{
+                    width: `${100 / TENSION_PRESETS.length}%`,
+                    transform: `translateX(${activeTensionIndex * 100}%)`,
+                    backgroundColor: routeColor,
+                    opacity: 0.85,
+                  }}
+                />
+                {TENSION_PRESETS.map((preset, i) => (
+                  <button
+                    key={preset.value}
+                    onClick={() => onTensionChange(preset.value)}
+                    className="relative z-10 px-5 py-1.5 text-xs font-medium transition-colors duration-200"
+                    style={{
+                      color: i === activeTensionIndex ? '#fff' : 'rgba(255,255,255,0.4)',
+                    }}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 第三行: 缩放控制 (视觉弱化) */}
+          <div
+            className="flex items-center justify-center gap-3 px-4 py-2"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
           >
-            <Minus className="w-5 h-5 text-white" />
-          </button>
-          <span className="text-white text-sm font-medium min-w-[60px] text-center">
-            {Math.round(scale * 100)}%
-          </span>
-          <button
-            onClick={() => transformRef.current?.zoomIn()}
-            className="p-2 rounded-full transition-all active:scale-90"
-            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-          >
-            <Plus className="w-5 h-5 text-white" />
-          </button>
-          <button
-            onClick={() => transformRef.current?.resetTransform()}
-            className="p-2 rounded-full transition-all active:scale-90"
-            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-          >
-            <RotateCcw className="w-5 h-5 text-white" />
-          </button>
+            <button
+              onClick={() => transformRef.current?.zoomOut()}
+              className="p-1.5 rounded-lg transition-all active:scale-90"
+              style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+            >
+              <Minus className="w-3.5 h-3.5 text-white/50" />
+            </button>
+            <span className="text-white/45 text-xs font-medium min-w-[44px] text-center">
+              {Math.round(scale * 100)}%
+            </span>
+            <button
+              onClick={() => transformRef.current?.zoomIn()}
+              className="p-1.5 rounded-lg transition-all active:scale-90"
+              style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+            >
+              <Plus className="w-3.5 h-3.5 text-white/50" />
+            </button>
+            <button
+              onClick={() => transformRef.current?.resetTransform()}
+              className="p-1.5 rounded-lg transition-all active:scale-90"
+              style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-white/50" />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* 退出确认对话框 */}
       {showExitConfirm && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center"
+          className="fixed inset-0 z-[110] flex items-center justify-center"
           style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
           onClick={() => setShowExitConfirm(false)}
         >
@@ -378,7 +437,7 @@ export function FullscreenTopoEditor({
       {/* 清空确认对话框 */}
       {showClearConfirm && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center"
+          className="fixed inset-0 z-[110] flex items-center justify-center"
           style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
           onClick={() => setShowClearConfirm(false)}
         >
