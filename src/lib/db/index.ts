@@ -136,6 +136,101 @@ async function _getCragById(id: string): Promise<Crag | null> {
 }
 export const getCragById = cache(_getCragById)
 
+/**
+ * 创建新岩场
+ * 使用 crag.id 作为 MongoDB _id
+ */
+export async function createCrag(
+  crag: Omit<Crag, 'coverImages' | 'approachPaths' | 'areas' | 'credits'>
+): Promise<Crag> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+
+    // 检查 ID 唯一性
+    const existing = await db.collection('crags').findOne({ _id: toMongoId(crag.id) })
+    if (existing) {
+      throw new Error(`岩场 ID "${crag.id}" 已存在`)
+    }
+
+    const { id, ...fields } = crag
+    const doc = {
+      _id: toMongoId(id),
+      ...fields,
+      areas: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    await db.collection('crags').insertOne(doc)
+
+    log.info(`Created crag: ${id}`, {
+      action: 'createCrag',
+      duration: Date.now() - start,
+      metadata: { cragId: id, name: crag.name },
+    })
+
+    return { ...crag, areas: [] } as Crag
+  } catch (error) {
+    log.error('Failed to create crag', error, {
+      action: 'createCrag',
+      duration: Date.now() - start,
+      metadata: { cragId: crag.id },
+    })
+    throw error
+  }
+}
+
+/**
+ * 更新岩场信息
+ * 支持部分更新，不允许修改 id
+ */
+export async function updateCrag(
+  id: string,
+  updates: Partial<Omit<Crag, 'id'>>
+): Promise<Crag | null> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+
+    const updateData = {
+      ...updates,
+      updatedAt: new Date(),
+    }
+
+    const result = await db.collection('crags').findOneAndUpdate(
+      { _id: toMongoId(id) },
+      { $set: updateData },
+      { returnDocument: 'after' }
+    )
+
+    if (!result) {
+      log.info(`Crag not found for update: ${id}`, {
+        action: 'updateCrag',
+        duration: Date.now() - start,
+      })
+      return null
+    }
+
+    log.info(`Updated crag: ${id}`, {
+      action: 'updateCrag',
+      duration: Date.now() - start,
+      metadata: { cragId: id, fields: Object.keys(updates) },
+    })
+
+    return toCrag(result)
+  } catch (error) {
+    log.error(`Failed to update crag: ${id}`, error, {
+      action: 'updateCrag',
+      duration: Date.now() - start,
+      metadata: { cragId: id },
+    })
+    throw error
+  }
+}
+
 // ============ Route 相关操作 ============
 
 /**

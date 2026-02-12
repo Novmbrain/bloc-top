@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Image as ImageIcon, Edit3, Play } from 'lucide-react'
+import { ArrowLeft, Image as ImageIcon, Edit3, Play, Mountain } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
 
@@ -10,6 +10,13 @@ import { AppTabbar } from '@/components/app-tabbar'
  */
 export default function TopoEditorPage() {
   const cards = [
+    {
+      href: '/editor/crags' as const,
+      icon: Mountain,
+      title: '岩场管理',
+      description: '添加和编辑岩场基本信息',
+      detail: '新建岩场 → 填写信息 → 保存',
+    },
     {
       href: '/editor/faces' as const,
       icon: ImageIcon,

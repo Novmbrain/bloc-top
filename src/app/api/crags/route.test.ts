@@ -15,6 +15,12 @@ import type { Crag } from '@/types'
 vi.mock('@/lib/db', () => ({
   getAllCrags: vi.fn(),
   getCragsByCityId: vi.fn(),
+  createCrag: vi.fn(),
+}))
+
+// Mock auth module (POST handler imports getAuth)
+vi.mock('@/lib/auth', () => ({
+  getAuth: vi.fn(),
 }))
 
 // Mock logger
