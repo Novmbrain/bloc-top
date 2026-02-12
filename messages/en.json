@@ -94,8 +94,9 @@
     "imageLoadFailed": "Image failed to load",
     "comments": "Comments",
     "commentsComingSoon": "Comments coming soon...",
-    "showOtherRoutes": "Show other routes",
-    "hideOtherRoutes": "Current route only"
+    "showAllRoutes": "Show all",
+    "showCurrentOnly": "Current only",
+    "sameFaceRoutes": "Routes on this face"
   },
   "Weather": {
     "title": "Weather",

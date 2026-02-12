@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
-import { MapPin, User, Wrench, Video, ImageIcon, ZoomIn, Eye, EyeOff } from 'lucide-react'
+import { MapPin, User, Wrench, Video, ImageIcon, ZoomIn } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { ImageViewer } from '@/components/ui/image-viewer'
 
@@ -19,6 +19,7 @@ const BetaSubmitDrawer = dynamic(() =>
 import { ContextualHint } from '@/components/contextual-hint'
 import { TopoLineOverlay, type TopoLineOverlayRef } from '@/components/topo-line-overlay'
 import { MultiTopoLineOverlay, type MultiTopoLineOverlayRef, type MultiTopoRoute } from '@/components/multi-topo-line-overlay'
+import { RouteLegendPanel } from '@/components/route-legend-panel'
 import { getGradeColor } from '@/lib/tokens'
 import { TOPO_ANIMATION_CONFIG } from '@/lib/topo-constants'
 import { useFaceImage } from '@/hooks/use-face-image'
@@ -62,8 +63,8 @@ export function RouteDetailDrawer({
   // 本地 Beta 数据状态，用于绕过 ISR 缓存实现即时更新
   const [localBetaLinks, setLocalBetaLinks] = useState<BetaLink[] | null>(null)
 
-  // 是否显示同岩面的其他线路
-  const [showOtherRoutes, setShowOtherRoutes] = useState(true)
+  // 用户手动切换「显示全部叠加线路」（仅 >3 条时需要）
+  const [showAllOverlay, setShowAllOverlay] = useState(false)
 
   // Topo 线路 overlay refs (用于触发动画)
   const drawerOverlayRef = useRef<TopoLineOverlayRef>(null)
@@ -100,8 +101,12 @@ export function RouteDetailDrawer({
   // 是否有可用的多线路数据
   const hasMultiLines = validSiblingRoutes.length > 1 && hasTopoLine
 
-  // 是否使用多线路模式（受用户切换控制）
-  const useMultiLineMode = hasMultiLines && showOtherRoutes
+  // 智能默认：≤3 条线路默认全部显示，>3 条需要用户手动切换
+  const shouldShowAllByDefault = validSiblingRoutes.length <= 3
+  const effectiveShowAll = shouldShowAllByDefault || showAllOverlay
+
+  // 是否使用多线路模式
+  const useMultiLineMode = hasMultiLines && effectiveShowAll
 
   // 当线路变化时重置非图片状态 (图片状态由 useFaceImage 自动管理)
   useEffect(() => {
@@ -234,27 +239,6 @@ export function RouteDetailDrawer({
                   )
                 )}
 
-                {/* 多线路切换按钮（图片右上角） */}
-                {!imageLoading && hasMultiLines && (
-                  <button
-                    className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-black/50 backdrop-blur-sm transition-all active:scale-95"
-                    style={{ borderRadius: 'var(--theme-radius-md)', pointerEvents: 'auto', zIndex: 10 }}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setShowOtherRoutes(prev => !prev)
-                    }}
-                    aria-label={showOtherRoutes ? t('hideOtherRoutes') : t('showOtherRoutes')}
-                  >
-                    {showOtherRoutes
-                      ? <Eye className="w-3.5 h-3.5 text-white" />
-                      : <EyeOff className="w-3.5 h-3.5 text-white/60" />
-                    }
-                    <span className={`text-xs ${showOtherRoutes ? 'text-white' : 'text-white/60'}`}>
-                      {validSiblingRoutes.length - 1}
-                    </span>
-                  </button>
-                )}
-
                 {/* 放大提示（图片加载完成后显示） */}
                 {!imageLoading && (
                   <div
@@ -268,6 +252,17 @@ export function RouteDetailDrawer({
               </button>
             )}
           </div>
+
+          {/* 同岩面线路图例面板 */}
+          {hasMultiLines && (
+            <RouteLegendPanel
+              routes={validSiblingRoutes}
+              selectedRouteId={route.id}
+              onRouteSelect={handleRouteSelect}
+              showAllOverlay={showAllOverlay}
+              onToggleShowAll={() => setShowAllOverlay(prev => !prev)}
+            />
+          )}
 
           {/* 线路信息 */}
           <div className="mb-4">
@@ -466,21 +461,6 @@ export function RouteDetailDrawer({
                 message={tIntro('hintPinchZoom')}
                 icon={<ZoomIn className="w-3.5 h-3.5" />}
               />
-              {hasMultiLines && (
-                <button
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/50 backdrop-blur-sm transition-all active:scale-95"
-                  style={{ borderRadius: 'var(--theme-radius-md)' }}
-                  onClick={() => setShowOtherRoutes(prev => !prev)}
-                >
-                  {showOtherRoutes
-                    ? <Eye className="w-4 h-4 text-white" />
-                    : <EyeOff className="w-4 h-4 text-white/60" />
-                  }
-                  <span className={`text-xs ${showOtherRoutes ? 'text-white' : 'text-white/60'}`}>
-                    {validSiblingRoutes.length - 1}
-                  </span>
-                </button>
-              )}
             </div>
           }
         >

@@ -14,6 +14,17 @@ vi.mock('@/components/topo-line-overlay', () => ({
 vi.mock('@/components/multi-topo-line-overlay', () => ({
   MultiTopoLineOverlay: () => <div data-testid="multi-topo-line-overlay" />,
 }))
+vi.mock('@/components/route-legend-panel', () => ({
+  RouteLegendPanel: ({ routes, onRouteSelect }: { routes: { id: number; name: string }[]; onRouteSelect: (id: number) => void }) => (
+    <div data-testid="route-legend-panel">
+      {routes.map(r => (
+        <button key={r.id} data-testid={`legend-route-${r.id}`} onClick={() => onRouteSelect(r.id)}>
+          {r.name}
+        </button>
+      ))}
+    </div>
+  ),
+}))
 
 // Mock 线路数据
 const mockRoute: Route = {
@@ -325,6 +336,53 @@ describe('RouteDetailDrawer', () => {
 
       expect(screen.queryByTestId('topo-line-overlay')).not.toBeInTheDocument()
       expect(screen.queryByTestId('multi-topo-line-overlay')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('线路图例面板', () => {
+    const siblingRoutes: Route[] = [
+      mockRouteWithTopo,
+      { ...mockRouteWithTopo, id: 11, name: '银河', grade: 'V6' },
+    ]
+
+    it('有多条同岩面线路时应渲染 RouteLegendPanel', () => {
+      render(
+        <RouteDetailDrawer
+          {...defaultProps}
+          route={mockRouteWithTopo}
+          siblingRoutes={siblingRoutes}
+        />
+      )
+
+      expect(screen.getByTestId('route-legend-panel')).toBeInTheDocument()
+    })
+
+    it('无同岩面线路时不应渲染 RouteLegendPanel', () => {
+      render(
+        <RouteDetailDrawer
+          {...defaultProps}
+          route={mockRoute}
+        />
+      )
+
+      expect(screen.queryByTestId('route-legend-panel')).not.toBeInTheDocument()
+    })
+
+    it('点击图例面板中的线路应触发 onRouteChange', () => {
+      const onRouteChange = vi.fn()
+      render(
+        <RouteDetailDrawer
+          {...defaultProps}
+          route={mockRouteWithTopo}
+          siblingRoutes={siblingRoutes}
+          onRouteChange={onRouteChange}
+        />
+      )
+
+      fireEvent.click(screen.getByTestId('legend-route-11'))
+      expect(onRouteChange).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 11, name: '银河' })
+      )
     })
   })
 })

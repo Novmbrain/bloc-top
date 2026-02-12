@@ -94,8 +94,9 @@
     "imageLoadFailed": "Échec du chargement de l'image",
     "comments": "Commentaires",
     "commentsComingSoon": "Commentaires bientôt disponibles...",
-    "showOtherRoutes": "Afficher les autres voies",
-    "hideOtherRoutes": "Voie actuelle uniquement"
+    "showAllRoutes": "Tout afficher",
+    "showCurrentOnly": "Actuelle uniquement",
+    "sameFaceRoutes": "Voies sur cette face"
   },
   "Weather": {
     "title": "Météo",
