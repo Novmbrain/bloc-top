@@ -101,8 +101,8 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
           <div
             className="h-[26px] px-2.5 rounded-md flex items-center"
             style={{
-              backgroundColor: 'color-mix(in srgb, white 85%, transparent)',
-              color: '#0C0C0C',
+              backgroundColor: 'var(--theme-surface-variant)',
+              color: 'var(--theme-on-surface)',
             }}
           >
             <span className="text-xs font-bold">{gradeRange}</span>
