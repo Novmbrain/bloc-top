@@ -75,13 +75,19 @@ function loadOfflineCrags(): OfflineCragMeta[] {
  * 离线下载管理 Hook
  */
 export function useOfflineDownload(): UseOfflineDownloadReturn {
-  // 检查 IndexedDB 支持 (初始化时同步检查)
-  const [isSupported] = useState(() => isIndexedDBSupported())
+  // 初始为 false，hydration 后检测 IndexedDB 支持
+  // 避免 SSR/Client 不一致导致 Hydration Mismatch（服务端无 indexedDB 全局变量）
+  const [isSupported, setIsSupported] = useState(false)
+  const [offlineCrags, setOfflineCrags] = useState<OfflineCragMeta[]>([])
 
-  // 使用惰性初始化加载已下载岩场列表 (避免 useEffect 中的 setState)
-  const [offlineCrags, setOfflineCrags] = useState<OfflineCragMeta[]>(() =>
-    isIndexedDBSupported() ? loadOfflineCrags() : []
-  )
+  /* eslint-disable react-hooks/set-state-in-effect -- 浏览器 API 检测必须在 hydration 后执行，无法用 render-time 模式（会破坏 hydration 一致性） */
+  useEffect(() => {
+    if (isIndexedDBSupported()) {
+      setIsSupported(true)
+      setOfflineCrags(loadOfflineCrags())
+    }
+  }, [])
+  /* eslint-enable react-hooks/set-state-in-effect */
   const [downloadProgress, setDownloadProgress] = useState<DownloadProgress | null>(null)
 
   // staleness 检查版本号 — 递增时触发 UI 重渲染

@@ -23,20 +23,22 @@ export default function CragListPage() {
 
   // 加载岩场列表
   useEffect(() => {
+    const controller = new AbortController()
     async function fetchCrags() {
       try {
-        const res = await fetch('/api/crags')
+        const res = await fetch('/api/crags', { signal: controller.signal })
         const data = await res.json()
         if (data.success) {
           setCrags(data.crags)
         }
-      } catch {
-        // 静默处理
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return
       } finally {
-        setLoading(false)
+        if (!controller.signal.aborted) setLoading(false)
       }
     }
     fetchCrags()
+    return () => controller.abort()
   }, [])
 
   // 有数据的城市列表
