@@ -28,7 +28,12 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
         database: mongodbAdapter(db, { client }),
 
         appName: '寻岩记 BlocTop',
-        baseURL: process.env.NEXT_PUBLIC_APP_URL,
+        // 不设 baseURL — 让 better-auth 从请求 Host header 自动推断，
+        // 避免 bouldering.top 与 www.bouldering.top 的 origin 校验失败
+        trustedOrigins: [
+          'https://bouldering.top',
+          'https://www.bouldering.top',
+        ],
 
         user: {
           additionalFields: {
@@ -68,7 +73,9 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
               ? 'bouldering.top'
               : 'localhost',
             rpName: '寻岩记 BlocTop',
-            origin: process.env.NEXT_PUBLIC_APP_URL!,
+            origin: process.env.NODE_ENV === 'production'
+              ? 'https://www.bouldering.top'
+              : 'http://localhost:3000',
           }),
         ],
 
