@@ -204,21 +204,25 @@ export function DownloadButton({
         'focus:outline-none focus-visible:ring-2',
         status === 'idle' && 'hover:opacity-80 active:scale-95',
         status === 'downloading' && 'cursor-wait',
-        status === 'completed' && 'bg-green-500/80',
-        status === 'failed' && 'bg-red-500/80 hover:bg-red-500',
-        status === 'stale' && 'bg-amber-500/80 hover:bg-amber-500 active:scale-95',
+        status === 'stale' && 'hover:opacity-90 active:scale-95',
         className
       )}
       style={{
         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+        // Use inline style for stateful backgrounds so they can't be
+        // overridden by utility classes like glass-light (CSS `background`
+        // shorthand beats Tailwind's `background-color`).
+        ...(status === 'completed' ? { backgroundColor: 'var(--theme-success)' } : {}),
+        ...(status === 'stale' ? { backgroundColor: 'var(--theme-warning)' } : {}),
+        ...(status === 'failed' ? { backgroundColor: 'var(--theme-error)' } : {}),
         ...style,
       }}
       title={
         status === 'idle' ? t('download') :
-        status === 'downloading' ? `${t('downloading')} ${progressPercent}%` :
-        status === 'completed' ? t('downloaded') :
-        status === 'stale' ? t('updateAvailable') :
-        t('failed')
+          status === 'downloading' ? `${t('downloading')} ${progressPercent}%` :
+            status === 'completed' ? t('downloaded') :
+              status === 'stale' ? t('updateAvailable') :
+                t('failed')
       }
     >
       {status === 'idle' && (
@@ -238,15 +242,15 @@ export function DownloadButton({
       )}
 
       {status === 'completed' && (
-        <Check className="w-4 h-4 text-white" />
+        <Check className="w-4 h-4" style={{ color: 'white' }} />
       )}
 
       {status === 'stale' && (
-        <RefreshCw className="w-4 h-4 text-white" />
+        <RefreshCw className="w-4 h-4" style={{ color: 'white' }} />
       )}
 
       {status === 'failed' && (
-        <AlertCircle className="w-4 h-4 text-white" />
+        <AlertCircle className="w-4 h-4" style={{ color: 'white' }} />
       )}
     </button>
   )
