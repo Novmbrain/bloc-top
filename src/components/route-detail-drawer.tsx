@@ -212,7 +212,7 @@ export function RouteDetailDrawer({
                   src={topoImageUrl!}
                   alt={route.name}
                   fill
-                  className={`object-cover transition-all duration-300 group-active:scale-[0.98] ${
+                  className={`object-contain transition-all duration-300 group-active:scale-[0.98] ${
                     imageLoading ? 'opacity-0' : 'opacity-100'
                   }`}
                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -228,6 +228,7 @@ export function RouteDetailDrawer({
                       routes={validSiblingRoutes}
                       selectedRouteId={route.id}
                       onRouteSelect={handleRouteSelect}
+                      objectFit="contain"
                     />
                   ) : (
                     <TopoLineOverlay
@@ -236,6 +237,7 @@ export function RouteDetailDrawer({
                       color={routeColor}
                       tension={route.topoTension}
                       animated
+                      objectFit="contain"
                     />
                   )
                 )}
