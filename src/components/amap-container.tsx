@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { MapPin, Navigation, Maximize2 } from 'lucide-react'
 import type { Coordinates, ApproachPath } from '@/types'
+import { wgs84ToGcj02 } from '@/lib/coordinate-utils'
 
 // 高德地图 API Key (从环境变量读取)
 const AMAP_KEY = process.env.NEXT_PUBLIC_AMAP_KEY || ''
@@ -39,6 +40,9 @@ export default function AMapContainer({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // DB 存 WGS-84，高德地图需要 GCJ-02
+  const gcj02Center = wgs84ToGcj02(center)
+
   useEffect(() => {
     let isMounted = true
 
@@ -46,7 +50,7 @@ export default function AMapContainer({
       try {
         // 动态导入 AMapLoader，避免 SSR 时访问 window
         const AMapLoader = (await import('@amap/amap-jsapi-loader')).default
-        
+
         const AMap: AMapType = await AMapLoader.load({
           key: AMAP_KEY,
           version: '1.4.15',
@@ -55,11 +59,11 @@ export default function AMapContainer({
 
         if (!isMounted || !containerRef.current) return
 
-        // 创建地图实例
+        // 创建地图实例 (使用 GCJ-02 坐标)
         const map = new AMap.Map(containerRef.current, {
           viewMode: '2D',
           zoom,
-          center: [center.lng, center.lat],
+          center: [gcj02Center.lng, gcj02Center.lat],
           resizeEnable: true,
         })
 
@@ -67,7 +71,7 @@ export default function AMapContainer({
 
         // 添加岩场标记
         const marker = new AMap.Marker({
-          position: [center.lng, center.lat],
+          position: [gcj02Center.lng, gcj02Center.lat],
           title: name,
           label: {
             content: `<div style="
@@ -87,11 +91,14 @@ export default function AMapContainer({
 
         map.add(marker)
 
-        // 绘制接近路径 (如果有)
+        // 绘制接近路径 (如果有，路径坐标也需转换)
         if (approachPaths.length > 0) {
           approachPaths.forEach((path) => {
             const polyline = new AMap.Polyline({
-              path: path.points.map((p) => [p.lng, p.lat] as [number, number]),
+              path: path.points.map((p) => {
+                const gcj = wgs84ToGcj02(p)
+                return [gcj.lng, gcj.lat] as [number, number]
+              }),
               strokeColor: path.color || '#3366FF',
               strokeWeight: 4,
               strokeOpacity: 0.8,
@@ -134,25 +141,25 @@ export default function AMapContainer({
         mapRef.current = null
       }
     }
-  }, [center, name, zoom, approachPaths])
+  }, [gcj02Center, name, zoom, approachPaths])
 
   // 重置视图到中心点
   const handleRecenter = () => {
     if (mapRef.current) {
-      mapRef.current.setCenter([center.lng, center.lat])
+      mapRef.current.setCenter([gcj02Center.lng, gcj02Center.lat])
       mapRef.current.setZoom(zoom)
     }
   }
 
-  // 打开高德地图 App 导航
+  // 打开高德地图 App 导航 (传 GCJ-02 坐标 + coordinate=gaode)
   const handleNavigate = () => {
-    const url = `https://uri.amap.com/marker?position=${center.lng},${center.lat}&name=${encodeURIComponent(name)}&src=pwa-topo&coordinate=gaode&callnative=1`
+    const url = `https://uri.amap.com/marker?position=${gcj02Center.lng},${gcj02Center.lat}&name=${encodeURIComponent(name)}&src=pwa-topo&coordinate=gaode&callnative=1`
     window.open(url, '_blank')
   }
 
   // 全屏查看 (打开高德网页版)
   const handleFullscreen = () => {
-    const url = `https://www.amap.com/place/${center.lng},${center.lat}`
+    const url = `https://www.amap.com/place/${gcj02Center.lng},${gcj02Center.lat}`
     window.open(url, '_blank')
   }
 

@@ -13,13 +13,8 @@ import AMapContainer from '@/components/amap-container'
 import { WeatherCard } from '@/components/weather-card'
 import type { Crag, Route } from '@/types'
 
-// 岩场真实 GPS 坐标
-const CRAG_COORDINATES: Record<string, { lng: number; lat: number }> = {
-  'yuan-tong-si': { lng: 119.52508494257924, lat: 26.47524770432985 }, // 圆通寺岩场
-  'ba-jing-cun': { lng: 119.55549, lat: 26.43837 },                    // 八井村岩场
-  // 默认坐标 (罗源县中心)
-  default: { lng: 119.5495, lat: 26.4893 },
-}
+/** 默认坐标 fallback: 罗源县中心 (WGS-84) */
+const DEFAULT_COORDINATES = { lng: 119.544922, lat: 26.492767 }
 
 interface CragDetailClientProps {
   crag: Crag
@@ -225,7 +220,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
 
         {/* 天气卡片 */}
         <WeatherCard
-          coordinates={crag.coordinates || CRAG_COORDINATES[crag.id] || CRAG_COORDINATES.default}
+          coordinates={crag.coordinates || DEFAULT_COORDINATES}
           delay={0}
         />
 
@@ -263,7 +258,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
 
           {/* 地图组件 */}
           <AMapContainer
-            center={crag.coordinates || CRAG_COORDINATES[crag.id] || CRAG_COORDINATES.default}
+            center={crag.coordinates || DEFAULT_COORDINATES}
             name={crag.name}
             zoom={15}
             height="180px"

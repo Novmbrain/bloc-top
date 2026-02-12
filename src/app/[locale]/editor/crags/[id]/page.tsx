@@ -18,6 +18,7 @@ import { useToast } from '@/components/ui/toast'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
 import { getCragCoverUrl } from '@/lib/constants'
 import { pinyin } from 'pinyin-pro'
+import { gcj02ToWgs84, truncateCoordinates } from '@/lib/coordinate-utils'
 import type { Crag, Coordinates, CityConfig, PrefectureConfig } from '@/types'
 
 // ==================== Slug 生成 ====================
@@ -59,6 +60,7 @@ export default function CragEditPage() {
   const [location, setLocation] = useState('')
   const [lng, setLng] = useState('')
   const [lat, setLat] = useState('')
+  const [coordSystem, setCoordSystem] = useState<'wgs84' | 'gcj02'>('wgs84')
   const [description, setDescription] = useState('')
   const [approach, setApproach] = useState('')
   const [coverImages, setCoverImages] = useState<string[]>([])
@@ -185,13 +187,17 @@ export default function CragEditPage() {
       return
     }
 
-    // 构建坐标 (可选)
+    // 构建坐标 (可选，DB 统一存 WGS-84)
     let coordinates: Coordinates | undefined
     if (lng && lat) {
       const lngNum = parseFloat(lng)
       const latNum = parseFloat(lat)
       if (!isNaN(lngNum) && !isNaN(latNum)) {
-        coordinates = { lng: lngNum, lat: latNum }
+        let coords = { lng: lngNum, lat: latNum }
+        if (coordSystem === 'gcj02') {
+          coords = gcj02ToWgs84(coords)
+        }
+        coordinates = truncateCoordinates(coords)
       }
     }
 
@@ -552,6 +558,40 @@ export default function CragEditPage() {
             />
           </div>
 
+          {/* 坐标系选择 */}
+          <div>
+            <label
+              className="block text-xs font-medium mb-1.5"
+              style={{ color: 'var(--theme-on-surface-variant)' }}
+            >
+              坐标系
+            </label>
+            <div className="flex gap-2">
+              {(['wgs84', 'gcj02'] as const).map((sys) => (
+                <button
+                  key={sys}
+                  type="button"
+                  onClick={() => setCoordSystem(sys)}
+                  className="flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-all"
+                  style={{
+                    backgroundColor: coordSystem === sys
+                      ? 'color-mix(in srgb, var(--theme-primary) 20%, transparent)'
+                      : 'var(--theme-surface)',
+                    color: coordSystem === sys ? 'var(--theme-primary)' : 'var(--theme-on-surface-variant)',
+                    border: coordSystem === sys ? '1px solid var(--theme-primary)' : '1px solid transparent',
+                  }}
+                >
+                  {sys === 'wgs84' ? 'WGS-84 (GPS)' : 'GCJ-02 (高德)'}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] mt-1" style={{ color: 'var(--theme-on-surface-variant)' }}>
+              {coordSystem === 'gcj02'
+                ? '从高德坐标拾取器复制的坐标，保存时自动转为 WGS-84'
+                : 'GPS 设备或国际地图的原始坐标，保留 6 位小数'}
+            </p>
+          </div>
+
           {/* 经纬度 */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -566,8 +606,8 @@ export default function CragEditPage() {
                 type="number"
                 value={lng}
                 onChange={(e) => setLng(e.target.value)}
-                placeholder="119.549"
-                step="0.001"
+                placeholder="119.549000"
+                step="0.000001"
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                 style={{
                   backgroundColor: 'var(--theme-surface)',
@@ -587,8 +627,8 @@ export default function CragEditPage() {
                 type="number"
                 value={lat}
                 onChange={(e) => setLat(e.target.value)}
-                placeholder="26.489"
-                step="0.001"
+                placeholder="26.489000"
+                step="0.000001"
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary)]"
                 style={{
                   backgroundColor: 'var(--theme-surface)',
