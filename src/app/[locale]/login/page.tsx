@@ -36,12 +36,14 @@ export default function LoginPage() {
         callbackURL: '/',
       })
       if (error) {
+        console.error('[Login] Magic Link error:', error)
         showToast(t('sendFailed'), 'error')
       } else {
         setIsSent(true)
         setCountdown(RESEND_COOLDOWN)
       }
-    } catch {
+    } catch (err) {
+      console.error('[Login] Magic Link exception:', err)
       showToast(t('sendFailed'), 'error')
     } finally {
       setIsSending(false)

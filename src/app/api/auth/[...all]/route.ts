@@ -2,11 +2,21 @@ import { getAuth } from '@/lib/auth'
 import { toNextJsHandler } from 'better-auth/next-js'
 
 export async function GET(req: Request) {
-  const auth = await getAuth()
-  return toNextJsHandler(auth).GET(req)
+  try {
+    const auth = await getAuth()
+    return toNextJsHandler(auth).GET(req)
+  } catch (err) {
+    console.error('[Auth Route] GET init failed:', err)
+    return Response.json({ error: 'Auth initialization failed' }, { status: 500 })
+  }
 }
 
 export async function POST(req: Request) {
-  const auth = await getAuth()
-  return toNextJsHandler(auth).POST(req)
+  try {
+    const auth = await getAuth()
+    return toNextJsHandler(auth).POST(req)
+  } catch (err) {
+    console.error('[Auth Route] POST init failed:', err)
+    return Response.json({ error: 'Auth initialization failed' }, { status: 500 })
+  }
 }

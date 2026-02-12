@@ -35,6 +35,9 @@ npm run dev
 |------|------|------|
 | `MONGODB_URI` | ✅ | MongoDB Atlas 连接字符串 |
 | `NEXT_PUBLIC_AMAP_KEY` | ✅ | 高德地图 API Key (地图展示 + 天气查询) |
+| `BETTER_AUTH_SECRET` | ✅ | Session 签名密钥 (32+ 字符随机串) |
+| `RESEND_API_KEY` | ✅ | Resend API Key (`re_xxxx`，Magic Link 邮件) |
+| `NEXT_PUBLIC_APP_URL` | ✅ | 应用 URL (`https://bouldering.top` / `http://localhost:3000`) |
 
 > 生产环境变量在 Vercel 项目设置中配置
 
@@ -76,6 +79,7 @@ npx shadcn@latest add <component>  # 添加 UI 组件
 - **I18n:** next-intl ^4.7.0 (中/英/法三语)
 - **PWA:** Serwist (service worker at `src/app/sw.ts`)
 - **Testing:** Vitest + Testing Library + Playwright (组件测试)
+- **Auth:** better-auth (Magic Link + Passkey/WebAuthn) + Resend (邮件)
 - **CI/CD:** 本地 pre-push hook (质量检查) + Vercel (部署)
 - **Map:** 高德地图 JS API 1.4.15 (@amap/amap-jsapi-loader)
 - **Icons:** lucide-react
@@ -95,8 +99,13 @@ src/
 │   │   ├── crag/[id]/          # 岩场详情页
 │   │   ├── route/              # 线路列表/详情
 │   │   ├── intro/              # 介绍页
-│   │   ├── profile/            # 用户页面
-│   │   ├── editor/             # ★ 编辑器 (管理后台)
+│   │   ├── login/              # ★ 登录页 (Magic Link + Passkey)
+│   │   ├── auth/               # 认证辅助页面
+│   │   │   ├── verify/         # Magic Link 验证中间页
+│   │   │   └── passkey-setup/  # Passkey 注册引导页
+│   │   ├── profile/            # 用户页面 (含账号管理 + Passkey 管理)
+│   │   ├── editor/             # ★ 编辑器 (管理后台, session+admin 保护)
+│   │   │   ├── layout.tsx      # Server-side auth guard
 │   │   │   ├── page.tsx        # 编辑器首页
 │   │   │   ├── routes/         # 线路编辑
 │   │   │   ├── faces/          # 岩面图片管理
@@ -105,7 +114,9 @@ src/
 │   │       ├── page.tsx        # 已下载岩场列表
 │   │       ├── crag/[id]/      # 离线岩场详情
 │   │       └── route/[id]/     # 离线线路详情
-│   └── api/                    # API Routes (见下方 API Routes 表)
+│   └── api/
+│       ├── auth/[...all]/      # ★ better-auth catch-all (Magic Link + Passkey + Session)
+│       └── ...                 # 其他 API Routes (见下方表)
 ├── i18n/                       # ★ 国际化配置
 │   ├── navigation.ts           # createNavigation (Link, redirect, usePathname)
 │   ├── request.ts              # getRequestConfig (server-side i18n)
@@ -154,6 +165,7 @@ src/
 │   └── theme-provider.tsx, theme-switcher.tsx
 ├── hooks/
 │   ├── use-face-image.ts       # ★ FaceImageCache hook
+│   ├── use-passkey-management.ts # Passkey CRUD (列表/添加/删除)
 │   ├── use-offline-download.ts # 离线下载 hook
 │   ├── use-offline-mode.ts     # 离线模式检测
 │   ├── use-route-search.ts     # 线路搜索
@@ -176,6 +188,9 @@ src/
     │   ├── types.ts            # FaceImageCacheService 接口
     │   ├── cache-service.ts    # 缓存实现 (URL 版本化)
     │   └── index.ts            # 导出
+    ├── auth.ts                 # ★ better-auth server config (lazy singleton)
+    ├── auth-client.ts          # better-auth React client (useSession, signIn, signOut)
+    ├── email-templates.ts      # Magic Link 邮件 HTML 模板
     ├── db/index.ts             # 数据访问层 (typed CRUD functions)
     ├── mongodb.ts              # MongoDB 连接层 (exports getDatabase())
     ├── constants.ts            # ★ 图片 URL 生成 (getTopoImageUrl, getFaceTopoUrl 等)
@@ -213,6 +228,7 @@ scripts/                        # 数据库脚本
 doc/
 ├── PROJECT_OVERVIEW.md         # 项目技术文档 (详细)
 ├── PROJECT_INDEX.md            # 项目索引 (自动生成)
+├── AUTH_SYSTEM.md              # 认证系统架构文档
 ├── FACE_IMAGE_CACHE_ARCHITECTURE.md  # 缓存架构文档
 └── data-flow/                  # 数据流文档
     ├── ROUTE_RENDERING.md      # Bloc 线路渲染数据流
@@ -325,6 +341,19 @@ import { Link } from '@/i18n/navigation'
 - **失效**: 编辑器 CRUD 操作后调用 `faceImageCache.invalidate(faceKey)`
 
 > 架构详情见 `doc/FACE_IMAGE_CACHE_ARCHITECTURE.md`
+
+## Authentication (better-auth)
+
+无密码认证：Magic Link 邮件 + Passkey 生物识别。
+
+- **Server**: `src/lib/auth.ts` — lazy singleton，通过 `getAuth()` 获取 (避免构建期 top-level await)
+- **Client**: `src/lib/auth-client.ts` — `useSession()`, `signIn`, `signOut`, `authClient.passkey.*`
+- **API**: `/api/auth/[...all]` — better-auth catch-all 路由
+- **编辑器保护**: `editor/layout.tsx` 为 Server Component，检查 `session.user.role === 'admin'`
+- **MongoDB**: 自动创建 `user`, `session`, `account`, `verification`, `passkey` collections (单数命名)
+- **Hook**: `usePasskeyManagement()` — Passkey 列表/添加/删除
+
+> 架构详情见 `doc/AUTH_SYSTEM.md`
 
 ## Design System
 
@@ -499,6 +528,7 @@ const key = `${cragId}/${encodeURIComponent(faceId)}.jpg`  // 会导致双重编
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
+| `GET/POST` | `/api/auth/[...all]` | ★ better-auth catch-all (登录/注册/session/passkey) |
 | `GET` | `/api/crags` | 获取所有岩场列表 |
 | `GET` | `/api/crags/[id]/routes` | 获取指定岩场的线路列表 |
 | `PATCH` | `/api/crags/[id]/areas` | 更新岩场区域列表 |

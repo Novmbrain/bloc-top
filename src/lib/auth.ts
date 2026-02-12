@@ -18,9 +18,11 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
   if (_auth) return Promise.resolve(_auth)
   if (!_promise) {
     _promise = (async () => {
+      console.log('[Auth] Initializing better-auth...')
       const resend = new Resend(process.env.RESEND_API_KEY)
       const client = await clientPromise
       const db = await getDatabase()
+      console.log('[Auth] MongoDB connected, creating auth instance')
 
       const instance = betterAuth({
         database: mongodbAdapter(db, { client }),
@@ -41,10 +43,12 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
           magicLink({
             expiresIn: 600, // 10 minutes
             sendMagicLink: async ({ email, url }) => {
-              // TODO: 域名验证后改回 'noreply@bouldering.top'
-              const from = process.env.NODE_ENV === 'production'
-                ? '寻岩记 <noreply@bouldering.top>'
+              // 使用环境变量控制发件人，域名验证完成后在 Vercel 设置
+              // RESEND_FROM_EMAIL=noreply@bouldering.top
+              const from = process.env.RESEND_FROM_EMAIL
+                ? `寻岩记 <${process.env.RESEND_FROM_EMAIL}>`
                 : '寻岩记 <onboarding@resend.dev>'
+              console.log('[Auth] Sending Magic Link to:', email, 'from:', from)
               const { error } = await resend.emails.send({
                 from,
                 to: email,
@@ -52,9 +56,10 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
                 html: magicLinkEmailTemplate(url),
               })
               if (error) {
-                console.error('[Auth] Magic Link email failed:', error)
+                console.error('[Auth] Magic Link email failed:', JSON.stringify(error))
                 throw new Error(error.message)
               }
+              console.log('[Auth] Magic Link sent successfully to:', email)
             },
           }),
 
