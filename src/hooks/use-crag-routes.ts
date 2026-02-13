@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import type { Crag, Route } from '@/types'
+import type { Crag, Route, UserRole } from '@/types'
 
 interface FaceInfo {
   faceId: string
@@ -11,6 +11,8 @@ interface FaceInfo {
 interface UseCragRoutesOptions {
   /** 是否同时加载 R2 岩面数据 */
   includeFaces?: boolean
+  /** 编辑器模式：从 /api/editor/crags 获取权限过滤后的岩场列表 */
+  editorMode?: boolean
 }
 
 /**
@@ -19,6 +21,7 @@ interface UseCragRoutesOptions {
  */
 export function useCragRoutes(options?: UseCragRoutesOptions) {
   const includeFaces = options?.includeFaces ?? false
+  const editorMode = options?.editorMode ?? false
 
   const [crags, setCrags] = useState<Crag[]>([])
   const [routes, setRoutes] = useState<Route[]>([])
@@ -27,17 +30,25 @@ export function useCragRoutes(options?: UseCragRoutesOptions) {
   const [isLoadingRoutes, setIsLoadingRoutes] = useState(false)
   const [r2Faces, setR2Faces] = useState<FaceInfo[]>([])
   const [isLoadingFaces, setIsLoadingFaces] = useState(false)
+  // 编辑器模式下的额外状态
+  const [userRole, setUserRole] = useState<UserRole | null>(null)
+  const [canCreate, setCanCreate] = useState(false)
 
   // 加载岩场列表
   useEffect(() => {
+    const endpoint = editorMode ? '/api/editor/crags' : '/api/crags'
     async function loadCrags() {
       try {
-        const response = await fetch('/api/crags')
+        const response = await fetch(endpoint)
         if (response.ok) {
           const data = await response.json()
           setCrags(data.crags || [])
           if (data.crags?.length > 0) {
             setSelectedCragId(data.crags[0].id)
+          }
+          if (editorMode) {
+            setUserRole(data.role ?? null)
+            setCanCreate(data.canCreate ?? false)
           }
         }
       } catch (error) {
@@ -47,7 +58,7 @@ export function useCragRoutes(options?: UseCragRoutesOptions) {
       }
     }
     loadCrags()
-  }, [])
+  }, [editorMode])
 
   // 加载岩场线路（可选并行加载 faces）
   useEffect(() => {
@@ -127,5 +138,6 @@ export function useCragRoutes(options?: UseCragRoutesOptions) {
     stats,
     updateCragAreas,
     ...(includeFaces ? { r2Faces, setR2Faces, isLoadingFaces } : {}),
+    ...(editorMode ? { userRole, canCreate } : {}),
   }
 }

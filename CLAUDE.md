@@ -596,6 +596,7 @@ const key = `${cragId}/${encodeURIComponent(faceId)}.jpg`  // 会导致双重编
 | `GET/PATCH/DELETE` | `/api/faces` | 岩面图片管理 (全部需认证+岩场权限) |
 | `POST` | `/api/upload` | 上传 Topo 图片到 R2 (需认证+岩场权限) |
 | `GET/POST/DELETE` | `/api/crag-permissions` | 岩场权限管理 (需 creator/admin) |
+| `GET` | `/api/editor/crags` | 编辑器岩场列表 (权限过滤, 需认证) |
 | `POST` | `/api/revalidate` | ISR 按需重验证 |
 | `GET` | `/api/weather?lng=119&lat=26` | 天气数据 (含攀岩适宜度, 1h 缓存) |
 | `GET` | `/api/geo` | IP 定位 → 推断城市 (主要由 middleware 替代，保留供 profile 等场景) |

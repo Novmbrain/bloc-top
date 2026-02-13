@@ -31,7 +31,7 @@ export default function BetaEditorPage() {
   const {
     crags, routes, setRoutes, selectedCragId, setSelectedCragId,
     isLoadingCrags, isLoadingRoutes, stats,
-  } = useCragRoutes()
+  } = useCragRoutes({ editorMode: true })
 
   // ============ 选择状态 ============
   const [selectedArea, setSelectedArea] = useState<string | null>(null)

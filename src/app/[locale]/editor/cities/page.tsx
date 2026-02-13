@@ -18,6 +18,8 @@ import { AppTabbar } from '@/components/app-tabbar'
 import { useToast } from '@/components/ui/toast'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
 import { gcj02ToWgs84, truncateCoordinates } from '@/lib/coordinate-utils'
+import { useSession } from '@/lib/auth-client'
+import { useRouter } from '@/i18n/navigation'
 import type { CityConfig, PrefectureConfig } from '@/types'
 
 // ==================== 城市管理页面 ====================
@@ -25,6 +27,16 @@ import type { CityConfig, PrefectureConfig } from '@/types'
 export default function CityManagementPage() {
   useBreakAppShellLimit()
   const { showToast } = useToast()
+  const { data: session, isPending: isSessionPending } = useSession()
+  const router = useRouter()
+  const userRole = (session?.user as { role?: string })?.role || 'user'
+
+  // Admin-only 守卫：非 admin 重定向到编辑器首页
+  useEffect(() => {
+    if (!isSessionPending && userRole !== 'admin') {
+      router.replace('/editor')
+    }
+  }, [isSessionPending, userRole, router])
 
   const [cities, setCities] = useState<CityConfig[]>([])
   const [prefectures, setPrefectures] = useState<PrefectureConfig[]>([])
@@ -76,7 +88,7 @@ export default function CityManagementPage() {
     }
   }
 
-  if (loading) {
+  if (loading || isSessionPending || userRole !== 'admin') {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
