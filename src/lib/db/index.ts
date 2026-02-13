@@ -1048,3 +1048,127 @@ export async function deletePrefecture(id: string): Promise<boolean> {
     throw error
   }
 }
+
+// ============ Avatar 相关操作 ============
+
+/**
+ * 上传或更新用户头像
+ * 使用 upsert：同一用户只保留最新头像
+ */
+export async function upsertAvatar(
+  userId: string,
+  data: Buffer,
+  contentType: string
+): Promise<void> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+
+    await db.collection('avatars').updateOne(
+      { userId },
+      {
+        $set: {
+          data,
+          contentType,
+          size: data.length,
+          updatedAt: new Date(),
+        },
+      },
+      { upsert: true }
+    )
+
+    // 同步更新 better-auth user 文档的 image 字段
+    const avatarUrl = `/api/user/avatar/${userId}?t=${Date.now()}`
+    await db.collection('user').updateOne(
+      { _id: toMongoId(userId) },
+      { $set: { image: avatarUrl } }
+    )
+
+    log.info(`Upserted avatar for user: ${userId}`, {
+      action: 'upsertAvatar',
+      duration: Date.now() - start,
+      metadata: { userId, size: data.length, contentType },
+    })
+  } catch (error) {
+    log.error(`Failed to upsert avatar for user: ${userId}`, error, {
+      action: 'upsertAvatar',
+      duration: Date.now() - start,
+      metadata: { userId },
+    })
+    throw error
+  }
+}
+
+/**
+ * 获取用户头像数据
+ */
+export async function getAvatar(
+  userId: string
+): Promise<{ data: Buffer; contentType: string; updatedAt: Date } | null> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const doc = await db.collection('avatars').findOne({ userId })
+
+    if (!doc) {
+      log.debug(`Avatar not found for user: ${userId}`, {
+        action: 'getAvatar',
+        duration: Date.now() - start,
+      })
+      return null
+    }
+
+    log.debug(`Fetched avatar for user: ${userId}`, {
+      action: 'getAvatar',
+      duration: Date.now() - start,
+    })
+
+    return {
+      data: doc.data.buffer ? Buffer.from(doc.data.buffer) : doc.data,
+      contentType: doc.contentType,
+      updatedAt: doc.updatedAt,
+    }
+  } catch (error) {
+    log.error(`Failed to fetch avatar for user: ${userId}`, error, {
+      action: 'getAvatar',
+      duration: Date.now() - start,
+      metadata: { userId },
+    })
+    throw error
+  }
+}
+
+/**
+ * 删除用户头像
+ */
+export async function deleteAvatar(userId: string): Promise<boolean> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+
+    const result = await db.collection('avatars').deleteOne({ userId })
+
+    // 清空 user 文档的 image 字段
+    await db.collection('user').updateOne(
+      { _id: toMongoId(userId) },
+      { $set: { image: null } }
+    )
+
+    log.info(`Deleted avatar for user: ${userId} (matched: ${result.deletedCount})`, {
+      action: 'deleteAvatar',
+      duration: Date.now() - start,
+    })
+
+    return result.deletedCount > 0
+  } catch (error) {
+    log.error(`Failed to delete avatar for user: ${userId}`, error, {
+      action: 'deleteAvatar',
+      duration: Date.now() - start,
+      metadata: { userId },
+    })
+    throw error
+  }
+}

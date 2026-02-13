@@ -335,7 +335,16 @@
     "preferences": "Préférences",
     "about": "À propos",
     "accountSecurity": "Compte & Sécurité",
-    "accountSecurityHint": "Mot de passe, Passkey, gestion de connexion"
+    "accountSecurityHint": "Mot de passe, Passkey, gestion de connexion",
+    "avatarTapToChange": "Appuyez pour changer l'avatar",
+    "avatarCropTitle": "Recadrer l'avatar",
+    "avatarUpdated": "Avatar mis à jour",
+    "avatarUploadFailed": "Échec du téléchargement, réessayez",
+    "avatarInvalidFormat": "Veuillez sélectionner une image JPG/PNG/WebP",
+    "avatarRemove": "Supprimer l'avatar",
+    "avatarDeleting": "Suppression...",
+    "avatarDeleted": "Avatar supprimé",
+    "avatarDeleteFailed": "Échec de la suppression, réessayez"
   },
   "Intro": {
     "heroTitle": "BlocTop",

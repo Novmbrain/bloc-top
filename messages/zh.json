@@ -367,7 +367,16 @@
     "preferences": "偏好设置",
     "about": "关于",
     "accountSecurity": "账号与安全",
-    "accountSecurityHint": "密码、Passkey、登录管理"
+    "accountSecurityHint": "密码、Passkey、登录管理",
+    "avatarTapToChange": "点击更换头像",
+    "avatarCropTitle": "裁剪头像",
+    "avatarUpdated": "头像已更新",
+    "avatarUploadFailed": "头像上传失败，请重试",
+    "avatarInvalidFormat": "请选择 JPG/PNG/WebP 格式的图片",
+    "avatarRemove": "移除头像",
+    "avatarDeleting": "正在移除...",
+    "avatarDeleted": "头像已移除",
+    "avatarDeleteFailed": "移除失败，请重试"
   },
   "Intro": {
     "heroTitle": "寻岩记",

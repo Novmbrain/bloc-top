@@ -367,7 +367,16 @@
     "preferences": "Preferences",
     "about": "About",
     "accountSecurity": "Account & Security",
-    "accountSecurityHint": "Password, Passkey, login management"
+    "accountSecurityHint": "Password, Passkey, login management",
+    "avatarTapToChange": "Tap to change avatar",
+    "avatarCropTitle": "Crop Avatar",
+    "avatarUpdated": "Avatar updated",
+    "avatarUploadFailed": "Upload failed, please try again",
+    "avatarInvalidFormat": "Please select a JPG/PNG/WebP image",
+    "avatarRemove": "Remove avatar",
+    "avatarDeleting": "Removing...",
+    "avatarDeleted": "Avatar removed",
+    "avatarDeleteFailed": "Failed to remove, please try again"
   },
   "Intro": {
     "heroTitle": "BlocTop",

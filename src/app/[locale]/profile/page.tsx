@@ -14,6 +14,7 @@ import { Drawer } from '@/components/ui/drawer'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageViewer } from '@/components/ui/image-viewer'
 import { useSession } from '@/lib/auth-client'
+import { UserAvatar } from '@/components/user-avatar'
 
 // 访问统计缓存 key
 const VISITS_CACHE_KEY = 'total_visits_cache'
@@ -37,6 +38,12 @@ export default function ProfilePage() {
   const { data: session } = useSession()
   const isLoggedIn = !!session
   const isAdmin = (session?.user as { role?: string } | undefined)?.role === 'admin'
+
+  // Avatar local state (overrides session until next refresh)
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null | undefined>(undefined)
+  const avatarUrl = localAvatarUrl !== undefined
+    ? localAvatarUrl
+    : (session?.user as { image?: string | null } | undefined)?.image ?? null
 
   // Drawer states
   const [securityDrawerOpen, setSecurityDrawerOpen] = useState(false)
@@ -143,12 +150,11 @@ export default function ProfilePage() {
                 className="glass w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
                 style={{ borderRadius: 'var(--theme-radius-xl)' }}
               >
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))' }}
-                >
-                  <User className="w-6 h-6" style={{ color: 'var(--theme-primary)' }} />
-                </div>
+                <UserAvatar
+                  src={avatarUrl}
+                  email={session.user.email}
+                  size={48}
+                />
                 <div className="flex-1 text-left">
                   <p className="text-base font-medium" style={{ color: 'var(--theme-on-surface)' }}>
                     {session.user.email}
@@ -311,8 +317,15 @@ export default function ProfilePage() {
         <SecurityDrawer
           isOpen={securityDrawerOpen}
           onClose={() => setSecurityDrawerOpen(false)}
-          session={{ user: { email: session.user.email, role: (session.user as { role?: string }).role } }}
+          session={{
+            user: {
+              email: session.user.email,
+              role: (session.user as { role?: string }).role,
+              image: avatarUrl,
+            },
+          }}
           isAdmin={isAdmin}
+          onAvatarChange={setLocalAvatarUrl}
         />
       )}
 
