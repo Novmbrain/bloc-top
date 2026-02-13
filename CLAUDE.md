@@ -111,6 +111,7 @@ src/
 │   │   │   ├── routes/         # 线路编辑
 │   │   │   ├── faces/          # 岩面图片管理
 │   │   │   ├── betas/          # Beta 视频管理
+│   │   │   ├── users/          # 用户管理 (admin-only, 角色分配)
 │   │   │   └── cities/         # 城市/地级市管理
 │   │   └── offline/            # ★ 离线浏览
 │   │       ├── page.tsx        # 已下载岩场列表
