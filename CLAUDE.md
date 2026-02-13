@@ -108,6 +108,8 @@ src/
 │   │   ├── editor/             # ★ 编辑器 (管理后台, session+admin 保护)
 │   │   │   ├── layout.tsx      # Server-side auth guard
 │   │   │   ├── page.tsx        # 编辑器首页
+│   │   │   ├── crags/          # 岩场管理 (列表 + 详情/权限)
+│   │   │   │   └── [id]/       # 岩场详情 + 权限管理面板
 │   │   │   ├── routes/         # 线路编辑
 │   │   │   ├── faces/          # 岩面图片管理
 │   │   │   ├── betas/          # Beta 视频管理
@@ -133,6 +135,7 @@ src/
 │   ├── editor/                 # 编辑器专用组件
 │   │   ├── crag-selector.tsx, route-card.tsx, progress-ring.tsx
 │   │   ├── editor-page-header.tsx      # 编辑器页面 Header (动态返回按钮)
+│   │   ├── crag-permissions-panel.tsx  # 岩场权限管理面板 (创建者/管理者)
 │   │   └── fullscreen-topo-editor.tsx  # Topo 线路编辑器
 │   ├── face-image-provider.tsx # ★ FaceImageCache React 上下文
 │   ├── face-thumbnail-strip.tsx # 岩面缩略图条
@@ -598,6 +601,7 @@ const key = `${cragId}/${encodeURIComponent(faceId)}.jpg`  // 会导致双重编
 | `POST` | `/api/upload` | 上传 Topo 图片到 R2 (需认证+岩场权限) |
 | `GET/POST/DELETE` | `/api/crag-permissions` | 岩场权限管理 (需 creator/admin) |
 | `GET` | `/api/editor/crags` | 编辑器岩场列表 (权限过滤, 需认证) |
+| `GET` | `/api/editor/search-users?q=xxx` | 搜索用户 (邮箱模糊匹配, 需 editor 权限) |
 | `POST` | `/api/revalidate` | ISR 按需重验证 |
 | `GET` | `/api/weather?lng=119&lat=26` | 天气数据 (含攀岩适宜度, 1h 缓存) |
 | `GET` | `/api/geo` | IP 定位 → 推断城市 (主要由 middleware 替代，保留供 profile 等场景) |
