@@ -60,3 +60,9 @@ next-env.d.ts
 .worktrees/
 .security-key
 logs/security/
+
+# Nx build cache
+.nx/
+
+# Playwright MCP artifacts
+.playwright-mcp/

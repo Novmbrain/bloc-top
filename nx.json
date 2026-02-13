@@ -1,0 +1,67 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "extends": "nx/presets/npm.json",
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": ["{projectRoot}/.next"]
+    },
+    "lint": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/eslint.config.mjs"
+      ]
+    },
+    "test": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    },
+    "test:run": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    },
+    "test:ct": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/playwright-ct.config.ts"
+      ]
+    },
+    "typecheck": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/tsconfig.json"
+      ]
+    }
+  },
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "!{projectRoot}/.next/**/*",
+      "!{projectRoot}/node_modules/**/*",
+      "!{projectRoot}/coverage/**/*",
+      "!{projectRoot}/playwright-report/**/*",
+      "!{projectRoot}/.playwright/**/*"
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.test.{ts,tsx}",
+      "!{projectRoot}/**/*.ct.{ts,tsx}",
+      "!{projectRoot}/test/**/*"
+    ]
+  },
+  "nxCloudAccessToken": null
+}
