@@ -2,6 +2,7 @@ import { getAuth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { canAccessEditor } from '@/lib/permissions'
+import type { UserRole } from '@/types'
 
 export default async function EditorLayout({
   children,
@@ -17,7 +18,7 @@ export default async function EditorLayout({
     redirect('/login')
   }
 
-  const role = (session.user as { role?: string }).role || 'user'
+  const role = ((session.user as { role?: string }).role || 'user') as UserRole
   const hasAccess = await canAccessEditor(session.user.id, role)
 
   if (!hasAccess) {
