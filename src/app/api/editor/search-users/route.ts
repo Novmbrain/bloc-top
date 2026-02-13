@@ -1,20 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { requireAuth } from '@/lib/require-auth'
+import { canAccessEditor } from '@/lib/permissions'
 import { getDatabase } from '@/lib/mongodb'
+import { createModuleLogger } from '@/lib/logger'
+
+const log = createModuleLogger('API:SearchUsers')
+
+/** Escape regex special characters to prevent ReDoS */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
 
 /**
  * GET /api/editor/search-users?q=xxx
- * Search users by email (contains match). Requires authentication.
+ * Search users by email (contains match).
+ * Requires editor access (admin, crag_creator, or user with crag permissions).
  * Returns at most 10 results with minimal info.
  */
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request)
   if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
+
+  // Only users with editor access can search
+  if (!(await canAccessEditor(userId, role))) {
+    return NextResponse.json(
+      { success: false, error: '无权限' },
+      { status: 403 }
+    )
+  }
 
   const query = request.nextUrl.searchParams.get('q')?.trim()
   if (!query || query.length < 2) {
-    return NextResponse.json({ users: [] })
+    return NextResponse.json({ success: true, users: [] })
   }
 
   try {
@@ -22,7 +41,7 @@ export async function GET(request: NextRequest) {
     const docs = await db
       .collection('user')
       .find({
-        email: { $regex: query, $options: 'i' },
+        email: { $regex: escapeRegex(query), $options: 'i' },
       })
       .project({ _id: 1, name: 1, email: 1 })
       .limit(10)
@@ -34,10 +53,13 @@ export async function GET(request: NextRequest) {
       email: doc.email,
     }))
 
-    return NextResponse.json({ users })
-  } catch {
+    return NextResponse.json({ success: true, users })
+  } catch (error) {
+    log.error('Failed to search users', error, {
+      action: 'GET /api/editor/search-users',
+    })
     return NextResponse.json(
-      { error: '搜索用户失败' },
+      { success: false, error: '搜索用户失败' },
       { status: 500 }
     )
   }
