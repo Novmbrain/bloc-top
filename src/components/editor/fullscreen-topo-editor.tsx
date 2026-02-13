@@ -1,19 +1,21 @@
 'use client'
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
-import { X, Trash2, Undo2, Minus, Plus, RotateCcw, Check } from 'lucide-react'
+import { X, Trash2, Undo2, Minus, Plus, RotateCcw, Check, Eye, EyeOff } from 'lucide-react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
 import type { TopoPoint } from '@/types'
 import { catmullRomCurve, scalePoints } from '@/lib/topo-utils'
+import { getGradeColor } from '@/lib/tokens'
 import { VIEW_WIDTH, VIEW_HEIGHT } from '@/lib/editor-utils'
 
-/** 曲线张力预设 */
-const TENSION_PRESETS = [
-  { value: 0, label: '平滑' },
-  { value: 0.5, label: '适中' },
-  { value: 1, label: '折线' },
-] as const
+/** 其他线路的简化数据 */
+interface OtherRoute {
+  id: number
+  grade: string
+  topoLine: TopoPoint[]
+  topoTension?: number
+}
 
 /**
  * 全屏 Topo 编辑覆盖层
@@ -24,6 +26,7 @@ export function FullscreenTopoEditor({
   topoLine,
   routeColor,
   tension = 0,
+  otherRoutes = [],
   onAddPoint,
   onRemoveLastPoint,
   onClearPoints,
@@ -34,6 +37,7 @@ export function FullscreenTopoEditor({
   topoLine: TopoPoint[]
   routeColor: string
   tension?: number
+  otherRoutes?: OtherRoute[]
   onAddPoint: (point: TopoPoint) => void
   onRemoveLastPoint: () => void
   onClearPoints: () => void
@@ -46,16 +50,25 @@ export function FullscreenTopoEditor({
   const [scale, setScale] = useState(1)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [showOtherRoutes, setShowOtherRoutes] = useState(true)
   const initialTopoLineRef = useRef<TopoPoint[]>(topoLine)
   const initialTensionRef = useRef<number>(tension ?? 0)
 
-  // 找到最接近当前 tension 的预设索引
-  const activeTensionIndex = useMemo(() =>
-    TENSION_PRESETS.reduce((closest, preset, i) =>
-      Math.abs(preset.value - (tension ?? 0)) < Math.abs(TENSION_PRESETS[closest].value - (tension ?? 0)) ? i : closest
-    , 0),
-    [tension]
-  )
+  // 预计算其他线路的 SVG 路径数据
+  const otherRoutePaths = useMemo(() => {
+    if (!showOtherRoutes) return []
+    return otherRoutes
+      .filter(r => r.topoLine.length >= 2)
+      .map(r => {
+        const scaled = scalePoints(r.topoLine, VIEW_WIDTH, VIEW_HEIGHT)
+        return {
+          id: r.id,
+          color: getGradeColor(r.grade),
+          path: catmullRomCurve(scaled, 0.5, r.topoTension ?? 0),
+          start: scaled[0],
+        }
+      })
+  }, [otherRoutes, showOtherRoutes])
 
   const hasTopoChanges = useCallback((): boolean => {
     const orig = initialTopoLineRef.current
@@ -128,9 +141,9 @@ export function FullscreenTopoEditor({
       className="fixed inset-0 z-[100] flex flex-col"
       style={{ backgroundColor: '#000' }}
     >
-      {/* 顶部 — 极简，仅关闭按钮 */}
+      {/* 顶部工具栏 */}
       <div
-        className="absolute top-0 left-0 right-0 z-10 flex items-center px-4 py-3 pointer-events-none"
+        className="absolute top-0 left-0 right-0 z-10 flex items-center gap-2 px-4 py-3 pointer-events-none"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <button
@@ -140,6 +153,21 @@ export function FullscreenTopoEditor({
         >
           <X className="w-5 h-5 text-white" />
         </button>
+        {otherRoutes.length > 0 && (
+          <button
+            onClick={() => setShowOtherRoutes(prev => !prev)}
+            className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-all active:scale-90"
+            style={{
+              backgroundColor: showOtherRoutes ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.45)',
+              WebkitBackdropFilter: 'blur(12px)',
+              backdropFilter: 'blur(12px)',
+              color: 'white',
+            }}
+          >
+            {showOtherRoutes ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+            {otherRoutes.length}条
+          </button>
+        )}
       </div>
 
       {/* 全屏缩放画布 */}
@@ -175,6 +203,37 @@ export function FullscreenTopoEditor({
                 viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
                 preserveAspectRatio="none"
               >
+                {/* 其他线路（只读，底层） */}
+                {otherRoutePaths.map(r => (
+                  <g key={r.id} opacity={0.35}>
+                    <path
+                      d={r.path}
+                      stroke="white"
+                      strokeWidth={5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                      opacity={0.5}
+                    />
+                    <path
+                      d={r.path}
+                      stroke={r.color}
+                      strokeWidth={3}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
+                    <circle
+                      cx={r.start.x}
+                      cy={r.start.y}
+                      r={5}
+                      fill={r.color}
+                      stroke="white"
+                      strokeWidth={1.5}
+                    />
+                  </g>
+                ))}
+                {/* 当前编辑线路 */}
                 {fsPathData && (
                   <path
                     d={fsPathData}
@@ -319,40 +378,28 @@ export function FullscreenTopoEditor({
             </button>
           </div>
 
-          {/* 第二行: 张力分段选择器 (≥2 个点时显示) */}
+          {/* 第二行: 张力滑块 (≥2 个点时显示) */}
           {topoLine.length >= 2 && onTensionChange && (
             <div
-              className="flex items-center justify-center gap-3 px-4 py-2.5"
+              className="flex items-center gap-3 px-4 py-2.5"
               style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
             >
-              <span className="text-[11px] text-white/35 whitespace-nowrap">弯度</span>
-              <div
-                className="relative flex rounded-lg p-0.5"
-                style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}
-              >
-                {/* 滑动指示器 */}
-                <div
-                  className="absolute top-0.5 bottom-0.5 rounded-md transition-transform duration-200 ease-out"
-                  style={{
-                    width: `${100 / TENSION_PRESETS.length}%`,
-                    transform: `translateX(${activeTensionIndex * 100}%)`,
-                    backgroundColor: routeColor,
-                    opacity: 0.85,
-                  }}
-                />
-                {TENSION_PRESETS.map((preset, i) => (
-                  <button
-                    key={preset.value}
-                    onClick={() => onTensionChange(preset.value)}
-                    className="relative z-10 px-5 py-1.5 text-xs font-medium transition-colors duration-200"
-                    style={{
-                      color: i === activeTensionIndex ? '#fff' : 'rgba(255,255,255,0.4)',
-                    }}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
+              <span className="text-[11px] text-white/35 whitespace-nowrap">平滑</span>
+              {/* eslint-disable-next-line no-restricted-syntax -- range input, no IME */}
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={tension ?? 0}
+                onChange={(e) => onTensionChange(parseFloat(e.target.value))}
+                className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, ${routeColor} ${(tension ?? 0) * 100}%, rgba(255,255,255,0.15) ${(tension ?? 0) * 100}%)`,
+                  accentColor: routeColor,
+                }}
+              />
+              <span className="text-[11px] text-white/35 whitespace-nowrap">折线</span>
             </div>
           )}
 
