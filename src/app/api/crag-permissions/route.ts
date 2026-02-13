@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ObjectId } from 'mongodb'
 import { getCragPermission, getCragPermissionsByCragId, createCragPermission, deleteCragPermission } from '@/lib/db'
 import { requireAuth } from '@/lib/require-auth'
 import { canManagePermissions } from '@/lib/permissions'
+import { getDatabase } from '@/lib/mongodb'
 import { createModuleLogger } from '@/lib/logger'
 import type { CragPermissionRole } from '@/types'
 
@@ -35,7 +37,31 @@ export async function GET(request: NextRequest) {
 
   try {
     const permissions = await getCragPermissionsByCragId(cragId)
-    return NextResponse.json({ success: true, permissions })
+
+    // Batch-fetch user info for all permissions
+    const userIds = permissions.map(p => p.userId)
+    if (userIds.length > 0) {
+      const db = await getDatabase()
+      const objectIds = userIds.map(id => new ObjectId(id))
+      const users = await db
+        .collection('user')
+        .find({ _id: { $in: objectIds } })
+        .project({ _id: 1, name: 1, email: 1 })
+        .toArray()
+
+      const userMap = new Map(
+        users.map(u => [(u._id as ObjectId).toString(), { name: u.name || '', email: u.email }])
+      )
+
+      const enriched = permissions.map(p => ({
+        ...p,
+        user: userMap.get(p.userId) || { name: '', email: '' },
+      }))
+
+      return NextResponse.json({ success: true, permissions: enriched })
+    }
+
+    return NextResponse.json({ success: true, permissions: [] })
   } catch (error) {
     log.error('Failed to get crag permissions', error, {
       action: 'GET /api/crag-permissions',
