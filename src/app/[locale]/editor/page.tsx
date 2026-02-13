@@ -3,49 +3,69 @@
 import { ArrowLeft, Image as ImageIcon, Edit3, Play, Mountain, MapPin } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
+import { useSession } from '@/lib/auth-client'
+
+interface EditorCard {
+  href: string
+  icon: typeof Mountain
+  title: string
+  description: string
+  detail: string
+  adminOnly?: boolean
+}
 
 /**
  * Topo 编辑器入口 Hub 页面
  * 提供岩面管理和线路标注两个入口
+ * 根据用户角色过滤可见卡片
  */
 export default function TopoEditorPage() {
-  const cards = [
+  const { data: session } = useSession()
+  const userRole = (session?.user as { role?: string })?.role || 'user'
+
+  const allCards: EditorCard[] = [
     {
-      href: '/editor/crags' as const,
+      href: '/editor/crags',
       icon: Mountain,
       title: '岩场管理',
       description: '添加和编辑岩场基本信息',
       detail: '新建岩场 → 填写信息 → 保存',
     },
     {
-      href: '/editor/faces' as const,
+      href: '/editor/faces',
       icon: ImageIcon,
       title: '岩面管理',
       description: '上传和管理岩面照片',
       detail: '选择岩场 → 创建岩面 → 上传照片',
     },
     {
-      href: '/editor/routes' as const,
+      href: '/editor/routes',
       icon: Edit3,
       title: '线路标注',
       description: '标注线路攀爬路径',
       detail: '选择岩面 → 选择线路 → 画 Topo 路线',
     },
     {
-      href: '/editor/betas' as const,
+      href: '/editor/betas',
       icon: Play,
       title: 'Beta 管理',
       description: '管理用户提交的 Beta 视频',
       detail: '选择线路 → 查看 Beta → 编辑或删除',
     },
     {
-      href: '/editor/cities' as const,
+      href: '/editor/cities',
       icon: MapPin,
       title: '城市管理',
       description: '管理城市和地级市配置',
       detail: '新增城市 → 设置地级市 → 切换可用状态',
+      adminOnly: true,
     },
   ]
+
+  const cards = allCards.filter(card => {
+    if (card.adminOnly && userRole !== 'admin') return false
+    return true
+  })
 
   return (
     <div

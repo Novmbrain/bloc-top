@@ -83,7 +83,7 @@ export default function FaceManagementPage() {
   const {
     crags, routes, setRoutes, selectedCragId, setSelectedCragId,
     isLoadingCrags, isLoadingRoutes, stats, updateCragAreas,
-  } = useCragRoutes()
+  } = useCragRoutes({ editorMode: true })
   const faceImageCache = useFaceImageCache()
 
   // ============ R2 上已有的 face 列表 ============
