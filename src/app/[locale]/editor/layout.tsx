@@ -1,6 +1,7 @@
 import { getAuth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { canAccessEditor } from '@/lib/permissions'
 
 export default async function EditorLayout({
   children,
@@ -12,7 +13,14 @@ export default async function EditorLayout({
     headers: await headers(),
   })
 
-  if (!session || (session.user as { role?: string }).role !== 'admin') {
+  if (!session?.user?.id) {
+    redirect('/login')
+  }
+
+  const role = (session.user as { role?: string }).role || 'user'
+  const hasAccess = await canAccessEditor(session.user.id, role)
+
+  if (!hasAccess) {
     redirect('/login')
   }
 

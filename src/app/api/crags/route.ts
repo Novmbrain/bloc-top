@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllCrags, getCragsByCityId, createCrag, getAllCities } from '@/lib/db'
+import { getAllCrags, getCragsByCityId, createCrag, createCragPermission, getAllCities } from '@/lib/db'
 import { isCityValid } from '@/lib/city-utils'
-import { getAuth } from '@/lib/auth'
+import { requireAuth } from '@/lib/require-auth'
+import { canCreateCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
 
 const log = createModuleLogger('API:Crags')
@@ -41,19 +42,22 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/crags
- * 创建新岩场 (需要 admin 权限)
+ * 创建新岩场 (需要 admin 或 crag_creator 角色)
  */
 export async function POST(request: NextRequest) {
-  try {
-    const auth = await getAuth()
-    const session = await auth.api.getSession({ headers: request.headers })
-    if (!session || (session.user as { role?: string }).role !== 'admin') {
-      return NextResponse.json(
-        { success: false, error: '需要管理员权限' },
-        { status: 403 }
-      )
-    }
+  // 认证 + 角色检查
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
 
+  if (!canCreateCrag(role)) {
+    return NextResponse.json(
+      { success: false, error: '需要岩场创建者或管理员权限' },
+      { status: 403 }
+    )
+  }
+
+  try {
     const body = await request.json()
     const { id, name, cityId, location, description, approach, coordinates } = body
 
@@ -78,12 +82,21 @@ export async function POST(request: NextRequest) {
       location,
       description,
       approach,
+      createdBy: userId,
       ...(coordinates ? { coordinates } : {}),
+    })
+
+    // 自动为创建者建立 creator 权限
+    await createCragPermission({
+      userId,
+      cragId: id,
+      role: 'creator',
+      assignedBy: userId,
     })
 
     log.info('Crag created', {
       action: 'POST /api/crags',
-      metadata: { cragId: id, name },
+      metadata: { cragId: id, name, createdBy: userId },
     })
 
     return NextResponse.json({ success: true, crag }, { status: 201 })

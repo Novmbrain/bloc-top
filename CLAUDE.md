@@ -193,6 +193,7 @@ src/
     ├── auth.ts                 # ★ better-auth server config (lazy singleton, Admin 插件)
     ├── auth-client.ts          # better-auth React client (useSession, signIn, signOut, admin)
     ├── permissions.ts          # ★ RBAC 权限定义 + 角色 + 工具函数
+    ├── require-auth.ts         # API 路由共享认证 helper (requireAuth)
     ├── email-templates.ts      # Magic Link 邮件 HTML 模板
     ├── db/index.ts             # 数据访问层 (typed CRUD functions)
     ├── mongodb.ts              # MongoDB 连接层 (exports getDatabase())
@@ -588,12 +589,13 @@ const key = `${cragId}/${encodeURIComponent(faceId)}.jpg`  // 会导致双重编
 | `PATCH/DELETE` | `/api/prefectures/[id]` | 更新/删除地级市 (admin) |
 | `GET` | `/api/crags` | 获取所有岩场列表 |
 | `GET` | `/api/crags/[id]/routes` | 获取指定岩场的线路列表 |
-| `PATCH` | `/api/crags/[id]/areas` | 更新岩场区域列表 |
-| `GET/POST` | `/api/routes` | 获取/创建线路 |
-| `GET/PATCH` | `/api/routes/[id]` | 获取/更新单条线路 (含 topoLine) |
-| `GET/POST` | `/api/beta` | 获取/提交 Beta 视频 (Rate Limited) |
-| `GET/DELETE` | `/api/faces` | 岩面图片管理 |
-| `POST` | `/api/upload` | 上传 Topo 图片到 R2 (FormData) |
+| `PATCH` | `/api/crags/[id]/areas` | 更新岩场区域列表 (需认证+岩场权限) |
+| `GET/POST` | `/api/routes` | 获取/创建线路 (POST 需认证+岩场权限) |
+| `GET/PATCH/DELETE` | `/api/routes/[id]` | 获取/更新/删除线路 (PATCH/DELETE 需认证+岩场权限) |
+| `GET/POST` | `/api/beta` | 获取/提交 Beta 视频 (POST: Rate Limited, PATCH/DELETE: 需认证) |
+| `GET/PATCH/DELETE` | `/api/faces` | 岩面图片管理 (全部需认证+岩场权限) |
+| `POST` | `/api/upload` | 上传 Topo 图片到 R2 (需认证+岩场权限) |
+| `GET/POST/DELETE` | `/api/crag-permissions` | 岩场权限管理 (需 creator/admin) |
 | `POST` | `/api/revalidate` | ISR 按需重验证 |
 | `GET` | `/api/weather?lng=119&lat=26` | 天气数据 (含攀岩适宜度, 1h 缓存) |
 | `GET` | `/api/geo` | IP 定位 → 推断城市 (主要由 middleware 替代，保留供 profile 等场景) |

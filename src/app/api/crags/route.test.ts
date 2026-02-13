@@ -11,17 +11,28 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import type { Crag } from '@/types'
 
+// Mock mongodb (permissions.ts 导入 getDatabase，需要在测试中 mock 以避免 MONGODB_URI 检查)
+vi.mock('@/lib/mongodb', () => ({
+  getDatabase: vi.fn(),
+}))
+
 // Mock db module
 vi.mock('@/lib/db', () => ({
   getAllCrags: vi.fn(),
   getCragsByCityId: vi.fn(),
   createCrag: vi.fn(),
+  createCragPermission: vi.fn(),
   getAllCities: vi.fn(),
 }))
 
-// Mock auth module (POST handler imports getAuth)
-vi.mock('@/lib/auth', () => ({
-  getAuth: vi.fn(),
+// Mock auth module (POST handler imports requireAuth)
+vi.mock('@/lib/require-auth', () => ({
+  requireAuth: vi.fn(),
+}))
+
+// Mock permissions
+vi.mock('@/lib/permissions', () => ({
+  canCreateCrag: vi.fn(),
 }))
 
 // Mock logger

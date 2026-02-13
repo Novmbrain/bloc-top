@@ -3,6 +3,8 @@ import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s
 import { createModuleLogger } from '@/lib/logger'
 import { sanitizePathSegment } from '@/lib/request-utils'
 import { getDatabase } from '@/lib/mongodb'
+import { requireAuth } from '@/lib/require-auth'
+import { canEditCrag } from '@/lib/permissions'
 
 const log = createModuleLogger('API:Upload')
 
@@ -76,6 +78,11 @@ async function checkFileExists(key: string): Promise<boolean> {
 export async function POST(request: NextRequest) {
   const start = Date.now()
 
+  // 认证检查
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
+
   try {
     const formData = await request.formData()
     const cragId = formData.get('cragId') as string | null
@@ -90,6 +97,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: '缺少岩场 ID 或线路名称/岩面信息' },
         { status: 400 }
+      )
+    }
+
+    // 权限检查
+    if (!(await canEditCrag(userId, cragId, role))) {
+      return NextResponse.json(
+        { success: false, error: '无权编辑此岩场' },
+        { status: 403 }
       )
     }
 
