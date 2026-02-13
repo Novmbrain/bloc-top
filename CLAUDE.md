@@ -79,7 +79,7 @@ npx shadcn@latest add <component>  # 添加 UI 组件
 - **I18n:** next-intl ^4.7.0 (中/英/法三语)
 - **PWA:** Serwist (service worker at `src/app/sw.ts`)
 - **Testing:** Vitest + Testing Library + Playwright (组件测试)
-- **Auth:** better-auth (Magic Link + Passkey/WebAuthn) + Resend (邮件)
+- **Auth:** better-auth (Magic Link + Passkey/WebAuthn + Admin 插件) + Resend (邮件)
 - **CI/CD:** 本地 pre-push hook (质量检查) + Vercel (部署)
 - **Map:** 高德地图 JS API 1.4.15 (@amap/amap-jsapi-loader)
 - **Icons:** lucide-react
@@ -190,8 +190,9 @@ src/
     │   ├── types.ts            # FaceImageCacheService 接口
     │   ├── cache-service.ts    # 缓存实现 (URL 版本化)
     │   └── index.ts            # 导出
-    ├── auth.ts                 # ★ better-auth server config (lazy singleton)
-    ├── auth-client.ts          # better-auth React client (useSession, signIn, signOut)
+    ├── auth.ts                 # ★ better-auth server config (lazy singleton, Admin 插件)
+    ├── auth-client.ts          # better-auth React client (useSession, signIn, signOut, admin)
+    ├── permissions.ts          # ★ RBAC 权限定义 + 角色 + 工具函数
     ├── email-templates.ts      # Magic Link 邮件 HTML 模板
     ├── db/index.ts             # 数据访问层 (typed CRUD functions)
     ├── mongodb.ts              # MongoDB 连接层 (exports getDatabase())
@@ -232,6 +233,7 @@ doc/
 ├── PROJECT_INDEX.md            # 项目索引 (自动生成)
 ├── AUTH_SYSTEM.md              # 认证系统架构文档
 ├── FACE_IMAGE_CACHE_ARCHITECTURE.md  # 缓存架构文档
+├── RBAC_DESIGN.md              # ★ RBAC 权限系统设计文档
 └── data-flow/                  # 数据流文档
     ├── ROUTE_RENDERING.md      # Bloc 线路渲染数据流
     └── CITY_CRAG_ISOLATION.md  # 城市→岩场数据隔离与多城市扩展
@@ -379,8 +381,31 @@ import { Link } from '@/i18n/navigation'
   - `useSession()` — 订阅 nanostores atom，仅在 `$sessionSignal` toggle 时自动 refetch（仅 sign-in/sign-out/update-user 等 mutation 路径触发）
   - **正确刷新方式**: 使用 session atom 的 `refetch` 方法：`(useSession() as any).refetch({ query: { disableCookieCache: true } })`
   - **错误方式**: ~~`getSession({ query: { disableCookieCache: true } })`~~ — 不会更新任何 `useSession()` hook
+- **⚠️ ObjectId 陷阱**: 绕过 better-auth adapter 直接操作 `user` 集合时，`_id` 必须用 `new ObjectId(userId)` 而非裸字符串：
+  - better-auth 的 MongoDB adapter 内置 `serializeID`，自动将 string 转为 `ObjectId`
+  - 我们手写的 `db.collection('user').updateOne(...)` 不经过 adapter，必须自行转换
+  - MongoDB 中 `"67a..."` (string) ≠ `ObjectId("67a...")`，`updateOne` 匹配不到时**静默返回** `matchedCount: 0`
+  - **正确方式**: `import { ObjectId } from 'mongodb'` → `{ _id: new ObjectId(userId) }`
+  - **错误方式**: ~~`{ _id: toMongoId(userId) }`~~ — `toMongoId` 只做类型断言，不转 ObjectId
 
 > 架构详情见 `doc/AUTH_SYSTEM.md`
+
+## RBAC 权限系统
+
+两层架构：用户级角色 + 岩场级权限。
+
+- **权限定义**: `src/lib/permissions.ts` — AC 定义、角色、权限工具函数
+- **数据层**: `src/lib/db/index.ts` — `crag_permissions` CRUD 函数
+- **类型**: `src/types/index.ts` — `UserRole`, `CragPermission`, `CragPermissionRole`
+- **迁移**: `scripts/migrate-crag-ownership.ts` — 初始化岩场所有权
+- **用户角色** (`user.role`): `admin` | `crag_creator` | `user`
+  - Admin 插件自动管理，通过 `authClient.admin.setRole()` 修改
+- **岩场权限** (`crag_permissions` collection): `creator` | `manager`
+  - `creator` = 岩场全部权限 + 可分配 manager
+  - `manager` = 可编辑线路/岩面/Beta (不可删除岩场)
+- **权限函数**: `canCreateCrag(role)`, `canEditCrag(userId, cragId, role)`, `canDeleteCrag(...)`, `canAccessEditor(...)`, `getEditableCragIds(...)`
+
+> 设计详情见 `doc/RBAC_DESIGN.md`
 
 ## Design System
 

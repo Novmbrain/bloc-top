@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import { getDatabase } from '@/lib/mongodb'
 import { createModuleLogger } from '@/lib/logger'
-import type { Crag, Route, Feedback, VisitStats, CityConfig, PrefectureConfig } from '@/types'
+import type { Crag, Route, Feedback, VisitStats, CityConfig, PrefectureConfig, CragPermission, CragPermissionRole } from '@/types'
 import { ObjectId } from 'mongodb'
 import type { WithId, Document } from 'mongodb'
 
@@ -1179,4 +1179,189 @@ export async function deleteAvatar(userId: string): Promise<boolean> {
     })
     throw error
   }
+}
+
+// ============ CragPermission 相关操作 ============
+
+/**
+ * 将 MongoDB 文档转换为 CragPermission 类型
+ */
+function toCragPermission(doc: WithId<Document>): CragPermission {
+  return {
+    userId: doc.userId as string,
+    cragId: doc.cragId as string,
+    role: doc.role as CragPermissionRole,
+    assignedBy: doc.assignedBy as string,
+    createdAt: doc.createdAt as Date,
+  }
+}
+
+/**
+ * 查询单条岩场权限记录
+ */
+export async function getCragPermission(
+  userId: string,
+  cragId: string
+): Promise<CragPermission | null> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const doc = await db.collection('crag_permissions').findOne({ userId, cragId })
+
+    if (!doc) return null
+
+    log.debug(`Fetched crag permission: ${userId} → ${cragId}`, {
+      action: 'getCragPermission',
+      duration: Date.now() - start,
+    })
+
+    return toCragPermission(doc)
+  } catch (error) {
+    log.error(`Failed to get crag permission: ${userId} → ${cragId}`, error, {
+      action: 'getCragPermission',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+
+/**
+ * 获取指定岩场的所有权限记录
+ */
+export async function getCragPermissionsByCragId(
+  cragId: string
+): Promise<CragPermission[]> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const docs = await db
+      .collection('crag_permissions')
+      .find({ cragId })
+      .sort({ createdAt: 1 })
+      .toArray()
+
+    log.debug(`Fetched ${docs.length} permissions for crag: ${cragId}`, {
+      action: 'getCragPermissionsByCragId',
+      duration: Date.now() - start,
+    })
+
+    return docs.map(toCragPermission)
+  } catch (error) {
+    log.error(`Failed to get permissions for crag: ${cragId}`, error, {
+      action: 'getCragPermissionsByCragId',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+
+/**
+ * 获取指定用户的所有岩场权限记录
+ */
+export async function getCragPermissionsByUserId(
+  userId: string
+): Promise<CragPermission[]> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const docs = await db
+      .collection('crag_permissions')
+      .find({ userId })
+      .sort({ createdAt: 1 })
+      .toArray()
+
+    log.debug(`Fetched ${docs.length} permissions for user: ${userId}`, {
+      action: 'getCragPermissionsByUserId',
+      duration: Date.now() - start,
+    })
+
+    return docs.map(toCragPermission)
+  } catch (error) {
+    log.error(`Failed to get permissions for user: ${userId}`, error, {
+      action: 'getCragPermissionsByUserId',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+
+/**
+ * 创建岩场权限记录
+ * 使用 userId+cragId 唯一索引防重
+ */
+export async function createCragPermission(
+  data: Omit<CragPermission, 'createdAt'>
+): Promise<CragPermission> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const doc = {
+      ...data,
+      createdAt: new Date(),
+    }
+
+    await db.collection('crag_permissions').insertOne(doc)
+
+    log.info(`Created crag permission: ${data.userId} → ${data.cragId} (${data.role})`, {
+      action: 'createCragPermission',
+      duration: Date.now() - start,
+      metadata: { userId: data.userId, cragId: data.cragId, role: data.role },
+    })
+
+    return doc
+  } catch (error) {
+    log.error(`Failed to create crag permission: ${data.userId} → ${data.cragId}`, error, {
+      action: 'createCragPermission',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+
+/**
+ * 删除岩场权限记录
+ */
+export async function deleteCragPermission(
+  userId: string,
+  cragId: string
+): Promise<boolean> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const result = await db.collection('crag_permissions').deleteOne({ userId, cragId })
+
+    log.info(`Deleted crag permission: ${userId} → ${cragId} (matched: ${result.deletedCount})`, {
+      action: 'deleteCragPermission',
+      duration: Date.now() - start,
+    })
+
+    return result.deletedCount > 0
+  } catch (error) {
+    log.error(`Failed to delete crag permission: ${userId} → ${cragId}`, error, {
+      action: 'deleteCragPermission',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+
+/**
+ * 确保 crag_permissions collection 的索引存在
+ * 在迁移脚本或应用启动时调用
+ */
+export async function ensureCragPermissionIndexes(): Promise<void> {
+  const db = await getDatabase()
+  await db.collection('crag_permissions').createIndex(
+    { userId: 1, cragId: 1 },
+    { unique: true }
+  )
+  await db.collection('crag_permissions').createIndex({ cragId: 1 })
+  log.info('Ensured crag_permissions indexes', {
+    action: 'ensureCragPermissionIndexes',
+  })
 }
