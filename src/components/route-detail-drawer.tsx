@@ -62,6 +62,9 @@ export function RouteDetailDrawer({
     onError: handleImageError,
   } = useFaceImage(route)
 
+  // 图片真实宽高比（用于动态 viewBox）
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | undefined>(undefined)
+
   // 本地 Beta 数据状态，用于绕过 ISR 缓存实现即时更新
   const [localBetaLinks, setLocalBetaLinks] = useState<BetaLink[] | null>(null)
 
@@ -115,6 +118,7 @@ export function RouteDetailDrawer({
     if (route) {
       setLocalBetaLinks(null)
       setDrawerAnimated(false)
+      setImageAspectRatio(undefined)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅依赖 route.id 变化
   }, [route?.id])
@@ -217,7 +221,13 @@ export function RouteDetailDrawer({
                     imageLoading ? 'opacity-0' : 'opacity-100'
                   }`}
                   sizes="(max-width: 768px) 100vw, 50vw"
-                  onLoad={handleImageLoad}
+                  onLoad={(e) => {
+                    handleImageLoad()
+                    const img = e.currentTarget as HTMLImageElement
+                    if (img.naturalWidth && img.naturalHeight) {
+                      setImageAspectRatio(img.naturalWidth / img.naturalHeight)
+                    }
+                  }}
                   onError={handleImageError}
                 />
 
@@ -230,6 +240,7 @@ export function RouteDetailDrawer({
                       selectedRouteId={route.id}
                       onRouteSelect={handleRouteSelect}
                       objectFit="contain"
+                      aspectRatio={imageAspectRatio}
                     />
                   ) : (
                     <TopoLineOverlay
@@ -239,6 +250,7 @@ export function RouteDetailDrawer({
                       tension={route.topoTension}
                       animated
                       objectFit="contain"
+                      aspectRatio={imageAspectRatio}
                     />
                   )
                 )}
@@ -521,6 +533,7 @@ export function RouteDetailDrawer({
                 selectedRouteId={route.id}
                 onRouteSelect={handleRouteSelect}
                 objectFit="contain"
+                aspectRatio={imageAspectRatio}
               />
             ) : (
               <TopoLineOverlay
@@ -530,6 +543,7 @@ export function RouteDetailDrawer({
                 tension={route.topoTension}
                 animated
                 objectFit="contain"
+                aspectRatio={imageAspectRatio}
               />
             )
           )}

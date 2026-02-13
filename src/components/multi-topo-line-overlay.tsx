@@ -5,12 +5,11 @@ import type { TopoPoint } from '@/types'
 import { catmullRomCurve, scalePoints } from '@/lib/topo-utils'
 import { getGradeColor } from '@/lib/tokens'
 import {
-  TOPO_VIEW_WIDTH,
-  TOPO_VIEW_HEIGHT,
   TOPO_LINE_CONFIG,
   TOPO_MARKER_CONFIG,
   TOPO_ANIMATION_CONFIG,
   TOPO_MULTI_LINE_CONFIG,
+  computeViewBox,
 } from '@/lib/topo-constants'
 
 /**
@@ -35,6 +34,8 @@ export interface MultiTopoLineOverlayProps {
   objectFit?: 'cover' | 'contain'
   /** 自定义 preserveAspectRatio，覆盖 objectFit 推导值 */
   preserveAspectRatio?: string
+  /** 图片宽高比 (width/height)，用于动态 viewBox 计算。不传则使用默认 4:3 */
+  aspectRatio?: number
 }
 
 export interface MultiTopoLineOverlayRef {
@@ -59,6 +60,7 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
       onRouteSelect,
       objectFit = 'cover',
       preserveAspectRatio: preserveAspectRatioProp,
+      aspectRatio,
     },
     ref
   ) {
@@ -79,6 +81,9 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
       [routes, selectedRouteId]
     )
 
+    // 动态 viewBox 尺寸
+    const vb = useMemo(() => computeViewBox(aspectRatio ?? 4 / 3), [aspectRatio])
+
     // 预计算所有线路的路径数据
     const routePathData = useMemo(() => {
       const map = new Map<number, { path: string; start: TopoPoint }>()
@@ -86,7 +91,7 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
       routes.forEach(route => {
         if (route.topoLine.length < 2) return
 
-        const scaledPoints = scalePoints(route.topoLine, TOPO_VIEW_WIDTH, TOPO_VIEW_HEIGHT)
+        const scaledPoints = scalePoints(route.topoLine, vb.width, vb.height)
         map.set(route.id, {
           path: catmullRomCurve(scaledPoints, 0.5, route.topoTension ?? 0),
           start: scaledPoints[0],
@@ -94,7 +99,7 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
       })
 
       return map
-    }, [routes])
+    }, [routes, vb])
 
     // 画线动画函数
     const animate = useCallback(() => {
@@ -163,7 +168,7 @@ export const MultiTopoLineOverlay = forwardRef<MultiTopoLineOverlayRef, MultiTop
     return (
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none"
-        viewBox={`0 0 ${TOPO_VIEW_WIDTH} ${TOPO_VIEW_HEIGHT}`}
+        viewBox={`0 0 ${vb.width} ${vb.height}`}
         preserveAspectRatio={preserveAspectRatio}
       >
         {/* 未选中线路 (先渲染，在底层) */}
