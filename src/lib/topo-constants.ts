@@ -3,9 +3,28 @@
  * 统一管理所有 Topo 相关的尺寸、样式和动画参数
  */
 
-// SVG viewBox 尺寸
+// SVG viewBox 默认尺寸 (4:3 横图)
 export const TOPO_VIEW_WIDTH = 400
 export const TOPO_VIEW_HEIGHT = 300
+
+/** 默认 viewBox 面积，用于动态 viewBox 计算时保持线条/标记粗细一致 */
+const TOPO_VIEW_AREA = TOPO_VIEW_WIDTH * TOPO_VIEW_HEIGHT
+
+/**
+ * 根据图片宽高比动态计算 SVG viewBox 尺寸
+ * 保持总面积恒定（≈120000），确保 strokeWidth/marker 视觉大小一致
+ *
+ * @param aspectRatio 图片宽高比 (width / height)，如 4/3=1.33，3/4=0.75
+ * @returns { width, height } viewBox 尺寸
+ */
+export function computeViewBox(aspectRatio: number): { width: number; height: number } {
+  if (!aspectRatio || !Number.isFinite(aspectRatio) || aspectRatio <= 0) {
+    return { width: TOPO_VIEW_WIDTH, height: TOPO_VIEW_HEIGHT }
+  }
+  const height = Math.round(Math.sqrt(TOPO_VIEW_AREA / aspectRatio))
+  const width = Math.round(height * aspectRatio)
+  return { width, height }
+}
 
 // 线路样式
 export const TOPO_LINE_CONFIG = {

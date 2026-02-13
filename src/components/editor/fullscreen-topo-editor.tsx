@@ -7,7 +7,7 @@ import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
 import type { TopoPoint } from '@/types'
 import { catmullRomCurve, scalePoints } from '@/lib/topo-utils'
 import { getGradeColor } from '@/lib/tokens'
-import { VIEW_WIDTH, VIEW_HEIGHT } from '@/lib/editor-utils'
+import { computeViewBox } from '@/lib/topo-constants'
 
 /** 其他线路的简化数据 */
 interface OtherRoute {
@@ -26,6 +26,7 @@ export function FullscreenTopoEditor({
   topoLine,
   routeColor,
   tension = 0,
+  imageAspectRatio,
   otherRoutes = [],
   onAddPoint,
   onRemoveLastPoint,
@@ -37,6 +38,8 @@ export function FullscreenTopoEditor({
   topoLine: TopoPoint[]
   routeColor: string
   tension?: number
+  /** 图片宽高比 (width/height)，用于动态 viewBox，避免控制点变形 */
+  imageAspectRatio?: number
   otherRoutes?: OtherRoute[]
   onAddPoint: (point: TopoPoint) => void
   onRemoveLastPoint: () => void
@@ -44,6 +47,8 @@ export function FullscreenTopoEditor({
   onTensionChange?: (tension: number) => void
   onClose: (confirmed: boolean) => void
 }) {
+  const vb = useMemo(() => computeViewBox(imageAspectRatio ?? 4 / 3), [imageAspectRatio])
+
   const imgContainerRef = useRef<HTMLDivElement>(null)
   const pointerDownRef = useRef<{ x: number; y: number; time: number } | null>(null)
   const transformRef = useRef<ReactZoomPanPinchRef>(null)
@@ -60,7 +65,7 @@ export function FullscreenTopoEditor({
     return otherRoutes
       .filter(r => r.topoLine.length >= 2)
       .map(r => {
-        const scaled = scalePoints(r.topoLine, VIEW_WIDTH, VIEW_HEIGHT)
+        const scaled = scalePoints(r.topoLine, vb.width, vb.height)
         return {
           id: r.id,
           color: getGradeColor(r.grade),
@@ -68,7 +73,7 @@ export function FullscreenTopoEditor({
           start: scaled[0],
         }
       })
-  }, [otherRoutes, showOtherRoutes])
+  }, [otherRoutes, showOtherRoutes, vb])
 
   const hasTopoChanges = useCallback((): boolean => {
     const orig = initialTopoLineRef.current
@@ -128,8 +133,8 @@ export function FullscreenTopoEditor({
 
   // SVG 数据
   const fsScaledPoints = useMemo(
-    () => scalePoints(topoLine, VIEW_WIDTH, VIEW_HEIGHT),
-    [topoLine]
+    () => scalePoints(topoLine, vb.width, vb.height),
+    [topoLine, vb]
   )
   const fsPathData = useMemo(() => {
     if (fsScaledPoints.length < 2) return ''
@@ -200,8 +205,8 @@ export function FullscreenTopoEditor({
               {/* SVG 叠加层 */}
               <svg
                 className="absolute inset-0 w-full h-full pointer-events-none"
-                viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
-                preserveAspectRatio="none"
+                viewBox={`0 0 ${vb.width} ${vb.height}`}
+                preserveAspectRatio="xMidYMid meet"
               >
                 {/* 其他线路（只读，底层） */}
                 {otherRoutePaths.map(r => (

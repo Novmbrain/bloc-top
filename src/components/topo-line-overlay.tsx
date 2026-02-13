@@ -4,11 +4,10 @@ import { useRef, useCallback, useEffect, useMemo, forwardRef, useImperativeHandl
 import type { TopoPoint } from '@/types'
 import { catmullRomCurve, scalePoints } from '@/lib/topo-utils'
 import {
-  TOPO_VIEW_WIDTH,
-  TOPO_VIEW_HEIGHT,
   TOPO_LINE_CONFIG,
   TOPO_MARKER_CONFIG,
   TOPO_ANIMATION_CONFIG,
+  computeViewBox,
 } from '@/lib/topo-constants'
 
 export interface TopoLineOverlayProps {
@@ -33,6 +32,8 @@ export interface TopoLineOverlayProps {
   objectFit?: 'cover' | 'contain'
   /** Catmull-Rom 曲线张力 0-1 (0=平滑, 1=折线, 默认 0) */
   tension?: number
+  /** 图片宽高比 (width/height)，用于动态 viewBox 计算。不传则使用默认 4:3 */
+  aspectRatio?: number
 }
 
 export interface TopoLineOverlayRef {
@@ -69,16 +70,20 @@ export const TopoLineOverlay = forwardRef<TopoLineOverlayRef, TopoLineOverlayPro
       onAnimationEnd,
       objectFit = 'cover',
       tension = 0,
+      aspectRatio,
     },
     ref
   ) {
     const pathRef = useRef<SVGPathElement>(null)
     const hasAutoPlayed = useRef(false)
 
+    // 动态 viewBox 尺寸（保持面积恒定，确保 strokeWidth 一致）
+    const vb = useMemo(() => computeViewBox(aspectRatio ?? 4 / 3), [aspectRatio])
+
     // 缩放坐标到 viewBox 尺寸
     const scaledPoints = useMemo(
-      () => scalePoints(points, TOPO_VIEW_WIDTH, TOPO_VIEW_HEIGHT),
-      [points]
+      () => scalePoints(points, vb.width, vb.height),
+      [points, vb]
     )
 
     // 生成 Catmull-Rom 样条曲线路径
@@ -143,7 +148,7 @@ export const TopoLineOverlay = forwardRef<TopoLineOverlayRef, TopoLineOverlayPro
     return (
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none"
-        viewBox={`0 0 ${TOPO_VIEW_WIDTH} ${TOPO_VIEW_HEIGHT}`}
+        viewBox={`0 0 ${vb.width} ${vb.height}`}
         preserveAspectRatio={preserveAspectRatio}
       >
         {/* 线路路径 - 外层白色描边 (增加可见性) */}

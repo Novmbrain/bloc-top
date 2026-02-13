@@ -35,7 +35,8 @@ import { RouteCard } from '@/components/editor/route-card'
 import { AreaSelect } from '@/components/editor/area-select'
 import { MultiTopoLineOverlay } from '@/components/multi-topo-line-overlay'
 import type { MultiTopoRoute } from '@/components/multi-topo-line-overlay'
-import { VIEW_WIDTH, VIEW_HEIGHT, GRADE_OPTIONS } from '@/lib/editor-utils'
+import { GRADE_OPTIONS } from '@/lib/editor-utils'
+import { computeViewBox } from '@/lib/topo-constants'
 import { deriveAreas, getPersistedAreas } from '@/lib/editor-areas'
 
 const FullscreenTopoEditor = dynamic(
@@ -92,6 +93,7 @@ export default function RouteAnnotationPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [isImageLoading, setIsImageLoading] = useState(false)
   const [imageLoadError, setImageLoadError] = useState(false)
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | undefined>(undefined)
 
   // ============ 保存状态 ============
   const [isSaving, setIsSaving] = useState(false)
@@ -378,6 +380,7 @@ export default function RouteAnnotationPage() {
       setImageUrl(prev => {
         if (prev === url) return prev
         setIsImageLoading(true)
+        setImageAspectRatio(undefined)
         return url
       })
       setImageLoadError(false)
@@ -564,9 +567,11 @@ export default function RouteAnnotationPage() {
     [editedRoute.grade, selectedRoute?.grade]
   )
 
+  const vb = useMemo(() => computeViewBox(imageAspectRatio ?? 4 / 3), [imageAspectRatio])
+
   const scaledPoints = useMemo(
-    () => scalePoints(topoLine, VIEW_WIDTH, VIEW_HEIGHT),
-    [topoLine]
+    () => scalePoints(topoLine, vb.width, vb.height),
+    [topoLine, vb]
   )
 
   const pathData = useMemo(() => {
@@ -878,6 +883,7 @@ export default function RouteAnnotationPage() {
                       setImageUrl(url)
                       setIsImageLoading(true)
                       setImageLoadError(false)
+                      setImageAspectRatio(undefined)
                       // 立即绑定 faceId 到线路
                       try {
                         const res = await fetch(`/api/routes/${selectedRoute.id}`, {
@@ -960,8 +966,8 @@ export default function RouteAnnotationPage() {
             ) : (
               <div className="p-4">
                 <div
-                  className="relative rounded-xl overflow-hidden"
-                  style={{ boxShadow: 'var(--theme-shadow-md)' }}
+                  className="relative rounded-xl overflow-hidden aspect-[4/3]"
+                  style={{ boxShadow: 'var(--theme-shadow-md)', backgroundColor: 'var(--theme-surface-variant)' }}
                 >
                   {isImageLoading && (
                     <div className="absolute inset-0 flex items-center justify-center z-10" style={{ backgroundColor: 'var(--theme-surface-variant)' }}>
@@ -977,10 +983,17 @@ export default function RouteAnnotationPage() {
                     key={imageUrl}
                     src={imageUrl}
                     alt="岩面照片"
-                    className="w-full aspect-[4/3] object-cover"
+                    className="w-full h-full object-contain"
                     style={{ opacity: isImageLoading ? 0 : 1 }}
                     draggable={false}
-                    onLoad={() => { setIsImageLoading(false); setImageLoadError(false) }}
+                    onLoad={(e) => {
+                      setIsImageLoading(false)
+                      setImageLoadError(false)
+                      const img = e.currentTarget
+                      if (img.naturalWidth && img.naturalHeight) {
+                        setImageAspectRatio(img.naturalWidth / img.naturalHeight)
+                      }
+                    }}
                     onError={() => { setIsImageLoading(false); setImageLoadError(true) }}
                   />
 
@@ -993,15 +1006,16 @@ export default function RouteAnnotationPage() {
                         const target = routes.find(r => r.id === routeId)
                         if (target) handleRouteClick(target)
                       }}
-                      preserveAspectRatio="none"
+                      aspectRatio={imageAspectRatio}
+                      preserveAspectRatio="xMidYMid meet"
                     />
                   )}
 
                   {/* 当前线路 SVG 叠加层（只读预览） */}
                   <svg
                     className="absolute inset-0 w-full h-full pointer-events-none"
-                    viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
-                    preserveAspectRatio="none"
+                    viewBox={`0 0 ${vb.width} ${vb.height}`}
+                    preserveAspectRatio="xMidYMid meet"
                   >
                     {pathData && (
                       <path d={pathData} stroke={routeColor} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" fill="none" />
@@ -1198,6 +1212,7 @@ export default function RouteAnnotationPage() {
       {isFullscreenEdit && imageUrl && (
         <FullscreenTopoEditor
           imageUrl={imageUrl}
+          imageAspectRatio={imageAspectRatio}
           topoLine={topoLine}
           routeColor={routeColor}
           tension={topoTension}
