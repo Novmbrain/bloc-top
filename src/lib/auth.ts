@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { mongodbAdapter } from 'better-auth/adapters/mongodb'
-import { magicLink } from 'better-auth/plugins'
+import { magicLink, admin } from 'better-auth/plugins'
 import { passkey } from '@better-auth/passkey'
 import { Resend } from 'resend'
 import { getDatabase, clientPromise } from '@/lib/mongodb'
@@ -51,10 +51,6 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
 
         user: {
           additionalFields: {
-            role: {
-              type: 'string',
-              defaultValue: 'user',
-            },
             name: {
               type: 'string',
               required: false,
@@ -71,6 +67,11 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
         },
 
         plugins: [
+          admin({
+            defaultRole: 'user',
+            adminRoles: ['admin'],
+          }),
+
           magicLink({
             expiresIn: 600, // 10 minutes
             sendMagicLink: async ({ email, url }) => {

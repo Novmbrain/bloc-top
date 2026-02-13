@@ -106,6 +106,7 @@ export interface Crag {
   approachPaths?: ApproachPath[] // 接近路径 (用于 KML 导入)
   areas?: string[]               // 持久化的区域列表
   credits?: CragCredit[]         // 致谢人员列表
+  createdBy?: string             // 创建者 userId (RBAC)
 }
 
 // 评论数据类型
@@ -132,6 +133,32 @@ export interface User {
   id: string
   nickName: string
   avatarUrl?: string
+}
+
+// ==================== RBAC 权限类型 ====================
+
+/**
+ * 用户角色 (better-auth Admin 插件管理)
+ */
+export type UserRole = 'admin' | 'crag_creator' | 'user'
+
+/**
+ * 岩场级权限角色
+ * - creator: 岩场创建者，全部权限 + 可分配 manager
+ * - manager: 岩场管理者，可编辑线路/岩面/Beta (不能删除岩场)
+ */
+export type CragPermissionRole = 'creator' | 'manager'
+
+/**
+ * 岩场权限记录
+ * 存储在 MongoDB `crag_permissions` collection
+ */
+export interface CragPermission {
+  userId: string           // better-auth user._id (ObjectId as string)
+  cragId: string           // Crag.id (e.g. 'yuan-tong-si')
+  role: CragPermissionRole
+  assignedBy: string       // 分配者的 userId
+  createdAt: Date
 }
 
 // 难度等级范围
