@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { S3Client, ListObjectsV2Command, DeleteObjectCommand, CopyObjectCommand } from '@aws-sdk/client-s3'
 import { getDatabase } from '@/lib/mongodb'
+import { requireAuth } from '@/lib/require-auth'
+import { canEditCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
 
 const log = createModuleLogger('API:Faces')
@@ -45,12 +47,24 @@ interface FaceInfo {
  * 每个 FaceInfo 包含 faceId 和 area
  */
 export async function GET(request: NextRequest) {
+  // 认证 + 权限检查 (编辑器专用接口)
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
+
   const cragId = request.nextUrl.searchParams.get('cragId')
 
   if (!cragId) {
     return NextResponse.json(
       { success: false, error: '缺少 cragId 参数' },
       { status: 400 }
+    )
+  }
+
+  if (!(await canEditCrag(userId, cragId, role))) {
+    return NextResponse.json(
+      { success: false, error: '无权编辑此岩场' },
+      { status: 403 }
     )
   }
 
@@ -118,6 +132,11 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   const start = Date.now()
 
+  // 认证检查
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
+
   try {
     const { cragId, area, oldFaceId, newFaceId } = await request.json()
 
@@ -139,6 +158,14 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: '名称只允许中文、小写字母、数字和连字符' },
         { status: 400 }
+      )
+    }
+
+    // 权限检查
+    if (!(await canEditCrag(userId, cragId, role))) {
+      return NextResponse.json(
+        { success: false, error: '无权编辑此岩场' },
+        { status: 403 }
       )
     }
 
@@ -208,6 +235,11 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const start = Date.now()
 
+  // 认证检查
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
+
   try {
     const { cragId, area, faceId } = await request.json()
 
@@ -215,6 +247,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: '缺少 cragId、area 或 faceId' },
         { status: 400 }
+      )
+    }
+
+    // 权限检查
+    if (!(await canEditCrag(userId, cragId, role))) {
+      return NextResponse.json(
+        { success: false, error: '无权编辑此岩场' },
+        { status: 403 }
       )
     }
 

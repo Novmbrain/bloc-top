@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateCragAreas } from '@/lib/db'
+import { requireAuth } from '@/lib/require-auth'
+import { canEditCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
 
 const log = createModuleLogger('API:CragAreas')
 
 /**
  * PATCH /api/crags/[id]/areas
- * 更新岩场的区域列表
+ * 更新岩场的区域列表 (需要岩场编辑权限)
  */
 export async function PATCH(
   request: NextRequest,
@@ -18,6 +20,18 @@ export async function PATCH(
     return NextResponse.json(
       { success: false, error: '岩场 ID 不能为空' },
       { status: 400 }
+    )
+  }
+
+  // 认证 + 权限检查
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
+
+  if (!(await canEditCrag(userId, cragId, role))) {
+    return NextResponse.json(
+      { success: false, error: '无权编辑此岩场' },
+      { status: 403 }
     )
   }
 

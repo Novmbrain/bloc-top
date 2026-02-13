@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRoute } from '@/lib/db'
+import { requireAuth } from '@/lib/require-auth'
+import { canEditCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
 
 const log = createModuleLogger('API:Routes')
 
 /**
  * POST /api/routes
- * 创建新线路
+ * 创建新线路 (需要岩场编辑权限)
  */
 export async function POST(request: NextRequest) {
+  // 认证 + 权限检查 (cragId 在 body 中，需要先解析)
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
+
   try {
     const body = await request.json()
 
@@ -40,6 +47,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: '区域不能为空' },
         { status: 400 }
+      )
+    }
+
+    // 权限检查：用户是否可以编辑此岩场
+    if (!(await canEditCrag(userId, cragId, role))) {
+      return NextResponse.json(
+        { success: false, error: '无权编辑此岩场' },
+        { status: 403 }
       )
     }
 

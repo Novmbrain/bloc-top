@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRouteById, updateRoute, deleteRoute } from '@/lib/db'
+import { requireAuth } from '@/lib/require-auth'
+import { canEditCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
 import type { Route, TopoPoint } from '@/types'
 
@@ -72,6 +74,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // 认证检查
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
+
   const { id } = await params
   const routeId = parseInt(id, 10)
 
@@ -79,6 +86,23 @@ export async function PATCH(
     return NextResponse.json(
       { success: false, error: '无效的线路 ID' },
       { status: 400 }
+    )
+  }
+
+  // 先获取线路以得到 cragId
+  const existingRoute = await getRouteById(routeId)
+  if (!existingRoute) {
+    return NextResponse.json(
+      { success: false, error: '线路不存在' },
+      { status: 404 }
+    )
+  }
+
+  // 权限检查
+  if (!(await canEditCrag(userId, existingRoute.cragId, role))) {
+    return NextResponse.json(
+      { success: false, error: '无权编辑此岩场的线路' },
+      { status: 403 }
     )
   }
 
@@ -220,9 +244,14 @@ export async function PATCH(
  * 删除线路（含内嵌的 betaLinks、topoLine）
  */
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // 认证检查
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
+
   const start = Date.now()
   const { id } = await params
   const routeId = parseInt(id, 10)
@@ -231,6 +260,23 @@ export async function DELETE(
     return NextResponse.json(
       { success: false, error: '无效的线路 ID' },
       { status: 400 }
+    )
+  }
+
+  // 先获取线路以得到 cragId
+  const existingRoute = await getRouteById(routeId)
+  if (!existingRoute) {
+    return NextResponse.json(
+      { success: false, error: '线路不存在' },
+      { status: 404 }
+    )
+  }
+
+  // 权限检查
+  if (!(await canEditCrag(userId, existingRoute.cragId, role))) {
+    return NextResponse.json(
+      { success: false, error: '无权删除此岩场的线路' },
+      { status: 403 }
     )
   }
 

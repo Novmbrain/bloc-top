@@ -6,6 +6,8 @@ import { HTTP_CACHE } from '@/lib/cache-config'
 import { createModuleLogger } from '@/lib/logger'
 import { API_ERROR_CODES, createErrorResponse } from '@/lib/api-error-codes'
 import { getClientIp } from '@/lib/request-utils'
+import { requireAuth } from '@/lib/require-auth'
+import { canEditCrag } from '@/lib/permissions'
 import type { Document } from 'mongodb'
 
 // 创建 API 模块专用 logger
@@ -263,9 +265,15 @@ export async function POST(request: NextRequest) {
 /**
  * PATCH /api/beta
  * 更新 Beta 链接的可编辑字段 (title, author, climberHeight, climberReach)
+ * 需要登录 + 岩场编辑权限
  */
 export async function PATCH(request: NextRequest) {
   const start = Date.now()
+
+  // 认证检查
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
 
   try {
     const body = await request.json()
@@ -293,6 +301,24 @@ export async function PATCH(request: NextRequest) {
     }
 
     const db = await getDatabase()
+
+    // 查找线路获取 cragId 以验证权限
+    const route = await db.collection('routes').findOne(
+      { _id: routeId as unknown as Document['_id'] },
+      { projection: { cragId: 1 } }
+    )
+    if (!route) {
+      return NextResponse.json(
+        createErrorResponse(API_ERROR_CODES.ROUTE_NOT_FOUND),
+        { status: 404 }
+      )
+    }
+    if (!(await canEditCrag(userId, route.cragId, role))) {
+      return NextResponse.json(
+        { success: false, error: '无权编辑此岩场的 Beta' },
+        { status: 403 }
+      )
+    }
 
     // 构建 $set 更新对象，仅更新提供的字段
     const setFields: Record<string, unknown> = { updatedAt: new Date() }
@@ -343,9 +369,15 @@ export async function PATCH(request: NextRequest) {
 /**
  * DELETE /api/beta
  * 从线路中移除指定的 Beta 链接
+ * 需要登录 + 岩场编辑权限
  */
 export async function DELETE(request: NextRequest) {
   const start = Date.now()
+
+  // 认证检查
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
 
   try {
     const body = await request.json()
@@ -359,6 +391,24 @@ export async function DELETE(request: NextRequest) {
     }
 
     const db = await getDatabase()
+
+    // 查找线路获取 cragId 以验证权限
+    const route = await db.collection('routes').findOne(
+      { _id: routeId as unknown as Document['_id'] },
+      { projection: { cragId: 1 } }
+    )
+    if (!route) {
+      return NextResponse.json(
+        createErrorResponse(API_ERROR_CODES.ROUTE_NOT_FOUND),
+        { status: 404 }
+      )
+    }
+    if (!(await canEditCrag(userId, route.cragId, role))) {
+      return NextResponse.json(
+        { success: false, error: '无权删除此岩场的 Beta' },
+        { status: 403 }
+      )
+    }
 
     const result = await db.collection('routes').updateOne(
       { _id: routeId as unknown as Document['_id'] },
