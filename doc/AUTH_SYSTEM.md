@@ -294,21 +294,105 @@ await auth.api.setPassword({
 
 > `setPassword` 是 server-only API — 为已通过 Magic Link 验证但尚未设置密码的用户创建 credential account。
 
-## 编辑器权限保护
+## RBAC 权限系统
 
-`editor/layout.tsx` 是 **Server Component**，在服务端检查 session：
+> 详细设计文档见 `doc/RBAC_DESIGN.md`
+
+### 两层架构
+
+```
+┌─────────────────────────────────────────────────────┐
+│ 用户级角色 (user.role)                               │
+│ ┌─────────┐  ┌──────────────┐  ┌──────────┐        │
+│ │  admin   │  │ crag_creator │  │   user   │        │
+│ │ 全部权限 │  │ 创建岩场+管理 │  │ 仅浏览   │        │
+│ └─────────┘  └──────────────┘  └──────────┘        │
+├─────────────────────────────────────────────────────┤
+│ 岩场级权限 (crag_permissions collection)             │
+│ ┌──────────────┐  ┌──────────────┐                  │
+│ │   creator    │  │   manager    │                  │
+│ │ 删除+分配权限 │  │ 编辑线路/岩面 │                  │
+│ └──────────────┘  └──────────────┘                  │
+└─────────────────────────────────────────────────────┘
+```
+
+### 用户角色
+
+| 角色 | 说明 | 编辑器 | 创建岩场 | 编辑任意岩场 |
+|------|------|--------|---------|-------------|
+| `admin` | 超级管理员 | ✅ | ✅ | ✅ |
+| `crag_creator` | 岩场创建者 | ✅ | ✅ | 仅自己的 |
+| `user` | 普通用户 | 仅被分配岩场 | ❌ | 仅被分配的 |
+
+通过 better-auth Admin 插件管理: `authClient.admin.setRole({ userId, role })`
+
+### 岩场级权限
+
+| 权限 | 编辑线路/岩面 | 删除岩场 | 分配管理者 |
+|------|-------------|---------|-----------|
+| `creator` | ✅ | ✅ | ✅ |
+| `manager` | ✅ | ❌ | ❌ |
+
+存储在 `crag_permissions` collection: `{ userId, cragId, role, assignedBy, createdAt }`
+
+### 权限判定函数
+
+位于 `src/lib/permissions.ts`:
+
+| 函数 | 用途 | Admin 行为 |
+|------|------|-----------|
+| `canAccessEditor(userId, role)` | 编辑器入口 | 直接放行 |
+| `canCreateCrag(role)` | 创建岩场 | 直接放行 |
+| `canEditCrag(userId, cragId, role)` | 编辑岩场 | 直接放行 |
+| `canDeleteCrag(userId, cragId, role)` | 删除岩场 | 直接放行 |
+| `canManagePermissions(userId, cragId, role)` | 管理权限 | 直接放行 |
+| `getEditableCragIds(userId, role)` | 获取可编辑岩场列表 | 返回 `'all'` |
+
+### 编辑器访问保护
+
+`editor/layout.tsx` 是 **Server Component**，使用 `canAccessEditor` 检查权限：
 
 ```typescript
-const auth = await getAuth()
+import { canAccessEditor } from '@/lib/permissions'
+import type { UserRole } from '@/types'
+
 const session = await auth.api.getSession({ headers: await headers() })
-if (!session || session.user.role !== 'admin') {
-  redirect('/login')
+if (!session?.user?.id) redirect('/login')
+
+const role = ((session.user as { role?: string }).role || 'user') as UserRole
+if (!(await canAccessEditor(session.user.id, role))) redirect('/login')
+```
+
+- 未登录 → 302 到 `/login`
+- 无编辑器权限 (普通 user 且无 crag_permissions) → 302 到 `/login`
+- admin / crag_creator / 有岩场权限的 user → 放行
+- 所有 editor 子页面自动受 layout 保护
+
+### API 路由保护模式
+
+```typescript
+import { requireAuth } from '@/lib/require-auth'
+import { canEditCrag } from '@/lib/permissions'
+
+export async function PATCH(request: NextRequest) {
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
+
+  if (!(await canEditCrag(userId, cragId, role))) {
+    return NextResponse.json({ error: '无权限' }, { status: 403 })
+  }
+  // ... handle request
 }
 ```
 
-- 未登录/非 admin → 服务端 302 重定向，浏览器永远不会收到编辑器 HTML
-- 所有 editor 子页面 (`/editor/faces`, `/editor/routes`, `/editor/betas`) 自动受 layout 保护
-- 现有 editor 页面代码无需任何修改（均为 `'use client'` 组件）
+### 相关 API
+
+| 方法 | 路径 | 权限 |
+|------|------|------|
+| `GET/POST/DELETE` | `/api/crag-permissions` | creator / admin |
+| `GET` | `/api/editor/crags` | 任何有编辑器权限的用户 |
+| `GET` | `/api/editor/search-users?q=xxx` | 任何有编辑器权限的用户 |
 
 ## Session 配置
 
@@ -369,6 +453,7 @@ t('passwordChanged')    // "密码已修改"
 
 ## 待办事项
 
+- [x] RBAC 权限系统 — 用户角色 + 岩场级权限 (详见 `doc/RBAC_DESIGN.md`)
 - [ ] 完成 `bouldering.top` 在 Resend 的 DNS 域名验证 (SPF/DKIM/MX)
 - [ ] 实现密码登录 Tab（`signIn.email` 客户端调用）
 - [ ] 实现安全设置引导页（合并密码 + Passkey 设置）
