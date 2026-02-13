@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   Users,
   Search,
@@ -174,13 +174,13 @@ function AddManagerDrawer({
   const [isSearching, setIsSearching] = useState(false)
   const [addingUserId, setAddingUserId] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
-  // Cleanup timer on unmount
+  // Cleanup timer and abort in-flight request on unmount
   useEffect(() => {
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current)
-      }
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      abortRef.current?.abort()
     }
   }, [])
 
@@ -202,9 +202,15 @@ function AddManagerDrawer({
       setIsSearching(true)
 
       debounceRef.current = setTimeout(async () => {
+        // Abort previous in-flight search request to prevent stale results
+        abortRef.current?.abort()
+        const controller = new AbortController()
+        abortRef.current = controller
+
         try {
           const res = await fetch(
-            `/api/editor/search-users?q=${encodeURIComponent(value.trim())}`
+            `/api/editor/search-users?q=${encodeURIComponent(value.trim())}`,
+            { signal: controller.signal }
           )
           const data = await res.json()
           if (data.success) {
@@ -216,11 +222,12 @@ function AddManagerDrawer({
           } else {
             setResults([])
           }
-        } catch {
+        } catch (err) {
+          if (err instanceof DOMException && err.name === 'AbortError') return
           showToast('搜索用户失败', 'error')
           setResults([])
         } finally {
-          setIsSearching(false)
+          if (!controller.signal.aborted) setIsSearching(false)
         }
       }, 400)
     },
@@ -306,6 +313,7 @@ function AddManagerDrawer({
                 setResults([])
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2"
+              aria-label="清除搜索"
             >
               <X
                 className="w-4 h-4"
@@ -460,15 +468,22 @@ export function CragPermissionsPanel({
     [cragId, showToast]
   )
 
-  // Existing user IDs for filtering search results
-  const existingUserIds = new Set(permissions.map((p) => p.userId))
+  // Existing user IDs for filtering search results (memoized for stable reference)
+  const existingUserIds = useMemo(
+    () => new Set(permissions.map((p) => p.userId)),
+    [permissions]
+  )
 
   // Sort: creators first, then managers
-  const sortedPermissions = [...permissions].sort((a, b) => {
-    if (a.role === 'creator' && b.role !== 'creator') return -1
-    if (a.role !== 'creator' && b.role === 'creator') return 1
-    return 0
-  })
+  const sortedPermissions = useMemo(
+    () =>
+      [...permissions].sort((a, b) => {
+        if (a.role === 'creator' && b.role !== 'creator') return -1
+        if (a.role !== 'creator' && b.role === 'creator') return 1
+        return 0
+      }),
+    [permissions]
+  )
 
   return (
     <div

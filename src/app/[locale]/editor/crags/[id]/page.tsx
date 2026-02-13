@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect, useCallback } from 'react'
+import { use, useState, useEffect } from 'react'
 import {
   Mountain,
   Loader2,
@@ -67,33 +67,30 @@ export default function CragDetailPage({
 
   // ============ Determine canManage ============
 
-  const checkPermissions = useCallback(async () => {
+  useEffect(() => {
+    if (!session) return
+
     if (isAdmin) {
       setCanManage(true)
       return
     }
 
-    try {
-      const res = await fetch(
-        `/api/crag-permissions?cragId=${encodeURIComponent(cragId)}`
-      )
-      if (res.ok) {
-        // 200 means current user has permission to manage
-        setCanManage(true)
-      } else {
-        // 403 or other error means no permission
-        setCanManage(false)
-      }
-    } catch {
-      setCanManage(false)
-    }
-  }, [cragId, isAdmin])
+    const controller = new AbortController()
 
-  useEffect(() => {
-    if (session) {
-      checkPermissions()
-    }
-  }, [session, checkPermissions])
+    // Probe permissions API — 200 means user can manage, 403 means no access
+    fetch(`/api/crag-permissions?cragId=${encodeURIComponent(cragId)}`, {
+      signal: controller.signal,
+    })
+      .then((res) => {
+        if (!controller.signal.aborted) setCanManage(res.ok)
+      })
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        setCanManage(false)
+      })
+
+    return () => controller.abort()
+  }, [session, cragId, isAdmin])
 
   // ============ Loading state ============
 
