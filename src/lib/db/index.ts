@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { getDatabase } from '@/lib/mongodb'
 import { createModuleLogger } from '@/lib/logger'
 import type { Crag, Route, Feedback, VisitStats, CityConfig, PrefectureConfig } from '@/types'
+import { ObjectId } from 'mongodb'
 import type { WithId, Document } from 'mongodb'
 
 // 创建数据库模块专用 logger
@@ -1079,11 +1080,17 @@ export async function upsertAvatar(
     )
 
     // 同步更新 better-auth user 文档的 image 字段
+    // better-auth 的 MongoDB adapter 用 ObjectId 存储 _id，必须转换
     const avatarUrl = `/api/user/avatar/${userId}?t=${Date.now()}`
-    await db.collection('user').updateOne(
-      { _id: toMongoId(userId) },
+    const userResult = await db.collection('user').updateOne(
+      { _id: new ObjectId(userId) },
       { $set: { image: avatarUrl } }
     )
+    if (userResult.matchedCount === 0) {
+      log.warn(`User document not found for avatar sync: ${userId}`, {
+        action: 'upsertAvatar',
+      })
+    }
 
     log.info(`Upserted avatar for user: ${userId}`, {
       action: 'upsertAvatar',
@@ -1152,8 +1159,9 @@ export async function deleteAvatar(userId: string): Promise<boolean> {
     const result = await db.collection('avatars').deleteOne({ userId })
 
     // 清空 user 文档的 image 字段
+    // better-auth 的 MongoDB adapter 用 ObjectId 存储 _id，必须转换
     await db.collection('user').updateOne(
-      { _id: toMongoId(userId) },
+      { _id: new ObjectId(userId) },
       { $set: { image: null } }
     )
 
