@@ -47,7 +47,7 @@ export default function ProfilePage() {
     : (session?.user as { image?: string | null } | undefined)?.image ?? null
 
   // Keep refetch in a ref so the callback stays stable
-  const sessionRefetchRef = useRef<(params?: { query?: Record<string, unknown> }) => Promise<void>>()
+  const sessionRefetchRef = useRef<((params?: { query?: Record<string, unknown> }) => Promise<void>) | undefined>(undefined)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sessionRefetchRef.current = (sessionHook as any).refetch
 
