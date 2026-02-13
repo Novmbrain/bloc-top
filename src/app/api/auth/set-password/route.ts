@@ -15,8 +15,8 @@ export async function POST(req: Request) {
       return Response.json({ error: 'newPassword is required' }, { status: 400 })
     }
 
-    if (newPassword.length < 8) {
-      return Response.json({ error: 'Password must be at least 8 characters' }, { status: 400 })
+    if (newPassword.length < 4) {
+      return Response.json({ error: 'Password must be at least 4 characters' }, { status: 400 })
     }
 
     await auth.api.setPassword({

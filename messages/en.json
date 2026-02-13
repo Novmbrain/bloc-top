@@ -473,7 +473,7 @@
     "newPassword": "New password",
     "confirmPassword": "Confirm password",
     "passwordMismatch": "Passwords do not match",
-    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordTooShort": "Password must be at least 4 characters",
     "passwordSetSuccess": "Password set successfully",
     "passwordSetFailed": "Failed to set password",
     "changePassword": "Change Password",

@@ -441,7 +441,7 @@
     "newPassword": "Nouveau mot de passe",
     "confirmPassword": "Confirmer le mot de passe",
     "passwordMismatch": "Les mots de passe ne correspondent pas",
-    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 4 caractères",
     "passwordSetSuccess": "Mot de passe défini avec succès",
     "passwordSetFailed": "Échec de la définition du mot de passe",
     "changePassword": "Changer le mot de passe",

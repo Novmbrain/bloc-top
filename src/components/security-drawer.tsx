@@ -49,7 +49,7 @@ export function SecurityDrawer({ isOpen, onClose, session, isAdmin }: SecurityDr
 
   const handleSetPassword = useCallback(async () => {
     if (!pwNewPassword || !pwConfirmPassword || isSettingPassword) return
-    if (pwNewPassword.length < 8) {
+    if (pwNewPassword.length < 4) {
       showToast(tAuth('passwordTooShort'), 'error')
       return
     }
@@ -82,7 +82,7 @@ export function SecurityDrawer({ isOpen, onClose, session, isAdmin }: SecurityDr
 
   const handleChangePassword = useCallback(async () => {
     if (!pwCurrentPassword || !pwNewPassword || !pwConfirmPassword || isSettingPassword) return
-    if (pwNewPassword.length < 8) {
+    if (pwNewPassword.length < 4) {
       showToast(tAuth('passwordTooShort'), 'error')
       return
     }

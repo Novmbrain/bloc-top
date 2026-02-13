@@ -33,7 +33,7 @@ export default function SecuritySetupPage() {
   const handleSetPassword = useCallback(async () => {
     if (!newPassword || !confirmPassword || isSettingPassword) return
 
-    if (newPassword.length < 8) {
+    if (newPassword.length < 4) {
       showToast(t('passwordTooShort'), 'error')
       return
     }

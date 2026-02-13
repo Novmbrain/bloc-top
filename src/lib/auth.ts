@@ -39,7 +39,7 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
         // 注册只走 Magic Link 确保邮箱真实性，密码通过 setPassword 后补
         emailAndPassword: {
           enabled: true,
-          minPasswordLength: 8,
+          minPasswordLength: 4,
         },
 
         // 账号关联 — 同一邮箱的 Magic Link / Password / Passkey 共享用户记录

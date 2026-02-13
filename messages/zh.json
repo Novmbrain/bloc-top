@@ -473,7 +473,7 @@
     "newPassword": "新密码",
     "confirmPassword": "确认密码",
     "passwordMismatch": "两次密码不一致",
-    "passwordTooShort": "密码至少 8 位",
+    "passwordTooShort": "密码至少 4 位",
     "passwordSetSuccess": "密码设置成功",
     "passwordSetFailed": "密码设置失败",
     "changePassword": "修改密码",
