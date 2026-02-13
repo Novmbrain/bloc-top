@@ -14,6 +14,7 @@ import {
   Eye,
   EyeOff,
   Plus,
+  Trash2,
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { Link } from '@/i18n/navigation'
@@ -104,6 +105,10 @@ export default function RouteAnnotationPage() {
     name: '', grade: '？', area: '', FA: '', setter: '', description: '',
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+
+  // ============ 删除状态 ============
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // ============ UI 状态 ============
   const [showEditorPanel, setShowEditorPanel] = useState(false)
@@ -462,6 +467,28 @@ export default function RouteAnnotationPage() {
     setPendingAction(null)
     setShowUnsavedDialog(false)
   }, [pendingAction, handleSave, executePendingAction])
+
+  // ============ 删除线路逻辑 ============
+  const handleDeleteRoute = useCallback(async () => {
+    if (!selectedRoute || isDeleting) return
+    setIsDeleting(true)
+    try {
+      const res = await fetch(`/api/routes/${selectedRoute.id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '删除失败')
+
+      setRoutes(prev => prev.filter(r => r.id !== selectedRoute.id))
+      setSelectedRoute(null)
+      setShowDeleteConfirm(false)
+      setShowEditorPanel(false)
+      showToast('线路已删除', 'success', 3000)
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : '删除失败'
+      showToast(msg, 'error', 4000)
+    } finally {
+      setIsDeleting(false)
+    }
+  }, [selectedRoute, isDeleting, setRoutes, showToast])
 
   // ============ 新增线路逻辑 ============
   const handleStartCreate = useCallback(() => {
@@ -1103,6 +1130,19 @@ export default function RouteAnnotationPage() {
               <span className="text-sm">{saveError}</span>
             </div>
           )}
+
+          {/* 删除线路按钮 */}
+          <button
+            className="w-full py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
+            style={{
+              color: 'var(--theme-error)',
+              backgroundColor: 'color-mix(in srgb, var(--theme-error) 8%, transparent)',
+            }}
+            onClick={() => setShowDeleteConfirm(true)}
+          >
+            <Trash2 className="w-4 h-4" />
+            删除线路
+          </button>
         </div>
       )}
     </div>
@@ -1213,6 +1253,77 @@ export default function RouteAnnotationPage() {
                 }}
               >
                 {isSaving ? '保存中...' : '保存并切换'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 删除确认对话框 */}
+      {showDeleteConfirm && selectedRoute && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+        >
+          <div
+            className="max-w-sm w-full p-6 animate-scale-in"
+            style={{
+              backgroundColor: 'var(--theme-surface)',
+              borderRadius: 'var(--theme-radius-xl)',
+              boxShadow: 'var(--theme-shadow-lg)',
+            }}
+          >
+            <div className="flex items-start gap-4 mb-5">
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-error) 15%, var(--theme-surface))' }}
+              >
+                <Trash2 className="w-6 h-6" style={{ color: 'var(--theme-error)' }} />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg mb-1" style={{ color: 'var(--theme-on-surface)' }}>
+                  删除线路
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                  确定要删除线路「{selectedRoute.name}」({selectedRoute.grade}) 吗？
+                </p>
+              </div>
+            </div>
+
+            <div
+              className="p-3 mb-5 rounded-lg text-xs"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--theme-error) 8%, var(--theme-surface))',
+                color: 'var(--theme-on-surface-variant)',
+              }}
+            >
+              删除后，该线路的 Topo 标注和 Beta 视频链接将一并移除，此操作不可撤销。
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                className="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98] glass-light"
+                style={{ color: 'var(--theme-on-surface)' }}
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+              >
+                取消
+              </button>
+              <button
+                className="flex-1 py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
+                style={{
+                  backgroundColor: 'var(--theme-error)',
+                  color: 'white',
+                  opacity: isDeleting ? 0.7 : 1,
+                }}
+                onClick={handleDeleteRoute}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> 删除中...</>
+                ) : (
+                  '确认删除'
+                )}
               </button>
             </div>
           </div>

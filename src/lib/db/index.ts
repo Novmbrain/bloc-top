@@ -573,6 +573,33 @@ export async function createRoute(
 }
 
 /**
+ * 删除线路 (含内嵌的 betaLinks、topoLine 等)
+ */
+export async function deleteRoute(id: number): Promise<boolean> {
+  const start = Date.now()
+
+  try {
+    const db = await getDatabase()
+    const result = await db.collection('routes').deleteOne({
+      _id: toMongoId(id),
+    })
+
+    log.info(`Deleted route: ${id} (matched: ${result.deletedCount})`, {
+      action: 'deleteRoute',
+      duration: Date.now() - start,
+    })
+
+    return result.deletedCount > 0
+  } catch (error) {
+    log.error(`Failed to delete route: ${id}`, error, {
+      action: 'deleteRoute',
+      duration: Date.now() - start,
+    })
+    throw error
+  }
+}
+
+/**
  * 更新岩场的区域列表
  */
 export async function updateCragAreas(cragId: string, areas: string[]): Promise<string[]> {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getRouteById, updateRoute } from '@/lib/db'
+import { getRouteById, updateRoute, deleteRoute } from '@/lib/db'
 import { createModuleLogger } from '@/lib/logger'
 import type { Route, TopoPoint } from '@/types'
 
@@ -210,6 +210,54 @@ export async function PATCH(
     })
     return NextResponse.json(
       { success: false, error: '更新线路失败' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * DELETE /api/routes/[id]
+ * 删除线路（含内嵌的 betaLinks、topoLine）
+ */
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const start = Date.now()
+  const { id } = await params
+  const routeId = parseInt(id, 10)
+
+  if (isNaN(routeId)) {
+    return NextResponse.json(
+      { success: false, error: '无效的线路 ID' },
+      { status: 400 }
+    )
+  }
+
+  try {
+    const deleted = await deleteRoute(routeId)
+
+    if (!deleted) {
+      return NextResponse.json(
+        { success: false, error: '线路不存在' },
+        { status: 404 }
+      )
+    }
+
+    log.info('Route deleted', {
+      action: 'DELETE /api/routes/[id]',
+      duration: Date.now() - start,
+      metadata: { routeId },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    log.error('Failed to delete route', error, {
+      action: 'DELETE /api/routes/[id]',
+      duration: Date.now() - start,
+    })
+    return NextResponse.json(
+      { success: false, error: '删除线路失败' },
       { status: 500 }
     )
   }
