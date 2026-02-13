@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCragPermissionsByCragId, createCragPermission, deleteCragPermission } from '@/lib/db'
+import { getCragPermission, getCragPermissionsByCragId, createCragPermission, deleteCragPermission } from '@/lib/db'
 import { requireAuth } from '@/lib/require-auth'
 import { canManagePermissions } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
@@ -141,6 +141,15 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: '无权管理此岩场的权限' },
         { status: 403 }
+      )
+    }
+
+    // 保护: creator 不能删除自己的权限（防止岩场变成无主状态）
+    const targetPerm = await getCragPermission(targetUserId, cragId)
+    if (targetPerm?.role === 'creator' && currentRole !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: '无法移除创建者权限，请联系管理员' },
+        { status: 400 }
       )
     }
 

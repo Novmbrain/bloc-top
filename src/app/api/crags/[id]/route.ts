@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCragById, updateCrag } from '@/lib/db'
-import { getAuth } from '@/lib/auth'
+import { requireAuth } from '@/lib/require-auth'
+import { canEditCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
 
 const log = createModuleLogger('API:Crag')
@@ -38,23 +39,27 @@ export async function GET(
 
 /**
  * PATCH /api/crags/[id]
- * 更新岩场信息 (需要 admin 权限)
+ * 更新岩场信息 (需要岩场编辑权限)
  */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // 认证 + 权限检查
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+  const { userId, role } = authResult
+
   const { id } = await params
 
+  if (!(await canEditCrag(userId, id, role))) {
+    return NextResponse.json(
+      { success: false, error: '无权编辑此岩场' },
+      { status: 403 }
+    )
+  }
+
   try {
-    const auth = await getAuth()
-    const session = await auth.api.getSession({ headers: request.headers })
-    if (!session || (session.user as { role?: string }).role !== 'admin') {
-      return NextResponse.json(
-        { success: false, error: '需要管理员权限' },
-        { status: 403 }
-      )
-    }
 
     const body = await request.json()
     const allowedFields = ['name', 'cityId', 'location', 'description', 'approach', 'coordinates', 'coverImages']

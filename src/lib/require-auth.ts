@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuth } from '@/lib/auth'
+import type { UserRole } from '@/types'
 
 export interface AuthInfo {
   userId: string
-  role: string
+  role: UserRole
 }
 
 /**
@@ -23,6 +24,6 @@ export async function requireAuth(request: NextRequest): Promise<AuthInfo | Next
 
   return {
     userId: session.user.id,
-    role: (session.user as { role?: string }).role || 'user',
+    role: ((session.user as { role?: string }).role || 'user') as UserRole,
   }
 }

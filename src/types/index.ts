@@ -107,6 +107,8 @@ export interface Crag {
   areas?: string[]               // 持久化的区域列表
   credits?: CragCredit[]         // 致谢人员列表
   createdBy?: string             // 创建者 userId (RBAC)
+  createdAt?: Date               // 创建时间
+  updatedAt?: Date               // 更新时间
 }
 
 // 评论数据类型
