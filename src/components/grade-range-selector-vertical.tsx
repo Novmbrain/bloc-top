@@ -2,13 +2,14 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { V_GRADES } from '@/lib/filter-constants'
+
 import { getGradeColor } from '@/lib/tokens'
 
 const DRAG_THRESHOLD = 8
 const GRADE_HINT_SEEN_KEY = 'grade-selector-hint-seen'
 
 interface GradeRangeSelectorVerticalProps {
+  availableGrades: string[]
   selectedGrades: string[]
   onChange: (grades: string[]) => void
   className?: string
@@ -19,10 +20,15 @@ interface GradeRangeSelectorVerticalProps {
  * 固定在页面左侧，支持上下滑动选择连续范围
  */
 export function GradeRangeSelectorVertical({
+  availableGrades,
   selectedGrades,
   onChange,
   className,
 }: GradeRangeSelectorVerticalProps) {
+  if (availableGrades.length === 0) {
+    return null
+  }
+
   const containerRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState<number | null>(null)
@@ -34,7 +40,7 @@ export function GradeRangeSelectorVertical({
   useEffect(() => {
     try {
       if (!localStorage.getItem(GRADE_HINT_SEEN_KEY)) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载时读取 localStorage
+         
         setShowPulse(true)
       }
     } catch { /* SSR */ }
@@ -43,7 +49,7 @@ export function GradeRangeSelectorVertical({
   const [optimisticSelection, setOptimisticSelection] = useState<string[] | null>(null)
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- prop 变化时重置
+     
     setOptimisticSelection(null)
   }, [selectedGrades])
 
@@ -54,15 +60,15 @@ export function GradeRangeSelectorVertical({
     if (!containerRef.current) return 0
     const rect = containerRef.current.getBoundingClientRect()
     const y = clientY - rect.top
-    const index = Math.floor((y / rect.height) * V_GRADES.length)
-    return Math.max(0, Math.min(V_GRADES.length - 1, index))
-  }, [])
+    const index = Math.floor((y / rect.height) * availableGrades.length)
+    return Math.max(0, Math.min(availableGrades.length - 1, index))
+  }, [availableGrades])
 
   const getSelectedFromRange = useCallback((start: number, end: number): string[] => {
     const min = Math.min(start, end)
     const max = Math.max(start, end)
-    return V_GRADES.slice(min, max + 1) as string[]
-  }, [])
+    return availableGrades.slice(min, max + 1)
+  }, [availableGrades])
 
   const handleDragStart = useCallback((clientY: number) => {
     const index = getGradeIndexFromPosition(clientY)
@@ -97,7 +103,7 @@ export function GradeRangeSelectorVertical({
 
     const newSelection = hasMoved
       ? getSelectedFromRange(dragStart, dragEnd)
-      : [V_GRADES[dragStart] as string]
+      : [availableGrades[dragStart]]
 
     setOptimisticSelection(newSelection)
     onChange(newSelection)
@@ -107,7 +113,7 @@ export function GradeRangeSelectorVertical({
     setDragEnd(null)
     setHasMoved(false)
     dragStartY.current = null
-  }, [isDragging, dragStart, dragEnd, hasMoved, getSelectedFromRange, onChange])
+  }, [isDragging, dragStart, dragEnd, hasMoved, getSelectedFromRange, onChange, availableGrades])
 
   // 鼠标事件
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -154,8 +160,8 @@ export function GradeRangeSelectorVertical({
       const max = Math.max(dragStart, dragEnd)
       return index >= min && index <= max
     }
-    return displayedSelection.includes(V_GRADES[index])
-  }, [isDragging, hasMoved, dragStart, dragEnd, displayedSelection])
+    return displayedSelection.includes(availableGrades[index])
+  }, [isDragging, hasMoved, dragStart, dragEnd, displayedSelection, availableGrades])
 
   const handleClear = useCallback(() => {
     setOptimisticSelection([])
@@ -163,7 +169,7 @@ export function GradeRangeSelectorVertical({
   }, [onChange])
 
   return (
-    <div className={`flex flex-col items-center gap-1.5 ${className ?? ''}`}>
+    <div className={`flex flex-col items-center justify-center gap-1.5 ${className ?? ''}`}>
       {/* 清除按钮 */}
       {displayedSelection.length > 0 && (
         <button
@@ -182,7 +188,7 @@ export function GradeRangeSelectorVertical({
       {/* 竖向色谱条 */}
       <div
         ref={containerRef}
-        className={`flex flex-col rounded-lg overflow-hidden cursor-pointer select-none touch-none flex-1${showPulse ? ' animate-pulse' : ''}`}
+        className={`flex flex-col rounded-lg overflow-hidden cursor-pointer select-none touch-none${showPulse ? ' animate-pulse' : ''}`}
         style={{
           width: 36,
           boxShadow: showPulse
@@ -195,15 +201,16 @@ export function GradeRangeSelectorVertical({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {V_GRADES.map((grade, index) => {
+        {availableGrades.map((grade, index) => {
           const selected = isGradeSelected(index)
           const color = getGradeColor(grade)
 
           return (
             <div
               key={grade}
-              className="flex-1 flex items-center justify-center transition-all duration-150"
+              className="flex items-center justify-center transition-all duration-150"
               style={{
+                minHeight: 28,
                 backgroundColor: selected ? color : 'var(--theme-surface-variant)',
                 color: selected ? 'white' : 'var(--theme-on-surface-variant)',
                 fontSize: '9px',
