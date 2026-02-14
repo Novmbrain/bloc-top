@@ -278,9 +278,9 @@ export default function CragEditPage() {
       try {
         const formData = new FormData()
         formData.append('file', file)
-        // R2 路径: CragSurface/{cragId}/{index}.jpg
+        // R2 路径: CragSurface/{cragId}/0.jpg（单张封面，始终覆盖）
         formData.append('cragId', 'CragSurface')
-        formData.append('routeName', `${rawId}/${coverImages.length}`)
+        formData.append('routeName', `${rawId}/0`)
 
         const res = await fetch('/api/upload', {
           method: 'POST',
@@ -293,8 +293,8 @@ export default function CragEditPage() {
           return
         }
 
-        // 更新 coverImages 数组
-        const newCoverImages = [...coverImages, data.url]
+        // 单张封面：直接替换
+        const newCoverImages = [data.url]
         setCoverImages(newCoverImages)
 
         // 同步更新到数据库
@@ -321,7 +321,7 @@ export default function CragEditPage() {
         }
       }
     },
-    [rawId, coverImages, showToast]
+    [rawId, showToast]
   )
 
   // ============ 加载状态 ============
@@ -701,38 +701,20 @@ export default function CragEditPage() {
               封面图管理
             </h3>
 
-            {/* 已有封面图 grid */}
-            {coverImages.length > 0 && (
-              <div className="grid grid-cols-3 gap-2">
-                {coverImages.map((_, index) => (
-                  <div
-                    key={index}
-                    className="relative aspect-[4/3] rounded-lg overflow-hidden"
-                    style={{ backgroundColor: 'var(--theme-surface)' }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={getCragCoverUrl(rawId, index)}
-                      alt={`封面图 ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div
-                      className="absolute bottom-0 left-0 right-0 px-2 py-1 text-center text-xs font-medium"
-                      style={{
-                        backgroundColor:
-                          'color-mix(in srgb, var(--theme-surface) 70%, transparent)',
-                        color: 'var(--theme-on-surface)',
-                      }}
-                    >
-                      #{index}
-                    </div>
-                  </div>
-                ))}
+            {/* 封面图预览（单张） */}
+            {coverImages.length > 0 ? (
+              <div
+                className="relative aspect-[16/9] rounded-xl overflow-hidden"
+                style={{ backgroundColor: 'var(--theme-surface)' }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={getCragCoverUrl(rawId, 0)}
+                  alt="封面图"
+                  className="w-full h-full object-cover"
+                />
               </div>
-            )}
-
-            {/* 空状态 */}
-            {coverImages.length === 0 && (
+            ) : (
               <div
                 className="flex flex-col items-center justify-center py-8 rounded-xl"
                 style={{
@@ -745,7 +727,7 @@ export default function CragEditPage() {
               </div>
             )}
 
-            {/* 上传按钮 */}
+            {/* 上传/更换按钮 */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -765,7 +747,7 @@ export default function CragEditPage() {
               ) : (
                 <>
                   <Upload className="w-4 h-4" />
-                  上传封面图
+                  {coverImages.length > 0 ? '更换封面图' : '上传封面图'}
                 </>
               )}
             </button>
