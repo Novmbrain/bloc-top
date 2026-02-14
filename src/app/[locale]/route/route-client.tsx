@@ -66,6 +66,30 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
     return routes.filter(r => cragIds.has(r.cragId))
   }, [routes, cityFilteredCrags, selectedCity])
 
+  // 计算当前路线池中实际存在的难度等级
+  const availableGrades = useMemo(() => {
+    const pool = selectedCrag
+      ? cityFilteredRoutes.filter((r) => r.cragId === selectedCrag)
+      : cityFilteredRoutes
+    const gradeSet = new Set(pool.map((r) => r.grade))
+    // 按难度排序，"？"放最后
+    return [...gradeSet].sort((a, b) => {
+      if (a === '？') return 1
+      if (b === '？') return -1
+      return compareGrades(a, b)
+    })
+  }, [cityFilteredRoutes, selectedCrag])
+
+  // 切换岩场时，清除不在新岩场中的已选难度
+  useEffect(() => {
+    if (selectedGrades.length === 0) return
+    const validGrades = selectedGrades.filter((g) => availableGrades.includes(g))
+    if (validGrades.length !== selectedGrades.length) {
+      updateSearchParams(FILTER_PARAMS.GRADE, validGrades.length > 0 ? validGrades : null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅在 availableGrades 变化时检查
+  }, [availableGrades])
+
   // 更新 URL 参数
   const updateSearchParams = useCallback(
     (key: string, value: string | string[] | null) => {
@@ -273,6 +297,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
             style={{ width: 48 }}
           >
             <GradeRangeSelectorVertical
+              availableGrades={availableGrades}
               selectedGrades={selectedGrades}
               onChange={(grades) => updateSearchParams(FILTER_PARAMS.GRADE, grades)}
               className="h-full"
