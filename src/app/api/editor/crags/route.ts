@@ -15,17 +15,18 @@ export async function GET(request: NextRequest) {
 
   const isAdmin = role === 'admin'
 
-  // admin 不需要查 permission 表
+  // admin 也查 permission 表，以显示岩场级具体角色
   const [allCrags, permissions] = await Promise.all([
     getAllCrags(),
-    isAdmin ? Promise.resolve([]) : getCragPermissionsByUserId(userId),
+    getCragPermissionsByUserId(userId),
   ])
 
   // 构建 cragId → permission role 映射
   const permMap = new Map(permissions.map(p => [p.cragId, p.role]))
 
   const crags = isAdmin
-    ? allCrags.map(c => ({ ...c, permissionRole: 'admin' as const }))
+    // admin 看到所有岩场，优先显示岩场级角色，无记录则 fallback 为 'admin'
+    ? allCrags.map(c => ({ ...c, permissionRole: permMap.get(c.id) ?? 'admin' as const }))
     : allCrags
         .filter(c => permMap.has(c.id))
         .map(c => ({ ...c, permissionRole: permMap.get(c.id)! }))

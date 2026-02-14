@@ -10,6 +10,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest, NextResponse } from 'next/server'
+import type { Crag } from '@/types'
 
 vi.mock('@/lib/mongodb', () => ({
   getDatabase: vi.fn(),
@@ -68,7 +69,7 @@ describe('GET /api/editor/crags', () => {
   it('should return all crags for admin, with specific roles where available', async () => {
     mockRequireAuth.mockResolvedValue({ userId: 'admin1', role: 'admin' })
     mockCanCreateCrag.mockReturnValue(true)
-    mockGetAllCrags.mockResolvedValue(ALL_CRAGS as any)
+    mockGetAllCrags.mockResolvedValue(ALL_CRAGS as Crag[])
     mockGetCragPermissions.mockResolvedValue([
       { userId: 'admin1', cragId: 'crag-1', role: 'manager', assignedBy: 'system', createdAt: new Date() },
     ])
@@ -78,10 +79,10 @@ describe('GET /api/editor/crags', () => {
     const data = await res.json()
     expect(data.crags).toHaveLength(3)
     // crag-1 有具体角色 → 显示 manager
-    expect(data.crags.find((c: any) => c.id === 'crag-1').permissionRole).toBe('manager')
+    expect(data.crags.find((c: { id: string; permissionRole: string }) => c.id === 'crag-1').permissionRole).toBe('manager')
     // crag-2, crag-3 无记录 → fallback 为 admin
-    expect(data.crags.find((c: any) => c.id === 'crag-2').permissionRole).toBe('admin')
-    expect(data.crags.find((c: any) => c.id === 'crag-3').permissionRole).toBe('admin')
+    expect(data.crags.find((c: { id: string; permissionRole: string }) => c.id === 'crag-2').permissionRole).toBe('admin')
+    expect(data.crags.find((c: { id: string; permissionRole: string }) => c.id === 'crag-3').permissionRole).toBe('admin')
     expect(data.role).toBe('admin')
     expect(data.canCreate).toBe(true)
   })
@@ -89,7 +90,7 @@ describe('GET /api/editor/crags', () => {
   it('should return only permitted crags with correct roles', async () => {
     mockRequireAuth.mockResolvedValue({ userId: 'user1', role: 'user' })
     mockCanCreateCrag.mockReturnValue(true)
-    mockGetAllCrags.mockResolvedValue(ALL_CRAGS as any)
+    mockGetAllCrags.mockResolvedValue(ALL_CRAGS as Crag[])
     mockGetCragPermissions.mockResolvedValue([
       { userId: 'user1', cragId: 'crag-1', role: 'manager', assignedBy: 'system', createdAt: new Date() },
       { userId: 'user1', cragId: 'crag-3', role: 'manager', assignedBy: 'admin1', createdAt: new Date() },
@@ -108,7 +109,7 @@ describe('GET /api/editor/crags', () => {
   it('should return empty array for user with no permissions', async () => {
     mockRequireAuth.mockResolvedValue({ userId: 'user2', role: 'user' })
     mockCanCreateCrag.mockReturnValue(false)
-    mockGetAllCrags.mockResolvedValue(ALL_CRAGS as any)
+    mockGetAllCrags.mockResolvedValue(ALL_CRAGS as Crag[])
     mockGetCragPermissions.mockResolvedValue([])
 
     const res = await GET(createRequest())
@@ -121,7 +122,7 @@ describe('GET /api/editor/crags', () => {
   it('should include role and canCreate in response', async () => {
     mockRequireAuth.mockResolvedValue({ userId: 'user1', role: 'user' })
     mockCanCreateCrag.mockReturnValue(true)
-    mockGetAllCrags.mockResolvedValue(ALL_CRAGS as any)
+    mockGetAllCrags.mockResolvedValue(ALL_CRAGS as Crag[])
     mockGetCragPermissions.mockResolvedValue([
       { userId: 'user1', cragId: 'crag-1', role: 'manager', assignedBy: 'system', createdAt: new Date() },
     ])
@@ -135,7 +136,7 @@ describe('GET /api/editor/crags', () => {
   it('should not include crags without permission records', async () => {
     mockRequireAuth.mockResolvedValue({ userId: 'user1', role: 'user' })
     mockCanCreateCrag.mockReturnValue(false)
-    mockGetAllCrags.mockResolvedValue(ALL_CRAGS as any)
+    mockGetAllCrags.mockResolvedValue(ALL_CRAGS as Crag[])
     mockGetCragPermissions.mockResolvedValue([
       { userId: 'user1', cragId: 'crag-2', role: 'manager', assignedBy: 'admin1', createdAt: new Date() },
     ])
