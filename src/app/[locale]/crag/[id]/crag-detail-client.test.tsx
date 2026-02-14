@@ -27,6 +27,7 @@ const mockCrag: Crag = {
   developmentTime: '2024',
   description: '测试描述',
   approach: '测试前往方式',
+  coverImages: ['cover0.jpg', 'cover1.jpg'],
 }
 
 const mockRoutes: Route[] = [

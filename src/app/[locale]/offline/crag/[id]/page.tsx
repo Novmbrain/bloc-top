@@ -39,7 +39,10 @@ export default function OfflineCragDetailPage() {
 
         // 尝试从 Cache API 加载封面图
         if (data) {
-          const urls = [1, 2].map((n) => getCragCoverUrl(cragId, n))
+          const coverCount = data.crag.coverImages?.length ?? 0
+          const urls = coverCount > 0
+            ? Array.from({ length: coverCount }, (_, i) => getCragCoverUrl(cragId, i))
+            : [getCragCoverUrl(cragId, 0)]
           const cachedUrls = await loadCachedImages(urls)
           setCoverUrls(cachedUrls.length > 0 ? cachedUrls : urls)
         }

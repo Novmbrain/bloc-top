@@ -31,8 +31,11 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
   const [imageVisible, setImageVisible] = useState(true)
   const [isCreditsOpen, setIsCreditsOpen] = useState(false)
 
-  // 生成封面图 URL
-  const images = [1, 2].map((n) => getCragCoverUrl(crag.id, n))
+  // 生成封面图 URL（基于数据库 coverImages 数量，0-based 索引）
+  const coverCount = crag.coverImages?.length ?? 0
+  const images = coverCount > 0
+    ? Array.from({ length: coverCount }, (_, i) => getCragCoverUrl(crag.id, i))
+    : [getCragCoverUrl(crag.id, 0)]
 
   // 监听滚动位置更新当前索引
   useEffect(() => {
