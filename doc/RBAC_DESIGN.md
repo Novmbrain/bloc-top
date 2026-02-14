@@ -5,16 +5,14 @@
 ## 1. 需求概述
 
 为 BlocTop 添加基于角色的访问控制（RBAC），支持：
-- **Admin** 管理所有用户和岩场
-- **岩场创建者** 创建岩场并管理自己创建的岩场，可分配管理者
-- **岩场管理者** 管理被分配的岩场内容（线路/岩面/Beta）
+- **Admin** 管理所有用户和岩场，创建/删除岩场，管理权限
+- **岩场管理者** (manager) 管理被分配的岩场内容（线路/岩面/Beta）
 
 ### 设计决策
 
 | 决策项 | 结论 |
 |--------|------|
-| `crag_creator` 角色分配方式 | 由 admin 在用户管理页面分配 |
-| 岩场管理者分配方式 | 分配后即时生效，无邀请流程 |
+| 岩场管理者分配方式 | 由 admin 分配，即时生效，无邀请流程 |
 | 邮件通知 | 不需要 |
 | RBAC 插件选型 | better-auth Admin 插件（非 Organization） |
 | 岩场级权限存储 | 自定义 `crag_permissions` MongoDB collection |
@@ -29,33 +27,32 @@
 ┌──────────────────────────────────────────────────┐
 │  Layer 1: 用户级角色 (better-auth Admin 插件)       │
 │                                                   │
-│  admin         → 全局超级管理员，可管理用户和所有岩场  │
-│  crag_creator  → 可创建岩场，由 admin 分配           │
-│  user          → 默认角色，仅浏览（无编辑器访问权限）   │
+│  admin  → 全局超级管理员，可管理用户和所有岩场         │
+│  user   → 默认角色，仅浏览（无编辑器访问权限）         │
 └──────────────────────────────────────────────────┘
                         ↓
 ┌──────────────────────────────────────────────────┐
 │  Layer 2: 岩场级权限 (自定义 crag_permissions)       │
 │                                                   │
-│  creator  → 岩场全部权限 + 可分配/移除 manager       │
-│  manager  → 可编辑线路/岩面/Beta/区域 (不能删除岩场)  │
+│  manager  → 可编辑岩场信息/线路/岩面/Beta/区域        │
+│             (不能删除岩场，不能管理权限)               │
 └──────────────────────────────────────────────────┘
 ```
 
 ### 2.2 角色能力矩阵
 
-| 操作 | admin | crag_creator | crag manager | user |
-|------|-------|-------------|--------------|------|
-| 浏览所有岩场/线路 | ✅ | ✅ | ✅ | ✅ |
-| 进入编辑器 | ✅ | ✅ | ✅ | ❌ |
-| 创建新岩场 | ✅ | ✅ | ❌ | ❌ |
-| 编辑岩场信息 | ✅ 全部 | ✅ 自己的 | ✅ 被分配的 | ❌ |
-| 删除岩场 | ✅ 全部 | ✅ 自己的 | ❌ | ❌ |
-| 编辑线路/岩面/Beta | ✅ 全部 | ✅ 自己岩场的 | ✅ 被分配岩场的 | ❌ |
-| 管理岩场区域 | ✅ 全部 | ✅ 自己岩场的 | ✅ 被分配岩场的 | ❌ |
-| 分配 crag manager | ✅ 全部 | ✅ 自己岩场的 | ❌ | ❌ |
-| 管理用户 (角色分配) | ✅ | ❌ | ❌ | ❌ |
-| 管理城市/地级市 | ✅ | ❌ | ❌ | ❌ |
+| 操作 | admin | crag manager | user |
+|------|-------|--------------|------|
+| 浏览所有岩场/线路 | ✅ | ✅ | ✅ |
+| 进入编辑器 | ✅ | ✅ | ❌ |
+| 创建新岩场 | ✅ | ❌ | ❌ |
+| 编辑岩场信息 | ✅ 全部 | ✅ 被分配的 | ❌ |
+| 删除岩场 | ✅ | ❌ | ❌ |
+| 编辑线路/岩面/Beta | ✅ 全部 | ✅ 被分配岩场的 | ❌ |
+| 管理岩场区域 | ✅ 全部 | ✅ 被分配岩场的 | ❌ |
+| 分配/移除 crag manager | ✅ | ❌ | ❌ |
+| 管理用户 (角色分配) | ✅ | ❌ | ❌ |
+| 管理城市/地级市 | ✅ | ❌ | ❌ |
 
 ### 2.3 权限判定逻辑
 
@@ -65,33 +62,25 @@ function canEditCrag(userId: string, cragId: string, userRole: string): boolean 
   // 1. Admin 拥有所有权限
   if (userRole === 'admin') return true
 
-  // 2. 查询 crag_permissions
+  // 2. 查询 crag_permissions — manager 有编辑权限
   const perm = db.crag_permissions.findOne({ userId, cragId })
-  if (perm?.role === 'creator') return true  // 创建者有全部权限
-  if (perm?.role === 'manager') return true  // 管理者有编辑权限
-
-  // 3. 无权限
-  return false
+  return perm !== null
 }
 
 function canDeleteCrag(userId: string, cragId: string, userRole: string): boolean {
-  if (userRole === 'admin') return true
-  const perm = db.crag_permissions.findOne({ userId, cragId })
-  return perm?.role === 'creator'  // 只有创建者和 admin 可删除
+  return userRole === 'admin'  // 只有 admin 可删除岩场
 }
 
-function canAssignManager(userId: string, cragId: string, userRole: string): boolean {
-  if (userRole === 'admin') return true
-  const perm = db.crag_permissions.findOne({ userId, cragId })
-  return perm?.role === 'creator'  // 只有创建者和 admin 可分配管理者
+function canManagePermissions(userId: string, cragId: string, userRole: string): boolean {
+  return userRole === 'admin'  // 只有 admin 可管理权限
 }
 
 function canCreateCrag(userRole: string): boolean {
-  return userRole === 'admin' || userRole === 'crag_creator'
+  return userRole === 'admin'  // 只有 admin 可创建岩场
 }
 
 function canAccessEditor(userId: string, userRole: string): boolean {
-  if (userRole === 'admin' || userRole === 'crag_creator') return true
+  if (userRole === 'admin') return true
   // user 角色如果有任何 crag_permissions 记录也可进入编辑器
   return db.crag_permissions.exists({ userId })
 }
@@ -108,7 +97,7 @@ function canAccessEditor(userId: string, userRole: string): boolean {
 ```typescript
 // better-auth Admin 插件自动管理
 // user collection 中的 role 字段
-type UserRole = 'admin' | 'crag_creator' | 'user'
+type UserRole = 'admin' | 'user'
 ```
 
 Admin 插件额外添加的字段（自动迁移）：
@@ -138,14 +127,6 @@ export const ac = createAccessControl(statement)
 export const roles = {
   user: ac.newRole({}),  // 无权限
 
-  crag_creator: ac.newRole({
-    editor: ["access"],
-    crag:   ["create", "update"],
-    route:  ["create", "update", "delete"],
-    face:   ["upload", "rename", "delete"],
-    beta:   ["approve", "delete"],
-  }),
-
   admin: ac.newRole({
     ...adminAc.statements,  // 继承默认的 user/session 管理权限
     editor: ["access"],
@@ -163,8 +144,8 @@ export const roles = {
 interface CragPermission {
   userId: string       // better-auth user._id (ObjectId as string)
   cragId: string       // Crag.id (e.g. 'yuan-tong-si')
-  role: 'creator' | 'manager'
-  assignedBy: string   // 分配者的 userId
+  role: 'manager'      // 目前仅 manager 一种岩场级角色
+  assignedBy: string   // 分配者的 userId (admin)
   createdAt: Date
 }
 
@@ -239,7 +220,7 @@ export const authClient = createAuthClient({
 
 | 路由 | 方法 | 当前状态 | 目标权限 |
 |------|------|---------|---------|
-| `/api/crags` | POST | ✅ admin | admin / crag_creator |
+| `/api/crags` | POST | ✅ admin | admin-only |
 | `/api/crags/[id]` | PATCH | ✅ admin | canEditCrag(userId, cragId) |
 | `/api/crags/[id]/areas` | PATCH | ❌ 无检查 | canEditCrag(userId, cragId) |
 | `/api/routes` | POST | ❌ 无检查 | canEditCrag(userId, route.cragId) |
@@ -257,9 +238,9 @@ export const authClient = createAuthClient({
 
 | 路由 | 方法 | 权限 | 说明 |
 |------|------|------|------|
-| `/api/crag-permissions` | GET | admin / crag creator | 列出岩场的权限记录 |
-| `/api/crag-permissions` | POST | admin / crag creator | 分配管理者 |
-| `/api/crag-permissions` | DELETE | admin / crag creator | 移除管理者 |
+| `/api/crag-permissions` | GET | admin-only | 列出岩场的权限记录 |
+| `/api/crag-permissions` | POST | admin-only | 分配管理者 |
+| `/api/crag-permissions` | DELETE | admin-only | 移除管理者 |
 
 > better-auth Admin 插件自动注册的路由（通过 `/api/auth/[...all]`）：
 > `listUsers`, `setRole`, `banUser`, `unbanUser`, `removeUser` 等
@@ -283,26 +264,20 @@ export async function canEditCrag(userId: string, cragId: string, userRole: stri
   return perm !== null
 }
 
-export async function canDeleteCrag(userId: string, cragId: string, userRole: string): Promise<boolean> {
-  if (userRole === 'admin') return true
-  const db = await getDatabase()
-  const perm = await db.collection('crag_permissions').findOne({ userId, cragId, role: 'creator' })
-  return perm !== null
+export function canDeleteCrag(userRole: string): boolean {
+  return userRole === 'admin'  // 只有 admin 可删除岩场
 }
 
-export async function canCreateCrag(userRole: string): boolean {
-  return userRole === 'admin' || userRole === 'crag_creator'
+export function canCreateCrag(userRole: string): boolean {
+  return userRole === 'admin'  // 只有 admin 可创建岩场
 }
 
-export async function canManagePermissions(userId: string, cragId: string, userRole: string): Promise<boolean> {
-  if (userRole === 'admin') return true
-  const db = await getDatabase()
-  const perm = await db.collection('crag_permissions').findOne({ userId, cragId, role: 'creator' })
-  return perm !== null
+export function canManagePermissions(userRole: string): boolean {
+  return userRole === 'admin'  // 只有 admin 可管理权限
 }
 
 export async function canAccessEditor(userId: string, userRole: string): Promise<boolean> {
-  if (userRole === 'admin' || userRole === 'crag_creator') return true
+  if (userRole === 'admin') return true
   const db = await getDatabase()
   const perm = await db.collection('crag_permissions').findOne({ userId })
   return perm !== null
@@ -324,7 +299,7 @@ export async function getEditableCragIds(userId: string, userRole: string): Prom
 
 ```typescript
 // src/app/[locale]/editor/layout.tsx
-// 改为：允许 admin + crag_creator + 有 crag_permissions 的用户
+// 允许 admin + 有 crag_permissions 的用户
 const session = await auth.api.getSession({ headers: await headers() })
 if (!session) redirect('/login')
 
@@ -350,7 +325,7 @@ const crags = editableCragIds === 'all'
 
 | 页面 | 改造内容 |
 |------|---------|
-| `editor/crags/page.tsx` | 只展示有权限的岩场；admin 和 crag_creator 显示"创建岩场"按钮 |
+| `editor/crags/page.tsx` | 只展示有权限的岩场；admin 显示"创建岩场"按钮 |
 | `editor/routes/page.tsx` | CragSelector 只显示有权限的岩场 |
 | `editor/faces/page.tsx` | 同上 |
 | `editor/betas/page.tsx` | 同上 |
@@ -411,7 +386,7 @@ const { data } = await authClient.admin.listUsers({
 // 修改角色
 await authClient.admin.setRole({
   userId: targetUserId,
-  role: 'crag_creator',  // 'admin' | 'crag_creator' | 'user'
+  role: 'admin',  // 'admin' | 'user'
 })
 ```
 
@@ -449,7 +424,7 @@ DELETE /api/crag-permissions
 
 ```typescript
 // 为所有现有岩场设置 createdBy 和时间戳
-// 创建 crag_permissions 记录（现有 admin 成为所有岩场的 creator）
+// 创建 crag_permissions 记录（现有 admin 成为所有岩场的 manager）
 async function migrate() {
   const db = await getDatabase()
   const adminUser = await db.collection('user').findOne({ role: 'admin' })
@@ -460,26 +435,14 @@ async function migrate() {
     { $set: { createdBy: adminUser._id.toString(), createdAt: new Date(), updatedAt: new Date() } }
   )
 
-  // 2. 为 admin 创建 crag_permissions
-  const crags = await db.collection('crags').find({}).toArray()
-  const permissions = crags.map(c => ({
-    userId: adminUser._id.toString(),
-    cragId: c.id,
-    role: 'creator',
-    assignedBy: adminUser._id.toString(),
-    createdAt: new Date(),
-  }))
-
-  if (permissions.length > 0) {
-    await db.collection('crag_permissions').insertMany(permissions)
-  }
-
-  // 3. 创建索引
+  // 2. 创建索引
   await db.collection('crag_permissions').createIndex(
     { userId: 1, cragId: 1 },
     { unique: true }
   )
   await db.collection('crag_permissions').createIndex({ cragId: 1 })
+
+  // Note: admin 不需要 crag_permissions 记录 — admin 角色本身拥有全部权限
 }
 ```
 
@@ -527,7 +490,7 @@ async function migrate() {
 | 3.6 | `editor/cities/page.tsx` — 添加页面级 admin 检查 | 修改 |
 | 3.7 | 适配 `CragSelector` 组件接收过滤列表 | 修改 |
 
-**验证**: crag_creator 只看到自己的岩场，manager 只看到被分配的
+**验证**: manager 只看到被分配的岩场，admin 看到全部
 
 ### Phase 4: Admin 用户管理页面
 
@@ -585,14 +548,13 @@ better-auth 有 5 分钟 session cookie 缓存。角色变更后需要强制刷�
 
 ### 11.3 Admin 插件的 `adminRoles`
 
-`adminRoles: ['admin']` 决定了哪些角色能调用 `listUsers`/`setRole` 等管理 API。`crag_creator` 不在此列，因此无法调用这些 API（这是正确的）。
+`adminRoles: ['admin']` 决定了哪些角色能调用 `listUsers`/`setRole` 等管理 API。只有 `admin` 角色可调用。
 
 ### 11.4 crag_permissions 与 Crag.createdBy 的关系
 
-- `Crag.createdBy` 是冗余字段，用于快速查询"谁创建了这个岩场"
-- `crag_permissions` 是权限的 source of truth
-- 创建岩场时两者同时设置
-- 保持一致性：修改 crag_permissions 的 creator 时需同步 Crag.createdBy
+- `Crag.createdBy` 是记录字段，用于追踪"谁创建了这个岩场"
+- `crag_permissions` 是岩场级权限的 source of truth (仅 manager 角色)
+- Admin 不需要 crag_permissions 记录 — admin 角色本身拥有全部权限
 
 ### 11.5 向后兼容
 

@@ -113,7 +113,7 @@ src/
 │   │   │   ├── routes/         # 线路编辑
 │   │   │   ├── faces/          # 岩面图片管理
 │   │   │   ├── betas/          # Beta 视频管理
-│   │   │   ├── users/          # 用户管理 (admin-only, 角色分配)
+│   │   │   ├── users/          # 用户管理 (admin-only, 角色分配 admin/user)
 │   │   │   └── cities/         # 城市/地级市管理
 │   │   └── offline/            # ★ 离线浏览
 │   │       ├── page.tsx        # 已下载岩场列表
@@ -135,7 +135,7 @@ src/
 │   ├── editor/                 # 编辑器专用组件
 │   │   ├── crag-selector.tsx, route-card.tsx, progress-ring.tsx
 │   │   ├── editor-page-header.tsx      # 编辑器页面 Header (动态返回按钮)
-│   │   ├── crag-permissions-panel.tsx  # 岩场权限管理面板 (创建者/管理者)
+│   │   ├── crag-permissions-panel.tsx  # 岩场权限管理面板 (admin 管理管理者)
 │   │   └── fullscreen-topo-editor.tsx  # Topo 线路编辑器
 │   ├── face-image-provider.tsx # ★ FaceImageCache React 上下文
 │   ├── face-thumbnail-strip.tsx # 岩面缩略图条
@@ -403,11 +403,11 @@ import { Link } from '@/i18n/navigation'
 - **数据层**: `src/lib/db/index.ts` — `crag_permissions` CRUD 函数
 - **类型**: `src/types/index.ts` — `UserRole`, `CragPermission`, `CragPermissionRole`
 - **迁移**: `scripts/migrate-crag-ownership.ts` — 初始化岩场所有权
-- **用户角色** (`user.role`): `admin` | `crag_creator` | `user`
+- **用户角色** (`user.role`): `admin` | `user`
   - Admin 插件自动管理，通过 `authClient.admin.setRole()` 修改
-- **岩场权限** (`crag_permissions` collection): `creator` | `manager`
-  - `creator` = 岩场全部权限 + 可分配 manager
-  - `manager` = 可编辑线路/岩面/Beta (不可删除岩场)
+- **岩场权限** (`crag_permissions` collection): `manager`
+  - `manager` = 可编辑岩场信息/线路/岩面/Beta (不可删除岩场、不可管理权限)
+- **Admin 独有**: 创建岩场、删除岩场、管理权限 (添加/移除 manager)、管理用户
 - **权限函数**: `canCreateCrag(role)`, `canEditCrag(userId, cragId, role)`, `canDeleteCrag(...)`, `canAccessEditor(...)`, `getEditableCragIds(...)`
 
 > 设计详情见 `doc/RBAC_DESIGN.md`
@@ -599,7 +599,7 @@ const key = `${cragId}/${encodeURIComponent(faceId)}.jpg`  // 会导致双重编
 | `GET/POST` | `/api/beta` | 获取/提交 Beta 视频 (POST: Rate Limited, PATCH/DELETE: 需认证) |
 | `GET/PATCH/DELETE` | `/api/faces` | 岩面图片管理 (全部需认证+岩场权限) |
 | `POST` | `/api/upload` | 上传 Topo 图片到 R2 (需认证+岩场权限) |
-| `GET/POST/DELETE` | `/api/crag-permissions` | 岩场权限管理 (需 creator/admin) |
+| `GET/POST/DELETE` | `/api/crag-permissions` | 岩场权限管理 (admin-only) |
 | `GET` | `/api/editor/crags` | 编辑器岩场列表 (权限过滤, 需认证) |
 | `GET` | `/api/editor/search-users?q=xxx` | 搜索用户 (邮箱模糊匹配, 需 editor 权限) |
 | `POST` | `/api/revalidate` | ISR 按需重验证 |

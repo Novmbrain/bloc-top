@@ -303,34 +303,32 @@ await auth.api.setPassword({
 ```
 ┌─────────────────────────────────────────────────────┐
 │ 用户级角色 (user.role)                               │
-│ ┌─────────┐  ┌──────────────┐  ┌──────────┐        │
-│ │  admin   │  │ crag_creator │  │   user   │        │
-│ │ 全部权限 │  │ 创建岩场+管理 │  │ 仅浏览   │        │
-│ └─────────┘  └──────────────┘  └──────────┘        │
+│ ┌─────────┐  ┌──────────┐                           │
+│ │  admin   │  │   user   │                           │
+│ │ 全部权限 │  │ 仅浏览   │                           │
+│ └─────────┘  └──────────┘                           │
 ├─────────────────────────────────────────────────────┤
 │ 岩场级权限 (crag_permissions collection)             │
-│ ┌──────────────┐  ┌──────────────┐                  │
-│ │   creator    │  │   manager    │                  │
-│ │ 删除+分配权限 │  │ 编辑线路/岩面 │                  │
-│ └──────────────┘  └──────────────┘                  │
+│ ┌──────────────┐                                    │
+│ │   manager    │                                    │
+│ │ 编辑岩场/线路 │                                    │
+│ └──────────────┘                                    │
 └─────────────────────────────────────────────────────┘
 ```
 
 ### 用户角色
 
-| 角色 | 说明 | 编辑器 | 创建岩场 | 编辑任意岩场 |
-|------|------|--------|---------|-------------|
-| `admin` | 超级管理员 | ✅ | ✅ | ✅ |
-| `crag_creator` | 岩场创建者 | ✅ | ✅ | 仅自己的 |
-| `user` | 普通用户 | 仅被分配岩场 | ❌ | 仅被分配的 |
+| 角色 | 说明 | 编辑器 | 创建岩场 | 编辑岩场 |
+|------|------|--------|---------|---------|
+| `admin` | 超级管理员 | ✅ | ✅ | ✅ 全部 |
+| `user` | 普通用户 | 仅被分配岩场 | ❌ | 仅被分配的 (manager) |
 
 通过 better-auth Admin 插件管理: `authClient.admin.setRole({ userId, role })`
 
 ### 岩场级权限
 
-| 权限 | 编辑线路/岩面 | 删除岩场 | 分配管理者 |
-|------|-------------|---------|-----------|
-| `creator` | ✅ | ✅ | ✅ |
+| 权限 | 编辑岩场/线路/岩面 | 删除岩场 | 分配管理者 |
+|------|-------------------|---------|-----------|
 | `manager` | ✅ | ❌ | ❌ |
 
 存储在 `crag_permissions` collection: `{ userId, cragId, role, assignedBy, createdAt }`
@@ -364,8 +362,8 @@ if (!(await canAccessEditor(session.user.id, role))) redirect('/login')
 ```
 
 - 未登录 → 302 到 `/login`
-- 无编辑器权限 (普通 user 且无 crag_permissions) → 302 到 `/login`
-- admin / crag_creator / 有岩场权限的 user → 放行
+- 无编辑器权限 (user 角色且无 crag_permissions) → 302 到 `/login`
+- admin / 有岩场权限的 user (manager) → 放行
 - 所有 editor 子页面自动受 layout 保护
 
 ### API 路由保护模式
@@ -390,7 +388,7 @@ export async function PATCH(request: NextRequest) {
 
 | 方法 | 路径 | 权限 |
 |------|------|------|
-| `GET/POST/DELETE` | `/api/crag-permissions` | creator / admin |
+| `GET/POST/DELETE` | `/api/crag-permissions` | admin-only |
 | `GET` | `/api/editor/crags` | 任何有编辑器权限的用户 |
 | `GET` | `/api/editor/search-users?q=xxx` | 任何有编辑器权限的用户 |
 
