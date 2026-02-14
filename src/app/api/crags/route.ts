@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/crags
- * 创建新岩场 (需要 admin 或 crag_creator 角色)
+ * 创建新岩场 (需要 admin 权限)
  */
 export async function POST(request: NextRequest) {
   // 认证 + 角色检查
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
   if (!canCreateCrag(role)) {
     return NextResponse.json(
-      { success: false, error: '需要岩场创建者或管理员权限' },
+      { success: false, error: '需要管理员权限' },
       { status: 403 }
     )
   }
@@ -86,11 +86,11 @@ export async function POST(request: NextRequest) {
       ...(coordinates ? { coordinates } : {}),
     })
 
-    // 自动为创建者建立 creator 权限
+    // 自动为创建者建立 manager 权限
     await createCragPermission({
       userId,
       cragId: id,
-      role: 'creator',
+      role: 'manager',
       assignedBy: userId,
     })
 

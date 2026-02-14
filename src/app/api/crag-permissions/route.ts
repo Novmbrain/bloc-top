@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
-import { getCragPermission, getCragPermissionsByCragId, createCragPermission, deleteCragPermission } from '@/lib/db'
+import { getCragPermissionsByCragId, createCragPermission, deleteCragPermission } from '@/lib/db'
 import { requireAuth } from '@/lib/require-auth'
 import { canManagePermissions } from '@/lib/permissions'
 import { getDatabase } from '@/lib/mongodb'
@@ -9,11 +9,11 @@ import type { CragPermissionRole } from '@/types'
 
 const log = createModuleLogger('API:CragPermissions')
 
-const VALID_ROLES: CragPermissionRole[] = ['creator', 'manager']
+const VALID_ROLES: CragPermissionRole[] = ['manager']
 
 /**
  * GET /api/crag-permissions?cragId=xxx
- * 获取指定岩场的权限列表 (需要 creator/admin 权限)
+ * 获取指定岩场的权限列表 (需要 admin 权限)
  */
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request)
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/crag-permissions
- * 为用户分配岩场权限 (需要 creator/admin 权限)
+ * 为用户分配岩场权限 (需要 admin 权限)
  *
  * Body: { userId, cragId, role: 'manager' }
  */
@@ -100,14 +100,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: `角色无效，允许的值: ${VALID_ROLES.join(', ')}` },
         { status: 400 }
-      )
-    }
-
-    // 只有 admin 可以分配 creator 角色
-    if (permRole === 'creator' && currentRole !== 'admin') {
-      return NextResponse.json(
-        { success: false, error: '只有管理员可以分配创建者角色' },
-        { status: 403 }
       )
     }
 
@@ -143,7 +135,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * DELETE /api/crag-permissions
- * 移除用户的岩场权限 (需要 creator/admin 权限)
+ * 移除用户的岩场权限 (需要 admin 权限)
  *
  * Body: { userId, cragId }
  */
@@ -167,15 +159,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: '无权管理此岩场的权限' },
         { status: 403 }
-      )
-    }
-
-    // 保护: creator 不能删除自己的权限（防止岩场变成无主状态）
-    const targetPerm = await getCragPermission(targetUserId, cragId)
-    if (targetPerm?.role === 'creator' && currentRole !== 'admin') {
-      return NextResponse.json(
-        { success: false, error: '无法移除创建者权限，请联系管理员' },
-        { status: 400 }
       )
     }
 
