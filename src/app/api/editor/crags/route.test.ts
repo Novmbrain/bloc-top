@@ -3,8 +3,8 @@
  *
  * 覆盖场景:
  * - 未登录返回 401
- * - admin 看到所有岩场
- * - crag_creator 只看到有权限的岩场
+ * - admin 看到所有岩场 (permissionRole: 'admin')
+ * - crag_creator 只看到有权限的岩场 (permissionRole: 'creator'/'manager')
  * - 无权限用户返回空数组
  * - 返回 role + canCreate 供前端 UI 决策
  */
@@ -20,12 +20,12 @@ vi.mock('@/lib/require-auth', () => ({
 }))
 
 vi.mock('@/lib/permissions', () => ({
-  getEditableCragIds: vi.fn(),
   canCreateCrag: vi.fn(),
 }))
 
 vi.mock('@/lib/db', () => ({
   getAllCrags: vi.fn(),
+  getCragPermissionsByUserId: vi.fn(),
 }))
 
 vi.mock('@/lib/logger', () => ({
@@ -36,13 +36,13 @@ vi.mock('@/lib/logger', () => ({
 
 import { GET } from './route'
 import { requireAuth } from '@/lib/require-auth'
-import { getEditableCragIds, canCreateCrag } from '@/lib/permissions'
-import { getAllCrags } from '@/lib/db'
+import { canCreateCrag } from '@/lib/permissions'
+import { getAllCrags, getCragPermissionsByUserId } from '@/lib/db'
 
 const mockRequireAuth = vi.mocked(requireAuth)
-const mockGetEditableCragIds = vi.mocked(getEditableCragIds)
 const mockCanCreateCrag = vi.mocked(canCreateCrag)
 const mockGetAllCrags = vi.mocked(getAllCrags)
+const mockGetCragPermissions = vi.mocked(getCragPermissionsByUserId)
 
 function createRequest(): NextRequest {
   return new NextRequest('http://localhost:3000/api/editor/crags')
@@ -65,9 +65,8 @@ describe('GET /api/editor/crags', () => {
     expect(res.status).toBe(401)
   })
 
-  it('should return all crags for admin', async () => {
+  it('should return all crags with admin role for admin user', async () => {
     mockRequireAuth.mockResolvedValue({ userId: 'admin1', role: 'admin' })
-    mockGetEditableCragIds.mockResolvedValue('all')
     mockCanCreateCrag.mockReturnValue(true)
     mockGetAllCrags.mockResolvedValue(ALL_CRAGS as any)
 
@@ -75,28 +74,37 @@ describe('GET /api/editor/crags', () => {
     expect(res.status).toBe(200)
     const data = await res.json()
     expect(data.crags).toHaveLength(3)
+    expect(data.crags.every((c: any) => c.permissionRole === 'admin')).toBe(true)
     expect(data.role).toBe('admin')
     expect(data.canCreate).toBe(true)
+    // admin 不应查询 permission 表
+    expect(mockGetCragPermissions).not.toHaveBeenCalled()
   })
 
-  it('should return only permitted crags for crag_creator', async () => {
+  it('should return only permitted crags with correct roles', async () => {
     mockRequireAuth.mockResolvedValue({ userId: 'user1', role: 'crag_creator' })
-    mockGetEditableCragIds.mockResolvedValue(['crag-1', 'crag-3'])
     mockCanCreateCrag.mockReturnValue(true)
     mockGetAllCrags.mockResolvedValue(ALL_CRAGS as any)
+    mockGetCragPermissions.mockResolvedValue([
+      { userId: 'user1', cragId: 'crag-1', role: 'creator', assignedBy: 'system', createdAt: new Date() },
+      { userId: 'user1', cragId: 'crag-3', role: 'manager', assignedBy: 'admin1', createdAt: new Date() },
+    ])
 
     const res = await GET(createRequest())
     expect(res.status).toBe(200)
     const data = await res.json()
     expect(data.crags).toHaveLength(2)
-    expect(data.crags.map((c: any) => c.id)).toEqual(['crag-1', 'crag-3'])
+    expect(data.crags[0].id).toBe('crag-1')
+    expect(data.crags[0].permissionRole).toBe('creator')
+    expect(data.crags[1].id).toBe('crag-3')
+    expect(data.crags[1].permissionRole).toBe('manager')
   })
 
   it('should return empty array for user with no permissions', async () => {
     mockRequireAuth.mockResolvedValue({ userId: 'user2', role: 'user' })
-    mockGetEditableCragIds.mockResolvedValue([])
     mockCanCreateCrag.mockReturnValue(false)
     mockGetAllCrags.mockResolvedValue(ALL_CRAGS as any)
+    mockGetCragPermissions.mockResolvedValue([])
 
     const res = await GET(createRequest())
     expect(res.status).toBe(200)
@@ -107,13 +115,30 @@ describe('GET /api/editor/crags', () => {
 
   it('should include role and canCreate in response', async () => {
     mockRequireAuth.mockResolvedValue({ userId: 'user1', role: 'crag_creator' })
-    mockGetEditableCragIds.mockResolvedValue(['crag-1'])
     mockCanCreateCrag.mockReturnValue(true)
     mockGetAllCrags.mockResolvedValue(ALL_CRAGS as any)
+    mockGetCragPermissions.mockResolvedValue([
+      { userId: 'user1', cragId: 'crag-1', role: 'creator', assignedBy: 'system', createdAt: new Date() },
+    ])
 
     const res = await GET(createRequest())
     const data = await res.json()
     expect(data.role).toBe('crag_creator')
     expect(data.canCreate).toBe(true)
+  })
+
+  it('should not include crags without permission records', async () => {
+    mockRequireAuth.mockResolvedValue({ userId: 'user1', role: 'user' })
+    mockCanCreateCrag.mockReturnValue(false)
+    mockGetAllCrags.mockResolvedValue(ALL_CRAGS as any)
+    mockGetCragPermissions.mockResolvedValue([
+      { userId: 'user1', cragId: 'crag-2', role: 'manager', assignedBy: 'admin1', createdAt: new Date() },
+    ])
+
+    const res = await GET(createRequest())
+    const data = await res.json()
+    expect(data.crags).toHaveLength(1)
+    expect(data.crags[0].id).toBe('crag-2')
+    // crag-1 和 crag-3 不应出现
   })
 })

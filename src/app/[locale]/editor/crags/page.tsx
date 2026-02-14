@@ -1,41 +1,51 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Mountain, Plus, MapPin, Loader2 } from 'lucide-react'
+import { Mountain, Plus, MapPin, Loader2, Shield, Crown, Settings } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
 import { findCityName } from '@/lib/city-utils'
-import type { Crag, CityConfig } from '@/types'
+import type { Crag, CityConfig, CragPermissionRole } from '@/types'
+
+type CragWithPermission = Crag & { permissionRole: CragPermissionRole | 'admin' }
+
+const ROLE_CONFIG = {
+  admin: { label: '管理员', icon: Settings, color: 'var(--theme-error)' },
+  creator: { label: '创建者', icon: Crown, color: 'var(--theme-warning)' },
+  manager: { label: '管理者', icon: Shield, color: 'var(--theme-primary)' },
+} as const
 
 /**
  * 岩场管理列表页
- * 展示所有岩场，支持按城市筛选，入口新建/编辑岩场
+ * 展示当前用户有权限的岩场，显示权限角色
  */
 export default function CragListPage() {
   useBreakAppShellLimit()
 
-  const [crags, setCrags] = useState<Crag[]>([])
+  const [crags, setCrags] = useState<CragWithPermission[]>([])
   const [cities, setCities] = useState<CityConfig[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCity, setActiveCity] = useState<string>('all')
+  const [canCreate, setCanCreate] = useState(false)
 
-  // 加载岩场列表 + 城市数据
+  // 加载权限过滤的岩场列表 + 城市数据
   useEffect(() => {
     const controller = new AbortController()
     async function fetchData() {
       try {
         const [cragsRes, citiesRes] = await Promise.all([
-          fetch('/api/crags', { signal: controller.signal }),
+          fetch('/api/editor/crags', { signal: controller.signal }),
           fetch('/api/cities', { signal: controller.signal }),
         ])
         const [cragsData, citiesData] = await Promise.all([
           cragsRes.json(),
           citiesRes.json(),
         ])
-        if (cragsData.success) {
+        if (cragsData.crags) {
           setCrags(cragsData.crags)
+          setCanCreate(cragsData.canCreate ?? false)
         }
         if (citiesData.success) {
           setCities(citiesData.cities)
@@ -76,19 +86,21 @@ export default function CragListPage() {
       />
 
       <div className="max-w-lg mx-auto px-4 py-6">
-        {/* 新建岩场按钮 */}
-        <Link
-          href="/editor/crags/new"
-          className="flex items-center justify-center gap-2 w-full py-3 mb-6 font-medium transition-all duration-200 active:scale-[0.98]"
-          style={{
-            backgroundColor: 'var(--theme-primary)',
-            color: 'var(--theme-on-primary)',
-            borderRadius: 'var(--theme-radius-xl)',
-          }}
-        >
-          <Plus className="w-5 h-5" />
-          新建岩场
-        </Link>
+        {/* 新建岩场按钮 — 仅 admin 和 crag_creator 可见 */}
+        {canCreate && (
+          <Link
+            href="/editor/crags/new"
+            className="flex items-center justify-center gap-2 w-full py-3 mb-6 font-medium transition-all duration-200 active:scale-[0.98]"
+            style={{
+              backgroundColor: 'var(--theme-primary)',
+              color: 'var(--theme-on-primary)',
+              borderRadius: 'var(--theme-radius-xl)',
+            }}
+          >
+            <Plus className="w-5 h-5" />
+            新建岩场
+          </Link>
+        )}
 
         {/* 城市筛选 */}
         {cityTabs.length > 1 && (
@@ -145,57 +157,79 @@ export default function CragListPage() {
             className="text-center py-20 text-sm"
             style={{ color: 'var(--theme-on-surface-variant)' }}
           >
-            暂无岩场数据
+            暂无可管理的岩场
           </div>
         )}
 
         {/* 岩场列表 */}
         {!loading && filteredCrags.length > 0 && (
           <div className="flex flex-col gap-3">
-            {filteredCrags.map((crag, i) => (
-              <Link
-                key={crag.id}
-                href={`/editor/crags/${crag.id}`}
-                className="glass group block p-5 transition-all duration-300 active:scale-[0.98] hover:scale-[1.02] animate-fade-in-up"
-                style={{
-                  borderRadius: 'var(--theme-radius-xl)',
-                  animationDelay: `${i * 50}ms`,
-                  animationFillMode: 'both',
-                }}
-              >
-                <h3
-                  className="text-base font-bold mb-1"
-                  style={{ color: 'var(--theme-on-surface)' }}
-                >
-                  {crag.name}
-                </h3>
+            {filteredCrags.map((crag, i) => {
+              const roleConfig = ROLE_CONFIG[crag.permissionRole]
+              const RoleIcon = roleConfig.icon
 
-                <p
-                  className="text-xs mb-2"
-                  style={{ color: 'var(--theme-primary)' }}
+              return (
+                <Link
+                  key={crag.id}
+                  href={`/editor/crags/${crag.id}`}
+                  className="glass group block p-5 transition-all duration-300 active:scale-[0.98] hover:scale-[1.02] animate-fade-in-up"
+                  style={{
+                    borderRadius: 'var(--theme-radius-xl)',
+                    animationDelay: `${i * 50}ms`,
+                    animationFillMode: 'both',
+                  }}
                 >
-                  {findCityName(cities, crag.cityId)}
-                  {crag.areas && crag.areas.length > 0 && (
-                    <span style={{ color: 'var(--theme-on-surface-variant)' }}>
-                      {' '}· {crag.areas.length} 个区域
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h3
+                        className="text-base font-bold mb-1"
+                        style={{ color: 'var(--theme-on-surface)' }}
+                      >
+                        {crag.name}
+                      </h3>
+
+                      <p
+                        className="text-xs mb-2"
+                        style={{ color: 'var(--theme-primary)' }}
+                      >
+                        {findCityName(cities, crag.cityId)}
+                        {crag.areas && crag.areas.length > 0 && (
+                          <span style={{ color: 'var(--theme-on-surface-variant)' }}>
+                            {' '}· {crag.areas.length} 个区域
+                          </span>
+                        )}
+                      </p>
+
+                      <div className="flex items-center gap-1.5">
+                        <MapPin
+                          className="w-3.5 h-3.5 shrink-0"
+                          style={{ color: 'var(--theme-on-surface-variant)' }}
+                        />
+                        <p
+                          className="text-xs truncate"
+                          style={{ color: 'var(--theme-on-surface-variant)' }}
+                        >
+                          {crag.location}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* 权限角色标签 */}
+                    <span
+                      className="inline-flex items-center gap-1 shrink-0 px-2.5 py-1 text-xs font-medium"
+                      style={{
+                        color: roleConfig.color,
+                        backgroundColor: `color-mix(in srgb, ${roleConfig.color} 12%, transparent)`,
+                        borderRadius: 'var(--theme-radius-full)',
+                      }}
+                    >
+                      <RoleIcon className="w-3 h-3" />
+                      {roleConfig.label}
                     </span>
-                  )}
-                </p>
-
-                <div className="flex items-center gap-1.5">
-                  <MapPin
-                    className="w-3.5 h-3.5 shrink-0"
-                    style={{ color: 'var(--theme-on-surface-variant)' }}
-                  />
-                  <p
-                    className="text-xs truncate"
-                    style={{ color: 'var(--theme-on-surface-variant)' }}
-                  >
-                    {crag.location}
-                  </p>
-                </div>
-              </Link>
-            ))}
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         )}
       </div>
