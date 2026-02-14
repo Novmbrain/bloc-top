@@ -141,15 +141,16 @@ export interface User {
 
 /**
  * 用户角色 (better-auth Admin 插件管理)
+ * - admin: 全局管理员，可管理所有岩场和用户
+ * - user: 普通用户
  */
-export type UserRole = 'admin' | 'crag_creator' | 'user'
+export type UserRole = 'admin' | 'user'
 
 /**
  * 岩场级权限角色
- * - creator: 岩场创建者，全部权限 + 可分配 manager
- * - manager: 岩场管理者，可编辑线路/岩面/Beta (不能删除岩场)
+ * - manager: 岩场管理者，可编辑线路/岩面/Beta (由 admin 分配)
  */
-export type CragPermissionRole = 'creator' | 'manager'
+export type CragPermissionRole = 'manager'
 
 /**
  * 岩场权限记录
