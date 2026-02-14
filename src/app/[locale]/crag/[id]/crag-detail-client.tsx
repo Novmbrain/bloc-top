@@ -5,7 +5,7 @@ import { useMediaQuery } from '@/hooks/use-media-query'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
-import { FileText, Car, ChevronLeft, Heart } from 'lucide-react'
+import { FileText, Car, ChevronLeft, Heart, Mountain } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Drawer } from '@/components/ui/drawer'
 import { getCragCoverUrl } from '@/lib/constants'
@@ -30,6 +30,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
   const heroRef = useRef<HTMLDivElement>(null)
   const [imageVisible, setImageVisible] = useState(true)
   const [isCreditsOpen, setIsCreditsOpen] = useState(false)
+  const [coverError, setCoverError] = useState(false)
 
   // 生成封面图 URL（基于数据库 coverImages 数量，0-based 索引）
   const coverCount = crag.coverImages?.length ?? 0
@@ -104,7 +105,15 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
           <ChevronLeft className="w-6 h-6 text-white" />
         </button>
 
-        {isMobile ? (
+        {coverError ? (
+          /* Fallback: 封面图加载失败时的占位 */
+          <div
+            className="relative h-48 flex items-center justify-center"
+            style={{ backgroundColor: 'var(--theme-surface-variant)' }}
+          >
+            <Mountain className="w-12 h-12 opacity-20" style={{ color: 'var(--theme-on-surface-variant)' }} />
+          </div>
+        ) : isMobile ? (
           /* Mobile: 单张图片，无轮播 */
           <div className="relative h-48">
             <Image
@@ -115,6 +124,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
               sizes="100vw"
               className="object-cover"
               draggable={false}
+              onError={() => setCoverError(true)}
             />
           </div>
         ) : (
@@ -142,6 +152,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
                     sizes="100vw"
                     className="object-cover"
                     draggable={false}
+                    onError={() => setCoverError(true)}
                   />
                 </div>
               ))}
