@@ -89,6 +89,7 @@ npx shadcn@latest add <component>  # 添加 UI 组件
 
 ```
 src/
+├── middleware.ts                # ★ Middleware (i18n 路由 + 首页 IP 城市检测)
 ├── app/
 │   ├── layout.tsx              # 根布局 (fonts)
 │   ├── sw.ts                   # Service Worker (Serwist)
@@ -170,7 +171,7 @@ src/
 │   ├── use-offline-download.ts # 离线下载 hook
 │   ├── use-offline-mode.ts     # 离线模式检测
 │   ├── use-route-search.ts     # 线路搜索
-│   ├── use-city-selection.ts   # 城市选择 (localStorage + IP 定位)
+│   ├── use-city-selection.ts   # 城市选择 (cookie 单一数据源, middleware IP 检测)
 │   ├── use-crag-routes.ts      # 岩场线路数据
 │   ├── use-weather.ts          # 天气数据
 │   ├── use-climber-body-data.ts # 攀岩者身体数据 (身高/臂展)
@@ -570,7 +571,7 @@ const key = `${cragId}/${encodeURIComponent(faceId)}.jpg`  // 会导致双重编
 | `POST` | `/api/upload` | 上传 Topo 图片到 R2 (FormData) |
 | `POST` | `/api/revalidate` | ISR 按需重验证 |
 | `GET` | `/api/weather?lng=119&lat=26` | 天气数据 (含攀岩适宜度, 1h 缓存) |
-| `GET` | `/api/geo` | IP 定位 → 推断城市 |
+| `GET` | `/api/geo` | IP 定位 → 推断城市 (主要由 middleware 替代，保留供 profile 等场景) |
 | `POST` | `/api/feedback` | 用户反馈/留言 |
 | `POST` | `/api/visit` | 访问统计上报 |
 | `POST` | `/api/log` | 客户端错误上报 |
