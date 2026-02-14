@@ -15,7 +15,7 @@ function escapeRegex(str: string): string {
 /**
  * GET /api/editor/search-users?q=xxx
  * Search users by email (contains match).
- * Requires editor access (admin, crag_creator, or user with crag permissions).
+ * Requires editor access (admin or user with crag permissions).
  * Returns at most 10 results with minimal info.
  */
 export async function GET(request: NextRequest) {

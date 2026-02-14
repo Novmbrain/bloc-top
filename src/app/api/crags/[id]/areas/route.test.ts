@@ -100,7 +100,7 @@ describe('PATCH /api/crags/[id]/areas', () => {
   })
 
   it('should allow permitted user to update areas', async () => {
-    mockRequireAuth.mockResolvedValue({ userId: 'user1', role: 'crag_creator' })
+    mockRequireAuth.mockResolvedValue({ userId: 'user1', role: 'user' })
     mockCanEditCrag.mockResolvedValue(true)
     mockUpdateCragAreas.mockResolvedValue(['新区域'])
 
