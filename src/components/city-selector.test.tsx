@@ -335,36 +335,6 @@ describe('CitySelector', () => {
     })
   })
 
-  describe('首访提示', () => {
-    it('showHint=true 时应显示提示', () => {
-      render(<CitySelector {...defaultProps} showHint={true} />)
-
-      // 使用翻译 key
-      expect(screen.getByText('firstVisitHint')).toBeInTheDocument()
-    })
-
-    it('showHint=false 时不应显示提示', () => {
-      render(<CitySelector {...defaultProps} showHint={false} />)
-
-      expect(screen.queryByText('firstVisitHint')).not.toBeInTheDocument()
-    })
-
-    it('点击时应关闭首访提示', async () => {
-      const onDismissHint = vi.fn()
-      render(
-        <CitySelector
-          {...defaultProps}
-          showHint={true}
-          onDismissHint={onDismissHint}
-        />
-      )
-
-      fireEvent.click(screen.getByRole('button'))
-
-      expect(onDismissHint).toHaveBeenCalled()
-    })
-  })
-
   describe('点击外部关闭', () => {
     it('点击外部应关闭下拉菜单', async () => {
       render(

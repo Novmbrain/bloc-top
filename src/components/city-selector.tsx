@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { ChevronDown, ChevronRight, Check, MapPin } from 'lucide-react'
+import { ChevronDown, ChevronRight, Check } from 'lucide-react'
 import { findPrefectureByDistrictId, findCityById } from '@/lib/city-utils'
 import type { CityConfig, PrefectureConfig, CitySelection } from '@/types'
 
@@ -19,10 +19,6 @@ interface CitySelectorProps {
   prefectures: PrefectureConfig[]
   /** 选择切换回调（支持城市和地级市） */
   onSelectionChange: (selection: CitySelection) => void
-  /** 是否显示首次访问提示 */
-  showHint?: boolean
-  /** 关闭提示回调 */
-  onDismissHint?: () => void
 }
 
 // ==================== 组件 ====================
@@ -42,8 +38,6 @@ export function CitySelector({
   cities,
   prefectures,
   onSelectionChange,
-  showHint = false,
-  onDismissHint,
 }: CitySelectorProps) {
   const t = useTranslations('CitySelector')
   const [isOpen, setIsOpen] = useState(false)
@@ -80,9 +74,6 @@ export function CitySelector({
         // 地级市选中时，展开该地级市
         setExpandedPrefecture(currentSelection.id)
       }
-    }
-    if (showHint && onDismissHint) {
-      onDismissHint()
     }
   }
 
@@ -135,17 +126,6 @@ export function CitySelector({
           }}
         />
       </button>
-
-      {/* 首次访问提示 */}
-      {showHint && (
-        <p
-          className="text-xs mt-1 animate-fade-in flex items-center gap-1"
-          style={{ color: 'var(--theme-on-surface-variant)' }}
-        >
-          <MapPin className="w-3 h-3" />
-          {t('firstVisitHint')}
-        </p>
-      )}
 
       {/* 下拉菜单 */}
       {isOpen && (
