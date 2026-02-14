@@ -86,6 +86,18 @@ describe('constants', () => {
       const url = getCragCoverUrl('crag-id', 0)
       expect(url).toMatch(/^https:\/\/img\.bouldering\.top\//)
     })
+
+    it('应该支持时间戳参数覆盖版本号', () => {
+      const url = getCragCoverUrl('crag-id', 0, 1700000000000)
+      expect(url).toContain('?t=1700000000000')
+      expect(url).not.toContain(`?v=`)
+    })
+
+    it('无时间戳时使用静态版本号', () => {
+      const url = getCragCoverUrl('crag-id', 0)
+      expect(url).toContain(`?v=${IMAGE_VERSION}`)
+      expect(url).not.toContain('?t=')
+    })
   })
 
   describe('getFaceTopoUrl', () => {

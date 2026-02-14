@@ -33,9 +33,16 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
   const [coverError, setCoverError] = useState(false)
 
   // 生成封面图 URL（基于数据库 coverImages 数量，0-based 索引）
+  // 从 coverImages URL 提取上传时间戳，用于绕过 Next.js Image 优化缓存
   const coverCount = crag.coverImages?.length ?? 0
+  const coverTimestamp = useMemo(() => {
+    const url = crag.coverImages?.[0]
+    if (!url) return undefined
+    const match = url.match(/[?&]t=(\d+)/)
+    return match ? parseInt(match[1]) : undefined
+  }, [crag.coverImages])
   const images = coverCount > 0
-    ? Array.from({ length: coverCount }, (_, i) => getCragCoverUrl(crag.id, i))
+    ? Array.from({ length: coverCount }, (_, i) => getCragCoverUrl(crag.id, i, coverTimestamp))
     : [getCragCoverUrl(crag.id, 0)]
 
   // 监听滚动位置更新当前索引

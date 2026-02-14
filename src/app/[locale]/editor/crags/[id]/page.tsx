@@ -88,7 +88,7 @@ export default function CragEditPage() {
   const [isLoading, setIsLoading] = useState(!isCreateMode)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null)
+  const [coverTimestamp, setCoverTimestamp] = useState<number | null>(null)
 
   // ============ 数据加载 (编辑模式) ============
 
@@ -274,9 +274,6 @@ export default function CragEditPage() {
       const file = e.target.files?.[0]
       if (!file) return
 
-      // 乐观更新：立即用本地文件预览
-      const localUrl = URL.createObjectURL(file)
-      setCoverPreviewUrl(localUrl)
       setIsUploading(true)
 
       try {
@@ -295,10 +292,11 @@ export default function CragEditPage() {
         const data = await res.json()
         if (!data.success) {
           showToast(data.error || '上传失败', 'error')
-          URL.revokeObjectURL(localUrl)
-          setCoverPreviewUrl(null)
           return
         }
+
+        // 用时间戳破坏缓存，让 getCragCoverUrl 生成新 URL
+        setCoverTimestamp(Date.now())
 
         // 单张封面：直接替换
         const newCoverImages = [data.url]
@@ -329,9 +327,6 @@ export default function CragEditPage() {
         }
       } catch {
         showToast('上传失败，请重试', 'error')
-        // 回滚乐观更新
-        URL.revokeObjectURL(localUrl)
-        setCoverPreviewUrl(null)
       } finally {
         setIsUploading(false)
         // 清空 file input，允许重复上传同一文件
@@ -721,14 +716,14 @@ export default function CragEditPage() {
             </h3>
 
             {/* 封面图预览（单张，乐观更新优先用本地预览） */}
-            {(coverPreviewUrl || coverImages.length > 0) ? (
+            {coverImages.length > 0 ? (
               <div
                 className="relative aspect-[16/9] rounded-xl overflow-hidden"
                 style={{ backgroundColor: 'var(--theme-surface)' }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={coverPreviewUrl ?? getCragCoverUrl(rawId, 0)}
+                  src={getCragCoverUrl(rawId, 0, coverTimestamp ?? undefined)}
                   alt="封面图"
                   className="w-full h-full object-cover"
                 />
@@ -766,7 +761,7 @@ export default function CragEditPage() {
               ) : (
                 <>
                   <Upload className="w-4 h-4" />
-                  {(coverPreviewUrl || coverImages.length > 0) ? '更换封面图' : '上传封面图'}
+                  {coverImages.length > 0 ? '更换封面图' : '上传封面图'}
                 </>
               )}
             </button>

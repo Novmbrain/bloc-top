@@ -36,9 +36,14 @@ export function getRouteTopoUrl(
 
 /**
  * 生成岩场封面图片 URL (带版本号)
+ *
+ * @param cragId - 岩场 ID
+ * @param index - 封面图索引
+ * @param timestamp - 可选时间戳，用于刚上传后强制刷新缓存
  */
-export function getCragCoverUrl(cragId: string, index: number): string {
-  return `${IMAGE_BASE_URL}/CragSurface/${cragId}/${index}.jpg?v=${IMAGE_VERSION}`
+export function getCragCoverUrl(cragId: string, index: number, timestamp?: number): string {
+  const version = timestamp ? `t=${timestamp}` : `v=${IMAGE_VERSION}`
+  return `${IMAGE_BASE_URL}/CragSurface/${cragId}/${index}.jpg?${version}`
 }
 
 /**
