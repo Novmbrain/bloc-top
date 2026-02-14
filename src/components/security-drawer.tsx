@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { KeyRound, Fingerprint, Edit3, LogOut, Trash2, ChevronRight, Camera, Loader2, X } from 'lucide-react'
 import Cropper from 'react-easy-crop'
@@ -17,7 +17,7 @@ import { getPasskeyProvider } from '@/lib/passkey-providers'
 interface SecurityDrawerProps {
   isOpen: boolean
   onClose: () => void
-  session: { user: { email: string; role?: string; image?: string | null } }
+  session: { user: { email: string; role?: string; image?: string | null; name?: string; height?: number; reach?: number } }
   isAdmin: boolean
   onAvatarChange?: (url: string | null) => void
 }
@@ -94,6 +94,48 @@ export function SecurityDrawer({ isOpen, onClose, session, isAdmin, onAvatarChan
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarDeleting, setAvatarDeleting] = useState(false)
+
+  // Personal info state
+  const [nickname, setNickname] = useState(session.user.name ?? '')
+  const [height, setHeight] = useState(session.user.height?.toString() ?? '')
+  const [reach, setReach] = useState(session.user.reach?.toString() ?? '')
+  const [profileSaving, setProfileSaving] = useState(false)
+
+  // Sync personal info when drawer opens with fresh session data
+  useEffect(() => {
+    if (isOpen) {
+      setNickname(session.user.name ?? '')
+      setHeight(session.user.height?.toString() ?? '')
+      setReach(session.user.reach?.toString() ?? '')
+    }
+  }, [isOpen, session.user.name, session.user.height, session.user.reach])
+
+  const apeIndex = useMemo(() => {
+    const h = parseFloat(height)
+    const r = parseFloat(reach)
+    if (isNaN(h) || isNaN(r)) return null
+    return r - h
+  }, [height, reach])
+
+  const handleSaveProfile = useCallback(async () => {
+    setProfileSaving(true)
+    try {
+      const updateData: Record<string, unknown> = {
+        name: nickname.trim() || undefined,
+      }
+      const h = parseFloat(height)
+      const r = parseFloat(reach)
+      if (!isNaN(h) && h > 0) updateData.height = h
+      if (!isNaN(r) && r > 0) updateData.reach = r
+
+      await authClient.updateUser(updateData)
+      showToast(t('profileSaved'), 'success')
+    } catch {
+      showToast(t('profileSaveFailed'), 'error')
+    } finally {
+      setProfileSaving(false)
+    }
+  }, [nickname, height, reach, showToast, t])
 
   useEffect(() => {
     if (!isOpen) return
@@ -306,7 +348,7 @@ export function SecurityDrawer({ isOpen, onClose, session, isAdmin, onAvatarChan
       onClose={onClose}
       height="three-quarter"
       showHandle
-      title={t('accountSecurity')}
+      title={t('accountSettings')}
     >
       <div className="px-4 pb-6 space-y-5">
         {/* === Avatar section === */}
@@ -456,6 +498,84 @@ export function SecurityDrawer({ isOpen, onClose, session, isAdmin, onAvatarChan
           <p className="text-sm font-medium" style={{ color: 'var(--theme-on-surface)' }}>
             {session.user.email}
           </p>
+        </div>
+
+        {/* Personal info section */}
+        <div className="space-y-2.5">
+          <Input
+            value={nickname}
+            onChange={setNickname}
+            placeholder={t('nicknamePlaceholder')}
+            variant="form"
+            maxLength={20}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            {/* eslint-disable-next-line no-restricted-syntax -- type="number" exempt from IME */}
+            <input
+              type="number"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              placeholder={t('heightPlaceholder')}
+              min={100}
+              max={250}
+              className="w-full p-2.5 text-sm"
+              style={{
+                backgroundColor: 'var(--theme-surface-variant)',
+                color: 'var(--theme-on-surface)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--theme-radius-lg)',
+              }}
+            />
+            {/* eslint-disable-next-line no-restricted-syntax -- type="number" exempt from IME */}
+            <input
+              type="number"
+              value={reach}
+              onChange={(e) => setReach(e.target.value)}
+              placeholder={t('reachPlaceholder')}
+              min={100}
+              max={280}
+              className="w-full p-2.5 text-sm"
+              style={{
+                backgroundColor: 'var(--theme-surface-variant)',
+                color: 'var(--theme-on-surface)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--theme-radius-lg)',
+              }}
+            />
+          </div>
+          {apeIndex !== null && (
+            <div
+              className="flex items-center justify-between p-2.5"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--theme-primary) 10%, var(--theme-surface))',
+                borderRadius: 'var(--theme-radius-lg)',
+              }}
+            >
+              <span className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                {t('apeIndex')}
+              </span>
+              <span
+                className="text-sm font-bold"
+                style={{ color: apeIndex >= 0 ? 'var(--theme-success)' : 'var(--theme-on-surface)' }}
+              >
+                {apeIndex >= 0
+                  ? t('apeIndexPositive', { value: apeIndex.toFixed(1) })
+                  : t('apeIndexNegative', { value: apeIndex.toFixed(1) })}
+              </span>
+            </div>
+          )}
+          <button
+            onClick={handleSaveProfile}
+            disabled={profileSaving}
+            className="w-full p-2.5 text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
+            style={{
+              backgroundColor: 'var(--theme-primary)',
+              color: 'var(--theme-on-primary)',
+              borderRadius: 'var(--theme-radius-lg)',
+            }}
+          >
+            {t('saveProfile')}
+          </button>
         </div>
 
         {/* Password section */}

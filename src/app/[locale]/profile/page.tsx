@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Settings, Heart, Copy, Check, User, Send, Users, LogIn, Mountain, Info, ChevronRight } from 'lucide-react'
@@ -13,10 +13,8 @@ import { SecurityDrawer } from '@/components/security-drawer'
 import { Drawer } from '@/components/ui/drawer'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageViewer } from '@/components/ui/image-viewer'
-import { useSession, authClient } from '@/lib/auth-client'
+import { useSession } from '@/lib/auth-client'
 import { UserAvatar } from '@/components/user-avatar'
-import { useToast } from '@/components/ui/toast'
-import { Input } from '@/components/ui/input'
 
 // 访问统计缓存 key
 const VISITS_CACHE_KEY = 'total_visits_cache'
@@ -29,151 +27,6 @@ const AUTHOR = {
   donateUrl: 'https://img.bouldering.top/donate.png',
   wechat: 'Novmbrain',
   xiaohongshu: 'WindOfBretagne',
-}
-
-function PersonalInfoSection({ session }: { session: { user: { email: string } } }) {
-  const t = useTranslations('Profile')
-  const { showToast } = useToast()
-  const sessionHook = useSession()
-
-  const user = session.user as {
-    name?: string
-    height?: number
-    reach?: number
-    email: string
-  }
-
-  const [nickname, setNickname] = useState(user.name ?? '')
-  const [height, setHeight] = useState(user.height?.toString() ?? '')
-  const [reach, setReach] = useState(user.reach?.toString() ?? '')
-  const [saving, setSaving] = useState(false)
-
-  const apeIndex = useMemo(() => {
-    const h = parseFloat(height)
-    const r = parseFloat(reach)
-    if (isNaN(h) || isNaN(r)) return null
-    return r - h
-  }, [height, reach])
-
-  const handleSave = useCallback(async () => {
-    setSaving(true)
-    try {
-      const updateData: Record<string, unknown> = {
-        name: nickname.trim() || undefined,
-      }
-      const h = parseFloat(height)
-      const r = parseFloat(reach)
-      if (!isNaN(h) && h > 0) updateData.height = h
-      if (!isNaN(r) && r > 0) updateData.reach = r
-
-      await authClient.updateUser(updateData)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (sessionHook as any).refetch?.({ query: { disableCookieCache: true } })
-      showToast(t('profileSaved'), 'success')
-    } catch {
-      showToast(t('profileSaveFailed'), 'error')
-    } finally {
-      setSaving(false)
-    }
-  }, [nickname, height, reach, showToast, t, sessionHook])
-
-  return (
-    <div className="glass mb-6" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
-      <div className="p-4 space-y-3">
-        <div>
-          <label className="text-xs mb-1 block" style={{ color: 'var(--theme-on-surface-variant)' }}>
-            {t('nickname')}
-          </label>
-          <Input
-            value={nickname}
-            onChange={setNickname}
-            placeholder={t('nicknamePlaceholder')}
-            variant="form"
-            maxLength={20}
-          />
-        </div>
-
-        <div>
-          <label className="text-xs mb-1 block" style={{ color: 'var(--theme-on-surface-variant)' }}>
-            {t('heightLabel')}
-          </label>
-          {/* eslint-disable-next-line no-restricted-syntax -- type="number" exempt from IME */}
-          <input
-            type="number"
-            value={height}
-            onChange={(e) => setHeight(e.target.value)}
-            placeholder="170"
-            min={100}
-            max={250}
-            className="w-full p-2.5 text-sm"
-            style={{
-              backgroundColor: 'var(--theme-surface-variant)',
-              color: 'var(--theme-on-surface)',
-              border: '1px solid var(--glass-border)',
-              borderRadius: 'var(--theme-radius-lg)',
-            }}
-          />
-        </div>
-
-        <div>
-          <label className="text-xs mb-1 block" style={{ color: 'var(--theme-on-surface-variant)' }}>
-            {t('reachLabel')}
-          </label>
-          {/* eslint-disable-next-line no-restricted-syntax -- type="number" exempt from IME */}
-          <input
-            type="number"
-            value={reach}
-            onChange={(e) => setReach(e.target.value)}
-            placeholder="175"
-            min={100}
-            max={280}
-            className="w-full p-2.5 text-sm"
-            style={{
-              backgroundColor: 'var(--theme-surface-variant)',
-              color: 'var(--theme-on-surface)',
-              border: '1px solid var(--glass-border)',
-              borderRadius: 'var(--theme-radius-lg)',
-            }}
-          />
-        </div>
-
-        {apeIndex !== null && (
-          <div
-            className="flex items-center justify-between p-3"
-            style={{
-              backgroundColor: 'color-mix(in srgb, var(--theme-primary) 10%, var(--theme-surface))',
-              borderRadius: 'var(--theme-radius-lg)',
-            }}
-          >
-            <span className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
-              {t('apeIndex')}
-            </span>
-            <span
-              className="text-base font-bold"
-              style={{ color: apeIndex >= 0 ? 'var(--theme-success)' : 'var(--theme-on-surface)' }}
-            >
-              {apeIndex >= 0
-                ? t('apeIndexPositive', { value: apeIndex.toFixed(1) })
-                : t('apeIndexNegative', { value: apeIndex.toFixed(1) })}
-            </span>
-          </div>
-        )}
-
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full p-2.5 text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
-          style={{
-            backgroundColor: 'var(--theme-primary)',
-            color: 'var(--theme-on-primary)',
-            borderRadius: 'var(--theme-radius-lg)',
-          }}
-        >
-          {t('saveProfile')}
-        </button>
-      </div>
-    </div>
-  )
 }
 
 export default function ProfilePage() {
@@ -369,19 +222,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* === Personal Info (logged in only) === */}
-          {isLoggedIn && session && (
-            <>
-              <div className="flex items-center gap-2 mb-3">
-                <User className="w-4 h-4" style={{ color: 'var(--theme-primary)' }} />
-                <span className="text-sm font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-                  {t('personalInfo')}
-                </span>
-              </div>
-              <PersonalInfoSection session={session} />
-            </>
-          )}
-
           {/* === Data & Storage === */}
           <OfflineCacheSection />
 
@@ -494,6 +334,9 @@ export default function ProfilePage() {
               email: session.user.email,
               role: (session.user as { role?: string }).role,
               image: avatarUrl,
+              name: (session.user as { name?: string }).name,
+              height: (session.user as { height?: number }).height,
+              reach: (session.user as { reach?: number }).reach,
             },
           }}
           isAdmin={isAdmin}
