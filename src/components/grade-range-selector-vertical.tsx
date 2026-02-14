@@ -25,10 +25,6 @@ export function GradeRangeSelectorVertical({
   onChange,
   className,
 }: GradeRangeSelectorVerticalProps) {
-  if (availableGrades.length === 0) {
-    return null
-  }
-
   const containerRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState<number | null>(null)
@@ -40,7 +36,7 @@ export function GradeRangeSelectorVertical({
   useEffect(() => {
     try {
       if (!localStorage.getItem(GRADE_HINT_SEEN_KEY)) {
-         
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载时读取 localStorage
         setShowPulse(true)
       }
     } catch { /* SSR */ }
@@ -49,7 +45,7 @@ export function GradeRangeSelectorVertical({
   const [optimisticSelection, setOptimisticSelection] = useState<string[] | null>(null)
 
   useEffect(() => {
-     
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- prop 变化时重置
     setOptimisticSelection(null)
   }, [selectedGrades])
 
@@ -167,6 +163,10 @@ export function GradeRangeSelectorVertical({
     setOptimisticSelection([])
     onChange([])
   }, [onChange])
+
+  if (availableGrades.length === 0) {
+    return null
+  }
 
   return (
     <div className={`flex flex-col items-center justify-center gap-1.5 ${className ?? ''}`}>
