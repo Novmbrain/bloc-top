@@ -8,7 +8,6 @@ import {
   Loader2,
   X,
   Trash2,
-  Crown,
   UserCog,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -59,8 +58,6 @@ function PermissionRow({
   onRemove: (userId: string) => void
   isRemoving: boolean
 }) {
-  const isCreator = permission.role === 'creator'
-
   return (
     <div
       className="flex items-center justify-between gap-3 p-3 transition-all duration-200"
@@ -74,22 +71,13 @@ function PermissionRow({
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
           style={{
-            backgroundColor: isCreator
-              ? 'color-mix(in srgb, var(--theme-warning) 20%, transparent)'
-              : 'color-mix(in srgb, var(--theme-primary) 15%, transparent)',
+            backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)',
           }}
         >
-          {isCreator ? (
-            <Crown
-              className="w-4 h-4"
-              style={{ color: 'var(--theme-warning)' }}
-            />
-          ) : (
-            <UserCog
-              className="w-4 h-4"
-              style={{ color: 'var(--theme-primary)' }}
-            />
-          )}
+          <UserCog
+            className="w-4 h-4"
+            style={{ color: 'var(--theme-primary)' }}
+          />
         </div>
 
         <div className="min-w-0 flex-1">
@@ -103,16 +91,12 @@ function PermissionRow({
             <Badge
               className="shrink-0 text-[10px] px-1.5 py-0"
               style={{
-                backgroundColor: isCreator
-                  ? 'color-mix(in srgb, var(--theme-warning) 20%, transparent)'
-                  : 'color-mix(in srgb, var(--theme-primary) 15%, transparent)',
-                color: isCreator
-                  ? 'var(--theme-warning)'
-                  : 'var(--theme-primary)',
+                backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)',
+                color: 'var(--theme-primary)',
                 border: 'none',
               }}
             >
-              {isCreator ? '创建者' : '管理者'}
+              管理员
             </Badge>
           </div>
           <p
@@ -124,8 +108,8 @@ function PermissionRow({
         </div>
       </div>
 
-      {/* Remove button (only for managers, and only if canManage) */}
-      {canManage && !isCreator && (
+      {/* Remove button */}
+      {canManage && (
         <button
           type="button"
           onClick={() => onRemove(permission.userId)}
@@ -252,16 +236,16 @@ function AddManagerDrawer({
 
         const data = await res.json()
         if (!data.success) {
-          showToast(data.error || '添加管理者失败', 'error')
+          showToast(data.error || '添加管理员失败', 'error')
           return
         }
 
-        showToast(`已添加 ${user.name || user.email} 为管理者`, 'success')
+        showToast(`已添加 ${user.name || user.email} 为管理员`, 'success')
         // Remove from search results
         setResults((prev) => prev.filter((u) => u.id !== user.id))
         onAdded()
       } catch {
-        showToast('添加管理者失败', 'error')
+        showToast('添加管理员失败', 'error')
       } finally {
         setAddingUserId(null)
       }
@@ -284,7 +268,7 @@ function AddManagerDrawer({
       onClose={onClose}
       height="half"
       showHandle
-      title="添加管理者"
+      title="添加管理员"
       showCloseButton
     >
       <div className="px-4 pb-4 space-y-4">
@@ -457,7 +441,7 @@ export function CragPermissionsPanel({
           return
         }
 
-        showToast('已移除管理者', 'success')
+        showToast('已移除管理员', 'success')
         setPermissions((prev) => prev.filter((p) => p.userId !== userId))
       } catch {
         showToast('移除失败', 'error')
@@ -474,16 +458,8 @@ export function CragPermissionsPanel({
     [permissions]
   )
 
-  // Sort: creators first, then managers
-  const sortedPermissions = useMemo(
-    () =>
-      [...permissions].sort((a, b) => {
-        if (a.role === 'creator' && b.role !== 'creator') return -1
-        if (a.role !== 'creator' && b.role === 'creator') return 1
-        return 0
-      }),
-    [permissions]
-  )
+  // All permissions are 'manager' now, sort by creation date (natural order)
+  const sortedPermissions = permissions
 
   return (
     <div
@@ -519,7 +495,7 @@ export function CragPermissionsPanel({
             }}
           >
             <Plus className="w-3.5 h-3.5" />
-            添加管理者
+            添加管理员
           </button>
         )}
       </div>

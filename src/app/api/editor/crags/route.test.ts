@@ -70,15 +70,15 @@ describe('GET /api/editor/crags', () => {
     mockCanCreateCrag.mockReturnValue(true)
     mockGetAllCrags.mockResolvedValue(ALL_CRAGS as any)
     mockGetCragPermissions.mockResolvedValue([
-      { userId: 'admin1', cragId: 'crag-1', role: 'creator', assignedBy: 'system', createdAt: new Date() },
+      { userId: 'admin1', cragId: 'crag-1', role: 'manager', assignedBy: 'system', createdAt: new Date() },
     ])
 
     const res = await GET(createRequest())
     expect(res.status).toBe(200)
     const data = await res.json()
     expect(data.crags).toHaveLength(3)
-    // crag-1 有具体角色 → 显示 creator
-    expect(data.crags.find((c: any) => c.id === 'crag-1').permissionRole).toBe('creator')
+    // crag-1 有具体角色 → 显示 manager
+    expect(data.crags.find((c: any) => c.id === 'crag-1').permissionRole).toBe('manager')
     // crag-2, crag-3 无记录 → fallback 为 admin
     expect(data.crags.find((c: any) => c.id === 'crag-2').permissionRole).toBe('admin')
     expect(data.crags.find((c: any) => c.id === 'crag-3').permissionRole).toBe('admin')

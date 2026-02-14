@@ -1,20 +1,19 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Mountain, Plus, MapPin, Loader2, Shield, Crown, Settings } from 'lucide-react'
+import { Mountain, Plus, MapPin, Loader2, Shield, Settings } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { AppTabbar } from '@/components/app-tabbar'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
 import { findCityName } from '@/lib/city-utils'
-import type { Crag, CityConfig, CragPermissionRole } from '@/types'
+import type { Crag, CityConfig } from '@/types'
 
-type CragWithPermission = Crag & { permissionRole: CragPermissionRole | 'admin' }
+type CragWithPermission = Crag & { permissionRole: 'manager' | 'admin' }
 
 const ROLE_CONFIG = {
-  admin: { label: '管理员', icon: Settings, color: 'var(--theme-error)' },
-  creator: { label: '创建者', icon: Crown, color: 'var(--theme-warning)' },
-  manager: { label: '管理者', icon: Shield, color: 'var(--theme-primary)' },
+  admin: { label: '系统管理', icon: Settings, color: 'var(--theme-error)' },
+  manager: { label: '管理员', icon: Shield, color: 'var(--theme-primary)' },
 } as const
 
 /**
@@ -86,7 +85,7 @@ export default function CragListPage() {
       />
 
       <div className="max-w-lg mx-auto px-4 py-6">
-        {/* 新建岩场按钮 — 仅 admin 和 crag_creator 可见 */}
+        {/* 新建岩场按钮 — 仅 admin 可见 */}
         {canCreate && (
           <Link
             href="/editor/crags/new"

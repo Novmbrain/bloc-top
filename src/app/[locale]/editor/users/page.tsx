@@ -24,8 +24,7 @@ import type { UserRole } from '@/types'
 const PAGE_SIZE = 20
 
 const ROLE_CONFIG: Record<UserRole, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
-  admin: { label: '管理员', variant: 'default' },
-  crag_creator: { label: '岩场创建者', variant: 'secondary' },
+  admin: { label: '系统管理员', variant: 'default' },
   user: { label: '普通用户', variant: 'outline' },
 }
 
@@ -131,8 +130,6 @@ export default function UserManagementPage() {
     if (!selectedUser) return
     setChangingRole(true)
     try {
-      // better-auth's TS types only accept 'user' | 'admin', but setRole endpoint
-      // stores the value as a plain string in MongoDB — 'crag_creator' works at runtime
       await authClient.admin.setRole({
         userId: selectedUser.id,
         role: role as 'user' | 'admin',
@@ -319,7 +316,7 @@ function RoleChangeDrawer({
   onClose: () => void
 }) {
   const currentRole = (user.role || 'user') as UserRole
-  const roles: UserRole[] = ['admin', 'crag_creator', 'user']
+  const roles: UserRole[] = ['admin', 'user']
 
   return (
     <div
@@ -366,9 +363,8 @@ function RoleChangeDrawer({
                   <div>
                     <span className="font-medium">{config.label}</span>
                     <p className="text-xs mt-0.5" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                      {role === 'admin' && '全部权限：管理用户、创建/编辑/删除所有岩场'}
-                      {role === 'crag_creator' && '创建岩场、编辑自己的岩场、分配管理者'}
-                      {role === 'user' && '仅浏览，不能进入编辑器（除非被分配为岩场管理者）'}
+                      {role === 'admin' && '全部权限：创建岩场、管理用户、分配岩场管理员'}
+                      {role === 'user' && '浏览为主，被分配为岩场管理员后可编辑对应岩场'}
                     </p>
                   </div>
                   {isActive && (
