@@ -280,7 +280,8 @@ export default function CragEditPage() {
         formData.append('file', file)
         // R2 路径: CragSurface/{cragId}/0.jpg（单张封面，始终覆盖）
         formData.append('cragId', 'CragSurface')
-        formData.append('routeName', `${rawId}/0`)
+        formData.append('area', rawId)
+        formData.append('faceId', '0')
 
         const res = await fetch('/api/upload', {
           method: 'POST',
