@@ -19,14 +19,6 @@ export const ac = createAccessControl(statement)
 export const roles = {
   user: ac.newRole({}),
 
-  crag_creator: ac.newRole({
-    editor: ["access"],
-    crag:   ["create", "update"],
-    route:  ["create", "update", "delete"],
-    face:   ["upload", "rename", "delete"],
-    beta:   ["approve", "delete"],
-  }),
-
   admin: ac.newRole({
     user: ["create", "list", "set-role", "ban", "impersonate", "delete", "set-password", "get", "update"],
     session: ["list", "revoke", "delete"],
@@ -41,10 +33,10 @@ export const roles = {
 // ============ 纯函数 — 无 DB 依赖 ============
 
 /**
- * 判断用户是否可以创建岩场
+ * 判断用户是否可以创建岩场 (仅 admin)
  */
 export function canCreateCrag(userRole: UserRole): boolean {
-  return userRole === 'admin' || userRole === 'crag_creator'
+  return userRole === 'admin'
 }
 
 // ============ DB 查询权限函数 ============
@@ -68,33 +60,25 @@ export async function canEditCrag(userId: string, cragId: string, userRole: User
 }
 
 /**
- * 判断用户是否可以删除指定岩场
- * 只有 admin 和岩场 creator 可以删除
+ * 判断用户是否可以删除指定岩场 (仅 admin)
  */
 export async function canDeleteCrag(userId: string, cragId: string, userRole: UserRole): Promise<boolean> {
-  if (userRole === 'admin') return true
-  const db = await getDatabase()
-  const perm = await db.collection<CragPermission>('crag_permissions').findOne({ userId, cragId, role: 'creator' })
-  return perm !== null
+  return userRole === 'admin'
 }
 
 /**
- * 判断用户是否可以管理岩场权限（分配/移除 manager）
- * 只有 admin 和岩场 creator 可以
+ * 判断用户是否可以管理岩场权限（分配/移除 manager）(仅 admin)
  */
 export async function canManagePermissions(userId: string, cragId: string, userRole: UserRole): Promise<boolean> {
-  if (userRole === 'admin') return true
-  const db = await getDatabase()
-  const perm = await db.collection<CragPermission>('crag_permissions').findOne({ userId, cragId, role: 'creator' })
-  return perm !== null
+  return userRole === 'admin'
 }
 
 /**
  * 判断用户是否可以进入编辑器
- * admin/crag_creator 始终可以；有任意 crag_permission 的 user 也可以
+ * admin 始终可以；有任意 crag_permission 的 user 也可以
  */
 export async function canAccessEditor(userId: string, userRole: UserRole): Promise<boolean> {
-  if (userRole === 'admin' || userRole === 'crag_creator') return true
+  if (userRole === 'admin') return true
   const db = await getDatabase()
   const perm = await db.collection<CragPermission>('crag_permissions').findOne({ userId })
   return perm !== null
