@@ -66,7 +66,7 @@ export default function CragDetailPage({
 
   const [crag, setCrag] = useState<Crag | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [canManage, setCanManage] = useState(false)
+  const [canEdit, setCanEdit] = useState(false)
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false)
@@ -103,28 +103,29 @@ export default function CragDetailPage({
     return () => controller.abort()
   }, [cragId, router])
 
-  // ============ Determine canManage ============
+  // ============ Determine canEdit ============
 
   useEffect(() => {
     if (!session) return
 
     if (isAdmin) {
-      setCanManage(true)
+      setCanEdit(true)
       return
     }
 
     const controller = new AbortController()
 
-    // Probe permissions API — 200 means user can manage, 403 means no access
-    fetch(`/api/crag-permissions?cragId=${encodeURIComponent(cragId)}`, {
-      signal: controller.signal,
-    })
-      .then((res) => {
-        if (!controller.signal.aborted) setCanManage(res.ok)
+    // Check if user has edit permission for this crag via editor crags list
+    fetch('/api/editor/crags', { signal: controller.signal })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (controller.signal.aborted) return
+        const found = data?.crags?.some((c: { id: string }) => c.id === cragId)
+        setCanEdit(!!found)
       })
       .catch((err) => {
         if (err instanceof DOMException && err.name === 'AbortError') return
-        setCanManage(false)
+        setCanEdit(false)
       })
 
     return () => controller.abort()
@@ -295,7 +296,7 @@ export default function CragDetailPage({
               </h2>
             )}
 
-            {canManage && !isEditing && (
+            {canEdit && !isEditing && (
               <button
                 onClick={handleStartEdit}
                 className="p-2 rounded-lg transition-colors shrink-0 ml-2"
@@ -602,7 +603,7 @@ export default function CragDetailPage({
 
         {/* ==================== Permissions Panel ==================== */}
         <div className="animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
-          <CragPermissionsPanel cragId={cragId} canManage={canManage} />
+          <CragPermissionsPanel cragId={cragId} canManage={isAdmin} />
         </div>
       </div>
 
