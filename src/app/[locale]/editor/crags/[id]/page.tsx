@@ -88,6 +88,7 @@ export default function CragEditPage() {
   const [isLoading, setIsLoading] = useState(!isCreateMode)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null)
 
   // ============ 数据加载 (编辑模式) ============
 
@@ -273,6 +274,9 @@ export default function CragEditPage() {
       const file = e.target.files?.[0]
       if (!file) return
 
+      // 乐观更新：立即用本地文件预览
+      const localUrl = URL.createObjectURL(file)
+      setCoverPreviewUrl(localUrl)
       setIsUploading(true)
 
       try {
@@ -291,6 +295,8 @@ export default function CragEditPage() {
         const data = await res.json()
         if (!data.success) {
           showToast(data.error || '上传失败', 'error')
+          URL.revokeObjectURL(localUrl)
+          setCoverPreviewUrl(null)
           return
         }
 
@@ -312,8 +318,20 @@ export default function CragEditPage() {
         }
 
         showToast('封面图上传成功', 'success')
+
+        // 触发 ISR 重新生成岩场详情页（所有语言版本）
+        for (const locale of ['zh', 'en', 'fr']) {
+          fetch('/api/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: `/${locale}/crag/${rawId}` }),
+          }).catch(() => {}) // 非关键操作，静默失败
+        }
       } catch {
         showToast('上传失败，请重试', 'error')
+        // 回滚乐观更新
+        URL.revokeObjectURL(localUrl)
+        setCoverPreviewUrl(null)
       } finally {
         setIsUploading(false)
         // 清空 file input，允许重复上传同一文件
@@ -702,15 +720,15 @@ export default function CragEditPage() {
               封面图管理
             </h3>
 
-            {/* 封面图预览（单张） */}
-            {coverImages.length > 0 ? (
+            {/* 封面图预览（单张，乐观更新优先用本地预览） */}
+            {(coverPreviewUrl || coverImages.length > 0) ? (
               <div
                 className="relative aspect-[16/9] rounded-xl overflow-hidden"
                 style={{ backgroundColor: 'var(--theme-surface)' }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={getCragCoverUrl(rawId, 0)}
+                  src={coverPreviewUrl ?? getCragCoverUrl(rawId, 0)}
                   alt="封面图"
                   className="w-full h-full object-cover"
                 />
@@ -748,7 +766,7 @@ export default function CragEditPage() {
               ) : (
                 <>
                   <Upload className="w-4 h-4" />
-                  {coverImages.length > 0 ? '更换封面图' : '上传封面图'}
+                  {(coverPreviewUrl || coverImages.length > 0) ? '更换封面图' : '上传封面图'}
                 </>
               )}
             </button>
