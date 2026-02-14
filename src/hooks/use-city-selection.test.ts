@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, waitFor, act } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 import { useCitySelection } from './use-city-selection'
-import type { CityConfig, PrefectureConfig } from '@/types'
-
-const mockFetch = vi.fn()
+import type { CityConfig, PrefectureConfig, CitySelection } from '@/types'
 
 const mockCities: CityConfig[] = [
   {
@@ -41,28 +39,22 @@ const mockPrefectures: PrefectureConfig[] = [
   },
 ]
 
-const hookOptions = { cities: mockCities, prefectures: mockPrefectures }
+const defaultServerSelection: CitySelection = { type: 'city', id: 'luoyuan' }
+
+const hookOptions = {
+  cities: mockCities,
+  prefectures: mockPrefectures,
+  serverSelection: defaultServerSelection,
+}
 
 describe('useCitySelection', () => {
   beforeEach(() => {
-    vi.stubGlobal('fetch', mockFetch)
-    mockFetch.mockReset()
-    localStorage.clear()
-    sessionStorage.clear()
-
-    // Default: geo API returns luoyuan
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ cityId: 'luoyuan', province: '福建' }),
-    })
+    // Clear cookies
+    document.cookie = 'city=; max-age=0; path=/'
   })
 
-  it('should return default city on first load', async () => {
+  it('should initialize with serverSelection', () => {
     const { result } = renderHook(() => useCitySelection(hookOptions))
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
 
     expect(result.current.cityId).toBe('luoyuan')
     expect(result.current.selection).toEqual({ type: 'city', id: 'luoyuan' })
@@ -70,64 +62,32 @@ describe('useCitySelection', () => {
     expect(result.current.cities.length).toBeGreaterThan(0)
   })
 
-  it('should use stored city from localStorage (old format)', async () => {
-    // 旧格式纯字符串 → 自动升级
-    localStorage.setItem('selected-city', 'xiamen')
-    localStorage.setItem('city-first-visit', 'true')
-
-    const { result } = renderHook(() => useCitySelection(hookOptions))
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
+  it('should initialize with xiamen when serverSelection says so', () => {
+    const { result } = renderHook(() =>
+      useCitySelection({
+        ...hookOptions,
+        serverSelection: { type: 'city', id: 'xiamen' },
+      }),
+    )
 
     expect(result.current.cityId).toBe('xiamen')
     expect(result.current.selection).toEqual({ type: 'city', id: 'xiamen' })
   })
 
-  it('should use stored selection from localStorage (new format)', async () => {
-    localStorage.setItem('selected-city', '{"type":"prefecture","id":"fuzhou"}')
-    localStorage.setItem('city-first-visit', 'true')
-
-    const { result } = renderHook(() => useCitySelection(hookOptions))
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
+  it('should resolve prefecture selection to defaultDistrict for cityId', () => {
+    const { result } = renderHook(() =>
+      useCitySelection({
+        ...hookOptions,
+        serverSelection: { type: 'prefecture', id: 'fuzhou' },
+      }),
+    )
 
     expect(result.current.selection).toEqual({ type: 'prefecture', id: 'fuzhou' })
-    // 兼容 cityId 应取 defaultDistrict
-    expect(result.current.cityId).toBe('luoyuan')
+    expect(result.current.cityId).toBe('luoyuan') // defaultDistrict
   })
 
-  it('should set isFirstVisit on first visit', async () => {
+  it('should update city when setCity is called', () => {
     const { result } = renderHook(() => useCitySelection(hookOptions))
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
-
-    expect(result.current.isFirstVisit).toBe(true)
-  })
-
-  it('should not set isFirstVisit if already visited', async () => {
-    localStorage.setItem('city-first-visit', 'true')
-
-    const { result } = renderHook(() => useCitySelection(hookOptions))
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
-
-    expect(result.current.isFirstVisit).toBe(false)
-  })
-
-  it('should update city when setCity is called', async () => {
-    const { result } = renderHook(() => useCitySelection(hookOptions))
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
 
     act(() => {
       result.current.setCity('xiamen')
@@ -135,16 +95,12 @@ describe('useCitySelection', () => {
 
     expect(result.current.cityId).toBe('xiamen')
     expect(result.current.selection).toEqual({ type: 'city', id: 'xiamen' })
-    // 新格式存储
-    expect(localStorage.getItem('selected-city')).toBe('{"type":"city","id":"xiamen"}')
+    // Cookie should be set
+    expect(document.cookie).toContain('city=')
   })
 
-  it('should update selection when setSelection is called with prefecture', async () => {
+  it('should update selection when setSelection is called with prefecture', () => {
     const { result } = renderHook(() => useCitySelection(hookOptions))
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
 
     act(() => {
       result.current.setSelection({ type: 'prefecture', id: 'fuzhou' })
@@ -152,50 +108,47 @@ describe('useCitySelection', () => {
 
     expect(result.current.selection).toEqual({ type: 'prefecture', id: 'fuzhou' })
     expect(result.current.cityId).toBe('luoyuan') // defaultDistrict
-    expect(localStorage.getItem('selected-city')).toBe('{"type":"prefecture","id":"fuzhou"}')
   })
 
-  it('should dismiss first visit hint', async () => {
-    const { result } = renderHook(() => useCitySelection(hookOptions))
+  it('should fall back to FALLBACK_CITY when cityId not found in cities', () => {
+    const { result } = renderHook(() =>
+      useCitySelection({
+        ...hookOptions,
+        serverSelection: { type: 'city', id: 'nonexistent' },
+      }),
+    )
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
-
-    expect(result.current.isFirstVisit).toBe(true)
-
-    act(() => {
-      result.current.dismissFirstVisitHint()
-    })
-
-    expect(result.current.isFirstVisit).toBe(false)
+    // Should use first city in list as fallback
+    expect(result.current.city.id).toBe('luoyuan')
   })
 
-  it('should handle geo API failure gracefully', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Network error'))
+  it('should fall back to DEFAULT_CITY_ID when prefecture has no matching defaultDistrict', () => {
+    const { result } = renderHook(() =>
+      useCitySelection({
+        ...hookOptions,
+        prefectures: [],
+        serverSelection: { type: 'prefecture', id: 'nonexistent' },
+      }),
+    )
 
-    const { result } = renderHook(() => useCitySelection(hookOptions))
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
-    })
-
-    // Should fall back to default city
+    // Should fall back to DEFAULT_CITY_ID
     expect(result.current.cityId).toBe('luoyuan')
   })
 
-  it('should skip geo API when localStorage has city and session is recorded', async () => {
-    localStorage.setItem('selected-city', '{"type":"city","id":"luoyuan"}')
-    localStorage.setItem('city-first-visit', 'true')
-    sessionStorage.setItem('session-visit-recorded', 'true')
+  it('should write cookie when setSelection is called', () => {
+    const cookieSpy = vi.spyOn(document, 'cookie', 'set')
 
     const { result } = renderHook(() => useCitySelection(hookOptions))
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+    act(() => {
+      result.current.setSelection({ type: 'city', id: 'xiamen' })
     })
 
-    // Should not have called fetch at all
-    expect(mockFetch).not.toHaveBeenCalled()
+    expect(cookieSpy).toHaveBeenCalled()
+    const lastCall = cookieSpy.mock.calls[cookieSpy.mock.calls.length - 1][0]
+    expect(lastCall).toContain('city=')
+    expect(lastCall).toContain('xiamen')
+
+    cookieSpy.mockRestore()
   })
 })

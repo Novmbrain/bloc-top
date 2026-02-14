@@ -10,7 +10,7 @@ import { AppTabbar } from '@/components/app-tabbar'
 import { InstallPrompt } from '@/components/install-prompt'
 import { CitySelector } from '@/components/city-selector'
 import { EmptyCity } from '@/components/empty-city'
-import { findCityName } from '@/lib/city-utils'
+import { findCityName, CITY_COOKIE_NAME, CITY_COOKIE_MAX_AGE, serializeCitySelection } from '@/lib/city-utils'
 import { useRouteSearch } from '@/hooks/use-route-search'
 import { useCitySelection } from '@/hooks/use-city-selection'
 import { useWeather } from '@/hooks/use-weather'
@@ -44,10 +44,7 @@ export default function HomePageClient({
     cityId,
     city,
     setSelection,
-    isLoading,
-    isFirstVisit,
-    dismissFirstVisitHint,
-  } = useCitySelection({ cities, prefectures })
+  } = useCitySelection({ cities, prefectures, serverSelection })
 
   // 选择切换后刷新服务端数据
   const handleSelectionChange = (sel: CitySelection) => {
@@ -55,19 +52,25 @@ export default function HomePageClient({
     router.refresh()
   }
 
-  // 首次 hydration 后，如果客户端选择与服务端不一致，自动刷新
-  const hasCheckedRef = useRef(false)
+  // 一次性初始化：cookie 归一化 + 访问统计
+  const syncedRef = useRef(false)
   useEffect(() => {
-    if (!isLoading && !hasCheckedRef.current) {
-      hasCheckedRef.current = true
-      if (
-        selection.type !== serverSelection.type ||
-        selection.id !== serverSelection.id
-      ) {
-        router.refresh()
+    if (!syncedRef.current) {
+      syncedRef.current = true
+      // 归一化 cookie：将 middleware 写入的 adcode:xxx 替换为解析后的 cityId
+      const cookieValue = serializeCitySelection(serverSelection)
+      document.cookie = `${CITY_COOKIE_NAME}=${encodeURIComponent(cookieValue)}; path=/; max-age=${CITY_COOKIE_MAX_AGE}; samesite=lax`
+      // 访问统计（单会话去重）
+      if (!sessionStorage.getItem('visit-recorded')) {
+        sessionStorage.setItem('visit-recorded', '1')
+        fetch('/api/visit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        }).catch(() => {})
       }
     }
-  }, [isLoading, selection, serverSelection, router])
+  }, [serverSelection])
 
   // 获取天气数据 (用于卡片角标，不需要预报，使用城市 adcode)
   const { weather } = useWeather({ adcode: city?.adcode, forecast: false })
@@ -147,8 +150,6 @@ export default function HomePageClient({
               cities={cities}
               prefectures={prefectures}
               onSelectionChange={handleSelectionChange}
-              showHint={isFirstVisit}
-              onDismissHint={dismissFirstVisitHint}
             />
             <div
               className="w-16 h-0.5 mt-1 mb-3"
