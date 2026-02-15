@@ -7,6 +7,10 @@ import {
 import { isCityValid, DEFAULT_CITY_ID, CITY_COOKIE_NAME, parseCitySelection, findCityByAdcode } from '@/lib/city-utils'
 import HomePageClient from './home-client'
 
+// ISR: 安全网 — 即使自动 revalidation 失败，最多 1 天后也会刷新
+// 注意: Next.js 要求使用字面量，不能使用变量引用
+export const revalidate = 86400 // 1 天 (秒)
+
 /**
  * 首页 - 岩场列表
  *
