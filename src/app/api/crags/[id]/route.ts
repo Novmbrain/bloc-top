@@ -3,6 +3,7 @@ import { getCragById, updateCrag } from '@/lib/db'
 import { requireAuth } from '@/lib/require-auth'
 import { canEditCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
+import { revalidateCragPages } from '@/lib/revalidate-helpers'
 
 const log = createModuleLogger('API:Crag')
 
@@ -87,6 +88,8 @@ export async function PATCH(
       action: 'PATCH /api/crags/[id]',
       metadata: { cragId: id, fields: Object.keys(updates) },
     })
+
+    revalidateCragPages(id)
 
     return NextResponse.json({ success: true, crag })
   } catch (error) {

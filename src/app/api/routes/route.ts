@@ -3,6 +3,7 @@ import { createRoute } from '@/lib/db'
 import { requireAuth } from '@/lib/require-auth'
 import { canEditCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
+import { revalidateCragPages } from '@/lib/revalidate-helpers'
 
 const log = createModuleLogger('API:Routes')
 
@@ -75,6 +76,8 @@ export async function POST(request: NextRequest) {
       action: 'POST /api/routes',
       metadata: { routeId: route.id, name: route.name, cragId: route.cragId },
     })
+
+    revalidateCragPages(route.cragId)
 
     return NextResponse.json({ success: true, route }, { status: 201 })
   } catch (error) {

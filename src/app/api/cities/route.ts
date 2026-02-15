@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAllCities, getAllPrefectures, createCity } from '@/lib/db'
 import { getAuth } from '@/lib/auth'
 import { createModuleLogger } from '@/lib/logger'
+import { revalidateHomePage } from '@/lib/revalidate-helpers'
 
 const log = createModuleLogger('API:Cities')
 
@@ -73,6 +74,8 @@ export async function POST(request: NextRequest) {
       action: 'POST /api/cities',
       metadata: { cityId: id, name },
     })
+
+    revalidateHomePage()
 
     return NextResponse.json({ success: true, city }, { status: 201 })
   } catch (error) {

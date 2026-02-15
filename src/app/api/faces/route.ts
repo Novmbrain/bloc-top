@@ -4,6 +4,7 @@ import { getDatabase } from '@/lib/mongodb'
 import { requireAuth } from '@/lib/require-auth'
 import { canEditCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
+import { revalidateCragPages } from '@/lib/revalidate-helpers'
 
 const log = createModuleLogger('API:Faces')
 
@@ -210,6 +211,8 @@ export async function PATCH(request: NextRequest) {
       metadata: { cragId, area, oldFaceId, newFaceId, routesUpdated: updateResult.modifiedCount },
     })
 
+    revalidateCragPages(cragId)
+
     return NextResponse.json({
       success: true,
       routesUpdated: updateResult.modifiedCount,
@@ -285,6 +288,8 @@ export async function DELETE(request: NextRequest) {
       duration: Date.now() - start,
       metadata: { cragId, area, faceId, routesCleared: updateResult.modifiedCount },
     })
+
+    revalidateCragPages(cragId)
 
     return NextResponse.json({
       success: true,

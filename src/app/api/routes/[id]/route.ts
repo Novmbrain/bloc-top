@@ -3,6 +3,7 @@ import { getRouteById, updateRoute, deleteRoute } from '@/lib/db'
 import { requireAuth } from '@/lib/require-auth'
 import { canEditCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
+import { revalidateCragPages } from '@/lib/revalidate-helpers'
 import type { Route, TopoPoint } from '@/types'
 
 const log = createModuleLogger('API:Routes')
@@ -222,6 +223,8 @@ export async function PATCH(
       metadata: { routeId, fields: Object.keys(updates) },
     })
 
+    revalidateCragPages(existingRoute.cragId)
+
     return NextResponse.json({
       success: true,
       route: updatedRoute,
@@ -295,6 +298,8 @@ export async function DELETE(
       duration: Date.now() - start,
       metadata: { routeId },
     })
+
+    revalidateCragPages(existingRoute.cragId)
 
     return NextResponse.json({ success: true })
   } catch (error) {

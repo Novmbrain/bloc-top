@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { updateCity, deleteCity } from '@/lib/db'
 import { getAuth } from '@/lib/auth'
 import { createModuleLogger } from '@/lib/logger'
+import { revalidateHomePage } from '@/lib/revalidate-helpers'
 
 const log = createModuleLogger('API:Cities')
 
@@ -38,6 +39,8 @@ export async function PATCH(
       action: 'PATCH /api/cities/:id',
       metadata: { cityId: id, fields: Object.keys(updates) },
     })
+
+    revalidateHomePage()
 
     return NextResponse.json({ success: true, city })
   } catch (error) {
@@ -80,6 +83,8 @@ export async function DELETE(
     log.info(`City deleted: ${id}`, {
       action: 'DELETE /api/cities/:id',
     })
+
+    revalidateHomePage()
 
     return NextResponse.json({ success: true })
   } catch (error) {

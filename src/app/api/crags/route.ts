@@ -4,6 +4,7 @@ import { isCityValid } from '@/lib/city-utils'
 import { requireAuth } from '@/lib/require-auth'
 import { canCreateCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
+import { revalidateHomePage } from '@/lib/revalidate-helpers'
 
 const log = createModuleLogger('API:Crags')
 
@@ -98,6 +99,8 @@ export async function POST(request: NextRequest) {
       action: 'POST /api/crags',
       metadata: { cragId: id, name, createdBy: userId },
     })
+
+    revalidateHomePage()
 
     return NextResponse.json({ success: true, crag }, { status: 201 })
   } catch (error) {

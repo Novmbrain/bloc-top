@@ -11,6 +11,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest, NextResponse } from 'next/server'
 
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+}))
+
 // Mock mongodb (permissions.ts -> getDatabase)
 vi.mock('@/lib/mongodb', () => ({
   getDatabase: vi.fn(),
