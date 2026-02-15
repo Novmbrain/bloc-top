@@ -112,7 +112,7 @@ describe('Crag operations', () => {
     expect(crags).toHaveLength(1)
     expect(crags[0].id).toBe('yuan-tong-si')
     expect(crags[0].name).toBe('源通寺')
-    expect((crags[0] as Record<string, unknown>)._id).toBeUndefined()
+    expect((crags[0] as unknown as Record<string, unknown>)._id).toBeUndefined()
   })
 
   it('getCragById should return crag when found', async () => {
@@ -182,7 +182,7 @@ describe('Route operations', () => {
     const routes = await getAllRoutes()
     expect(mockCollection).toHaveBeenCalledWith('routes')
     expect(routes[0].id).toBe(42)
-    expect((routes[0] as Record<string, unknown>)._id).toBeUndefined()
+    expect((routes[0] as unknown as Record<string, unknown>)._id).toBeUndefined()
   })
 
   it('getRouteById should return route when found', async () => {

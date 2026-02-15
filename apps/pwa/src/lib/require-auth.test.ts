@@ -28,7 +28,7 @@ function mockSession(user: Record<string, unknown> | null) {
     api: {
       getSession: vi.fn().mockResolvedValue(user ? { user } : null),
     },
-  } as ReturnType<typeof getAuth> extends Promise<infer T> ? T : never)
+  } as unknown as Awaited<ReturnType<typeof getAuth>>)
 }
 
 describe('requireAuth', () => {
@@ -50,7 +50,7 @@ describe('requireAuth', () => {
       api: {
         getSession: vi.fn().mockResolvedValue({ user: null }),
       },
-    } as ReturnType<typeof getAuth> extends Promise<infer T> ? T : never)
+    } as unknown as Awaited<ReturnType<typeof getAuth>>)
 
     const result = await requireAuth(createRequest())
     expect(result).toBeInstanceOf(NextResponse)
@@ -91,7 +91,7 @@ describe('requireAuth', () => {
     })
     mockGetAuth.mockResolvedValue({
       api: { getSession: mockGetSession },
-    } as ReturnType<typeof getAuth> extends Promise<infer T> ? T : never)
+    } as unknown as Awaited<ReturnType<typeof getAuth>>)
 
     const req = new NextRequest('http://localhost:3000/api/test', {
       headers: { Authorization: 'Bearer token123' },
