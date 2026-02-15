@@ -95,7 +95,7 @@ describe('POST /api/revalidate', () => {
     })
     const res = await POST(req)
     expect(res.status).toBe(200)
-    expect(revalidateTag).toHaveBeenCalledWith('crag-yuan-tong-si')
+    expect(revalidateTag).toHaveBeenCalledWith('crag-yuan-tong-si', 'default')
   })
 
   it('supports routeId to revalidate all locale versions', async () => {

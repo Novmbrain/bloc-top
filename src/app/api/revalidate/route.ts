@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     if (Array.isArray(body.tags)) {
       for (const tag of body.tags) {
         if (typeof tag === 'string') {
-          revalidateTag(tag)
+          revalidateTag(tag, 'default')
           revalidatedTags.push(tag)
         }
       }
