@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -11,13 +11,13 @@
 !.yarn/versions
 
 # testing
-/coverage
-/playwright/.cache
-/playwright-report
-/test-results
+coverage
+playwright/.cache
+playwright-report
+test-results
 
 # next.js
-/.next/
+.next/
 /out/
 
 # production
@@ -40,7 +40,7 @@ yarn-error.log*
 .vercel
 
 # serwist generated service worker
-/public/sw.js
+**/public/sw.js
 
 # typescript
 *.tsbuildinfo
