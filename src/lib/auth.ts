@@ -101,7 +101,10 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
               : 'localhost',
             rpName: '寻岩记 BlocTop',
             origin: process.env.NODE_ENV === 'production'
-              ? 'https://www.bouldering.top'
+              ? [
+                  'https://bouldering.top',
+                  'https://www.bouldering.top',
+                ]
               : 'http://localhost:3000',
           }),
         ],
