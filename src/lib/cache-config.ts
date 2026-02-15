@@ -42,13 +42,15 @@ export const MILLISECONDS = {
  *
  * 此处仅作为配置值的文档记录和计算参考。
  * 修改此值时，需同步更新以下文件中的字面量：
- * - src/app/page.tsx
- * - src/app/route/page.tsx
- * - src/app/crag/[id]/page.tsx
- * - src/app/route/[id]/page.tsx
+ * - src/app/[locale]/page.tsx (HOME = 86400)
+ * - src/app/[locale]/route/page.tsx (PAGE = 2592000)
+ * - src/app/[locale]/crag/[id]/page.tsx (DETAIL = 2592000)
  */
 export const ISR_REVALIDATE = {
-  /** 列表页面 ISR - 首页、线路列表等 */
+  /** 首页 ISR 安全网 - 即使 revalidatePath 失败也会在 1 天内刷新 */
+  HOME: SECONDS.DAY, // 86400 秒 = 1 天
+
+  /** 列表页面 ISR - 线路列表等 */
   PAGE: SECONDS.MONTH, // 2592000 秒 = 30 天
 
   /** 详情页面 ISR - 岩场详情、线路详情等 */
