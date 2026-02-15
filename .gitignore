@@ -61,8 +61,8 @@ next-env.d.ts
 .security-key
 logs/security/
 
-# Nx build cache
-.nx/
+# Turborepo
+.turbo
 
 # Playwright MCP artifacts
 .playwright-mcp/

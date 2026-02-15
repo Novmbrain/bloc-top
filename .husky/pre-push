@@ -40,7 +40,7 @@ echo ""
 # Run all checks in parallel
 (
   echo "📘 TypeScript..."
-  if npx tsc --noEmit > "$TSC_LOG" 2>&1; then
+  if pnpm exec tsc --noEmit > "$TSC_LOG" 2>&1; then
     echo "TSC_PASS" >> "$TSC_LOG"
   fi
 ) &
@@ -48,7 +48,7 @@ TSC_PID=$!
 
 (
   echo "🧪 Vitest..."
-  if npm run test:run --silent > "$VITEST_LOG" 2>&1; then
+  if pnpm run test:run --silent > "$VITEST_LOG" 2>&1; then
     echo "VITEST_PASS" >> "$VITEST_LOG"
   fi
 ) &
@@ -56,7 +56,7 @@ VITEST_PID=$!
 
 (
   echo "🎭 Playwright..."
-  if npm run test:ct --silent > "$PLAYWRIGHT_LOG" 2>&1; then
+  if pnpm run test:ct --silent > "$PLAYWRIGHT_LOG" 2>&1; then
     echo "PLAYWRIGHT_PASS" >> "$PLAYWRIGHT_LOG"
   fi
 ) &
