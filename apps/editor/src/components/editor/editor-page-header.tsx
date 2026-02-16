@@ -47,7 +47,7 @@ export function EditorPageHeader({
           </button>
         ) : null}
         <Link
-          href="/editor"
+          href="/"
           className={`flex items-center gap-2 min-h-[44px] -ml-2 px-2 rounded-xl transition-all duration-200 active:scale-95 ${isDetailMode ? 'hidden lg:flex' : ''}`}
           style={{ color: 'var(--theme-primary)' }}
         >
