@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { KeyRound, Fingerprint, Edit3, LogOut, Trash2, ChevronRight, Camera, Loader2, X } from 'lucide-react'
+import { KeyRound, Fingerprint, Edit3, LogOut, Trash2, ExternalLink, Camera, Loader2, X } from 'lucide-react'
 import Cropper from 'react-easy-crop'
 import type { Area } from 'react-easy-crop'
-import { Link } from '@/i18n/navigation'
+
 import { Drawer } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/toast'
@@ -718,8 +718,10 @@ export function SecurityDrawer({ isOpen, onClose, session, isAdmin, hasEditorAcc
 
         {/* Editor entry (admin or manager with crag permissions) */}
         {hasEditorAccess && (
-          <Link
-            href="/editor"
+          <a
+            href={process.env.NEXT_PUBLIC_EDITOR_URL || 'https://editor.bouldering.top'}
+            target="_blank"
+            rel="noopener noreferrer"
             className="glass-light w-full flex items-center gap-3 p-3 transition-all active:scale-[0.98]"
             style={{ borderRadius: 'var(--theme-radius-lg)' }}
           >
@@ -727,8 +729,8 @@ export function SecurityDrawer({ isOpen, onClose, session, isAdmin, hasEditorAcc
             <span className="flex-1 text-sm font-medium" style={{ color: 'var(--theme-primary)' }}>
               {t('editorEntry')}
             </span>
-            <ChevronRight className="w-4 h-4" style={{ color: 'var(--theme-on-surface-variant)' }} />
-          </Link>
+            <ExternalLink className="w-4 h-4" style={{ color: 'var(--theme-on-surface-variant)' }} />
+          </a>
         )}
 
         {/* Logout button */}
