@@ -3,7 +3,7 @@ import { getRouteById, updateRoute, deleteRoute } from '@bloctop/shared/db'
 import { requireAuth } from '@/lib/require-auth'
 import { canEditCrag } from '@bloctop/shared/permissions'
 import { createModuleLogger } from '@bloctop/shared/logger'
-import { revalidateCragPages } from '@bloctop/shared/revalidate-helpers'
+import { revalidateCragPages } from '@/lib/revalidate-pwa'
 import type { Route, TopoPoint } from '@bloctop/shared/types'
 
 const log = createModuleLogger('API:Routes')

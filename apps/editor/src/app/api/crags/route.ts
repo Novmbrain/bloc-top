@@ -4,7 +4,7 @@ import { isCityValid } from '@bloctop/shared/city-utils'
 import { requireAuth } from '@/lib/require-auth'
 import { canCreateCrag } from '@bloctop/shared/permissions'
 import { createModuleLogger } from '@bloctop/shared/logger'
-import { revalidateHomePage } from '@bloctop/shared/revalidate-helpers'
+import { revalidateHomePage } from '@/lib/revalidate-pwa'
 
 const log = createModuleLogger('API:Crags')
 
