@@ -29,6 +29,7 @@
     "./editor-utils": "./src/editor-utils.ts",
     "./editor-areas": "./src/editor-areas.ts",
     "./revalidate-helpers": "./src/revalidate-helpers.ts",
+    "./cache-config": "./src/cache-config.ts",
     "./*": "./src/*/index.ts"
   },
   "dependencies": {
