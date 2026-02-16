@@ -69,6 +69,13 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
         },
 
         rateLimit: { window: 60, max: 10 },
+
+        advanced: {
+          crossSubDomainCookies: {
+            enabled: true,
+            domain: '.bouldering.top',
+          },
+        },
       })
 
       _auth = instance

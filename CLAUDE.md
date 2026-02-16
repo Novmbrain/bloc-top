@@ -4,7 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-寻岩记 (BlocTop) - 攀岩线路分享 PWA 应用（野外抱石指南）
+寻岩记 (BlocTop) - 攀岩线路分享平台（Turborepo monorepo）
+
+### Monorepo 结构
+
+| 包 | 说明 |
+|---|------|
+| `apps/pwa` | 面向用户的 PWA 应用 (Next.js 16.1) |
+| `apps/editor` | Topo 编辑器独立应用 (Next.js 16.1) |
+| `packages/shared` | 共享纯逻辑模块 (types, db, logger, permissions, utils) |
+| `packages/ui` | 共享 UI 组件 (face-image, filter-chip, theme, segmented-control) |
 
 ## Node Version
 
@@ -17,14 +26,16 @@ Node.js >= 20.9.0，使用 `nvm use` 自动切换
 nvm use
 
 # 2. 安装依赖
-npm install
+pnpm install
 
 # 3. 配置环境变量
-cp .env.example .env.local
+cp apps/pwa/.env.example apps/pwa/.env.local
 # 编辑 .env.local 填入 MongoDB 连接字符串
 
 # 4. 启动开发服务器
-npm run dev
+pnpm dev                          # 全部应用
+pnpm --filter @bloctop/pwa dev    # 仅 PWA
+pnpm --filter @bloctop/editor dev # 仅 Editor
 ```
 
 ## Environment Variables
@@ -38,6 +49,7 @@ npm run dev
 | `BETTER_AUTH_SECRET` | ✅ | Session 签名密钥 (32+ 字符随机串) |
 | `RESEND_API_KEY` | ✅ | Resend API Key (`re_xxxx`，Magic Link 邮件) |
 | `NEXT_PUBLIC_APP_URL` | ✅ | 应用 URL (`https://bouldering.top` / `http://localhost:3000`) |
+| `NEXT_PUBLIC_EDITOR_URL` | ⚡ | Editor 域名 (默认 `https://editor.bouldering.top`) |
 
 > 生产环境变量在 Vercel 项目设置中配置
 
@@ -45,22 +57,21 @@ npm run dev
 
 ```bash
 # 开发
-npm run dev           # 开发服务器 (Turbopack)
-npm run build         # 生产构建 (webpack)
-npm run start         # 生产服务器
-npm run lint          # ESLint
+pnpm dev                                # 全部应用 (turbo)
+pnpm build                              # 全量构建 (turbo)
+pnpm --filter @bloctop/pwa dev          # PWA 开发服务器
+pnpm --filter @bloctop/editor dev       # Editor 开发服务器
+pnpm lint                               # ESLint
 
 # 测试
-npm run test          # Vitest watch 模式
-npm run test:run      # Vitest 单次运行
-npm run test:coverage # Vitest + 覆盖率报告
-npm run test:ct       # Playwright 组件测试
-npm run test:ct:ui    # Playwright 显示浏览器
-npm run test:ct:debug # Playwright 慢动作调试
+pnpm --filter @bloctop/pwa test         # PWA Vitest watch
+pnpm --filter @bloctop/pwa test:run     # PWA Vitest 单次
+pnpm --filter @bloctop/shared test:run  # Shared 测试
+pnpm turbo typecheck                    # 全量类型检查
 
 # 数据库
-npm run db:seed       # 数据迁移 (开发环境)
-npm run db:seed:prod  # 数据迁移 (生产环境)
+pnpm --filter @bloctop/pwa db:seed      # 数据迁移 (开发环境)
+pnpm --filter @bloctop/pwa db:seed:prod # 数据迁移 (生产环境)
 
 # UI
 npx shadcn@latest add <component>  # 添加 UI 组件
@@ -72,8 +83,9 @@ npx shadcn@latest add <component>  # 添加 UI 组件
 
 ## Tech Stack
 
+- **Monorepo:** Turborepo + pnpm workspaces
 - **Framework:** Next.js 16.1.2 + App Router + ISR
-- **Database:** MongoDB Atlas (原生驱动)
+- **Database:** MongoDB Atlas (原生驱动, lazy init via `getClientPromise()`)
 - **Styling:** Tailwind CSS v4 + shadcn/ui (new-york style)
 - **Theming:** next-themes (日间/暗夜/自动模式，Dracula 配色)
 - **I18n:** next-intl ^4.7.0 (中/英/法三语)
@@ -88,7 +100,19 @@ npx shadcn@latest add <component>  # 添加 UI 组件
 ## Project Structure
 
 ```
-src/
+# 顶层 Monorepo
+├── turbo.json                  # Turborepo 配置
+├── pnpm-workspace.yaml         # pnpm 工作空间
+├── apps/
+│   ├── pwa/                    # 面向用户的 PWA
+│   └── editor/                 # Topo 编辑器 (独立部署)
+├── packages/
+│   ├── shared/                 # 共享逻辑 (@bloctop/shared)
+│   └── ui/                    # 共享 UI (@bloctop/ui)
+└── docs/plans/                 # 设计文档和实施计划
+
+# apps/pwa/src/ (PWA 应用)
+apps/pwa/src/
 ├── middleware.ts                # ★ Middleware (i18n 路由 + 首页 IP 城市检测)
 ├── app/
 │   ├── layout.tsx              # 根布局 (fonts)
@@ -105,16 +129,6 @@ src/
 │   │   │   ├── verify/         # Magic Link 验证中间页
 │   │   │   └── passkey-setup/  # Passkey 注册引导页
 │   │   ├── profile/            # 用户页面 (含账号管理 + Passkey 管理)
-│   │   ├── editor/             # ★ 编辑器 (管理后台, session+admin 保护)
-│   │   │   ├── layout.tsx      # Server-side auth guard
-│   │   │   ├── page.tsx        # 编辑器首页
-│   │   │   ├── crags/          # 岩场管理 (列表 + 详情/权限)
-│   │   │   │   └── [id]/       # 岩场详情 + 权限管理面板
-│   │   │   ├── routes/         # 线路编辑
-│   │   │   ├── faces/          # 岩面图片管理
-│   │   │   ├── betas/          # Beta 视频管理
-│   │   │   ├── users/          # 用户管理 (admin-only, 角色分配 admin/user)
-│   │   │   └── cities/         # 城市/地级市管理
 │   │   └── offline/            # ★ 离线浏览
 │   │       ├── page.tsx        # 已下载岩场列表
 │   │       ├── crag/[id]/      # 离线岩场详情
@@ -128,17 +142,11 @@ src/
 │   └── routing.ts              # defineRouting (locales, defaultLocale)
 ├── components/
 │   ├── ui/                     # shadcn/ui 基础组件
-│   │   ├── button.tsx, skeleton.tsx, drawer.tsx, image-viewer.tsx
+│   │   ├── skeleton.tsx, drawer.tsx, image-viewer.tsx
 │   │   ├── segmented-control.tsx, toast.tsx
 │   │   ├── input.tsx, textarea.tsx  # ★ IME 安全输入 (包装 composition-input.tsx)
 │   │   └── composition-input.tsx    # CompositionInput 底层实现
-│   ├── editor/                 # 编辑器专用组件
-│   │   ├── crag-selector.tsx, route-card.tsx, progress-ring.tsx
-│   │   ├── editor-page-header.tsx      # 编辑器页面 Header (动态返回按钮)
-│   │   ├── crag-permissions-panel.tsx  # 岩场权限管理面板 (admin 管理管理者)
-│   │   └── fullscreen-topo-editor.tsx  # Topo 线路编辑器
 │   ├── face-image-provider.tsx # ★ FaceImageCache React 上下文
-│   ├── face-thumbnail-strip.tsx # 岩面缩略图条
 │   ├── offline-download-provider.tsx # 离线下载上下文
 │   ├── offline-cache-manager.tsx     # 离线缓存管理
 │   ├── download-button.tsx           # 岩场下载按钮
@@ -146,7 +154,6 @@ src/
 │   ├── locale-switcher.tsx     # 语言切换器
 │   ├── crag-card.tsx           # 岩场卡片
 │   ├── app-tabbar.tsx          # 底部导航栏 (毛玻璃效果)
-│   ├── filter-chip.tsx         # 筛选芯片 (单选/多选)
 │   ├── filter-drawer.tsx       # 筛选面板抽屉
 │   ├── route-detail-drawer.tsx # 线路详情抽屉 (支持多线路切换)
 │   ├── route-filter-bar.tsx    # 线路筛选栏
@@ -155,8 +162,6 @@ src/
 │   ├── beta-list-drawer.tsx    # Beta 视频列表抽屉
 │   ├── beta-submit-drawer.tsx  # Beta 视频提交抽屉
 │   ├── floating-search.tsx     # 浮动搜索按钮
-│   ├── floating-search-input.tsx # 浮动搜索输入框
-│   ├── search-overlay.tsx      # 搜索覆盖层
 │   ├── search-drawer.tsx       # 搜索抽屉
 │   ├── contextual-hint.tsx     # 上下文提示
 │   ├── grade-range-selector.tsx # 难度范围选择器
@@ -168,7 +173,7 @@ src/
 │   ├── offline-indicator.tsx   # 离线状态提示
 │   ├── sw-update-prompt.tsx    # SW 更新提示
 │   ├── install-prompt.tsx      # PWA 安装提示
-│   └── theme-provider.tsx, theme-switcher.tsx
+│   └── theme-provider.tsx
 ├── hooks/
 │   ├── use-face-image.ts       # ★ FaceImageCache hook
 │   ├── use-passkey-management.ts # Passkey CRUD (列表/添加/删除)
@@ -185,7 +190,7 @@ src/
 │   ├── use-media-query.ts      # 响应式媒体查询 (SSR 安全)
 │   ├── use-scroll-reveal.ts    # 滚动显示动画
 │   └── use-delayed-loading.ts  # 延迟加载 (避免骨架屏闪烁)
-├── types/index.ts              # TypeScript 类型定义 (见下方 Core Data Types)
+├── types/index.ts              # TypeScript 类型定义 (re-export bridge → @bloctop/shared)
 ├── test/
 │   ├── setup.tsx               # Vitest 全局设置 (mocks)
 │   └── utils.tsx               # 测试辅助函数
@@ -196,35 +201,63 @@ src/
     │   └── index.ts            # 导出
     ├── auth.ts                 # ★ better-auth server config (lazy singleton, Admin 插件)
     ├── auth-client.ts          # better-auth React client (useSession, signIn, signOut, admin)
-    ├── permissions.ts          # ★ RBAC 权限定义 + 角色 + 工具函数
-    ├── require-auth.ts         # API 路由共享认证 helper (requireAuth)
+    ├── permissions.ts          # re-export bridge → @bloctop/shared
+    ├── require-auth.ts         # DI binding: createRequireAuth(getAuth)
     ├── email-templates.ts      # Magic Link 邮件 HTML 模板
-    ├── db/index.ts             # 数据访问层 (typed CRUD functions)
-    ├── mongodb.ts              # MongoDB 连接层 (exports getDatabase())
-    ├── constants.ts            # ★ 图片 URL 生成 (getTopoImageUrl, getFaceTopoUrl 等)
-    ├── utils.ts                # cn() 工具函数
-    ├── tokens.ts               # 设计令牌 (仅 gradeColors)
-    ├── grade-utils.ts          # 难度等级工具
+    ├── db/index.ts             # re-export bridge → @bloctop/shared
+    ├── mongodb.ts              # re-export bridge → @bloctop/shared
+    ├── constants.ts            # re-export bridge → @bloctop/shared
+    ├── utils.ts                # re-export bridge → @bloctop/shared
+    ├── tokens.ts               # re-export bridge → @bloctop/shared
     ├── cache-config.ts         # 统一缓存 TTL 配置
-    ├── rate-limit.ts           # 内存级 Rate Limiting
-    ├── filter-constants.ts     # 筛选配置常量
-    ├── beta-constants.ts       # Beta 平台配置
-    ├── topo-constants.ts       # Topo 编辑器常量
-    ├── topo-utils.ts           # Topo 工具函数
     ├── weather-constants.ts    # 天气配置
     ├── weather-utils.ts        # 天气工具 (攀岩适宜度评估)
-    ├── city-utils.ts           # 城市工具函数 (纯同步，接收数据参数)
-    ├── route-utils.ts          # 线路工具函数
-    ├── editor-utils.ts         # 编辑器工具函数
-    ├── editor-areas.ts         # 区域管理 (CRUD)
     ├── offline-storage.ts      # 离线存储工具
-    ├── request-utils.ts        # 请求工具 (sanitizePathSegment 等)
-    ├── api-error-codes.ts      # API 错误码
-    ├── logger.ts               # 服务端日志
     ├── client-logger.ts        # 客户端日志 (上报到 /api/log)
     └── themes/                 # 主题系统 (Dracula)
 
-messages/                       # ★ i18n 翻译文件
+# apps/editor/src/ (Topo 编辑器)
+apps/editor/src/
+├── app/
+│   ├── layout.tsx              # 根布局 (force-dynamic, auth guard)
+│   ├── [locale]/
+│   │   ├── editor/             # ★ 编辑器页面
+│   │   │   ├── page.tsx        # 编辑器首页
+│   │   │   ├── crags/          # 岩场管理
+│   │   │   ├── routes/         # 线路编辑
+│   │   │   ├── faces/          # 岩面图片管理
+│   │   │   ├── betas/          # Beta 视频管理
+│   │   │   ├── users/          # 用户管理 (admin-only)
+│   │   │   └── cities/         # 城市/地级市管理
+│   └── api/                    # Editor API Routes
+├── components/editor/          # 编辑器专用组件
+├── lib/
+│   ├── auth.ts                 # Editor auth config (lazy singleton)
+│   ├── require-auth.ts         # DI binding: createRequireAuth(getAuth)
+│   └── revalidate-pwa.ts       # ★ 跨应用 ISR webhook (→ PWA /api/revalidate)
+└── hooks/
+
+# packages/shared/src/ (共享逻辑)
+packages/shared/src/
+├── index.ts                    # 统一导出
+├── types/index.ts              # 核心类型 (Route, Crag, BetaLink 等)
+├── db/index.ts                 # 数据访问层
+├── mongodb.ts                  # MongoDB 连接 (getClientPromise)
+├── logger.ts                   # 服务端日志
+├── permissions.ts              # RBAC 权限
+├── require-auth.ts             # createRequireAuth (DI)
+├── constants.ts                # 图片 URL 生成
+├── grade-utils.ts, city-utils.ts, route-utils.ts, topo-utils.ts
+├── editor-utils.ts, editor-areas.ts
+└── ...                         # 其他工具模块
+
+# packages/ui/src/ (共享 UI)
+packages/ui/src/
+├── face-image/                 # FaceImageCache + FaceThumbnailStrip
+├── components/                 # FilterChip, SegmentedControl
+└── theme/                      # ThemeSwitcher
+
+apps/pwa/messages/              # ★ i18n 翻译文件
 ├── zh.json                     # 中文 (默认)
 ├── en.json                     # 英文
 └── fr.json                     # 法文
@@ -246,7 +279,7 @@ doc/
 
 ## Core Data Types
 
-定义在 `src/types/index.ts`：
+定义在 `packages/shared/src/types/index.ts`：
 
 ```typescript
 interface TopoPoint {
@@ -303,7 +336,7 @@ interface BetaLink {
 // TopoRoute, TopoData
 ```
 
-城市/地级市配置存储在 MongoDB（`cities`/`prefectures` 集合），类型定义在 `src/types/index.ts`：
+城市/地级市配置存储在 MongoDB（`cities`/`prefectures` 集合），类型定义在 `packages/shared/src/types/index.ts`：
 
 ```typescript
 type CityId = string
@@ -327,7 +360,7 @@ interface PrefectureConfig {
 }
 ```
 
-城市工具函数（纯同步）在 `src/lib/city-utils.ts`，接收数据数组作为参数：
+城市工具函数（纯同步）在 `packages/shared/src/city-utils.ts`，接收数据数组作为参数：
 ```typescript
 findCityById(cities, id)  // 按 ID 查找城市
 findCityName(cities, id)  // 获取城市名称
@@ -361,7 +394,7 @@ import { Link } from '@/i18n/navigation'
 
 ## Face Image Cache
 
-岩面图片统一缓存层，位于 `src/lib/face-image-cache/`。使用 URL 版本化（`?t=timestamp`）刷新缓存，兼容 Next.js `<Image>`。
+岩面图片统一缓存层，位于 `apps/pwa/src/lib/face-image-cache/`。使用 URL 版本化（`?t=timestamp`）刷新缓存，兼容 Next.js `<Image>`。
 
 - **Provider**: `<FaceImageProvider>` 包裹在 `[locale]/layout.tsx`
 - **Hook**: `useFaceImageCache()` 返回 `FaceImageCacheService`
@@ -374,10 +407,11 @@ import { Link } from '@/i18n/navigation'
 
 无密码认证：Magic Link 邮件 + Passkey 生物识别。
 
-- **Server**: `src/lib/auth.ts` — lazy singleton，通过 `getAuth()` 获取 (避免构建期 top-level await)
-- **Client**: `src/lib/auth-client.ts` — `useSession()`, `signIn`, `signOut`, `authClient.passkey.*`
-- **API**: `/api/auth/[...all]` — better-auth catch-all 路由
-- **编辑器保护**: `editor/layout.tsx` 为 Server Component，检查 `session.user.role === 'admin'`
+- **Server**: `apps/pwa/src/lib/auth.ts` — lazy singleton，通过 `getAuth()` 获取 (避免构建期 top-level await)
+- **Client**: `apps/pwa/src/lib/auth-client.ts` — `useSession()`, `signIn`, `signOut`, `authClient.passkey.*`
+- **API**: `/api/auth/[...all]` — better-auth catch-all 路由 (仅在 PWA 中)
+- **Editor Auth**: `apps/editor/src/lib/auth.ts` — 独立 auth 实例，通过 DI 共享 `createRequireAuth`
+- **编辑器保护**: `apps/editor/src/app/layout.tsx` — Server Component + `force-dynamic`，检查 admin/manager 权限
 - **MongoDB**: 自动创建 `user`, `session`, `account`, `verification`, `passkey` collections (单数命名)
 - **Hook**: `usePasskeyManagement()` — Passkey 列表/添加/删除
 - **Session cookieCache**: 服务端 `maxAge: 300` (5 分钟)，绕过 better-auth 直接修改 `user` 集合后需刷新 session
@@ -399,9 +433,9 @@ import { Link } from '@/i18n/navigation'
 
 两层架构：用户级角色 + 岩场级权限。
 
-- **权限定义**: `src/lib/permissions.ts` — AC 定义、角色、权限工具函数
-- **数据层**: `src/lib/db/index.ts` — `crag_permissions` CRUD 函数
-- **类型**: `src/types/index.ts` — `UserRole`, `CragPermission`, `CragPermissionRole`
+- **权限定义**: `packages/shared/src/permissions.ts` — AC 定义、角色、权限工具函数
+- **数据层**: `packages/shared/src/db/index.ts` — `crag_permissions` CRUD 函数
+- **类型**: `packages/shared/src/types/index.ts` — `UserRole`, `CragPermission`, `CragPermissionRole`
 - **迁移**: `scripts/migrate-crag-ownership.ts` — 初始化岩场所有权
 - **用户角色** (`user.role`): `admin` | `user`
   - Admin 插件自动管理，通过 `authClient.admin.setRole()` 修改
@@ -543,10 +577,18 @@ import AMapContainer from '@/components/amap-container'
 <AMapContainer center={coordinates} name="岩场名" zoom={15} height="200px" approachPaths={paths} />
 ```
 
+## Gotchas
+
+- **`.next` 缓存陷阱**: 删除 App Router 页面/路由文件后，`.next/types/validator.ts` 保留旧引用导致 `tsc` 报错。修复: `rm -rf apps/pwa/.next` 后重新 typecheck
+- **Lazy MongoDB**: 使用 `getClientPromise()` 而非顶级 `await clientPromise`，避免构建期 top-level await 失败
+- **Auth 跨应用共享**: 通过 `createRequireAuth(getAuth)` 依赖注入，Editor 和 PWA 各自绑定自己的 `getAuth` 实例
+- **Editor force-dynamic**: `apps/editor/src/app/layout.tsx` 必须 `export const dynamic = 'force-dynamic'`，防止 SSG 预渲染时执行 auth guard 失败
+- **跨应用 ISR 失效**: Editor 修改数据后通过 `revalidate-pwa.ts` webhook 通知 PWA 的 `/api/revalidate` 端点刷新缓存
+
 ## PWA Configuration
 
-- Service Worker: `src/app/sw.ts` (Serwist)
-- Manifest: `public/manifest.json`
+- Service Worker: `apps/pwa/src/app/sw.ts` (Serwist)
+- Manifest: `apps/pwa/public/manifest.json`
 - R2 图片缓存 30 天，最多 200 张
 - 图片域名: `img.bouldering.top` (Cloudflare R2)
 
@@ -613,13 +655,22 @@ const key = `${cragId}/${encodeURIComponent(faceId)}.jpg`  // 会导致双重编
 
 ## Import Aliases
 
+### PWA / Editor 应用内 (`@/` alias)
 - `@/components` — React 组件
 - `@/components/ui` — shadcn/ui 组件
-- `@/lib` — 工具函数
+- `@/lib` — 工具函数 (PWA 含 re-export bridge 到 @bloctop/shared)
 - `@/hooks` — 自定义 Hooks
 - `@/types` — 类型定义
 - `@/i18n` — 国际化工具
 - `@/data` — 静态数据
+
+### 跨包 imports
+- `@bloctop/shared` — 共享逻辑 (types, db, logger, permissions, utils)
+- `@bloctop/ui` — 共享 UI 组件 (face-image, filter-chip, theme)
+
+### Re-export Bridge 模式
+PWA 保留薄 bridge 文件 (如 `apps/pwa/src/lib/mongodb.ts`) 转发到 `@bloctop/shared`。
+高消费者 bridge (types: 50引用, db: 28引用) 暂不迁移，功能正常，迁移涉及 200+ 文件改动。
 
 ## Logging System
 
