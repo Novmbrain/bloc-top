@@ -103,7 +103,7 @@ bloctop/
 │   │   │       ├── auth-client.ts       # PWA 的 better-auth client
 │   │   │       ├── offline-storage.ts
 │   │   │       └── cache-config.ts      # SW 缓存配置
-│   │   ├── middleware.ts                 # i18n 路由 + IP 城市检测
+│   │   ├── proxy.ts                     # i18n 路由 + IP 城市检测 (Next.js 16 proxy)
 │   │   ├── messages/                     # PWA 翻译文件 (zh/en/fr)
 │   │   ├── next.config.ts
 │   │   ├── tailwind.config.ts
@@ -155,8 +155,7 @@ bloctop/
 │       │       ├── editor-utils.ts
 │       │       ├── editor-areas.ts
 │       │       └── revalidate-pwa.ts    # ★ Webhook 发送端
-│       ├── middleware.ts                 # 仅 i18n 路由 (无城市检测)
-│       ├── messages/                     # Editor 翻译文件 (复制 PWA 的)
+│       ├── proxy.ts                     # 仅 auth guard (无 i18n, 无城市检测)
 │       ├── next.config.ts
 │       ├── tailwind.config.ts
 │       └── package.json
@@ -296,7 +295,7 @@ bloctop/
 | `offline-*.tsx` | 离线组件 (3个) |
 | `app-tabbar.tsx` | 底部导航 |
 | `crag-card.tsx` | 岩场卡片 |
-| middleware 城市检测 | IP → 城市 |
+| proxy 城市检测 | IP → 城市 (proxy.ts) |
 
 #### Editor 专属 — 主要模块
 
@@ -511,23 +510,27 @@ Webhook 失败时不阻塞 editor 操作，靠 ISR time-based revalidate 作为 
 | `PWA_URL` | `https://bouldering.top`（Webhook 目标） |
 | `RESEND_API_KEY` | Magic Link 邮件（可共享同一个） |
 
-## Middleware 差异
+## Proxy 差异 (Next.js 16 — middleware 已重命名为 proxy)
 
-### PWA middleware.ts
+> Next.js 16 将 `middleware.ts` 重命名为 `proxy.ts`，导出函数从 `middleware` 改为 `proxy`。
+> "Proxy" 更准确描述其行为：Edge Runtime 网络代理，位于应用前面。
+
+### PWA proxy.ts
 
 ```typescript
 // i18n 路由 + IP 城市检测
 import createMiddleware from 'next-intl/middleware'
 // ... 包含 AMap IP 定位逻辑 + city_selection cookie
+export default async function proxy(request: NextRequest) { ... }
 ```
 
-### Editor middleware.ts
+### Editor proxy.ts
 
 ```typescript
 // 无 i18n（纯中文），仅做 auth guard
 import { NextRequest, NextResponse } from 'next/server'
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // 未登录用户重定向到 PWA 登录页
   const session = request.cookies.get('better-auth.session_token')
   if (!session) {
@@ -562,34 +565,55 @@ export const config = {
 ```json
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "MONGODB_URI", "MONGODB_DB_NAME",
+    "NEXT_PUBLIC_AMAP_KEY", "NEXT_PUBLIC_APP_URL",
+    "BETTER_AUTH_SECRET", "RESEND_API_KEY", "RESEND_FROM_EMAIL",
+    "REVALIDATE_SECRET",
+    "CLOUDFLARE_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCKET_NAME"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
-    "lint": {
-      "dependsOn": ["^build"]
-    },
-    "test": {
-      "dependsOn": ["^build"]
-    },
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "test:run": {
+      "dependsOn": ["^build"]
+    },
+    "test:ct": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
     }
   }
 }
 ```
 
+> **注意**: `globalEnv` 必须声明所有构建期使用的环境变量，否则 Turborepo 在 Vercel CI 上会忽略这些变量导致构建失败。
+
 ### Vercel Project 配置
+
+> **实际发现**: Vercel 会自动检测 `turbo.json` 并使用 Turborepo 构建。Root Directory 保持仓库根目录即可，
+> Vercel 自动执行 `turbo run build`，无需手动指定 Build Command。
 
 | 设置 | PWA Project | Editor Project |
 |------|-------------|----------------|
-| Root Directory | `apps/pwa` | `apps/editor` |
-| Build Command | `cd ../.. && turbo run build --filter=pwa` | `cd ../.. && turbo run build --filter=editor` |
+| Root Directory | 仓库根目录 (自动检测 Turborepo) | `apps/editor` (待创建) |
+| Build Command | 自动: `turbo run build` | 自动: `turbo run build --filter=editor` |
 | Domain | `bouldering.top` | `editor.bouldering.top` |
-| Framework | Next.js | Next.js |
+| Framework | Next.js (自动检测) | Next.js |
 | Node.js | ≥20.9.0 | ≥20.9.0 |
+
+> **Root Directory 注意**: Vercel 的 Root Directory 是 **Project 级别设置**（非 branch 级别），修改后影响所有分支。
+> 当前 PWA Project 的 Root Directory 从 `.` 无需改动 — Vercel 自动从根目录发现 `turbo.json` 并运行 Turborepo 构建。
 
 ### Ignored Build Step
 
@@ -600,11 +624,20 @@ Vercel 支持 "Ignored Build Step" 优化，只在相关文件变更时构建：
 
 ## 迁移策略（概要）
 
-### Phase 1: Monorepo 初始化
-1. 初始化 Turborepo + pnpm workspaces
-2. 创建 `packages/shared` 和 `packages/ui`
-3. 将共享模块移入 packages
-4. 确保现有 app 在 `apps/pwa` 下正常运行
+### Phase 1: Monorepo 初始化 — ✅ 已完成
+
+> Branch: `feat/editor-split-prerequisites` → merged to `main` via PR #261 (2026-02-15)
+
+1. ✅ npm → pnpm 迁移 (`d594ee6`)
+2. ✅ 代码移入 `apps/pwa/` + Turborepo 初始化 (`28220ad`)
+3. ✅ 创建 `packages/shared` 和 `packages/ui` 空骨架 (`2050f98`)
+4. ✅ `vercel.json` 移入 `apps/pwa/` (`e93c89d`)
+5. ✅ pre-push hook 适配 Turborepo (`fbafb68`)
+6. ✅ pnpm lockfile 同步修复 (`f38d166`)
+7. ✅ `turbo.json` 添加 `globalEnv` 修复 Vercel 构建 (`d9febf6`)
+8. ✅ `middleware.ts` → `proxy.ts` (Next.js 16) (`40bfee7`)
+
+**验证结果**: Vercel 构建成功，906 个测试全部通过，ESLint 0 错误。
 
 ### Phase 2: Editor App 创建
 1. 在 `apps/editor` 创建新 Next.js 项目
@@ -750,13 +783,15 @@ export async function POST(req) { /* editor-only */ }
 
 ## 构建工具决策
 
-**现状**：项目已使用 Nx 22.4.5 做任务编排和缓存（`nx.json`）。
+**原状**：项目曾使用 Nx 22.4.5 做任务编排和缓存（`nx.json`）。
 
 **决策**：迁移到 Turborepo，移除 Nx。理由：
 1. Vercel 原生支持 Turborepo，部署零配置
 2. Turborepo 配置更简洁（一个 `turbo.json` vs Nx 的多文件配置）
 3. 当前 Nx 仅用于任务缓存，未使用其高级特性（generators, executors）
 4. pnpm workspaces + Turborepo 是 Vercel monorepo 的推荐组合
+
+**状态**: ✅ 已完成 — Nx 已移除，`nx.json` 已删除，Turborepo 已就绪。
 
 ## 未来演进
 
