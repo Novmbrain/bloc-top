@@ -248,6 +248,7 @@ packages/shared/src/
 ├── require-auth.ts             # createRequireAuth (DI)
 ├── constants.ts                # 图片 URL 生成
 ├── grade-utils.ts, city-utils.ts, route-utils.ts, topo-utils.ts
+├── coordinate-utils.ts         # 坐标解析/验证/格式化 (GCJ-02)
 ├── editor-utils.ts, editor-areas.ts
 └── ...                         # 其他工具模块
 
@@ -576,6 +577,15 @@ import { ImageViewer } from '@/components/ui/image-viewer'
 import AMapContainer from '@/components/amap-container'
 <AMapContainer center={coordinates} name="岩场名" zoom={15} height="200px" approachPaths={paths} />
 ```
+
+## 坐标系 (GCJ-02)
+
+DB 统一存储 **GCJ-02 火星坐标系**（与高德地图一致），`Coordinates` 接口 `{ lng, lat }` 值直接对应高德坐标拾取器输出。
+
+- **坐标工具**: `@bloctop/shared/coordinate-utils` — `parseCoordinateInput`, `validateCoordinates`, `truncateCoordinates`, `formatCoordinateDisplay`
+- **输入方式**: Editor 中使用单行粘贴 (`119.306239,26.063477`)，从[高德坐标拾取器](https://lbs.amap.com/tools/picker)复制
+- **地图渲染**: `amap-container.tsx` 直接使用 DB 坐标，无需转换
+- **⚠️ 无 WGS-84 转换**: 项目中没有 WGS-84↔GCJ-02 转换代码，所有坐标均为 GCJ-02
 
 ## Gotchas
 
