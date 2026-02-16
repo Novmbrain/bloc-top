@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getAuth } from '@/lib/auth'
 import { canAccessEditor } from '@bloctop/shared/permissions'
+import { Providers } from './providers'
 import '@bloctop/ui/styles/globals.css'
 import './globals.css'
 
@@ -34,7 +35,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="zh" suppressHydrationWarning>
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }
