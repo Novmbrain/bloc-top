@@ -4,7 +4,7 @@ import { getDatabase } from '@bloctop/shared/mongodb'
 import { requireAuth } from '@/lib/require-auth'
 import { canEditCrag } from '@bloctop/shared/permissions'
 import { createModuleLogger } from '@bloctop/shared/logger'
-import { revalidateCragPages } from '@bloctop/shared/revalidate-helpers'
+import { revalidateCragPages } from '@/lib/revalidate-pwa'
 
 const log = createModuleLogger('API:Faces')
 

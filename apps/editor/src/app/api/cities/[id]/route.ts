@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { updateCity, deleteCity } from '@bloctop/shared/db'
 import { getAuth } from '@/lib/auth'
 import { createModuleLogger } from '@bloctop/shared/logger'
-import { revalidateHomePage } from '@bloctop/shared/revalidate-helpers'
+import { revalidateHomePage } from '@/lib/revalidate-pwa'
 
 const log = createModuleLogger('API:Cities')
 
