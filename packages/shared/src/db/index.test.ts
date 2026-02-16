@@ -33,11 +33,11 @@ const mockCollection = vi.fn(() => ({
 
 const mockDb = { collection: mockCollection }
 
-vi.mock('@/lib/mongodb', () => ({
+vi.mock('../mongodb', () => ({
   getDatabase: vi.fn(() => Promise.resolve(mockDb)),
 }))
 
-vi.mock('@/lib/logger', () => ({
+vi.mock('../logger', () => ({
   createModuleLogger: () => ({
     info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn(),
   }),
