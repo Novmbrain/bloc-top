@@ -9,7 +9,7 @@ const mockCollection = vi.fn(() => ({
 }))
 const mockDb = { collection: mockCollection }
 
-vi.mock('@/lib/mongodb', () => ({
+vi.mock('./mongodb', () => ({
   getDatabase: vi.fn(() => Promise.resolve(mockDb)),
 }))
 

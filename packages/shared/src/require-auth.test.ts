@@ -1,5 +1,5 @@
 /**
- * requireAuth — API 路由共享认证 helper
+ * createRequireAuth — shared API route auth helper factory
  *
  * 覆盖场景:
  * - 无 session → 返回 401 NextResponse
@@ -9,33 +9,33 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest, NextResponse } from 'next/server'
+import { createRequireAuth, type AuthInstance } from './require-auth'
 
-vi.mock('@/lib/auth', () => ({
-  getAuth: vi.fn(),
-}))
-
-import { requireAuth } from './require-auth'
-import { getAuth } from '@/lib/auth'
-
-const mockGetAuth = vi.mocked(getAuth)
+function createMockAuth(user: Record<string, unknown> | null): AuthInstance {
+  return {
+    api: {
+      getSession: vi.fn().mockResolvedValue(user ? { user } : null),
+    },
+  }
+}
 
 function createRequest(): NextRequest {
   return new NextRequest('http://localhost:3000/api/test')
 }
 
-function mockSession(user: Record<string, unknown> | null) {
-  mockGetAuth.mockResolvedValue({
-    api: {
-      getSession: vi.fn().mockResolvedValue(user ? { user } : null),
-    },
-  } as unknown as Awaited<ReturnType<typeof getAuth>>)
-}
+describe('createRequireAuth', () => {
+  let mockAuth: AuthInstance
+  let requireAuth: ReturnType<typeof createRequireAuth>
 
-describe('requireAuth', () => {
+  function setupAuth(user: Record<string, unknown> | null) {
+    mockAuth = createMockAuth(user)
+    requireAuth = createRequireAuth(async () => mockAuth)
+  }
+
   beforeEach(() => vi.clearAllMocks())
 
   it('should return 401 when no session', async () => {
-    mockSession(null)
+    setupAuth(null)
     const result = await requireAuth(createRequest())
     expect(result).toBeInstanceOf(NextResponse)
     const res = result as NextResponse
@@ -46,11 +46,12 @@ describe('requireAuth', () => {
   })
 
   it('should return 401 when session has no user', async () => {
-    mockGetAuth.mockResolvedValue({
+    mockAuth = {
       api: {
         getSession: vi.fn().mockResolvedValue({ user: null }),
       },
-    } as unknown as Awaited<ReturnType<typeof getAuth>>)
+    }
+    requireAuth = createRequireAuth(async () => mockAuth)
 
     const result = await requireAuth(createRequest())
     expect(result).toBeInstanceOf(NextResponse)
@@ -58,28 +59,28 @@ describe('requireAuth', () => {
   })
 
   it('should return 401 when user has no id', async () => {
-    mockSession({ name: 'test' })
+    setupAuth({ name: 'test' })
     const result = await requireAuth(createRequest())
     expect(result).toBeInstanceOf(NextResponse)
     expect((result as NextResponse).status).toBe(401)
   })
 
   it('should return AuthInfo with role when session is valid', async () => {
-    mockSession({ id: 'user-123', role: 'admin' })
+    setupAuth({ id: 'user-123', role: 'admin' })
     const result = await requireAuth(createRequest())
     expect(result).not.toBeInstanceOf(NextResponse)
     expect(result).toEqual({ userId: 'user-123', role: 'admin' })
   })
 
   it('should default role to user when role is missing', async () => {
-    mockSession({ id: 'user-456' })
+    setupAuth({ id: 'user-456' })
     const result = await requireAuth(createRequest())
     expect(result).not.toBeInstanceOf(NextResponse)
     expect(result).toEqual({ userId: 'user-456', role: 'user' })
   })
 
   it('should default role to user when role is empty string', async () => {
-    mockSession({ id: 'user-789', role: '' })
+    setupAuth({ id: 'user-789', role: '' })
     const result = await requireAuth(createRequest())
     expect(result).not.toBeInstanceOf(NextResponse)
     expect(result).toEqual({ userId: 'user-789', role: 'user' })
@@ -89,9 +90,8 @@ describe('requireAuth', () => {
     const mockGetSession = vi.fn().mockResolvedValue({
       user: { id: 'u1', role: 'admin' },
     })
-    mockGetAuth.mockResolvedValue({
-      api: { getSession: mockGetSession },
-    } as unknown as Awaited<ReturnType<typeof getAuth>>)
+    mockAuth = { api: { getSession: mockGetSession } }
+    requireAuth = createRequireAuth(async () => mockAuth)
 
     const req = new NextRequest('http://localhost:3000/api/test', {
       headers: { Authorization: 'Bearer token123' },
