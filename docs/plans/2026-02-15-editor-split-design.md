@@ -639,16 +639,67 @@ Vercel 支持 "Ignored Build Step" 优化，只在相关文件变更时构建：
 
 **验证结果**: Vercel 构建成功，906 个测试全部通过，ESLint 0 错误。
 
-### Phase 2: Editor App 创建
-1. 在 `apps/editor` 创建新 Next.js 项目
-2. 将 editor 页面 + 组件迁入
-3. 配置独立 better-auth 实例
-4. 实现 `revalidate-pwa.ts` webhook 发送
+### Phase 2: Editor App 创建 — ✅ 已完成
+
+> Branch: `feat/phase2-editor-app` (2026-02-16)
+
+#### Sub-phase 2a: 共享包提取 (`packages/shared`)
+
+1. ✅ 提取类型定义到 `packages/shared/src/types/` (`b84102a`)
+2. ✅ 提取 MongoDB + 数据访问层 + Logger (`af6c652`)
+   - **关键重构**: `mongodb.ts` 从 top-level `throw` 改为 lazy `getClientPromise()` 函数，防止 Next.js 构建期连接数据库
+3. ✅ 提取权限、认证 helper、基础设施 (`2fbbbfe`)
+   - `require-auth.ts` 重构为 `createRequireAuth(getAuth)` 依赖注入模式，支持不同 App 传入各自的 auth 实例
+4. ✅ 提取工具模块（constants, utils, grade, city, topo, beta 等）(`7e9cd1c`)
+
+#### Sub-phase 2b: UI 包提取 (`packages/ui`)
+
+5. ✅ 提取 UI 组件、face-image-cache、主题到 `packages/ui` (`e849240`)
+
+#### Sub-phase 2c: Editor 骨架
+
+6. ✅ 创建 `apps/editor` Next.js 项目骨架 (`f96a84c`)
+   - `package.json`, `next.config.ts` (含 `transpilePackages`), `tsconfig.json`, `globals.css`
+7. ✅ 配置 Editor 独立 better-auth 实例 + proxy guard (`3ef6470`)
+   - **关键决策**: Editor auth 不含 Magic Link client（用户通过 PWA 注册）
+   - **关键决策**: `export const dynamic = 'force-dynamic'` 在 root layout，防止 auth guard 触发 SSG 时连接 MongoDB
+   - Passkey `origin` 设为 `editor.bouldering.top`，`rpID` 共享 `bouldering.top`
+
+#### Sub-phase 2d: 代码迁移
+
+8. ✅ 迁移 Editor 页面（7 个目录）、组件（8 个）、hooks（2 个）(`ad51bde`)
+9. ✅ 复制 16 个 API 路由到 Editor，更新所有 import (`f9ddf8e`)
+   - `cache-config.ts` 补充提取到 `packages/shared`
+10. ✅ 实现 `revalidate-pwa.ts` webhook 发送端 (`6d657be`)
+    - 替换所有 Editor API 路由中的 `revalidateHelpers` 为 webhook 调用
+
+#### Sub-phase 2e: PWA Import 清理 — 🔄 延迟
+
+> PWA 的 re-export bridge（如 `apps/pwa/src/lib/mongodb.ts` → `@bloctop/shared/mongodb`）工作正常，
+> 直接 import 迁移是优化项，不影响功能。延迟到后续单独 PR。
+
+#### Sub-phase 2f: 验证
+
+11. ✅ 全量构建通过（`pnpm build` — shared + ui + pwa + editor 全部成功）
+12. ✅ 874 个测试通过（266 shared + 608 PWA）
+
+**关键架构决策记录**:
+
+| 决策 | 方案 | 原因 |
+|------|------|------|
+| MongoDB 连接 | lazy `getClientPromise()` | 防止构建期 top-level throw |
+| Auth 共享 | `createRequireAuth(getAuth)` DI | 各 App 传入各自 auth 实例 |
+| Editor i18n | 不使用 next-intl，硬编码中文 | 简化架构，Editor 仅中文 |
+| SSG 冲突 | `force-dynamic` 在 root layout | auth guard 需要 runtime MongoDB |
+| 跨应用缓存失效 | HTTP webhook (`revalidate-pwa.ts`) | Editor 无法直接调用 PWA 的 `revalidatePath()` |
+| PWA import 迁移 | 延迟，保留 re-export bridge | 功能不受影响，减少 Phase 2 变更范围 |
+
+**最终统计**: `packages/shared` (43 files), `packages/ui` (20 files), `apps/editor` (46 files), `apps/pwa` (210 files)
 
 ### Phase 3: PWA 清理
-1. 从 PWA 中删除 editor 相关页面/组件
-2. 升级 `/api/revalidate` 为 webhook 接收端
-3. 更新 `editor/layout.tsx` 保护逻辑（改为重定向到 editor 域名）
+1. 从 PWA 中删除 editor 相关页面/组件（待 Phase 2 合并后执行）
+2. 更新 `editor/layout.tsx` 保护逻辑（改为重定向到 editor 域名）
+3. 清理 PWA re-export bridge，改为直接从 `@bloctop/shared` 导入
 
 ### Phase 4: 部署 & 验证
 1. Vercel 创建两个 Project
