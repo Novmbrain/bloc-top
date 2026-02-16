@@ -33,6 +33,7 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
         trustedOrigins: [
           'https://bouldering.top',
           'https://www.bouldering.top',
+          'https://editor.bouldering.top',
         ],
 
         // 邮箱+密码（内置核心功能，非插件）
@@ -104,6 +105,7 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
               ? [
                   'https://bouldering.top',
                   'https://www.bouldering.top',
+                  'https://editor.bouldering.top',
                 ]
               : 'http://localhost:3000',
           }),
@@ -121,6 +123,13 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
         rateLimit: {
           window: 60,
           max: 10,
+        },
+
+        advanced: {
+          crossSubDomainCookies: {
+            enabled: true,
+            domain: '.bouldering.top',
+          },
         },
       })
 
