@@ -4,6 +4,8 @@ import { useState, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Mail, ArrowLeft, Fingerprint, KeyRound } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
+import { useSearchParams } from 'next/navigation'
+import { isTrustedCallbackURL } from '@/lib/trusted-url'
 import { useToast } from '@/components/ui/toast'
 import { Input } from '@/components/ui/input'
 import { SegmentedControl } from '@/components/ui/segmented-control'
@@ -16,6 +18,11 @@ type LoginTab = 'magic-link' | 'password'
 export default function LoginPage() {
   const t = useTranslations('Auth')
   const { showToast } = useToast()
+  const searchParams = useSearchParams()
+  const rawCallbackURL = searchParams.get('callbackURL')
+  const callbackURL = rawCallbackURL && isTrustedCallbackURL(rawCallbackURL)
+    ? rawCallbackURL
+    : '/'
 
   const [activeTab, setActiveTab] = useState<LoginTab>('magic-link')
   const [email, setEmail] = useState('')
@@ -43,7 +50,7 @@ export default function LoginPage() {
     try {
       const { error } = await authClient.signIn.magicLink({
         email: email.trim(),
-        callbackURL: '/auth/security-setup',
+        callbackURL,
       })
       if (error) {
         console.error('[Login] Magic Link error:', error)
@@ -79,7 +86,7 @@ export default function LoginPage() {
         showToast(t('passwordLoginFailed'), 'error')
       } else {
         // Redirect handled by better-auth
-        window.location.href = '/'
+        window.location.href = callbackURL
       }
     } catch (err) {
       console.error('[Login] Password exception:', err)
@@ -101,7 +108,7 @@ export default function LoginPage() {
         console.error('[Login] Passkey error:', error)
         showToast(t('passkeyFailed'), 'error')
       } else {
-        window.location.href = '/'
+        window.location.href = callbackURL
       }
     } catch {
       showToast(t('passkeyFailed'), 'error')
