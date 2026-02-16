@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { IMAGE_VERSION, getRouteTopoUrl, getCragCoverUrl, getFaceTopoUrl, getTopoImageUrl } from './constants'
-import type { Route } from '@/types'
+import type { Route } from './types'
 
 describe('constants', () => {
   describe('IMAGE_VERSION', () => {
