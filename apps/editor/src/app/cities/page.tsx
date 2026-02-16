@@ -12,15 +12,14 @@ import {
   ToggleLeft,
   ToggleRight,
 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Input } from '@bloctop/ui/components/input'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
-import { AppTabbar } from '@/components/app-tabbar'
-import { useToast } from '@/components/ui/toast'
+import { useToast } from '@bloctop/ui/components/toast'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
 import { gcj02ToWgs84, truncateCoordinates } from '@/lib/coordinate-utils'
 import { useSession } from '@/lib/auth-client'
-import { useRouter } from '@/i18n/navigation'
-import type { CityConfig, PrefectureConfig } from '@/types'
+import { useRouter } from 'next/navigation'
+import type { CityConfig, PrefectureConfig } from '@bloctop/shared/types'
 
 // ==================== 城市管理页面 ====================
 
@@ -34,7 +33,7 @@ export default function CityManagementPage() {
   // Admin-only 守卫：非 admin 重定向到编辑器首页
   useEffect(() => {
     if (!isSessionPending && userRole !== 'admin') {
-      router.replace('/editor')
+      router.replace('/')
     }
   }, [isSessionPending, userRole, router])
 
@@ -298,10 +297,6 @@ export default function CityManagementPage() {
           }}
         />
       )}
-
-      <div className="lg:hidden">
-        <AppTabbar />
-      </div>
     </div>
   )
 }

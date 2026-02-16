@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { Mountain, Plus, MapPin, Loader2, Shield, Settings } from 'lucide-react'
-import { Link } from '@/i18n/navigation'
-import { AppTabbar } from '@/components/app-tabbar'
+import Link from 'next/link'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
-import { findCityName } from '@/lib/city-utils'
-import type { Crag, CityConfig } from '@/types'
+import { findCityName } from '@bloctop/shared/city-utils'
+import type { Crag, CityConfig } from '@bloctop/shared/types'
 
 type CragWithPermission = Crag & { permissionRole: 'manager' | 'admin' }
 
@@ -88,7 +87,7 @@ export default function CragListPage() {
         {/* 新建岩场按钮 — 仅 admin 可见 */}
         {canCreate && (
           <Link
-            href="/editor/crags/new"
+            href="/crags/new"
             className="flex items-center justify-center gap-2 w-full py-3 mb-6 font-medium transition-all duration-200 active:scale-[0.98]"
             style={{
               backgroundColor: 'var(--theme-primary)',
@@ -170,7 +169,7 @@ export default function CragListPage() {
               return (
                 <Link
                   key={crag.id}
-                  href={`/editor/crags/${crag.id}`}
+                  href={`/crags/${crag.id}`}
                   className="glass group block p-5 transition-all duration-300 active:scale-[0.98] hover:scale-[1.02] animate-fade-in-up"
                   style={{
                     borderRadius: 'var(--theme-radius-xl)',
@@ -231,10 +230,6 @@ export default function CragListPage() {
             })}
           </div>
         )}
-      </div>
-
-      <div className="lg:hidden">
-        <AppTabbar />
       </div>
     </div>
   )

@@ -12,9 +12,9 @@ import {
   Ruler,
   MoveHorizontal,
 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { BETA_PLATFORMS } from '@/lib/beta-constants'
-import type { BetaLink } from '@/types'
+import { Input } from '@bloctop/ui/components/input'
+import { BETA_PLATFORMS } from '@bloctop/shared/beta-constants'
+import type { BetaLink } from '@bloctop/shared/types'
 
 export interface BetaEditForm {
   title: string

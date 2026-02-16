@@ -4,10 +4,10 @@ import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import { X, Trash2, Undo2, Minus, Plus, RotateCcw, Check, Eye, EyeOff } from 'lucide-react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
-import type { TopoPoint } from '@/types'
-import { catmullRomCurve, scalePoints } from '@/lib/topo-utils'
-import { getGradeColor } from '@/lib/tokens'
-import { computeViewBox } from '@/lib/topo-constants'
+import type { TopoPoint } from '@bloctop/shared/types'
+import { catmullRomCurve, scalePoints } from '@bloctop/shared/topo-utils'
+import { getGradeColor } from '@bloctop/shared/tokens'
+import { computeViewBox } from '@bloctop/shared/topo-constants'
 
 /** 其他线路的简化数据 */
 interface OtherRoute {

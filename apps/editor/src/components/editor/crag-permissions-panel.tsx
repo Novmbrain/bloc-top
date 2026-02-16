@@ -10,11 +10,11 @@ import {
   Trash2,
   UserCog,
 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Drawer } from '@/components/ui/drawer'
-import { useToast } from '@/components/ui/toast'
-import type { CragPermissionRole } from '@/types'
+import { Input } from '@bloctop/ui/components/input'
+import { Badge } from '@bloctop/ui/components/badge'
+import { Drawer } from '@bloctop/ui/components/drawer'
+import { useToast } from '@bloctop/ui/components/toast'
+import type { CragPermissionRole } from '@bloctop/shared/types'
 
 // ==================== Types ====================
 

@@ -10,16 +10,15 @@ import {
   Shield,
   X,
 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+import { Input } from '@bloctop/ui/components/input'
+import { Badge } from '@bloctop/ui/components/badge'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
-import { AppTabbar } from '@/components/app-tabbar'
-import { useToast } from '@/components/ui/toast'
+import { useToast } from '@bloctop/ui/components/toast'
 import { useSession } from '@/lib/auth-client'
 import { authClient } from '@/lib/auth-client'
-import { useRouter } from '@/i18n/navigation'
+import { useRouter } from 'next/navigation'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
-import type { UserRole } from '@/types'
+import type { UserRole } from '@bloctop/shared/types'
 
 const PAGE_SIZE = 20
 
@@ -48,7 +47,7 @@ export default function UserManagementPage() {
   // Admin guard
   useEffect(() => {
     if (!isSessionPending && userRole !== 'admin') {
-      router.replace('/editor')
+      router.replace('/')
     }
   }, [isSessionPending, userRole, router])
 
@@ -243,10 +242,6 @@ export default function UserManagementPage() {
           onClose={() => setSelectedUser(null)}
         />
       )}
-
-      <div className="lg:hidden">
-        <AppTabbar />
-      </div>
     </div>
   )
 }

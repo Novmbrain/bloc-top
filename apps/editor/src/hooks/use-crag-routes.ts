@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import type { Crag, Route, UserRole } from '@/types'
+import type { Crag, Route, UserRole } from '@bloctop/shared/types'
 
 interface FaceInfo {
   faceId: string

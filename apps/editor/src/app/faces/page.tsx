@@ -15,18 +15,17 @@ import {
   Check,
   RefreshCw,
 } from 'lucide-react'
-import { AppTabbar } from '@/components/app-tabbar'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
-import { Input } from '@/components/ui/input'
-import type { Route } from '@/types'
-import { useToast } from '@/components/ui/toast'
-import { useFaceImageCache } from '@/hooks/use-face-image'
+import { Input } from '@bloctop/ui/components/input'
+import type { Route } from '@bloctop/shared/types'
+import { useToast } from '@bloctop/ui/components/toast'
+import { useFaceImageCache } from '@bloctop/ui/face-image/use-face-image'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
 import { useCragRoutes } from '@/hooks/use-crag-routes'
 import { CragSelector } from '@/components/editor/crag-selector'
 import { AreaSelect } from '@/components/editor/area-select'
-import { preloadImage } from '@/lib/editor-utils'
-import { deriveAreas, getPersistedAreas } from '@/lib/editor-areas'
+import { preloadImage } from '@bloctop/shared/editor-utils'
+import { deriveAreas, getPersistedAreas } from '@bloctop/shared/editor-areas'
 
 const FACE_ID_PATTERN = /^[\u4e00-\u9fffa-z0-9-]+$/
 const FACE_ID_CLEANUP = /[^\u4e00-\u9fffa-z0-9-]/g
@@ -1163,10 +1162,6 @@ export default function FaceManagementPage() {
           </div>
         )
       })()}
-
-      <div className="lg:hidden">
-        <AppTabbar />
-      </div>
     </div>
   )
 }

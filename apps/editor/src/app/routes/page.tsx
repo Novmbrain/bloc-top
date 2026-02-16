@@ -17,16 +17,15 @@ import {
   Trash2,
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
-import { Link } from '@/i18n/navigation'
-import { AppTabbar } from '@/components/app-tabbar'
+import Link from 'next/link'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import type { Route, TopoPoint } from '@/types'
-import { catmullRomCurve, scalePoints } from '@/lib/topo-utils'
-import { getGradeColor } from '@/lib/tokens'
-import { useToast } from '@/components/ui/toast'
-import { useFaceImageCache } from '@/hooks/use-face-image'
+import { Input } from '@bloctop/ui/components/input'
+import { Textarea } from '@bloctop/ui/components/textarea'
+import type { Route, TopoPoint } from '@bloctop/shared/types'
+import { catmullRomCurve, scalePoints } from '@bloctop/shared/topo-utils'
+import { getGradeColor } from '@bloctop/shared/tokens'
+import { useToast } from '@bloctop/ui/components/toast'
+import { useFaceImageCache } from '@bloctop/ui/face-image/use-face-image'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
 import { matchRouteByQuery } from '@/hooks/use-route-search'
 import { useCragRoutes } from '@/hooks/use-crag-routes'
@@ -35,9 +34,9 @@ import { RouteCard } from '@/components/editor/route-card'
 import { AreaSelect } from '@/components/editor/area-select'
 import { MultiTopoLineOverlay } from '@/components/multi-topo-line-overlay'
 import type { MultiTopoRoute } from '@/components/multi-topo-line-overlay'
-import { GRADE_OPTIONS } from '@/lib/editor-utils'
-import { computeViewBox } from '@/lib/topo-constants'
-import { deriveAreas, getPersistedAreas } from '@/lib/editor-areas'
+import { GRADE_OPTIONS } from '@bloctop/shared/editor-utils'
+import { computeViewBox } from '@bloctop/shared/topo-constants'
+import { deriveAreas, getPersistedAreas } from '@bloctop/shared/editor-areas'
 
 const FullscreenTopoEditor = dynamic(
   () => import('@/components/editor/fullscreen-topo-editor'),
@@ -865,7 +864,7 @@ export default function RouteAnnotationPage() {
             ) : areaFaceGroups.length === 0 ? (
               <div className="text-center py-3" style={{ color: 'var(--theme-on-surface-variant)' }}>
                 <p className="text-sm">暂无岩面数据</p>
-                <Link href="/editor/faces" className="text-sm font-medium mt-1 inline-block" style={{ color: 'var(--theme-primary)' }}>
+                <Link href="/faces" className="text-sm font-medium mt-1 inline-block" style={{ color: 'var(--theme-primary)' }}>
                   去岩面管理页面创建 →
                 </Link>
               </div>
@@ -959,7 +958,7 @@ export default function RouteAnnotationPage() {
               <div className="m-4 rounded-xl flex flex-col items-center justify-center aspect-[4/3]" style={{ backgroundColor: 'var(--theme-surface)' }}>
                 <AlertCircle className="w-10 h-10 mb-3" style={{ color: 'var(--theme-warning)' }} />
                 <p className="font-medium mb-1" style={{ color: 'var(--theme-on-surface)' }}>暂无岩面照片</p>
-                <Link href="/editor/faces" className="text-sm font-medium mt-1" style={{ color: 'var(--theme-primary)' }}>
+                <Link href="/faces" className="text-sm font-medium mt-1" style={{ color: 'var(--theme-primary)' }}>
                   去岩面管理页面上传照片 →
                 </Link>
               </div>
@@ -1344,10 +1343,6 @@ export default function RouteAnnotationPage() {
           </div>
         </div>
       )}
-
-      <div className="lg:hidden">
-        <AppTabbar />
-      </div>
     </div>
   )
 }
