@@ -10,12 +10,19 @@
     "./db": "./src/db/index.ts",
     "./mongodb": "./src/mongodb.ts",
     "./logger": "./src/logger.ts",
+    "./permissions": "./src/permissions.ts",
+    "./require-auth": "./src/require-auth.ts",
+    "./api-error-codes": "./src/api-error-codes.ts",
+    "./rate-limit": "./src/rate-limit.ts",
+    "./request-utils": "./src/request-utils.ts",
     "./*": "./src/*/index.ts"
   },
   "dependencies": {
+    "better-auth": "^1.4.18",
     "mongodb": "^7.0.0"
   },
   "peerDependencies": {
+    "next": ">=15",
     "react": "^19"
   },
   "scripts": {
