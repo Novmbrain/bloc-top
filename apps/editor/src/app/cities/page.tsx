@@ -16,7 +16,7 @@ import { Input } from '@bloctop/ui/components/input'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { useToast } from '@bloctop/ui/components/toast'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
-import { gcj02ToWgs84, truncateCoordinates } from '@/lib/coordinate-utils'
+import { parseCoordinateInput, truncateCoordinates, formatCoordinateDisplay } from '@bloctop/shared/coordinate-utils'
 import { useSession } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import type { CityConfig, PrefectureConfig } from '@bloctop/shared/types'
@@ -384,9 +384,7 @@ function CityFormModal({
   const [name, setName] = useState(city?.name ?? '')
   const [shortName, setShortName] = useState(city?.shortName ?? '')
   const [adcode, setAdcode] = useState(city?.adcode ?? '')
-  const [lng, setLng] = useState(city?.coordinates.lng.toString() ?? '')
-  const [lat, setLat] = useState(city?.coordinates.lat.toString() ?? '')
-  const [coordSystem, setCoordSystem] = useState<'wgs84' | 'gcj02'>('wgs84')
+  const [coordinateInput, setCoordinateInput] = useState(city ? formatCoordinateDisplay(city.coordinates) : '')
   const [available, setAvailable] = useState(city?.available ?? false)
   const [prefectureId, setPrefectureId] = useState(city?.prefectureId ?? '')
   const [sortOrder, setSortOrder] = useState(city?.sortOrder?.toString() ?? '0')
@@ -400,19 +398,20 @@ function CityFormModal({
 
     setSaving(true)
     try {
-      // 坐标转换 + 精度截断 (DB 统一存 WGS-84)
-      let coords = { lng: parseFloat(lng) || 0, lat: parseFloat(lat) || 0 }
-      if (coordSystem === 'gcj02') {
-        coords = gcj02ToWgs84(coords)
+      const coords = parseCoordinateInput(coordinateInput)
+      if (!coords) {
+        showToast('坐标格式无效，请从高德拾取器粘贴', 'error')
+        setSaving(false)
+        return
       }
-      coords = truncateCoordinates(coords)
+      const truncated = truncateCoordinates(coords)
 
       const payload = {
         id,
         name,
         shortName,
         adcode,
-        coordinates: coords,
+        coordinates: truncated,
         available,
         prefectureId: prefectureId || undefined,
         sortOrder: parseInt(sortOrder) || 0,
@@ -478,57 +477,16 @@ function CityFormModal({
           <FormField label="高德 adcode *">
             <Input value={adcode} onChange={setAdcode} placeholder="350123" />
           </FormField>
-          {/* 坐标系选择 */}
-          <FormField label="坐标系">
-            <div className="flex gap-2">
-              {(['wgs84', 'gcj02'] as const).map((sys) => (
-                <button
-                  key={sys}
-                  type="button"
-                  onClick={() => setCoordSystem(sys)}
-                  className="flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-all"
-                  style={{
-                    backgroundColor: coordSystem === sys
-                      ? 'color-mix(in srgb, var(--theme-primary) 20%, transparent)'
-                      : 'var(--theme-surface)',
-                    color: coordSystem === sys ? 'var(--theme-primary)' : 'var(--theme-on-surface-variant)',
-                    border: coordSystem === sys ? '1px solid var(--theme-primary)' : '1px solid transparent',
-                  }}
-                >
-                  {sys === 'wgs84' ? 'WGS-84 (GPS)' : 'GCJ-02 (高德)'}
-                </button>
-              ))}
-            </div>
+          <FormField label="坐标 (GCJ-02)">
+            <Input
+              value={coordinateInput}
+              onChange={setCoordinateInput}
+              placeholder="119.306239,26.063477"
+            />
             <p className="text-[11px] mt-1" style={{ color: 'var(--theme-on-surface-variant)' }}>
-              {coordSystem === 'gcj02' ? '从高德坐标拾取器复制的坐标，保存时自动转为 WGS-84' : 'GPS 设备或国际地图的原始坐标'}
+              从<a href="https://lbs.amap.com/tools/picker" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: 'var(--theme-primary)' }}>高德坐标拾取器</a>复制坐标粘贴
             </p>
           </FormField>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="经度">
-              {/* eslint-disable-next-line no-restricted-syntax */}
-              <input
-                type="number"
-                value={lng}
-                onChange={(e) => setLng(e.target.value)}
-                placeholder="119.549000"
-                step="0.000001"
-                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
-              />
-            </FormField>
-            <FormField label="纬度">
-              {/* eslint-disable-next-line no-restricted-syntax */}
-              <input
-                type="number"
-                value={lat}
-                onChange={(e) => setLat(e.target.value)}
-                placeholder="26.489000"
-                step="0.000001"
-                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}
-              />
-            </FormField>
-          </div>
           <FormField label="所属地级市">
             <select
               value={prefectureId}
