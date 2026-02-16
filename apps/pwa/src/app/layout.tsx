@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import { getLocale } from 'next-intl/server'
-import './globals.css'
+import '@bloctop/ui/styles/globals.css'
 
 // Plus Jakarta Sans - 现代几何感字体，比 Geist 更有特色
 const jakartaSans = Plus_Jakarta_Sans({
