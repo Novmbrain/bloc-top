@@ -19,7 +19,7 @@ const HOME_PATH_REGEX = /^\/(zh|en|fr)?\/?$/
  *    Edge Runtime 无法连接 MongoDB，故存储 adcode:XXX 格式，
  *    由 page.tsx 在服务端解析为具体 cityId
  */
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   // 先运行 next-intl 中间件，获取 response
   const response = intlMiddleware(request)
 
