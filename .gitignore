@@ -12,8 +12,8 @@ node_modules
 
 # testing
 coverage
-playwright/.cache
-playwright-report
+**/playwright/.cache
+**/playwright-report
 test-results
 
 # next.js
