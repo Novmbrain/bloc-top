@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Mountain, MapPin, Loader2, ChevronDown } from 'lucide-react'
-import type { Crag } from '@/types'
+import type { Crag } from '@bloctop/shared/types'
 import { ProgressRing } from './progress-ring'
 
 /**

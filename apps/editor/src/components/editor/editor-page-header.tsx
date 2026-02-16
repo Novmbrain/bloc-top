@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react'
 import { ArrowLeft } from 'lucide-react'
-import { Link } from '@/i18n/navigation'
+import Link from 'next/link'
 
 interface EditorPageHeaderProps {
   /** 页面标题 (e.g., "岩面管理", "线路标注", "Beta 管理") */

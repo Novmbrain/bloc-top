@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Input } from '@/components/ui/input'
+import { Input } from '@bloctop/ui/components/input'
 
 interface AreaSelectProps {
   areas: string[]

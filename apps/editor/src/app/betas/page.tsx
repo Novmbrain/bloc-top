@@ -8,17 +8,16 @@ import {
   Loader2,
   Plus,
 } from 'lucide-react'
-import { AppTabbar } from '@/components/app-tabbar'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
-import { Input } from '@/components/ui/input'
-import type { Route, BetaLink } from '@/types'
-import { getGradeColor } from '@/lib/tokens'
-import { useToast } from '@/components/ui/toast'
+import { Input } from '@bloctop/ui/components/input'
+import type { Route, BetaLink } from '@bloctop/shared/types'
+import { getGradeColor } from '@bloctop/shared/tokens'
+import { useToast } from '@bloctop/ui/components/toast'
 import { matchRouteByQuery } from '@/hooks/use-route-search'
 import { useCragRoutes } from '@/hooks/use-crag-routes'
 import { CragSelector } from '@/components/editor/crag-selector'
 import { RouteCard } from '@/components/editor/route-card'
-import { deriveAreas } from '@/lib/editor-areas'
+import { deriveAreas } from '@bloctop/shared/editor-areas'
 import { BetaSubmitDrawer } from '@/components/beta-submit-drawer'
 import { BetaCard, type BetaEditForm } from '@/components/editor/beta-card'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
@@ -452,10 +451,6 @@ export default function BetaEditorPage() {
           onSuccess={handleBetaSubmitSuccess}
         />
       )}
-
-      <div className="lg:hidden">
-        <AppTabbar />
-      </div>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { CheckCircle2, Circle, ChevronRight } from 'lucide-react'
-import type { Route } from '@/types'
-import { getGradeColor } from '@/lib/tokens'
+import type { Route } from '@bloctop/shared/types'
+import { getGradeColor } from '@bloctop/shared/tokens'
 
 /**
  * 线路卡片组件 - 用于线路列表

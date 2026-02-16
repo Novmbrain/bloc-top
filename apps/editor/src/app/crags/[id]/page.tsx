@@ -12,16 +12,15 @@ import {
   X,
   Navigation,
 } from 'lucide-react'
-import { useRouter } from '@/i18n/navigation'
+import { useRouter } from 'next/navigation'
 import { useSession } from '@/lib/auth-client'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { CragPermissionsPanel } from '@/components/editor/crag-permissions-panel'
-import { AppTabbar } from '@/components/app-tabbar'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { findCityName } from '@/lib/city-utils'
-import type { Crag, CityConfig } from '@/types'
+import { Input } from '@bloctop/ui/components/input'
+import { Textarea } from '@bloctop/ui/components/textarea'
+import { findCityName } from '@bloctop/shared/city-utils'
+import type { Crag, CityConfig } from '@bloctop/shared/types'
 
 // ==================== Types ====================
 
@@ -87,13 +86,13 @@ export default function CragDetailPage({
         })
         const data = await res.json()
         if (!data.success || !data.crag) {
-          router.push('/editor/crags')
+          router.push('/crags')
           return
         }
         setCrag(data.crag)
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return
-        router.push('/editor/crags')
+        router.push('/crags')
       } finally {
         if (!controller.signal.aborted) setIsLoading(false)
       }
@@ -264,7 +263,7 @@ export default function CragDetailPage({
           />
         }
         isDetailMode={true}
-        onBackToList={() => router.push('/editor/crags')}
+        onBackToList={() => router.push('/crags')}
         listLabel="岩场列表"
       />
 
@@ -608,9 +607,6 @@ export default function CragDetailPage({
       </div>
 
       {/* Mobile Tabbar */}
-      <div className="lg:hidden">
-        <AppTabbar />
-      </div>
     </div>
   )
 }
