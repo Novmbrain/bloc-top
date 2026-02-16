@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { deriveAreas, getPersistedAreas } from './editor-areas'
-import type { Route, Crag } from '@/types'
+import type { Route, Crag } from './types'
 
 function makeRoute(overrides: Partial<Route> & { cragId: string; area: string }): Route {
   return {

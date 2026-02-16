@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getSiblingRoutes } from './route-utils'
-import type { Route } from '@/types'
+import type { Route } from './types'
 
 function makeRoute(overrides: Partial<Route> & { id: number; name: string; grade: string; cragId: string; area: string }): Route {
   return { ...overrides } as Route

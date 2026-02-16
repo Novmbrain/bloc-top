@@ -18,7 +18,7 @@ import {
   parseCitySelection,
   serializeCitySelection,
 } from './city-utils'
-import type { CityConfig, PrefectureConfig } from '@/types'
+import type { CityConfig, PrefectureConfig } from './types'
 
 // ==================== 测试数据 ====================
 
