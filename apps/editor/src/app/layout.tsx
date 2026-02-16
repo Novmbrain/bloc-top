@@ -18,14 +18,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const auth = await getAuth()
   const session = await auth.api.getSession({ headers: await headers() })
 
+  const pwaUrl = process.env.NEXT_PUBLIC_PWA_URL || 'https://bouldering.top'
+  const editorUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://editor.bouldering.top'
+
   if (!session?.user?.id) {
-    redirect(`${process.env.NEXT_PUBLIC_PWA_URL || 'https://bouldering.top'}/zh/login`)
+    redirect(`${pwaUrl}/zh/login?callbackURL=${encodeURIComponent(editorUrl)}`)
   }
 
   const role = (session.user as { role?: string }).role || 'user'
   const hasAccess = await canAccessEditor(session.user.id, role as 'admin' | 'user')
   if (!hasAccess) {
-    redirect(`${process.env.NEXT_PUBLIC_PWA_URL || 'https://bouldering.top'}/zh/login`)
+    // 无权限 → 回 PWA 首页（不回 editor，避免循环）
+    redirect(pwaUrl)
   }
 
   return (
