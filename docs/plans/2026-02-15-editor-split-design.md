@@ -696,16 +696,30 @@ Vercel 支持 "Ignored Build Step" 优化，只在相关文件变更时构建：
 
 **最终统计**: `packages/shared` (43 files), `packages/ui` (20 files), `apps/editor` (46 files), `apps/pwa` (210 files)
 
-### Phase 3: PWA 清理
-1. 从 PWA 中删除 editor 相关页面/组件（待 Phase 2 合并后执行）
-2. 更新 `editor/layout.tsx` 保护逻辑（改为重定向到 editor 域名）
-3. 清理 PWA re-export bridge，改为直接从 `@bloctop/shared` 导入
+### Phase 3: PWA 清理 — ✅ 已完成
+
+> Branch: `feat/phase2-editor-app` (2026-02-16，与 Phase 2 同分支)
+
+1. ✅ 删除空壳 editor layout + 空目录 (`abcb00a`)
+2. ✅ 删除零消费者 bridge 文件和死代码 (`12a260f`)
+   - 删除: `editor-utils.ts`, `editor-areas.ts`, `use-break-app-shell-limit.ts`, `ui/badge.tsx`
+   - 保留: `ui/button.tsx` (4 消费者), `ui/composition-input.tsx` (有测试文件)
+3. ✅ 删除 editor-only API 路由 `search-users` (`40ea24a`)
+   - 保留: `/api/editor/crags` — Profile 页面仍需判断 editor access
+4. ✅ Profile 编辑器入口改为外部链接 (`4f9a7dc`)
+   - `<Link href="/editor">` → `<a href={NEXT_PUBLIC_EDITOR_URL}>` + `target="_blank"`
+   - `ChevronRight` → `ExternalLink` 图标
+   - 翻译更新: "前往 Topo 编辑器" / "Go to Topo Editor" / "Aller à l'éditeur Topo"
+   - `NEXT_PUBLIC_EDITOR_URL` 添加到 `turbo.json` globalEnv
+
+**延迟项**: 高消费者 re-export bridge 迁移（types 50 引用、db 28 引用等）— 功能正常，后续独立 PR。
+
+**验证结果**: 全量构建成功，874 测试通过 (266 shared + 608 PWA)。
 
 ### Phase 4: 部署 & 验证
-1. Vercel 创建两个 Project
-2. 配置域名和环境变量
+1. Vercel 创建 Editor Project（`apps/editor`）
+2. 配置域名 `editor.bouldering.top` 和环境变量
 3. 端到端测试：Editor 编辑 → Webhook → PWA 更新
-4. Profile 页面添加"前往编辑器"链接
 
 ## 架构审查发现
 
