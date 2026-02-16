@@ -3,7 +3,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Image as ImageIcon } from 'lucide-react'
-import { FilterChip, FilterChipGroup } from '@/components/filter-chip'
+import { FilterChip, FilterChipGroup } from '../components/filter-chip'
 import { useFaceImageCache } from './use-face-image'
 
 interface FaceGroup {
