@@ -8,8 +8,10 @@ export default function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 检查 session cookie（better-auth 默认 cookie 名）
-  const sessionToken = request.cookies.get('better-auth.session_token')
+  // 检查 session cookie
+  // HTTPS 环境下 crossSubDomainCookies 会加 __Secure- 前缀
+  const sessionToken = request.cookies.get('__Secure-better-auth.session_token')
+    || request.cookies.get('better-auth.session_token')
   if (!sessionToken) {
     // 未登录 → 重定向到 PWA 登录页
     const pwaUrl = process.env.NEXT_PUBLIC_PWA_URL || 'https://bouldering.top'
