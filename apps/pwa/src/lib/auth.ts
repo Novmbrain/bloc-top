@@ -3,7 +3,7 @@ import { mongodbAdapter } from 'better-auth/adapters/mongodb'
 import { magicLink, admin } from 'better-auth/plugins'
 import { passkey } from '@better-auth/passkey'
 import { Resend } from 'resend'
-import { getDatabase, clientPromise } from '@/lib/mongodb'
+import { getDatabase, getClientPromise } from '@/lib/mongodb'
 import { magicLinkEmailTemplate } from '@/lib/email-templates'
 
 /**
@@ -20,7 +20,7 @@ export function getAuth(): Promise<ReturnType<typeof betterAuth>> {
     _promise = (async () => {
       console.log('[Auth] Initializing better-auth...')
       const resend = new Resend(process.env.RESEND_API_KEY)
-      const client = await clientPromise
+      const client = await getClientPromise()
       const db = await getDatabase()
       console.log('[Auth] MongoDB connected, creating auth instance')
 
