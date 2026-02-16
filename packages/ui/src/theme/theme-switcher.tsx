@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { Sun, Moon, Monitor } from 'lucide-react'
 import { useEffect, useState, useMemo } from 'react'
 import { SegmentedControl, type SegmentOption } from '../components/segmented-control'
-import type { ThemeMode } from '@/lib/themes'
+type ThemeMode = 'light' | 'dark' | 'system'
 
 /**
  * 主题切换器组件
