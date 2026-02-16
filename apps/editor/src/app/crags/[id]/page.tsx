@@ -20,6 +20,7 @@ import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
 import { Input } from '@bloctop/ui/components/input'
 import { Textarea } from '@bloctop/ui/components/textarea'
 import { findCityName } from '@bloctop/shared/city-utils'
+import { parseCoordinateInput, formatCoordinateDisplay } from '@bloctop/shared/coordinate-utils'
 import type { Crag, CityConfig } from '@bloctop/shared/types'
 
 // ==================== Types ====================
@@ -30,8 +31,7 @@ interface EditForm {
   location: string
   description: string
   approach: string
-  lng: string
-  lat: string
+  coordinateInput: string
 }
 
 function cragToForm(crag: Crag): EditForm {
@@ -41,8 +41,7 @@ function cragToForm(crag: Crag): EditForm {
     location: crag.location,
     description: crag.description,
     approach: crag.approach,
-    lng: crag.coordinates?.lng?.toString() ?? '',
-    lat: crag.coordinates?.lat?.toString() ?? '',
+    coordinateInput: crag.coordinates ? formatCoordinateDisplay(crag.coordinates) : '',
   }
 }
 
@@ -178,17 +177,17 @@ export default function CragDetailPage({
       if (editForm.approach.trim() !== crag.approach) updates.approach = editForm.approach.trim()
 
       // Handle coordinates
-      const lng = editForm.lng.trim() ? parseFloat(editForm.lng) : null
-      const lat = editForm.lat.trim() ? parseFloat(editForm.lat) : null
-      const origLng = crag.coordinates?.lng ?? null
-      const origLat = crag.coordinates?.lat ?? null
+      const newCoords = editForm.coordinateInput.trim()
+        ? parseCoordinateInput(editForm.coordinateInput)
+        : null
+      const origCoords = crag.coordinates ?? null
 
-      if (lng !== origLng || lat !== origLat) {
-        if (lng !== null && lat !== null && !isNaN(lng) && !isNaN(lat)) {
-          updates.coordinates = { lng, lat }
-        } else if (lng === null && lat === null) {
-          updates.coordinates = null
+      if (newCoords !== null) {
+        if (!origCoords || newCoords.lng !== origCoords.lng || newCoords.lat !== origCoords.lat) {
+          updates.coordinates = newCoords
         }
+      } else if (editForm.coordinateInput.trim() === '' && origCoords !== null) {
+        updates.coordinates = null
       }
 
       if (Object.keys(updates).length === 0) {
@@ -398,40 +397,25 @@ export default function CragDetailPage({
                   style={{ color: 'var(--theme-on-surface-variant)' }}
                 >
                   <Navigation className="w-3 h-3" />
-                  坐标
+                  坐标 (GCJ-02)
                 </label>
-                <div className="flex gap-3">
-                  {/* eslint-disable-next-line no-restricted-syntax -- type="number", no IME issue */}
-                  <input
-                    type="number"
-                    value={editForm.lng}
-                    onChange={(e) => updateField('lng', e.target.value)}
-                    placeholder="经度 (lng)"
-                    step="any"
-                    className="flex-1 px-3 py-2 rounded-lg text-sm border"
-                    style={{
-                      backgroundColor: 'var(--theme-surface)',
-                      color: 'var(--theme-on-surface)',
-                      borderColor: 'var(--theme-outline-variant)',
-                      borderRadius: 'var(--theme-radius-md)',
-                    }}
-                  />
-                  {/* eslint-disable-next-line no-restricted-syntax -- type="number", no IME issue */}
-                  <input
-                    type="number"
-                    value={editForm.lat}
-                    onChange={(e) => updateField('lat', e.target.value)}
-                    placeholder="纬度 (lat)"
-                    step="any"
-                    className="flex-1 px-3 py-2 rounded-lg text-sm border"
-                    style={{
-                      backgroundColor: 'var(--theme-surface)',
-                      color: 'var(--theme-on-surface)',
-                      borderColor: 'var(--theme-outline-variant)',
-                      borderRadius: 'var(--theme-radius-md)',
-                    }}
-                  />
-                </div>
+                <Input
+                  value={editForm.coordinateInput}
+                  onChange={(value) => updateField('coordinateInput', value)}
+                  placeholder="119.306239,26.063477"
+                />
+                <p
+                  className="text-[11px]"
+                  style={{ color: 'var(--theme-on-surface-variant)' }}
+                >
+                  从<a
+                    href="https://lbs.amap.com/tools/picker"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                    style={{ color: 'var(--theme-primary)' }}
+                  >高德坐标拾取器</a>复制坐标粘贴，留空则清除坐标
+                </p>
               </div>
 
               {/* Error message */}
