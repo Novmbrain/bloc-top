@@ -1,0 +1,532 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans), "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+
+  /* 主题过渡动画 */
+  --theme-transition: color 0.2s ease, background-color 0.2s ease,
+                      border-color 0.2s ease, box-shadow 0.2s ease;
+
+  /* Design Tokens - App Shell (桌面端容器) */
+  --app-shell-width: 480px;
+  --app-shell-padding: 16px; /* 内边距，用于计算内容区宽度 */
+
+  /* Design Tokens - Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.5rem;
+  --space-page: 1rem;
+
+  /* Design Tokens - Radius */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.75rem;
+
+  /* Design Tokens - Elevation */
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --elevation-2: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --elevation-3: 0 3px 8px rgba(0, 0, 0, 0.12);
+  --elevation-4: 0 4px 12px rgba(0, 0, 0, 0.14);
+  --elevation-5: 0 6px 16px rgba(0, 0, 0, 0.16);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* ============================
+   主题系统 - Theme System
+   ============================
+
+   使用 next-themes 的 class 模式
+   - 日间模式: :root (默认)
+   - 暗夜模式: .dark 类
+   - 自动模式: 由 next-themes 根据系统偏好自动切换
+*/
+
+/* 日间主题 (Light) - Dracula Light */
+:root {
+  /* 主色 - Dracula Purple 日间变体 */
+  --theme-primary: #7C3AED;
+  --theme-on-primary: #ffffff;
+  --theme-primary-container: #EDE9FE;
+  --theme-on-primary-container: #5B21B6;
+  /* 表面色 - 带微妙紫色调的浅色 */
+  --theme-surface: #FAFAFA;
+  --theme-surface-variant: #F3F0F7;
+  /* 文字色 */
+  --theme-on-surface: #1E1E2E;
+  --theme-on-surface-variant: #6B7280;
+  /* 边框色 */
+  --theme-outline: #E5E5E5;
+  --theme-outline-variant: #F0F0F0;
+  /* 状态色 */
+  --theme-warning: #D97706;
+  --theme-error: #DC2626;
+  --theme-success: #059669;
+  /* 圆角 */
+  --theme-radius-sm: 4px;
+  --theme-radius-md: 6px;
+  --theme-radius-lg: 8px;
+  --theme-radius-xl: 12px;
+  --theme-radius-full: 9999px;
+  /* 阴影 */
+  --theme-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --theme-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --theme-shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
+  /* 桌面端背景 - 移动端与 surface 相同，桌面端显示为更深的背景 */
+  --theme-desktop-bg: #FAFAFA;
+}
+
+/* 桌面端背景：仅在 md 以上断点生效 */
+@media (min-width: 768px) {
+  :root {
+    --theme-desktop-bg: #E8E4EF;
+  }
+}
+
+/* 暗夜主题 (Dark) - Dracula */
+.dark {
+  /* 主色 - Dracula Purple (#BD93F9) */
+  --theme-primary: #BD93F9;
+  --theme-on-primary: #282A36;
+  --theme-primary-container: #44475A;
+  --theme-on-primary-container: #BD93F9;
+  /* 表面色 - Dracula Background (#282A36) */
+  --theme-surface: #282A36;
+  --theme-surface-variant: #44475A;
+  /* 文字色 - Dracula Foreground (#F8F8F2) */
+  --theme-on-surface: #F8F8F2;
+  --theme-on-surface-variant: #6272A4;
+  /* 边框色 */
+  --theme-outline: #44475A;
+  --theme-outline-variant: #383A46;
+  /* 状态色 - Dracula 官方色彩 */
+  --theme-warning: #FFB86C;
+  --theme-error: #FF5555;
+  --theme-success: #50FA7B;
+  /* 圆角 */
+  --theme-radius-sm: 4px;
+  --theme-radius-md: 6px;
+  --theme-radius-lg: 8px;
+  --theme-radius-xl: 12px;
+  --theme-radius-full: 9999px;
+  /* 阴影 - 暗色模式下更深的阴影 */
+  --theme-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --theme-shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --theme-shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
+  /* 桌面端背景 - 移动端与 surface 相同 */
+  --theme-desktop-bg: #282A36;
+}
+
+/* 暗色模式桌面端背景 */
+@media (min-width: 768px) {
+  .dark {
+    --theme-desktop-bg: #1E1F29;
+  }
+}
+
+/* ============================
+   毛玻璃设计系统 - Glass Design System
+   ============================ */
+
+:root {
+  /* Blur Radius — 桌面端 */
+  --glass-blur-xs: 4px;
+  --glass-blur-sm: 8px;
+  --glass-blur-md: 12px;
+  --glass-blur-lg: 20px;
+
+  /* Glass 表面 — 使用 color-mix 保持主题兼容 */
+  --glass-surface: color-mix(in srgb, var(--theme-surface) 72%, transparent);
+  --glass-surface-heavy: color-mix(in srgb, var(--theme-surface) 85%, transparent);
+  --glass-surface-light: color-mix(in srgb, var(--theme-surface) 55%, transparent);
+
+  /* Glass 边框 */
+  --glass-border: 1px solid color-mix(in srgb, var(--theme-outline) 25%, transparent);
+  --glass-border-strong: 1px solid color-mix(in srgb, var(--theme-outline) 40%, transparent);
+
+  /* Glass 阴影 */
+  --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --glass-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+/* 移动端性能优化：降低 blur 值 */
+@media (max-width: 767px) {
+  :root {
+    --glass-blur-xs: 3px;
+    --glass-blur-sm: 5px;
+    --glass-blur-md: 8px;
+    --glass-blur-lg: 12px;
+  }
+}
+
+/* 暗色模式 Glass 调整 */
+.dark {
+  --glass-surface: color-mix(in srgb, var(--theme-surface) 75%, transparent);
+  --glass-surface-heavy: color-mix(in srgb, var(--theme-surface) 88%, transparent);
+  --glass-surface-light: color-mix(in srgb, var(--theme-surface) 58%, transparent);
+
+  --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15);
+  --glass-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================
+   Glass 工具类
+   ============================ */
+
+/* 标准毛玻璃 — 用于卡片、内容区 */
+.glass {
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--glass-surface);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* 轻量毛玻璃 — 用于标签、芯片、次要 UI */
+.glass-light {
+  -webkit-backdrop-filter: blur(var(--glass-blur-xs));
+  backdrop-filter: blur(var(--glass-blur-xs));
+  background: var(--glass-surface-light);
+  border: var(--glass-border);
+}
+
+/* 重度毛玻璃 — 用于导航栏、抽屉、弹窗 */
+.glass-heavy {
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  backdrop-filter: blur(var(--glass-blur-lg));
+  background: var(--glass-surface-heavy);
+  border: var(--glass-border-strong);
+  box-shadow: var(--glass-shadow-lg);
+}
+
+/* 中度毛玻璃 — 用于浮动搜索栏等 */
+.glass-md {
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--glass-surface);
+  border: var(--glass-border-strong);
+  box-shadow: var(--glass-shadow);
+}
+
+/* @supports 回退 */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .glass-light,
+  .glass-heavy,
+  .glass-md {
+    background: var(--theme-surface);
+    border: 1px solid var(--theme-outline);
+    box-shadow: var(--theme-shadow-md);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-color: var(--theme-surface);
+    color: var(--theme-on-surface);
+    transition: var(--theme-transition);
+  }
+}
+
+/* 自定义动画 */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.35s cubic-bezier(0, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+/* 骨架屏 shimmer 效果 */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--glass-surface-light) 25%,
+    var(--glass-surface) 50%,
+    var(--glass-surface-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  -webkit-backdrop-filter: blur(var(--glass-blur-xs));
+  backdrop-filter: blur(var(--glass-blur-xs));
+}
+
+/* 渐入缩放动画 */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out forwards;
+}
+
+/* 隐藏滚动条但保留滚动功能 */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* 抽屉组件动画 */
+@keyframes drawer-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-drawer-in {
+  animation: drawer-slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}
+
+/* 微妙脉冲动画 - 用于状态指示 */
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* ==================== 桌面端适配工具类 ==================== */
+
+/**
+ * 桌面端居中容器
+ * 移动端：全宽
+ * 桌面端 (≥768px)：居中 + 固定宽度
+ */
+.desktop-center-full {
+  /* 桌面端：居中并限制为容器宽度 */
+  /* 使用 margin: auto 而非 transform，避免与组件动画的 transform 冲突 */
+  @media (min-width: 768px) {
+    left: 0 !important;
+    right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: var(--app-shell-width);
+    width: 100%;
+  }
+}
+
+/**
+ * 桌面端居中容器（带内边距）
+ * 用于需要保留左右边距的固定元素（如搜索框、提示框）
+ * 内容宽度 = 容器宽度 - 2 * padding
+ */
+/* ==================== 滚动触发动画 ==================== */
+
+/* 基础滚动显现 - 从下方淡入 */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.scroll-reveal[data-visible] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 从左侧滑入 */
+.scroll-reveal-left {
+  opacity: 0;
+  transform: translateX(-24px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.scroll-reveal-left[data-visible] {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* 从右侧滑入 */
+.scroll-reveal-right {
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.scroll-reveal-right[data-visible] {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.desktop-center-padded {
+  @media (min-width: 768px) {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    max-width: calc(var(--app-shell-width) - var(--app-shell-padding) * 2);
+    width: 100%;
+  }
+}

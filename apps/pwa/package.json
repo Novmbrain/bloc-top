@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@bloctop/shared": "workspace:*",
+    "@bloctop/ui": "workspace:*",
     "@amap/amap-jsapi-loader": "^1.0.1",
     "@aws-sdk/client-s3": "^3.975.0",
     "@better-auth/passkey": "^1.4.18",

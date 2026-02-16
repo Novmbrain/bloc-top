@@ -4,11 +4,33 @@
   "private": true,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles/globals.css": "./src/styles/globals.css",
+    "./components/*": "./src/components/*.tsx",
+    "./face-image": "./src/face-image/index.ts",
+    "./face-image/face-image-provider": "./src/face-image/face-image-provider.tsx",
+    "./face-image/face-thumbnail-strip": "./src/face-image/face-thumbnail-strip.tsx",
+    "./face-image/*": "./src/face-image/*.ts",
+    "./theme/*": "./src/theme/*.tsx",
+    "./*": "./src/*.ts"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@bloctop/shared": "workspace:*",
+    "@radix-ui/react-slot": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
+    "lucide-react": "^0.562.0",
+    "radix-ui": "^1.4.3",
+    "react-zoom-pan-pinch": "^3.7.0"
+  },
   "peerDependencies": {
     "react": "^19",
-    "react-dom": "^19"
+    "react-dom": "^19",
+    "next": "^16",
+    "next-themes": "^0.4",
+    "next-intl": "^4"
   }
 }

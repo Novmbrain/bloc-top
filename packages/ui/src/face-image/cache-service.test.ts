@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { FaceImageCacheService } from './cache-service'
-import type { Route } from '@/types'
+import type { Route } from '@bloctop/shared/types'
 
 describe('FaceImageCacheService', () => {
   let cache: FaceImageCacheService

@@ -1,4 +1,4 @@
-import type { Route } from '@/types'
+import type { Route } from '@bloctop/shared/types'
 
 /**
  * Face key: 岩面图片的唯一标识

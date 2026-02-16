@@ -1,4 +1,4 @@
-import { getTopoImageUrl, getFaceTopoUrl } from '@/lib/constants'
+import { getTopoImageUrl, getFaceTopoUrl } from '@bloctop/shared/constants'
 import type { FaceKey, ImageSource } from './types'
 
 /**
