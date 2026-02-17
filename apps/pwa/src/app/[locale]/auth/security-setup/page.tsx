@@ -120,10 +120,10 @@ export default function SecuritySetupPage() {
 
   return (
     <div
-      className="flex flex-col min-h-screen"
+      className="flex flex-col h-dvh overflow-hidden"
       style={{ backgroundColor: 'var(--theme-surface)' }}
     >
-      <main className="flex-1 px-4 pt-16 pb-8">
+      <main className="flex-1 overflow-y-auto px-4 pt-16 pb-8">
         <div className="max-w-sm mx-auto">
           {/* Success icon */}
           <div className="text-center mb-8">
