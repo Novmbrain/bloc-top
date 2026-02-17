@@ -43,23 +43,57 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
     return () => clearTimeout(timer)
   }, [])
 
-  // 折叠状态 — 由 IntersectionObserver 驱动
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  // 滚动关联折叠动画 — CSS 自定义属性驱动，避免每帧 React 重渲染
+  const [isSearchCollapsed, setIsSearchCollapsed] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
-  const sentinelRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const filterBarRef = useRef<HTMLDivElement>(null)
 
-  // 检测滚动 → 折叠/展开 filter bar
   useEffect(() => {
-    const sentinel = sentinelRef.current
-    const scrollRoot = mainRef.current
-    if (!sentinel || !scrollRoot) return
+    const main = mainRef.current
+    const container = containerRef.current
+    const filterBar = filterBarRef.current
+    if (!main || !container) return
 
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsCollapsed(!entry.isIntersecting),
-      { root: scrollRoot, threshold: 0 }
-    )
-    observer.observe(sentinel)
-    return () => observer.disconnect()
+    let raf: number
+    let prevCollapsed = false
+
+    const onScroll = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const fbh = filterBar?.offsetHeight || 150
+        const threshold = Math.max(fbh * 0.8, 60)
+        const progress = Math.min(1, main.scrollTop / threshold)
+        container.style.setProperty('--cp', String(progress))
+
+        // 搜索栏在进度 > 0.6 时折叠（带 CSS transition 平滑过渡）
+        const collapsed = progress > 0.6
+        if (collapsed !== prevCollapsed) {
+          prevCollapsed = collapsed
+          setIsSearchCollapsed(collapsed)
+        }
+      })
+    }
+
+    // 初始化筛选栏高度
+    if (filterBar) {
+      container.style.setProperty('--fbh', `${filterBar.offsetHeight}px`)
+    }
+
+    // 跟踪筛选栏高度变化（岩场选择导致内容变化）
+    const ro = filterBar
+      ? new ResizeObserver((entries) => {
+          container.style.setProperty('--fbh', `${entries[0].contentRect.height}px`)
+        })
+      : null
+    if (filterBar) ro?.observe(filterBar)
+
+    main.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      main.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(raf)
+      ro?.disconnect()
+    }
   }, [])
 
   // 从 URL 读取筛选状态
@@ -159,10 +193,19 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
     [selectedCrag, searchParams, router, startTransition]
   )
 
-  // 处理岩面筛选
+  // 处理岩面筛选 — 选中后自动折叠筛选栏展示结果
   const handleFaceSelect = useCallback(
     (faceId: string | null) => {
       updateSearchParams(FILTER_PARAMS.FACE, faceId)
+      if (faceId && mainRef.current) {
+        const fbh = filterBarRef.current?.offsetHeight || 150
+        // 仅在筛选栏展开时触发自动折叠
+        if (mainRef.current.scrollTop < fbh * 0.3) {
+          requestAnimationFrame(() => {
+            mainRef.current?.scrollTo({ top: fbh, behavior: 'smooth' })
+          })
+        }
+      }
     },
     [updateSearchParams]
   )
@@ -302,25 +345,29 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   return (
     <>
       <div
+        ref={containerRef}
         className="flex flex-col h-dvh overflow-hidden"
         style={{
           backgroundColor: 'var(--theme-surface)',
           transition: 'var(--theme-transition)',
-        }}
+          '--cp': '0',
+          '--fbh': '150px',
+        } as React.CSSProperties}
       >
-        {/* 折叠态摘要 */}
+        {/* 折叠态摘要 — 高度从 0 渐增，跟随滚动进度 */}
         <div
-          className="flex-shrink-0 overflow-hidden"
+          className="flex-shrink-0 overflow-hidden relative z-10"
           style={{
-            maxHeight: isCollapsed ? 60 : 0,
-            opacity: isCollapsed ? 1 : 0,
-            transition: 'max-height 300ms ease, opacity 200ms ease',
-          }}
+            height: 'calc(var(--cp) * (2.75rem + env(safe-area-inset-top, 0px)))',
+            opacity: 'var(--cp)',
+            pointerEvents: isSearchCollapsed ? 'auto' : 'none',
+          } as React.CSSProperties}
         >
           <CollapsedFilterSummary
             selectedCragName={selectedCragName}
             selectedFaceName={selectedFace}
             gradeRangeLabel={gradeRangeLabel}
+            searchQuery={searchQuery || null}
             sortDirection={sortDirection}
             onToggleSort={toggleSortDirection}
             filteredCount={filteredRoutes.length}
@@ -328,14 +375,15 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
           />
         </div>
 
-        {/* 展开态 filter bar */}
+        {/* 展开态 filter bar — 负 margin 向上滑出，释放空间给内容区 */}
         <div
-          className="overflow-hidden"
+          ref={filterBarRef}
+          className="flex-shrink-0"
           style={{
-            maxHeight: isCollapsed ? 0 : 500,
-            opacity: isCollapsed ? 0 : 1,
-            transition: 'max-height 300ms ease, opacity 200ms ease',
-          }}
+            marginTop: 'calc(var(--cp) * var(--fbh) * -1)',
+            opacity: 'calc(1 - var(--cp))',
+            pointerEvents: isSearchCollapsed ? 'none' : 'auto',
+          } as React.CSSProperties}
         >
           <RouteFilterBar
             crags={cityFilteredCrags}
@@ -382,8 +430,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
               pointerEvents: isPending ? 'none' : undefined,
             }}
           >
-            {/* Sentinel — IO 检测滚动状态 */}
-            <div ref={sentinelRef} className="h-px -mb-px" aria-hidden />
+            {/* 滚动进度直接驱动动画，无需 sentinel */}
             <div className="space-y-2">
               {filteredRoutes.map((route, index) => (
                 <button
@@ -466,7 +513,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         value={searchQuery}
         onChange={handleSearchChange}
         placeholder={tSearch('placeholder')}
-        isCollapsed={isCollapsed}
+        isCollapsed={isSearchCollapsed}
         onExpandClick={handleExpand}
       />
 

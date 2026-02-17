@@ -1,12 +1,13 @@
 'use client'
 
-import { ArrowUpDown } from 'lucide-react'
+import { ArrowUpDown, Search } from 'lucide-react'
 import type { SortDirection } from '@/lib/filter-constants'
 
 interface CollapsedFilterSummaryProps {
   selectedCragName: string | null
   selectedFaceName: string | null
   gradeRangeLabel: string | null
+  searchQuery: string | null
   sortDirection: SortDirection
   onToggleSort: () => void
   filteredCount: number
@@ -24,12 +25,13 @@ export function CollapsedFilterSummary({
   selectedCragName,
   selectedFaceName,
   gradeRangeLabel,
+  searchQuery,
   sortDirection,
   onToggleSort,
   filteredCount,
   onExpand,
 }: CollapsedFilterSummaryProps) {
-  const hasAnyFilter = selectedCragName || selectedFaceName || gradeRangeLabel
+  const hasAnyFilter = selectedCragName || selectedFaceName || gradeRangeLabel || searchQuery
 
   return (
     <div
@@ -60,7 +62,7 @@ export function CollapsedFilterSummary({
             )}
             {selectedFaceName && (
               <span
-                className="px-2 py-0.5 text-xs font-medium whitespace-nowrap flex-shrink-0 truncate max-w-20"
+                className="px-2 py-0.5 text-xs font-medium whitespace-nowrap flex-shrink-0 truncate max-w-24"
                 style={{
                   backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))',
                   color: 'var(--theme-primary)',
@@ -80,6 +82,19 @@ export function CollapsedFilterSummary({
                 }}
               >
                 {gradeRangeLabel}
+              </span>
+            )}
+            {searchQuery && (
+              <span
+                className="flex items-center gap-0.5 px-2 py-0.5 text-xs font-medium whitespace-nowrap flex-shrink-0 truncate max-w-24"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))',
+                  color: 'var(--theme-primary)',
+                  borderRadius: 'var(--theme-radius-full)',
+                }}
+              >
+                <Search className="w-2.5 h-2.5 flex-shrink-0" />
+                {searchQuery}
               </span>
             )}
           </>
