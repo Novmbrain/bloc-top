@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useCallback, useState, useTransition, useEffect } from 'react'
+import { useMemo, useCallback, useState, useTransition, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ChevronRight } from 'lucide-react'
@@ -11,6 +11,7 @@ import { getSiblingRoutes } from '@/lib/route-utils'
 import { matchRouteByQuery } from '@/hooks/use-route-search'
 import { GradeRangeSelectorVertical } from '@/components/grade-range-selector-vertical'
 import { RouteFilterBar } from '@/components/route-filter-bar'
+import { CollapsedFilterSummary } from '@/components/collapsed-filter-summary'
 import { FloatingSearchInput } from '@/components/floating-search-input'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
 import { AppTabbar } from '@/components/app-tabbar'
@@ -40,6 +41,25 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   useEffect(() => {
     const timer = setTimeout(() => setHasInitialRender(true), 500)
     return () => clearTimeout(timer)
+  }, [])
+
+  // 折叠状态 — 由 IntersectionObserver 驱动
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const mainRef = useRef<HTMLElement>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+
+  // 检测滚动 → 折叠/展开 filter bar
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    const scrollRoot = mainRef.current
+    if (!sentinel || !scrollRoot) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsCollapsed(!entry.isIntersecting),
+      { root: scrollRoot, threshold: 0 }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
   }, [])
 
   // 从 URL 读取筛选状态
@@ -164,6 +184,11 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   // 是否有任何 filter 激活（用于 0 结果提示）
   const hasActiveFilters = selectedCrag !== '' || selectedGrades.length > 0 || searchQuery !== '' || selectedFace !== null
 
+  // 展开 filter bar — 滚回顶部，IO 自动检测 sentinel 恢复展开
+  const handleExpand = useCallback(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
   // 清除所有筛选
   const handleClearAllFilters = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString())
@@ -228,6 +253,20 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
     return tags
   }, [selectedFace, selectedGrades, searchQuery, t, updateSearchParams])
 
+  // 折叠态摘要信息
+  const selectedCragName = useMemo(() => {
+    if (!selectedCrag) return null
+    return cityFilteredCrags.find(c => c.id === selectedCrag)?.name || null
+  }, [selectedCrag, cityFilteredCrags])
+
+  const gradeRangeLabel = useMemo(() => {
+    if (selectedGrades.length === 0) return null
+    const sorted = [...selectedGrades].sort((a, b) => compareGrades(a, b))
+    return selectedGrades.length <= 2
+      ? sorted.join(', ')
+      : `${sorted[0]}–${sorted[sorted.length - 1]}`
+  }, [selectedGrades])
+
   // 筛选逻辑
   const filteredRoutes = useMemo(() => {
     let result = cityFilteredRoutes
@@ -269,25 +308,54 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
           transition: 'var(--theme-transition)',
         }}
       >
-        {/* 顶部筛选栏 — 全宽 */}
-        <RouteFilterBar
-          crags={cityFilteredCrags}
-          selectedCrag={selectedCrag}
-          onCragSelect={handleCragSelect}
-          selectedFace={selectedFace}
-          onFaceSelect={handleFaceSelect}
-          sortDirection={sortDirection}
-          onToggleSort={toggleSortDirection}
-          filteredCount={filteredRoutes.length}
-          activeFilterTags={activeFilterTags}
-          allLabel={tCommon('all')}
-          totalCountLabel={t('totalCount', { count: filteredRoutes.length })}
-          sortAscLabel={t('sortAsc')}
-          sortDescLabel={t('sortDesc')}
-          sortAscHint={t('sortAscHint')}
-          sortDescHint={t('sortDescHint')}
-          faceHintLabel={t('faceHint')}
-        />
+        {/* 折叠态摘要 */}
+        <div
+          className="flex-shrink-0 overflow-hidden"
+          style={{
+            maxHeight: isCollapsed ? 60 : 0,
+            opacity: isCollapsed ? 1 : 0,
+            transition: 'max-height 300ms ease, opacity 200ms ease',
+          }}
+        >
+          <CollapsedFilterSummary
+            selectedCragName={selectedCragName}
+            selectedFaceName={selectedFace}
+            gradeRangeLabel={gradeRangeLabel}
+            sortDirection={sortDirection}
+            onToggleSort={toggleSortDirection}
+            filteredCount={filteredRoutes.length}
+            onExpand={handleExpand}
+          />
+        </div>
+
+        {/* 展开态 filter bar */}
+        <div
+          className="overflow-hidden"
+          style={{
+            maxHeight: isCollapsed ? 0 : 500,
+            opacity: isCollapsed ? 0 : 1,
+            transition: 'max-height 300ms ease, opacity 200ms ease',
+          }}
+        >
+          <RouteFilterBar
+            crags={cityFilteredCrags}
+            selectedCrag={selectedCrag}
+            onCragSelect={handleCragSelect}
+            selectedFace={selectedFace}
+            onFaceSelect={handleFaceSelect}
+            sortDirection={sortDirection}
+            onToggleSort={toggleSortDirection}
+            filteredCount={filteredRoutes.length}
+            activeFilterTags={activeFilterTags}
+            allLabel={tCommon('all')}
+            totalCountLabel={t('totalCount', { count: filteredRoutes.length })}
+            sortAscLabel={t('sortAsc')}
+            sortDescLabel={t('sortDesc')}
+            sortAscHint={t('sortAscHint')}
+            sortDescHint={t('sortDescHint')}
+            faceHintLabel={t('faceHint')}
+          />
+        </div>
 
         {/* 中间内容区 — flex row */}
         <div className="flex flex-1 min-h-0">
@@ -306,6 +374,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
 
           {/* 右侧线路列表 */}
           <main
+            ref={mainRef}
             className="flex-1 overflow-y-auto px-4 pb-36"
             style={{
               opacity: isPending ? 0.6 : 1,
@@ -313,6 +382,8 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
               pointerEvents: isPending ? 'none' : undefined,
             }}
           >
+            {/* Sentinel — IO 检测滚动状态 */}
+            <div ref={sentinelRef} className="h-px -mb-px" aria-hidden />
             <div className="space-y-2">
               {filteredRoutes.map((route, index) => (
                 <button
@@ -395,6 +466,8 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         value={searchQuery}
         onChange={handleSearchChange}
         placeholder={tSearch('placeholder')}
+        isCollapsed={isCollapsed}
+        onExpandClick={handleExpand}
       />
 
       {/* 线路详情抽屉 */}
