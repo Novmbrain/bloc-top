@@ -93,7 +93,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             {/* 居中容器 - 移动端全宽，桌面端固定宽度居中 + 阴影 */}
             <div
               id="app-shell"
-              className="relative mx-auto w-full min-h-screen md:shadow-2xl"
+              className="relative mx-auto w-full h-dvh overflow-hidden md:shadow-2xl"
               style={{
                 maxWidth: 'var(--app-shell-width)',
                 backgroundColor: 'var(--theme-surface)',
