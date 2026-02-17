@@ -109,7 +109,8 @@ npx shadcn@latest add <component>  # 添加 UI 组件
 ├── packages/
 │   ├── shared/                 # 共享逻辑 (@bloctop/shared)
 │   └── ui/                    # 共享 UI (@bloctop/ui)
-└── docs/plans/                 # 设计文档和实施计划
+├── doc/                        # 架构文档 + 数据流 + 设计
+└── docs/                       # 实施计划 + 研究笔记
 
 # apps/pwa/src/ (PWA 应用)
 apps/pwa/src/
@@ -269,13 +270,18 @@ scripts/                        # 数据库脚本
 
 doc/
 ├── PROJECT_OVERVIEW.md         # 项目技术文档 (详细)
-├── PROJECT_INDEX.md            # 项目索引 (自动生成)
 ├── AUTH_SYSTEM.md              # 认证系统架构文档
 ├── FACE_IMAGE_CACHE_ARCHITECTURE.md  # 缓存架构文档
 ├── RBAC_DESIGN.md              # ★ RBAC 权限系统设计文档
-└── data-flow/                  # 数据流文档
-    ├── ROUTE_RENDERING.md      # Bloc 线路渲染数据流
-    └── CITY_CRAG_ISOLATION.md  # 城市→岩场数据隔离与多城市扩展
+├── data-flow/                  # 数据流文档
+│   ├── ROUTE_RENDERING.md      # Bloc 线路渲染数据流
+│   └── CITY_CRAG_ISOLATION.md  # 城市→岩场数据隔离与多城市扩展
+└── design/                     # 设计文档
+    └── ROUTE_LEGEND_PANEL.md   # 线路图例面板设计
+
+docs/
+├── plans/                      # 未完成的实施计划
+└── research/                   # 技术研究笔记
 ```
 
 ## Core Data Types
