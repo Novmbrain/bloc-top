@@ -132,6 +132,7 @@ export default function HomePageClient({
     : city.available && crags.length > 0
 
   return (
+    <>
     <div
       className="flex flex-col h-dvh overflow-hidden px-4"
       style={{
@@ -140,7 +141,7 @@ export default function HomePageClient({
       }}
     >
       {/* 头部区域 */}
-      <header className="pt-12 pb-3">
+      <header className="flex-shrink-0 pt-12 pb-3">
         <div className="flex items-start justify-between">
           <div className="flex flex-col">
             {/* 城市选择器 */}
@@ -213,25 +214,27 @@ export default function HomePageClient({
         )}
       </main>
 
-      {/* 浮动搜索框 - 仅在有岩场数据时显示 */}
-      {crags.length > 0 && (
-        <FloatingSearch onClick={() => setIsSearchOpen(true)} placeholder={tSearch('placeholder')} />
-      )}
-
-      {/* 搜索抽屉 */}
-      <SearchDrawer
-        isOpen={isSearchOpen}
-        onClose={handleCloseSearch}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        results={searchResults}
-        crags={crags}
-        allRoutes={allRoutes}
-        cityId={cityId}
-      />
-
-      {/* 底部导航栏 */}
-      <AppTabbar />
     </div>
+
+    {/* 浮动搜索框 - 仅在有岩场数据时显示 */}
+    {crags.length > 0 && (
+      <FloatingSearch onClick={() => setIsSearchOpen(true)} placeholder={tSearch('placeholder')} />
+    )}
+
+    {/* 搜索抽屉 */}
+    <SearchDrawer
+      isOpen={isSearchOpen}
+      onClose={handleCloseSearch}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      results={searchResults}
+      crags={crags}
+      allRoutes={allRoutes}
+      cityId={cityId}
+    />
+
+    {/* 底部导航栏 */}
+    <AppTabbar />
+    </>
   )
 }
