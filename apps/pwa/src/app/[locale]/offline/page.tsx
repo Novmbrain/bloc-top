@@ -10,7 +10,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { WifiOff, CloudDownload, RefreshCw, Mountain, ChevronRight } from 'lucide-react'
+import { CloudDownload, RefreshCw, Mountain, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AppTabbar } from '@/components/app-tabbar'
 import { getAllOfflineCrags, type OfflineCragData } from '@/lib/offline-storage'
@@ -126,22 +126,8 @@ export default function OfflinePage() {
         transition: 'var(--theme-transition)',
       }}
     >
-      {/* 顶部状态栏 */}
-      <div
-        className="flex-shrink-0 flex items-center justify-center gap-2 px-4 py-3"
-        style={{
-          backgroundColor: isOnline ? 'var(--theme-success)' : 'var(--theme-warning)',
-          color: 'white',
-        }}
-      >
-        <WifiOff className="w-4 h-4" />
-        <span className="text-sm font-medium">
-          {isOnline ? t('backOnline') : t('offline')}
-        </span>
-      </div>
-
-      {/* 主内容区 */}
-      <main className="flex-1 overflow-y-auto px-4 py-6">
+      {/* 主内容区 — pt-12 为 layout 的 OfflineIndicator (fixed top-0) 留出空间 */}
+      <main className="flex-1 overflow-y-auto px-4 pt-12 pb-6">
         {/* 标题区域 */}
         <div className="text-center mb-6">
           <div
