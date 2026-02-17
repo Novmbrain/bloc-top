@@ -20,6 +20,8 @@ interface FaceThumbnailStripProps {
   selectedCrag: string
   selectedFace: string | null
   onFaceSelect: (faceId: string | null) => void
+  selectedArea?: string | null
+  onAreaChange?: (area: string | null) => void
 }
 
 /**
@@ -66,6 +68,8 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
   selectedCrag,
   selectedFace,
   onFaceSelect,
+  selectedArea: controlledArea,
+  onAreaChange,
 }: FaceThumbnailStripProps) {
   const tCommon = useTranslations('Common')
   const cache = useFaceImageCache()
@@ -89,22 +93,28 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
     })
   }, [selectedCrag, cache])
 
-  // Area 筛选状态 (null = "全部")，绑定到 crag，切换岩场自动重置
+  // Area 筛选状态 — 支持受控模式 (controlledArea + onAreaChange) 和内部状态
+  const isControlled = controlledArea !== undefined
   const [areaState, setAreaState] = useState<{ cragId: string; area: string | null }>({
     cragId: '',
     area: null,
   })
-  const selectedArea = areaState.cragId === selectedCrag ? areaState.area : null
+  const internalArea = areaState.cragId === selectedCrag ? areaState.area : null
+  const selectedArea = isControlled ? (controlledArea ?? null) : internalArea
 
   // AC4: 切换 area 时重置 face 选中状态
   const setSelectedArea = useCallback(
     (area: string | null) => {
-      setAreaState({ cragId: selectedCrag, area })
+      if (isControlled) {
+        onAreaChange?.(area)
+      } else {
+        setAreaState({ cragId: selectedCrag, area })
+      }
       if (selectedFace) {
         onFaceSelect(null)
       }
     },
-    [selectedCrag, selectedFace, onFaceSelect]
+    [selectedCrag, selectedFace, onFaceSelect, isControlled, onAreaChange]
   )
 
   // 从 API 获取 R2 上真实存在的 face 列表

@@ -44,6 +44,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
 
   // 从 URL 读取筛选状态（城市过滤已在服务端完成，客户端不再处理）
   const selectedCrag = searchParams.get(FILTER_PARAMS.CRAG) || ''
+  const selectedArea = searchParams.get(FILTER_PARAMS.AREA) || null
   const gradeParam = searchParams.get(FILTER_PARAMS.GRADE)
   const selectedGrades = useMemo(
     () => (gradeParam ? gradeParam.split(',') : []),
@@ -115,6 +116,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
         params.delete(FILTER_PARAMS.GRADE)
         params.delete(FILTER_PARAMS.QUERY)
       }
+      params.delete(FILTER_PARAMS.AREA)
       params.delete(FILTER_PARAMS.FACE)
 
       const queryString = params.toString()
@@ -124,6 +126,14 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
       })
     },
     [selectedCrag, searchParams, router, startTransition]
+  )
+
+  // 处理区域筛选
+  const handleAreaChange = useCallback(
+    (area: string | null) => {
+      updateSearchParams(FILTER_PARAMS.AREA, area)
+    },
+    [updateSearchParams]
   )
 
   // 处理岩面筛选
@@ -149,12 +159,13 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   }, [sortDirection, updateSearchParams])
 
   // 是否有任何 filter 激活（用于 0 结果提示）
-  const hasActiveFilters = selectedCrag !== '' || selectedGrades.length > 0 || searchQuery !== '' || selectedFace !== null
+  const hasActiveFilters = selectedCrag !== '' || selectedArea !== null || selectedGrades.length > 0 || searchQuery !== '' || selectedFace !== null
 
   // 清除所有筛选
   const handleClearAllFilters = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete(FILTER_PARAMS.CRAG)
+    params.delete(FILTER_PARAMS.AREA)
     params.delete(FILTER_PARAMS.FACE)
     params.delete(FILTER_PARAMS.GRADE)
     params.delete(FILTER_PARAMS.QUERY)
@@ -223,6 +234,10 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
       result = result.filter((r) => r.cragId === selectedCrag)
     }
 
+    if (selectedArea) {
+      result = result.filter((r) => r.area === selectedArea)
+    }
+
     if (selectedFace) {
       result = result.filter((r) => {
         const key = r.faceId || `${r.cragId}:${r.area}`
@@ -245,7 +260,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
     })
 
     return result
-  }, [routes, selectedCrag, selectedFace, selectedGrades, searchQuery, sortDirection])
+  }, [routes, selectedCrag, selectedArea, selectedFace, selectedGrades, searchQuery, sortDirection])
 
   return (
     <>
@@ -261,6 +276,8 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
           crags={crags}
           selectedCrag={selectedCrag}
           onCragSelect={handleCragSelect}
+          selectedArea={selectedArea}
+          onAreaChange={handleAreaChange}
           selectedFace={selectedFace}
           onFaceSelect={handleFaceSelect}
           sortDirection={sortDirection}

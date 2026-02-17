@@ -45,6 +45,7 @@ export function getGradesByValues(values: string[]): string[] {
 export const FILTER_PARAMS = {
   CITY: 'city',
   CRAG: 'crag',
+  AREA: 'area',
   GRADE: 'grade',
   QUERY: 'q',
   SORT: 'sort',

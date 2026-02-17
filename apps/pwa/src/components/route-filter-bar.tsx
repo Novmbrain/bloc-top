@@ -17,6 +17,8 @@ interface RouteFilterBarProps {
   onCragSelect: (cragId: string) => void
   selectedFace: string | null
   onFaceSelect: (faceId: string | null) => void
+  selectedArea: string | null
+  onAreaChange: (area: string | null) => void
   sortDirection: SortDirection
   onToggleSort: () => void
   filteredCount: number
@@ -37,6 +39,8 @@ export function RouteFilterBar({
   onCragSelect,
   selectedFace,
   onFaceSelect,
+  selectedArea,
+  onAreaChange,
   sortDirection,
   onToggleSort,
   filteredCount,
@@ -76,6 +80,8 @@ export function RouteFilterBar({
           selectedCrag={selectedCrag}
           selectedFace={selectedFace}
           onFaceSelect={onFaceSelect}
+          selectedArea={selectedArea}
+          onAreaChange={onAreaChange}
         />
       ) : (
         <p
