@@ -24,7 +24,7 @@ export default function CragError({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-[var(--space-page)]">
+    <div className="h-dvh overflow-hidden flex items-center justify-center p-[var(--space-page)]">
       <div className="text-center space-y-6 animate-fade-in-up">
         <div className="w-16 h-16 mx-auto rounded-full bg-[var(--theme-primary-container)] flex items-center justify-center">
           <Mountain className="w-8 h-8 text-[var(--theme-primary)]" />

@@ -38,10 +38,10 @@ export default function PasskeySetupPage() {
 
   return (
     <div
-      className="flex flex-col min-h-screen"
+      className="flex flex-col h-dvh overflow-hidden"
       style={{ backgroundColor: 'var(--theme-surface)' }}
     >
-      <main className="flex-1 flex flex-col items-center justify-center px-4">
+      <main className="flex-1 flex flex-col items-center justify-center overflow-y-auto px-4">
         <div className="max-w-sm w-full text-center">
           {/* Success icon */}
           <div
