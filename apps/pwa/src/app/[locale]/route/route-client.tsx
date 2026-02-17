@@ -193,18 +193,15 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
     [selectedCrag, searchParams, router, startTransition]
   )
 
-  // 处理岩面筛选 — 选中后自动折叠筛选栏展示结果
+  // 处理岩面筛选 — 选中后强制折叠筛选栏展示结果
   const handleFaceSelect = useCallback(
     (faceId: string | null) => {
       updateSearchParams(FILTER_PARAMS.FACE, faceId)
-      if (faceId && mainRef.current) {
-        const fbh = filterBarRef.current?.offsetHeight || 150
-        // 仅在筛选栏展开时触发自动折叠
-        if (mainRef.current.scrollTop < fbh * 0.3) {
-          requestAnimationFrame(() => {
-            mainRef.current?.scrollTo({ top: fbh, behavior: 'smooth' })
-          })
-        }
+      if (faceId && containerRef.current) {
+        // 强制折叠：直接设置 CSS 变量 + React 状态
+        // 即使过滤后 0 条线路（main 无法滚动），也能正确折叠
+        containerRef.current.style.setProperty('--cp', '1')
+        setIsSearchCollapsed(true)
       }
     },
     [updateSearchParams]
@@ -227,9 +224,16 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   // 是否有任何 filter 激活（用于 0 结果提示）
   const hasActiveFilters = selectedCrag !== '' || selectedGrades.length > 0 || searchQuery !== '' || selectedFace !== null
 
-  // 展开 filter bar — 滚回顶部，IO 自动检测 sentinel 恢复展开
+  // 展开 filter bar — 滚回顶部恢复展开态
   const handleExpand = useCallback(() => {
-    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    if (mainRef.current && mainRef.current.scrollTop > 0) {
+      // 有滚动距离 → 平滑滚回，scroll handler 自动重置 --cp
+      mainRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+    } else if (containerRef.current) {
+      // scrollTop 已是 0（如 0 结果页面）→ 直接重置 CSS 变量
+      containerRef.current.style.setProperty('--cp', '0')
+      setIsSearchCollapsed(false)
+    }
   }, [])
 
   // 清除所有筛选
@@ -383,6 +387,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
             marginTop: 'calc(var(--cp) * var(--fbh) * -1)',
             opacity: 'calc(1 - var(--cp))',
             pointerEvents: isSearchCollapsed ? 'none' : 'auto',
+            overscrollBehavior: 'contain',
           } as React.CSSProperties}
         >
           <RouteFilterBar
@@ -425,6 +430,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
             ref={mainRef}
             className="flex-1 overflow-y-auto px-4 pb-36"
             style={{
+              overscrollBehavior: 'contain',
               opacity: isPending ? 0.6 : 1,
               transition: 'opacity 150ms ease',
               pointerEvents: isPending ? 'none' : undefined,

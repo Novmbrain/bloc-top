@@ -62,6 +62,7 @@ export function FilterChipGroup({ children, className }: FilterChipGroupProps) {
         'flex gap-2 overflow-x-auto scrollbar-hide pb-0.5',
         className
       )}
+      style={{ overscrollBehavior: 'contain' }}
     >
       {children}
     </div>

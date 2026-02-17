@@ -218,7 +218,7 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
   // 加载中显示 skeleton strip
   if (loading) {
     return (
-      <div className="overflow-x-auto scrollbar-hide">
+      <div className="overflow-x-auto scrollbar-hide" style={{ overscrollBehavior: 'contain' }}>
         <div className="flex gap-2 px-4 pb-2" style={{ minWidth: 'min-content' }}>
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex-shrink-0 flex flex-col items-center gap-1">
@@ -262,7 +262,7 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
       )}
 
       {/* 岩面缩略图 */}
-      <div className="overflow-x-auto scrollbar-hide">
+      <div className="overflow-x-auto scrollbar-hide" style={{ overscrollBehavior: 'contain' }}>
         <div className="flex gap-2 px-4 pb-2" style={{ minWidth: 'min-content' }}>
         {/* "全部" 选项 */}
         <button
