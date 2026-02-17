@@ -153,20 +153,20 @@ export default function ProfilePage() {
   return (
     <>
       <div
-        className="flex flex-col min-h-screen"
+        className="flex flex-col h-dvh overflow-hidden"
         style={{
           backgroundColor: 'var(--theme-surface)',
           transition: 'var(--theme-transition)',
         }}
       >
         {/* Header */}
-        <header className="pt-12 px-4 pb-6">
+        <header className="flex-shrink-0 pt-12 px-4 pb-6">
           <h1 className="text-2xl font-bold" style={{ color: 'var(--theme-on-surface)' }}>
             {t('title')}
           </h1>
         </header>
 
-        <main className="flex-1 px-4 pb-24">
+        <main className="flex-1 overflow-y-auto px-4 pb-24">
           {/* === Profile Hero === */}
           <div className="mb-6">
             {isLoggedIn ? (
@@ -334,8 +334,9 @@ export default function ProfilePage() {
           </div>
         </main>
 
-        <AppTabbar />
       </div>
+
+      <AppTabbar />
 
       {/* Security Drawer */}
       {isLoggedIn && session && (
