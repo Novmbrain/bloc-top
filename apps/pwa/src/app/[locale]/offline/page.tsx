@@ -118,8 +118,9 @@ export default function OfflinePage() {
   }
 
   return (
+    <>
     <div
-      className="min-h-screen flex flex-col"
+      className="flex flex-col h-dvh overflow-hidden"
       style={{
         backgroundColor: 'var(--theme-surface)',
         transition: 'var(--theme-transition)',
@@ -127,7 +128,7 @@ export default function OfflinePage() {
     >
       {/* 顶部状态栏 */}
       <div
-        className="flex items-center justify-center gap-2 px-4 py-3"
+        className="flex-shrink-0 flex items-center justify-center gap-2 px-4 py-3"
         style={{
           backgroundColor: isOnline ? 'var(--theme-success)' : 'var(--theme-warning)',
           color: 'white',
@@ -140,7 +141,7 @@ export default function OfflinePage() {
       </div>
 
       {/* 主内容区 */}
-      <main className="flex-1 px-4 py-6">
+      <main className="flex-1 overflow-y-auto px-4 py-6">
         {/* 标题区域 */}
         <div className="text-center mb-6">
           <div
@@ -225,41 +226,40 @@ export default function OfflinePage() {
             </p>
           </div>
         )}
-      </main>
-
-      {/* 底部操作区 - 为 Tabbar 留出空间 */}
-      <div className="p-4 pb-20 space-y-3">
-        {isOnline && (
+        {/* 底部操作区 */}
+        <div className="pt-4 pb-20 space-y-3">
+          {isOnline && (
+            <Button
+              onClick={goHome}
+              className="w-full h-12 font-semibold"
+              style={{
+                backgroundColor: 'var(--theme-primary)',
+                color: 'var(--theme-on-primary)',
+                borderRadius: 'var(--theme-radius-xl)',
+              }}
+            >
+              {t('goHome')}
+            </Button>
+          )}
           <Button
-            onClick={goHome}
-            className="w-full h-12 font-semibold"
+            onClick={handleRetry}
+            variant="outline"
+            className="w-full h-12 font-semibold flex items-center justify-center gap-2"
             style={{
-              backgroundColor: 'var(--theme-primary)',
-              color: 'var(--theme-on-primary)',
+              borderColor: 'var(--theme-outline)',
+              color: 'var(--theme-on-surface)',
               borderRadius: 'var(--theme-radius-xl)',
             }}
           >
-            {t('goHome')}
+            <RefreshCw className="w-4 h-4" />
+            {t('retry')}
           </Button>
-        )}
-        <Button
-          onClick={handleRetry}
-          variant="outline"
-          className="w-full h-12 font-semibold flex items-center justify-center gap-2"
-          style={{
-            borderColor: 'var(--theme-outline)',
-            color: 'var(--theme-on-surface)',
-            borderRadius: 'var(--theme-radius-xl)',
-          }}
-        >
-          <RefreshCw className="w-4 h-4" />
-          {t('retry')}
-        </Button>
-      </div>
-
-      {/* 底部导航栏 */}
-      <AppTabbar />
+        </div>
+      </main>
     </div>
+
+    <AppTabbar />
+    </>
   )
 }
 
