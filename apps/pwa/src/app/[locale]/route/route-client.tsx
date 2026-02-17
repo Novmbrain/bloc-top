@@ -29,7 +29,7 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
   const tSearch = useTranslations('Search')
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [, startTransition] = useTransition()
+  const [isPending, startTransition] = useTransition()
 
   // 抽屉状态
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
@@ -305,7 +305,14 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
           </div>
 
           {/* 右侧线路列表 */}
-          <main className="flex-1 overflow-y-auto px-4 pb-36">
+          <main
+            className="flex-1 overflow-y-auto px-4 pb-36"
+            style={{
+              opacity: isPending ? 0.6 : 1,
+              transition: 'opacity 150ms ease',
+              pointerEvents: isPending ? 'none' : undefined,
+            }}
+          >
             <div className="space-y-2">
               {filteredRoutes.map((route, index) => (
                 <button
