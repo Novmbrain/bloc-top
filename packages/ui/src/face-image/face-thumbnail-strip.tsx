@@ -6,6 +6,9 @@ import { Image as ImageIcon } from 'lucide-react'
 import { FilterChip, FilterChipGroup } from '../components/filter-chip'
 import { useFaceImageCache } from './use-face-image'
 
+/** 模块级缓存: cragId → faces 列表。同一 session 内切回已访问岩场时命中缓存，跳过 API 请求。 */
+const facesCache = new Map<string, { faceId: string; area: string }[]>()
+
 interface FaceGroup {
   key: string
   label: string
@@ -69,10 +72,19 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
   // 递增值用于强制 useMemo 重算 (缓存失效时触发)
   const [cacheVersion, setCacheVersion] = useState(0)
 
+  // Optimistic: 点击后立即显示选中边框，不等 URL transition 完成
+  const [optimisticFace, setOptimisticFace] = useState<string | null>(null)
+  // URL 状态追上后清除 optimistic 状态
+  useEffect(() => {
+    setOptimisticFace(null)
+  }, [selectedFace])
+  const displayFace = optimisticFace !== null ? optimisticFace : selectedFace
+
   // 订阅当前岩场下所有岩面的缓存失效事件
   useEffect(() => {
     if (!selectedCrag) return
     return cache.subscribeByPrefix(`${selectedCrag}/`, () => {
+      facesCache.delete(selectedCrag)
       setCacheVersion(v => v + 1)
     })
   }, [selectedCrag, cache])
@@ -106,13 +118,32 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
   useEffect(() => {
     if (!selectedCrag) return
 
+    // 预加载缩略图到浏览器 HTTP 缓存（浏览器会自动去重已加载的图片）
+    const preloadThumbnails = (faces: { faceId: string; area: string }[]) => {
+      faces.slice(0, 8).forEach((f) => {
+        const url = cache.getImageUrl({ cragId: selectedCrag, area: f.area, faceId: f.faceId })
+        const img = new window.Image()
+        img.src = url
+      })
+    }
+
+    // 命中缓存 → 立即返回，跳过 API 请求
+    const cached = facesCache.get(selectedCrag)
+    if (cached) {
+      setFacesState({ cragId: selectedCrag, faces: cached, loading: false })
+      preloadThumbnails(cached)
+      return
+    }
+
     let cancelled = false
 
     fetch(`/api/faces?cragId=${encodeURIComponent(selectedCrag)}`)
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled && data.success) {
+          facesCache.set(selectedCrag, data.faces)
           setFacesState({ cragId: selectedCrag, faces: data.faces, loading: false })
+          preloadThumbnails(data.faces)
         }
       })
       .catch(() => {
@@ -120,6 +151,7 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
       })
 
     return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cache is a stable singleton from context
   }, [selectedCrag])
 
   // 派生状态：crag 不匹配时视为 loading
@@ -168,12 +200,15 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
   }, [faceGroups, selectedFace, onFaceSelect])
 
   const handleAllClick = useCallback(() => {
+    setOptimisticFace(null)
     onFaceSelect(null)
   }, [onFaceSelect])
 
   const handleFaceClick = useCallback(
     (key: string) => {
-      onFaceSelect(selectedFace === key ? null : key)
+      const newValue = selectedFace === key ? null : key
+      setOptimisticFace(newValue)
+      onFaceSelect(newValue)
     },
     [onFaceSelect, selectedFace]
   )
@@ -181,7 +216,7 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
   if (!selectedCrag) return null
 
   // 加载中显示 skeleton strip
-  if (loading && allFaceGroups.length === 0) {
+  if (loading) {
     return (
       <div className="overflow-x-auto scrollbar-hide">
         <div className="flex gap-2 px-4 pb-2" style={{ minWidth: 'min-content' }}>
@@ -235,16 +270,16 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
           className="flex-shrink-0 flex flex-col items-center gap-1 transition-all active:scale-95"
         >
           <div
-            className={`w-16 h-12 flex items-center justify-center text-xs font-medium ${!selectedFace ? '' : 'glass-light'}`}
+            className={`w-16 h-12 flex items-center justify-center text-xs font-medium ${!displayFace ? '' : 'glass-light'}`}
             style={{
               borderRadius: 'var(--theme-radius-md)',
-              backgroundColor: !selectedFace
+              backgroundColor: !displayFace
                 ? 'var(--theme-primary)'
                 : undefined,
-              color: !selectedFace
+              color: !displayFace
                 ? 'var(--theme-on-primary)'
                 : 'var(--theme-on-surface-variant)',
-              border: !selectedFace
+              border: !displayFace
                 ? '2px solid var(--theme-primary)'
                 : '2px solid transparent',
             }}
@@ -254,7 +289,7 @@ export const FaceThumbnailStrip = memo(function FaceThumbnailStrip({
         </button>
 
         {faceGroups.map((group) => {
-          const isSelected = selectedFace === group.key
+          const isSelected = displayFace === group.key
           return (
             <button
               key={group.key}
