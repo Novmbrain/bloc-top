@@ -93,17 +93,14 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
 
   return (
     <div
-      className={isMobile
-        ? "h-dvh overflow-y-auto"
-        : "flex flex-col h-dvh overflow-hidden"
-      }
+      className="flex flex-col h-dvh overflow-hidden"
       style={{
         backgroundColor: 'var(--theme-surface)',
         transition: 'var(--theme-transition)',
       }}
     >
       {/* Hero 图片区域 */}
-      <div ref={heroRef} className={isMobile ? "relative" : "relative flex-shrink-0"}>
+      <div ref={heroRef} className="relative flex-shrink-0">
         {/* 返回按钮（图片上方） */}
         <button
           onClick={() => router.back()}
@@ -183,7 +180,7 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
       </div>
 
       {/* 内容滚动区域 */}
-      <main className={isMobile ? "px-4 pb-24" : "flex-1 overflow-y-auto px-4 pb-24"}>
+      <main className="flex-1 overflow-y-auto px-4 pb-24">
         {/* 标题区域 */}
         <div className="py-4">
           <div className="flex flex-col mb-2">
