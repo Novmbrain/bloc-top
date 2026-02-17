@@ -122,11 +122,11 @@ export default function LoginPage() {
 
   return (
     <div
-      className="flex flex-col min-h-screen"
+      className="flex flex-col h-dvh overflow-hidden"
       style={{ backgroundColor: 'var(--theme-surface)' }}
     >
       {/* Header */}
-      <header className="pt-12 px-4 pb-2">
+      <header className="flex-shrink-0 pt-12 px-4 pb-2">
         <Link
           href="/"
           className="inline-flex items-center gap-1 text-sm mb-6"
@@ -138,7 +138,7 @@ export default function LoginPage() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 px-4 pt-8">
+      <main className="flex-1 overflow-y-auto px-4 pt-8">
         <div className="max-w-sm mx-auto">
           {/* Title */}
           <h1
