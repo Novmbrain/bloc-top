@@ -20,7 +20,7 @@ import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
 import { Input } from '@bloctop/ui/components/input'
 import { Textarea } from '@bloctop/ui/components/textarea'
 import { findCityName } from '@bloctop/shared/city-utils'
-import { parseCoordinateInput, formatCoordinateDisplay } from '@bloctop/shared/coordinate-utils'
+import { parseCoordinateInput, formatCoordinateDisplay, truncateCoordinates } from '@bloctop/shared/coordinate-utils'
 import type { Crag, CityConfig } from '@bloctop/shared/types'
 
 // ==================== Types ====================
@@ -176,15 +176,18 @@ export default function CragDetailPage({
       if (editForm.description.trim() !== crag.description) updates.description = editForm.description.trim()
       if (editForm.approach.trim() !== crag.approach) updates.approach = editForm.approach.trim()
 
-      // Handle coordinates
+      // Handle coordinates — truncate to 6 decimals before comparing to avoid
+      // floating-point drift causing spurious saves
       const newCoords = editForm.coordinateInput.trim()
         ? parseCoordinateInput(editForm.coordinateInput)
         : null
       const origCoords = crag.coordinates ?? null
 
       if (newCoords !== null) {
-        if (!origCoords || newCoords.lng !== origCoords.lng || newCoords.lat !== origCoords.lat) {
-          updates.coordinates = newCoords
+        const truncNew = truncateCoordinates(newCoords)
+        const truncOrig = origCoords ? truncateCoordinates(origCoords) : null
+        if (!truncOrig || truncNew.lng !== truncOrig.lng || truncNew.lat !== truncOrig.lat) {
+          updates.coordinates = truncNew
         }
       } else if (editForm.coordinateInput.trim() === '' && origCoords !== null) {
         updates.coordinates = null
@@ -402,19 +405,19 @@ export default function CragDetailPage({
                 <Input
                   value={editForm.coordinateInput}
                   onChange={(value) => updateField('coordinateInput', value)}
-                  placeholder="119.306239,26.063477"
+                  placeholder="经度,纬度 (如 119.306239,26.063477)"
                 />
                 <p
                   className="text-[11px]"
                   style={{ color: 'var(--theme-on-surface-variant)' }}
                 >
-                  从<a
+                  格式: 经度,纬度 — 从<a
                     href="https://lbs.amap.com/tools/picker"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline"
                     style={{ color: 'var(--theme-primary)' }}
-                  >高德坐标拾取器</a>复制坐标粘贴，留空则清除坐标
+                  >高德坐标拾取器</a>复制粘贴即可，留空则清除
                 </p>
               </div>
 
@@ -540,6 +543,7 @@ export default function CragDetailPage({
                       style={{ color: 'var(--theme-on-surface-variant)' }}
                     >
                       {crag.coordinates.lng.toFixed(6)}, {crag.coordinates.lat.toFixed(6)}
+                      <span className="text-[10px] ml-1 opacity-60">(经度, 纬度)</span>
                     </span>
                   </div>
                 )}
