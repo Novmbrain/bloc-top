@@ -46,14 +46,14 @@ export default function IntroPage() {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen"
+      className="flex flex-col h-dvh overflow-hidden"
       style={{
         backgroundColor: 'var(--theme-surface)',
         color: 'var(--theme-on-surface)',
       }}
     >
       {/* Back Button */}
-      <nav className="px-4 pt-4">
+      <nav className="flex-shrink-0 px-4 pt-4">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors"
@@ -68,6 +68,7 @@ export default function IntroPage() {
         </Link>
       </nav>
 
+      <main className="flex-1 overflow-y-auto">
       {/* Hero Section */}
       <section className="px-6 pt-8 pb-14 text-center scroll-reveal">
         <div
@@ -162,6 +163,7 @@ export default function IntroPage() {
           {t('cta')}
         </Link>
       </section>
+      </main>
     </div>
   )
 }
