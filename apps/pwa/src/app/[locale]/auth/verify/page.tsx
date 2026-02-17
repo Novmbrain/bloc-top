@@ -24,7 +24,7 @@ export default function VerifyPage() {
 
   return (
     <div
-      className="flex flex-col min-h-screen items-center justify-center"
+      className="flex flex-col h-dvh overflow-hidden items-center justify-center"
       style={{ backgroundColor: 'var(--theme-surface)' }}
     >
       <div className="text-center px-4">
