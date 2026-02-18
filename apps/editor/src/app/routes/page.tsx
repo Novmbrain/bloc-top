@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import {
   Save,
   Check,
@@ -11,8 +11,6 @@ import {
   Mountain,
   Edit3,
   AlertCircle,
-  Eye,
-  EyeOff,
   Plus,
   Trash2,
 } from 'lucide-react'
@@ -21,9 +19,7 @@ import Link from 'next/link'
 import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { Input } from '@bloctop/ui/components/input'
 import { Textarea } from '@bloctop/ui/components/textarea'
-import type { Route, TopoPoint } from '@bloctop/shared/types'
-import { catmullRomCurve, scalePoints } from '@bloctop/shared/topo-utils'
-import { getGradeColor } from '@bloctop/shared/tokens'
+import type { Route } from '@bloctop/shared/types'
 import { useToast } from '@bloctop/ui/components/toast'
 import { useFaceImageCache } from '@bloctop/ui/face-image/use-face-image'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
@@ -35,25 +31,19 @@ import { AreaSelect } from '@/components/editor/area-select'
 import { MultiTopoLineOverlay } from '@/components/multi-topo-line-overlay'
 import type { MultiTopoRoute } from '@/components/multi-topo-line-overlay'
 import { GRADE_OPTIONS } from '@bloctop/shared/editor-utils'
-import { computeViewBox } from '@bloctop/shared/topo-constants'
 import { deriveAreas, getPersistedAreas } from '@bloctop/shared/editor-areas'
+import { ConfirmDialog } from '@/components/editor/confirm-dialog'
+import { FaceSelector } from '@/components/editor/face-selector'
+import { TopoPreview } from '@/components/editor/topo-preview'
+import { useRouteEditor } from '@/hooks/use-route-editor'
+import { useRouteCreation } from '@/hooks/use-route-creation'
+import { useDirtyGuard } from '@/hooks/use-dirty-guard'
+import type { R2FaceInfo, FaceGroup } from '@/types/face'
 
 const FullscreenTopoEditor = dynamic(
   () => import('@/components/editor/fullscreen-topo-editor'),
   { ssr: false }
 )
-
-interface R2FaceInfo {
-  faceId: string
-  area: string
-}
-
-interface FaceGroup {
-  faceId: string
-  area: string
-  routes: Route[]
-  imageUrl: string
-}
 
 type PendingAction =
   | { type: 'switchRoute'; payload: Route }
@@ -71,78 +61,46 @@ export default function RouteAnnotationPage() {
     isLoadingCrags, isLoadingRoutes, stats, updateCragAreas,
   } = useCragRoutes({ editorMode: true })
   const faceImageCache = useFaceImageCache()
+  const { showToast } = useToast()
 
   // ============ R2 上已有的 face 列表 ============
   const [r2Faces, setR2Faces] = useState<R2FaceInfo[]>([])
   const [isLoadingFaces, setIsLoadingFaces] = useState(false)
 
-  // ============ 选择状态 ============
+  // ============ 导航状态 ============
   const [selectedArea, setSelectedArea] = useState<string | null>(null)
-  const [selectedFaceId, setSelectedFaceId] = useState<string | null>(null)
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
-
-  // ============ 搜索和筛选 ============
+  const [showEditorPanel, setShowEditorPanel] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterMode, setFilterMode] = useState<'all' | 'marked' | 'unmarked'>('all')
 
-  // ============ 编辑状态 ============
-  const [editedRoute, setEditedRoute] = useState<Partial<Route>>({})
-  const [topoLine, setTopoLine] = useState<TopoPoint[]>([])
-  const [topoTension, setTopoTension] = useState(0)
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [isImageLoading, setIsImageLoading] = useState(false)
-  const [imageLoadError, setImageLoadError] = useState(false)
-  const [imageAspectRatio, setImageAspectRatio] = useState<number | undefined>(undefined)
+  // ============ 派生数据 ============
+  const selectedCrag = useMemo(() => crags.find(c => c.id === selectedCragId), [crags, selectedCragId])
+  const areas = useMemo(
+    () => deriveAreas(routes, selectedCragId, selectedCrag),
+    [routes, selectedCrag, selectedCragId],
+  )
+  const persistedAreas = useMemo(() => getPersistedAreas(selectedCrag), [selectedCrag])
 
-  // ============ 保存状态 ============
-  const [isSaving, setIsSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [saveSuccess, setSaveSuccess] = useState(false)
-
-  // ============ 新增线路状态 ============
-  const [isCreatingRoute, setIsCreatingRoute] = useState(false)
-  const [isSubmittingCreate, setIsSubmittingCreate] = useState(false)
-  const [newRoute, setNewRoute] = useState({
-    name: '', grade: '？', area: '', FA: '', setter: '', description: '',
+  // ============ Hooks ============
+  const editor = useRouteEditor({
+    selectedRoute,
+    faceImageCache,
+    setRoutes,
+    persistedAreas,
+    selectedCragId,
+    updateCragAreas,
   })
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
-  // ============ 删除状态 ============
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  // ============ UI 状态 ============
-  const [showEditorPanel, setShowEditorPanel] = useState(false)
-  const [isFullscreenEdit, setIsFullscreenEdit] = useState(false)
-  const [showOtherRoutes, setShowOtherRoutes] = useState(true)
-
-  // ============ 脏检查状态 ============
-  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
-  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false)
-  // ============ Refs ============
-  const justSavedRef = useRef(false)
-  const topoSnapshotRef = useRef<{ line: TopoPoint[]; tension: number } | null>(null)
-
-  // ============ Toast ============
-  const { showToast } = useToast()
-
-  // ============ 脏检查：检测未保存的更改 ============
-  const hasUnsavedChanges = useCallback((): boolean => {
-    if (!selectedRoute) return false
-    const fields = ['name', 'grade', 'area', 'FA', 'setter', 'description'] as const
-    for (const field of fields) {
-      if ((editedRoute[field] ?? '') !== (selectedRoute[field] ?? '')) return true
-    }
-    // Point-by-point comparison (faster than JSON.stringify)
-    const original = selectedRoute.topoLine || []
-    if (topoLine.length !== original.length) return true
-    for (let i = 0; i < topoLine.length; i++) {
-      if (topoLine[i].x !== original[i].x || topoLine[i].y !== original[i].y) return true
-    }
-    // Tension comparison
-    if (topoTension !== (selectedRoute.topoTension ?? 0)) return true
-    return false
-  }, [selectedRoute, editedRoute, topoLine, topoTension])
+  const creation = useRouteCreation({
+    selectedCragId,
+    selectedArea,
+    areas,
+    setRoutes,
+    persistedAreas,
+    updateCragAreas,
+    hasUnsavedChanges: editor.hasUnsavedChanges,
+  })
 
   const executePendingAction = useCallback((action: PendingAction) => {
     switch (action.type) {
@@ -158,7 +116,7 @@ export default function RouteAnnotationPage() {
         setSelectedCragId(action.payload)
         setSelectedRoute(null)
         setSelectedArea(null)
-        setSelectedFaceId(null)
+        editor.resetEditor()
         setShowEditorPanel(false)
         break
       case 'goBackMobile':
@@ -166,53 +124,13 @@ export default function RouteAnnotationPage() {
         setSelectedRoute(null)
         break
     }
-  }, [setSelectedCragId])
+  }, [setSelectedCragId, editor.resetEditor])
 
-  // ============ 脏检查：拦截处理器 ============
-  const handleRouteClick = useCallback((route: Route) => {
-    if (selectedRoute?.id === route.id) return
-    if (hasUnsavedChanges()) {
-      setPendingAction({ type: 'switchRoute', payload: route })
-      setShowUnsavedDialog(true)
-      return
-    }
-    setSelectedRoute(route)
-  }, [selectedRoute, hasUnsavedChanges])
-
-  const handleAreaSwitch = useCallback((area: string | null) => {
-    if (selectedArea === area) return
-    if (hasUnsavedChanges()) {
-      setPendingAction({ type: 'switchArea', payload: area })
-      setShowUnsavedDialog(true)
-      return
-    }
-    setSelectedArea(area)
-    setSelectedRoute(null)
-    setShowEditorPanel(false)
-  }, [selectedArea, hasUnsavedChanges])
-
-  const handleOpenFullscreen = useCallback(() => {
-    topoSnapshotRef.current = { line: [...topoLine], tension: topoTension }
-    setIsFullscreenEdit(true)
-  }, [topoLine, topoTension])
-
-  const handleFullscreenClose = useCallback((confirmed: boolean) => {
-    if (!confirmed && topoSnapshotRef.current) {
-      setTopoLine(topoSnapshotRef.current.line)
-      setTopoTension(topoSnapshotRef.current.tension)
-    }
-    topoSnapshotRef.current = null
-    setIsFullscreenEdit(false)
-  }, [])
-
-  const handleDiscardAndExecute = useCallback(() => {
-    if (!pendingAction) return
-    executePendingAction(pendingAction)
-    setPendingAction(null)
-    setShowUnsavedDialog(false)
-  }, [pendingAction, executePendingAction])
-
-  // handleSaveAndExecute is defined after handleSave below
+  const dirtyGuard = useDirtyGuard<PendingAction>({
+    hasUnsavedChanges: editor.hasUnsavedChanges,
+    onSave: editor.handleSave,
+    executeAction: executePendingAction,
+  })
 
   // ============ 从 R2 加载岩面列表 ============
   useEffect(() => {
@@ -227,64 +145,40 @@ export default function RouteAnnotationPage() {
       .then(data => {
         if (!cancelled && data.success) setR2Faces(data.faces as R2FaceInfo[])
       })
-      .catch(() => { /* 静默失败，回退到仅 route 派生 */ })
+      .catch(() => {})
       .finally(() => { if (!cancelled) setIsLoadingFaces(false) })
     return () => { cancelled = true }
   }, [selectedCragId])
 
-  // ============ 桌面端突破 app-shell 宽度限制 ============
   useBreakAppShellLimit()
 
-  // ============ 派生数据 ============
-  // 合并 crag.areas 与 route 派生 areas
-  const selectedCrag = useMemo(() => crags.find(c => c.id === selectedCragId), [crags, selectedCragId])
-  const areas = useMemo(
-    () => deriveAreas(routes, selectedCragId, selectedCrag),
-    [routes, selectedCrag, selectedCragId],
-  )
-  const persistedAreas = useMemo(() => getPersistedAreas(selectedCrag), [selectedCrag])
-
-  // 按 area 筛选的 face 列表（右栏 face 选择器用）
-  // 以 R2 返回的 face 数据为主（自带 area），再关联 routes
+  // ============ 派生数据：面组、线路过滤 ============
   const areaFaceGroups = useMemo(() => {
     if (!selectedCragId) return []
     const map = new Map<string, FaceGroup>()
-
-    // 从 R2 数据构建 face 列表（每个 face 自带 area）
     r2Faces.forEach(({ faceId, area }) => {
       map.set(faceId, {
-        faceId,
-        area,
-        routes: [],
+        faceId, area, routes: [],
         imageUrl: faceImageCache.getImageUrl({ cragId: selectedCragId, area, faceId }),
       })
     })
-
-    // 关联 routes 到对应的 face
     routes.forEach(r => {
       if (!r.faceId) return
       const entry = map.get(r.faceId)
       if (entry) entry.routes.push(r)
     })
-
     let result = Array.from(map.values())
-    // 按 area 过滤
-    if (selectedArea) {
-      result = result.filter(f => f.area === selectedArea)
-    }
+    if (selectedArea) result = result.filter(f => f.area === selectedArea)
     return result
   }, [routes, r2Faces, selectedCragId, selectedArea, faceImageCache])
 
-  // 按 area 筛选的线路
   const areaRoutes = useMemo(() => {
     if (!selectedArea) return routes
     return routes.filter(r => r.area === selectedArea)
   }, [routes, selectedArea])
 
-  // 筛选后的线路列表
   const filteredRoutes = useMemo(() => {
     let result = areaRoutes
-
     if (searchQuery) {
       const query = searchQuery.trim().toLowerCase()
       result = result.filter((r) => {
@@ -294,289 +188,86 @@ export default function RouteAnnotationPage() {
         return false
       })
     }
-
     if (filterMode === 'marked') {
       result = result.filter((r) => r.topoLine && r.topoLine.length >= 2)
     } else if (filterMode === 'unmarked') {
       result = result.filter((r) => !r.topoLine || r.topoLine.length < 2)
     }
-
     return result
   }, [areaRoutes, searchQuery, filterMode])
 
-  // Area 内的统计
   const areaStats = useMemo(() => {
     const marked = areaRoutes.filter((r) => r.topoLine && r.topoLine.length >= 2)
-    return {
-      total: areaRoutes.length,
-      marked: marked.length,
-      unmarked: areaRoutes.length - marked.length,
-    }
+    return { total: areaRoutes.length, marked: marked.length, unmarked: areaRoutes.length - marked.length }
   }, [areaRoutes])
 
-  // 预计算每个 area 的线路数量（避免 JSX 中 O(n*m) 的 inline filter）
   const areaCounts = useMemo(() => {
     const counts = new Map<string, number>()
-    routes.forEach(r => {
-      if (r.area) counts.set(r.area, (counts.get(r.area) || 0) + 1)
-    })
+    routes.forEach(r => { if (r.area) counts.set(r.area, (counts.get(r.area) || 0) + 1) })
     return counts
   }, [routes])
 
-  // ============ 同岩面的其他线路（用于多线路叠加） ============
   const sameFaceRoutes = useMemo<MultiTopoRoute[]>(() => {
-    if (!selectedFaceId || !showOtherRoutes) return []
-    const faceGroup = areaFaceGroups.find(f => f.faceId === selectedFaceId)
+    if (!editor.selectedFaceId || !editor.showOtherRoutes) return []
+    const faceGroup = areaFaceGroups.find(f => f.faceId === editor.selectedFaceId)
     if (!faceGroup) return []
     return faceGroup.routes
       .filter(r => r.id !== selectedRoute?.id && r.topoLine && r.topoLine.length >= 2)
       .map(r => ({ id: r.id, name: r.name, grade: r.grade, topoLine: r.topoLine!, topoTension: r.topoTension }))
-  }, [selectedRoute, selectedFaceId, areaFaceGroups, showOtherRoutes])
+  }, [selectedRoute, editor.selectedFaceId, areaFaceGroups, editor.showOtherRoutes])
 
-  // ============ 切换岩场 ============
+  // ============ 事件处理 ============
+  const handleRouteClick = useCallback((route: Route) => {
+    if (selectedRoute?.id === route.id) return
+    dirtyGuard.guardAction({ type: 'switchRoute', payload: route })
+  }, [selectedRoute, dirtyGuard.guardAction])
+
+  const handleAreaSwitch = useCallback((area: string | null) => {
+    if (selectedArea === area) return
+    dirtyGuard.guardAction({ type: 'switchArea', payload: area })
+  }, [selectedArea, dirtyGuard.guardAction])
+
   const handleSelectCrag = useCallback((id: string) => {
-    if (hasUnsavedChanges()) {
-      setPendingAction({ type: 'switchCrag', payload: id })
-      setShowUnsavedDialog(true)
-      return
-    }
-    setSelectedCragId(id)
-    setSelectedRoute(null)
-    setSelectedArea(null)
-    setSelectedFaceId(null)
-    setShowEditorPanel(false)
-  }, [setSelectedCragId, hasUnsavedChanges])
+    dirtyGuard.guardAction({ type: 'switchCrag', payload: id })
+  }, [dirtyGuard.guardAction])
 
-  // ============ 选择线路时初始化编辑状态 ============
-  useEffect(() => {
-    if (!selectedRoute) return
-
-    setEditedRoute({
-      name: selectedRoute.name,
-      grade: selectedRoute.grade,
-      area: selectedRoute.area,
-      setter: selectedRoute.setter,
-      FA: selectedRoute.FA,
-      description: selectedRoute.description,
-    })
-    setTopoLine(selectedRoute.topoLine || [])
-    setTopoTension(selectedRoute.topoTension ?? 0)
-    setFormErrors({})
-    setShowEditorPanel(true)
-
-    if (justSavedRef.current) {
-      justSavedRef.current = false
-      return
-    }
-
-    // 自动匹配 faceId：线路有 faceId → 自动选中；无则清空让用户手动选
-    const autoFaceId = selectedRoute.faceId || null
-    setSelectedFaceId(autoFaceId)
-
-    if (autoFaceId && selectedRoute.area) {
-      const url = faceImageCache.getImageUrl({ cragId: selectedRoute.cragId, area: selectedRoute.area, faceId: autoFaceId })
-      // 仅当 URL 变化时才触发 loading，避免同岩面切换线路时 onLoad 不触发导致永久 loading
-      setImageUrl(prev => {
-        if (prev === url) return prev
-        setIsImageLoading(true)
-        setImageAspectRatio(undefined)
-        return url
-      })
-      setImageLoadError(false)
-    } else {
-      setImageUrl(null)
-      setImageLoadError(false)
-    }
-  }, [selectedRoute, faceImageCache])
-
-  // ============ 画布操作 ============
-  const handleRemoveLastPoint = useCallback(() => {
-    setTopoLine((prev) => prev.slice(0, -1))
-  }, [])
-
-  const handleClearPoints = useCallback(() => {
-    setTopoLine([])
-    setTopoTension(0)
-  }, [])
-
-  // ============ 保存逻辑 ============
-  const handleSave = useCallback(async (): Promise<boolean> => {
-    if (!selectedRoute) return false
-
-    const errors = validateRouteForm({ name: editedRoute.name || '', area: editedRoute.area || '' })
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors)
-      return false
-    }
-    setFormErrors({})
-
-    setIsSaving(true)
-    setSaveError(null)
-    setSaveSuccess(false)
-
-    try {
-      const response = await fetch(`/api/routes/${selectedRoute.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...editedRoute,
-          faceId: selectedFaceId,
-          topoLine: topoLine.length >= 2 ? topoLine : null,
-          topoTension: topoLine.length >= 2 && topoTension > 0 ? topoTension : null,
-        }),
-      })
-
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || '保存失败')
-
-      setSaveSuccess(true)
-      justSavedRef.current = true
-
-      setRoutes((prev) => prev.map((r) => (r.id === selectedRoute.id ? data.route : r)))
-      setSelectedRoute(data.route)
-
-      // 如果区域是新的，同步到 crag.areas（仅基于持久化 areas，避免 route 派生 area 泄漏）
-      const savedArea = editedRoute.area?.trim()
-      if (savedArea && selectedCragId && !persistedAreas.includes(savedArea)) {
-        const merged = [...new Set([...persistedAreas, savedArea])].sort()
-        updateCragAreas(selectedCragId, merged).catch(() => {})
-      }
-
-      showToast('线路信息保存成功！', 'success', 3000)
-      setTimeout(() => setSaveSuccess(false), 2000)
-      return true
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : '保存失败'
-      setSaveError(errorMsg)
-      showToast(errorMsg, 'error', 4000)
-      return false
-    } finally {
-      setIsSaving(false)
-    }
-  }, [selectedRoute, editedRoute, topoLine, topoTension, selectedFaceId, setRoutes, showToast, persistedAreas, selectedCragId, updateCragAreas])
-
-  const handleSaveAndExecute = useCallback(async () => {
-    if (!pendingAction) return
-    const success = await handleSave()
-    if (success) {
-      justSavedRef.current = false // Reset so pending action initializes properly
-      executePendingAction(pendingAction)
-    }
-    // Always close dialog on both success and failure:
-    // - Success: action executed, dialog no longer needed
-    // - Failure: edits are preserved in the form; user can see inline errors
-    //   (validation) or toast (network), fix issues, and save manually
-    setPendingAction(null)
-    setShowUnsavedDialog(false)
-  }, [pendingAction, handleSave, executePendingAction])
-
-  // ============ 删除线路逻辑 ============
-  const handleDeleteRoute = useCallback(async () => {
-    if (!selectedRoute || isDeleting) return
-    setIsDeleting(true)
-    try {
-      const res = await fetch(`/api/routes/${selectedRoute.id}`, { method: 'DELETE' })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || '删除失败')
-
-      setRoutes(prev => prev.filter(r => r.id !== selectedRoute.id))
-      setSelectedRoute(null)
-      setShowDeleteConfirm(false)
-      setShowEditorPanel(false)
-      showToast('线路已删除', 'success', 3000)
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : '删除失败'
-      showToast(msg, 'error', 4000)
-    } finally {
-      setIsDeleting(false)
-    }
-  }, [selectedRoute, isDeleting, setRoutes, showToast])
-
-  // ============ 新增线路逻辑 ============
   const handleStartCreate = useCallback(() => {
-    if (hasUnsavedChanges()) {
-      showToast('请先保存当前线路的更改', 'info', 3000)
-      return
+    const started = creation.handleStartCreate()
+    if (started) {
+      setSelectedRoute(null)
+      setShowEditorPanel(true)
     }
-    setIsCreatingRoute(true)
-    setSelectedRoute(null)
-    setShowEditorPanel(true)
-    const defaultArea = selectedArea || (areas.length > 0 ? areas[0] : '')
-    setNewRoute({
-      name: '', grade: '？', area: defaultArea, FA: '', setter: '', description: '',
-    })
-    setFormErrors({})
-  }, [selectedArea, areas, hasUnsavedChanges, showToast])
-
-  function validateRouteForm(data: { name: string; area: string }): Record<string, string> {
-    const errors: Record<string, string> = {}
-    if (!data.name.trim()) errors.name = '请输入线路名称'
-    if (!data.area.trim()) errors.area = '请选择区域'
-    return errors
-  }
+  }, [creation.handleStartCreate])
 
   const handleSubmitCreate = useCallback(async () => {
-    const errors = validateRouteForm(newRoute)
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors)
-      return
-    }
-    setFormErrors({})
-    if (!selectedCragId) return
-
-    setIsSubmittingCreate(true)
-    try {
-      const res = await fetch('/api/routes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...newRoute, cragId: selectedCragId }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || '创建失败')
-
-      const created = data.route as Route
-      setRoutes(prev => [...prev, created])
-      setIsCreatingRoute(false)
+    const created = await creation.handleSubmitCreate()
+    if (created) {
       setSelectedRoute(created)
-
-      // 如果区域是新的，同步到 crag.areas（仅基于持久化 areas）
-      const createdArea = newRoute.area.trim()
-      if (createdArea && selectedCragId && !persistedAreas.includes(createdArea)) {
-        const merged = [...new Set([...persistedAreas, createdArea])].sort()
-        updateCragAreas(selectedCragId, merged).catch(() => {})
-      }
-
-      showToast(`线路「${created.name}」创建成功！`, 'success', 3000)
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : '创建失败', 'error', 4000)
-    } finally {
-      setIsSubmittingCreate(false)
     }
-  }, [selectedCragId, newRoute, setRoutes, showToast, persistedAreas, updateCragAreas])
+  }, [creation.handleSubmitCreate])
 
   const handleCancelCreate = useCallback(() => {
-    setIsCreatingRoute(false)
+    creation.handleCancelCreate()
     setShowEditorPanel(false)
-    setFormErrors({})
-  }, [])
+  }, [creation.handleCancelCreate])
 
-  // ============ SVG 计算 ============
-  const routeColor = useMemo(
-    () => getGradeColor(editedRoute.grade || selectedRoute?.grade || '？'),
-    [editedRoute.grade, selectedRoute?.grade]
-  )
+  const handleDeleteRoute = useCallback(async () => {
+    const deleted = await editor.handleDeleteRoute()
+    if (deleted) {
+      setSelectedRoute(null)
+      setShowEditorPanel(false)
+    }
+  }, [editor.handleDeleteRoute])
 
-  const vb = useMemo(() => computeViewBox(imageAspectRatio ?? 4 / 3), [imageAspectRatio])
+  const handleRouteClickFromTopo = useCallback((routeId: number) => {
+    const target = routes.find(r => r.id === routeId)
+    if (target) handleRouteClick(target)
+  }, [routes, handleRouteClick])
 
-  const scaledPoints = useMemo(
-    () => scalePoints(topoLine, vb.width, vb.height),
-    [topoLine, vb]
-  )
-
-  const pathData = useMemo(() => {
-    if (scaledPoints.length < 2) return ''
-    return catmullRomCurve(scaledPoints, 0.5, topoTension)
-  }, [scaledPoints, topoTension])
+  // Sync editor panel with route selection
+  useEffect(() => {
+    if (selectedRoute) setShowEditorPanel(true)
+  }, [selectedRoute])
 
   // ============ 左栏 ============
   const leftPanel = (
@@ -696,12 +387,16 @@ export default function RouteAnnotationPage() {
               </div>
             ) : (
               filteredRoutes.map((route) => (
-                <RouteCard
+                <div
                   key={route.id}
-                  route={route}
-                  isSelected={selectedRoute?.id === route.id}
-                  onClick={() => handleRouteClick(route)}
-                />
+                  style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 56px' }}
+                >
+                  <RouteCard
+                    route={route}
+                    isSelected={selectedRoute?.id === route.id}
+                    onClick={() => handleRouteClick(route)}
+                  />
+                </div>
               ))
             )}
           </div>
@@ -718,7 +413,7 @@ export default function RouteAnnotationPage() {
           <Mountain className="w-16 h-16 mb-4 opacity-30" />
           <p className="text-lg font-medium">选择岩场开始标注</p>
         </div>
-      ) : isCreatingRoute ? (
+      ) : creation.isCreatingRoute ? (
         /* 新增线路表单 */
         <div className="max-w-lg mx-auto space-y-4 animate-fade-in-up">
           <div
@@ -738,22 +433,22 @@ export default function RouteAnnotationPage() {
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>名称 *</label>
                 <Input
-                  value={newRoute.name}
-                  onChange={(v) => { setNewRoute(prev => ({ ...prev, name: v })); setFormErrors(prev => { const next = {...prev}; delete next.name; return next }) }}
+                  value={creation.newRoute.name}
+                  onChange={(v) => { creation.setNewRoute(prev => ({ ...prev, name: v })); creation.setFormErrors(prev => { const next = {...prev}; delete next.name; return next }) }}
                   placeholder="线路名称"
-                  style={formErrors.name ? { borderColor: 'var(--theme-error)' } : undefined}
+                  style={creation.formErrors.name ? { borderColor: 'var(--theme-error)' } : undefined}
                 />
-                {formErrors.name && (
+                {creation.formErrors.name && (
                   <p className="text-xs mt-1" style={{ color: 'var(--theme-error)' }} role="alert">
-                    {formErrors.name}
+                    {creation.formErrors.name}
                   </p>
                 )}
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>难度 *</label>
                 <select
-                  value={newRoute.grade}
-                  onChange={(e) => setNewRoute(prev => ({ ...prev, grade: e.target.value }))}
+                  value={creation.newRoute.grade}
+                  onChange={(e) => creation.setNewRoute(prev => ({ ...prev, grade: e.target.value }))}
                 >
                   {GRADE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
                 </select>
@@ -762,32 +457,32 @@ export default function RouteAnnotationPage() {
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>区域 *</label>
                 <AreaSelect
                   areas={areas}
-                  value={newRoute.area}
-                  onChange={(area) => { setNewRoute(prev => ({ ...prev, area })); setFormErrors(prev => { const next = {...prev}; delete next.area; return next }) }}
+                  value={creation.newRoute.area}
+                  onChange={(area) => { creation.setNewRoute(prev => ({ ...prev, area })); creation.setFormErrors(prev => { const next = {...prev}; delete next.area; return next }) }}
                   placeholder="选择区域..."
                   required
-                  error={formErrors.area}
+                  error={creation.formErrors.area}
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>首攀者 (FA)</label>
                 <Input
-                  value={newRoute.FA}
-                  onChange={(v) => setNewRoute(prev => ({ ...prev, FA: v }))}
+                  value={creation.newRoute.FA}
+                  onChange={(v) => creation.setNewRoute(prev => ({ ...prev, FA: v }))}
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>定线者</label>
                 <Input
-                  value={newRoute.setter}
-                  onChange={(v) => setNewRoute(prev => ({ ...prev, setter: v }))}
+                  value={creation.newRoute.setter}
+                  onChange={(v) => creation.setNewRoute(prev => ({ ...prev, setter: v }))}
                 />
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>描述</label>
                 <Textarea
-                  value={newRoute.description}
-                  onChange={(v) => setNewRoute(prev => ({ ...prev, description: v }))}
+                  value={creation.newRoute.description}
+                  onChange={(v) => creation.setNewRoute(prev => ({ ...prev, description: v }))}
                   rows={3}
                 />
               </div>
@@ -804,15 +499,15 @@ export default function RouteAnnotationPage() {
             </button>
             <button
               onClick={handleSubmitCreate}
-              disabled={isSubmittingCreate}
+              disabled={creation.isSubmittingCreate}
               className="flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
               style={{
                 backgroundColor: 'var(--theme-primary)',
                 color: 'var(--theme-on-primary)',
-                opacity: isSubmittingCreate ? 0.6 : 1,
+                opacity: creation.isSubmittingCreate ? 0.6 : 1,
               }}
             >
-              {isSubmittingCreate ? (
+              {creation.isSubmittingCreate ? (
                 <><div className="w-5 h-5 animate-spin"><Loader2 className="w-full h-full" /></div> 创建中...</>
               ) : (
                 <><Plus className="w-5 h-5" /> 创建线路</>
@@ -835,10 +530,10 @@ export default function RouteAnnotationPage() {
             style={{
               backgroundColor: 'color-mix(in srgb, var(--theme-primary) 10%, var(--theme-surface))',
               borderRadius: 'var(--theme-radius-xl)',
-              border: `2px solid ${routeColor}`,
+              border: `2px solid ${editor.routeColor}`,
             }}
           >
-            <Sparkles className="w-5 h-5" style={{ color: routeColor }} />
+            <Sparkles className="w-5 h-5" style={{ color: editor.routeColor }} />
             <div className="flex-1">
               <h2 className="text-lg font-bold" style={{ color: 'var(--theme-on-surface)' }}>
                 {selectedRoute.name}
@@ -847,7 +542,7 @@ export default function RouteAnnotationPage() {
                 {selectedRoute.area} · {selectedRoute.grade}
               </p>
             </div>
-            <div className="px-3 py-1.5 rounded-full text-sm font-bold text-white" style={{ backgroundColor: routeColor }}>
+            <div className="px-3 py-1.5 rounded-full text-sm font-bold text-white" style={{ backgroundColor: editor.routeColor }}>
               {selectedRoute.grade}
             </div>
           </div>
@@ -855,204 +550,36 @@ export default function RouteAnnotationPage() {
           {/* 岩面选择器 */}
           <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
             <label className="block text-xs font-medium mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
-              选择岩面 {selectedFaceId && <span style={{ color: 'var(--theme-primary)' }}>· {selectedFaceId}</span>}
+              选择岩面 {editor.selectedFaceId && <span style={{ color: 'var(--theme-primary)' }}>· {editor.selectedFaceId}</span>}
             </label>
-            {isLoadingFaces ? (
-              <div className="flex items-center justify-center py-3" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                <div className="w-5 h-5 animate-spin"><Loader2 className="w-full h-full" /></div>
-              </div>
-            ) : areaFaceGroups.length === 0 ? (
-              <div className="text-center py-3" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                <p className="text-sm">暂无岩面数据</p>
-                <Link href="/faces" className="text-sm font-medium mt-1 inline-block" style={{ color: 'var(--theme-primary)' }}>
-                  去岩面管理页面创建 →
-                </Link>
-              </div>
-            ) : (
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-                {areaFaceGroups.map(face => (
-                  <button
-                    key={face.faceId}
-                    onClick={async () => {
-                      // 已选中的岩面不重复操作
-                      if (face.faceId === selectedFaceId) return
-                      setSelectedFaceId(face.faceId)
-                      setTopoLine([])  // 切换岩面时清空旧控制点
-                      const url = faceImageCache.getImageUrl({ cragId: selectedRoute.cragId, area: face.area, faceId: face.faceId })
-                      setImageUrl(url)
-                      setIsImageLoading(true)
-                      setImageLoadError(false)
-                      setImageAspectRatio(undefined)
-                      // 立即绑定 faceId 到线路
-                      try {
-                        const res = await fetch(`/api/routes/${selectedRoute.id}`, {
-                          method: 'PATCH',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ faceId: face.faceId }),
-                        })
-                        if (res.ok) {
-                          const data = await res.json()
-                          setRoutes(prev => prev.map(r => r.id === selectedRoute.id ? data.route : r))
-                        }
-                      } catch { /* 静默失败，保存时会再次绑定 */ }
-                    }}
-                    className={`flex-shrink-0 p-1.5 transition-all duration-200 active:scale-[0.98] ${selectedFaceId === face.faceId ? 'ring-2' : ''}`}
-                    style={{
-                      backgroundColor: selectedFaceId === face.faceId
-                        ? 'color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface))'
-                        : 'var(--theme-surface)',
-                      borderRadius: 'var(--theme-radius-lg)',
-                      // @ts-expect-error -- CSS custom properties
-                      '--tw-ring-color': 'var(--theme-primary)',
-                    }}
-                  >
-                    <div className="w-20 h-14 rounded-md overflow-hidden" style={{ backgroundColor: 'var(--theme-surface-variant)' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={face.imageUrl}
-                        alt={face.faceId}
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                      />
-                    </div>
-                    <p className="text-xs mt-1 text-center truncate w-20" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                      {face.faceId}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            )}
+            <FaceSelector
+              faceGroups={areaFaceGroups}
+              selectedFaceId={editor.selectedFaceId}
+              isLoading={isLoadingFaces}
+              onSelect={editor.handleFaceSelect}
+            />
           </div>
 
           {/* Topo 画布 */}
-          <div className="glass-light overflow-hidden" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
-            <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--theme-outline-variant)' }}>
-              <div>
-                <h3 className="font-semibold" style={{ color: 'var(--theme-on-surface)' }}>Topo 标注</h3>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--theme-on-surface-variant)' }}>{topoLine.length >= 2 ? `${topoLine.length} 个控制点` : '尚未标注'}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {sameFaceRoutes.length > 0 && (
-                  <button
-                    onClick={() => setShowOtherRoutes(prev => !prev)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 active:scale-95"
-                    style={{
-                      backgroundColor: showOtherRoutes
-                        ? 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))'
-                        : 'var(--theme-surface)',
-                      color: showOtherRoutes ? 'var(--theme-primary)' : 'var(--theme-on-surface-variant)',
-                    }}
-                    title={showOtherRoutes ? '隐藏其他线路' : '显示其他线路'}
-                  >
-                    {showOtherRoutes ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                    {sameFaceRoutes.length}条
-                  </button>
-                )}
-                <div className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)' }}>
-                  {topoLine.length} 个点
-                </div>
-              </div>
-            </div>
-
-            {!imageUrl || imageLoadError ? (
-              <div className="m-4 rounded-xl flex flex-col items-center justify-center aspect-[4/3]" style={{ backgroundColor: 'var(--theme-surface)' }}>
-                <AlertCircle className="w-10 h-10 mb-3" style={{ color: 'var(--theme-warning)' }} />
-                <p className="font-medium mb-1" style={{ color: 'var(--theme-on-surface)' }}>暂无岩面照片</p>
-                <Link href="/faces" className="text-sm font-medium mt-1" style={{ color: 'var(--theme-primary)' }}>
-                  去岩面管理页面上传照片 →
-                </Link>
-              </div>
-            ) : (
-              <div className="p-4">
-                <div
-                  className="relative rounded-xl overflow-hidden aspect-[4/3]"
-                  style={{ boxShadow: 'var(--theme-shadow-md)', backgroundColor: 'var(--theme-surface-variant)' }}
-                >
-                  {isImageLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center z-10" style={{ backgroundColor: 'var(--theme-surface-variant)' }}>
-                      <div className="text-center">
-                        <div className="w-8 h-8 animate-spin mx-auto mb-2"><Loader2 className="w-full h-full" style={{ color: 'var(--theme-primary)' }} /></div>
-                        <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>加载云端图片...</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    key={imageUrl}
-                    src={imageUrl}
-                    alt="岩面照片"
-                    className="w-full h-full object-contain"
-                    style={{ opacity: isImageLoading ? 0 : 1 }}
-                    draggable={false}
-                    onLoad={(e) => {
-                      setIsImageLoading(false)
-                      setImageLoadError(false)
-                      const img = e.currentTarget
-                      if (img.naturalWidth && img.naturalHeight) {
-                        setImageAspectRatio(img.naturalWidth / img.naturalHeight)
-                      }
-                    }}
-                    onError={() => { setIsImageLoading(false); setImageLoadError(true) }}
-                  />
-
-                  {/* 多线路叠加层（其他线路，灰色可点击） */}
-                  {sameFaceRoutes.length > 0 && (
-                    <MultiTopoLineOverlay
-                      routes={sameFaceRoutes}
-                      selectedRouteId={-1}
-                      onRouteSelect={(routeId) => {
-                        const target = routes.find(r => r.id === routeId)
-                        if (target) handleRouteClick(target)
-                      }}
-                      aspectRatio={imageAspectRatio}
-                      preserveAspectRatio="xMidYMid meet"
-                    />
-                  )}
-
-                  {/* 当前线路 SVG 叠加层（只读预览） */}
-                  <svg
-                    className="absolute inset-0 w-full h-full pointer-events-none"
-                    viewBox={`0 0 ${vb.width} ${vb.height}`}
-                    preserveAspectRatio="xMidYMid meet"
-                  >
-                    {pathData && (
-                      <path d={pathData} stroke={routeColor} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                    )}
-                    {scaledPoints.map((point, index) => (
-                      <circle
-                        key={index}
-                        cx={point.x} cy={point.y}
-                        r={index === 0 ? 6 : index === scaledPoints.length - 1 ? 5 : 4}
-                        fill={index === 0 ? routeColor : 'white'}
-                        stroke={index === 0 ? 'white' : routeColor}
-                        strokeWidth={index === 0 ? 1.5 : 2}
-                      />
-                    ))}
-                    {scaledPoints.length > 0 && (
-                      <text x={scaledPoints[0].x - 12} y={scaledPoints[0].y + 18} fill={routeColor} fontSize="10" fontWeight="bold">起点</text>
-                    )}
-                    {scaledPoints.length > 1 && (
-                      <text x={scaledPoints[scaledPoints.length - 1].x - 12} y={scaledPoints[scaledPoints.length - 1].y - 12} fill={routeColor} fontSize="10" fontWeight="bold">终点</text>
-                    )}
-                  </svg>
-                </div>
-
-                {/* 标注按钮 */}
-                <button
-                  className="w-full py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 mt-4 transition-all duration-200 active:scale-[0.98]"
-                  style={topoLine.length === 0
-                    ? { backgroundColor: 'var(--theme-primary)', color: 'var(--theme-on-primary)', boxShadow: 'var(--theme-shadow-sm)' }
-                    : { backgroundColor: 'var(--theme-surface)', color: 'var(--theme-on-surface)', border: '1.5px solid var(--theme-outline-variant)', boxShadow: 'var(--theme-shadow-sm)' }
-                  }
-                  onClick={handleOpenFullscreen}
-                >
-                  <Edit3 className="w-4 h-4" />
-                  {topoLine.length === 0 ? '开始标注' : '编辑标注'}
-                </button>
-              </div>
-            )}
-          </div>
+          <TopoPreview
+            imageUrl={editor.imageUrl}
+            imageLoadError={editor.imageLoadError}
+            isImageLoading={editor.isImageLoading}
+            imageAspectRatio={editor.imageAspectRatio}
+            topoLine={editor.topoLine}
+            routeColor={editor.routeColor}
+            scaledPoints={editor.scaledPoints}
+            pathData={editor.pathData}
+            vb={editor.vb}
+            sameFaceRoutes={sameFaceRoutes}
+            showOtherRoutes={editor.showOtherRoutes}
+            onToggleOtherRoutes={() => editor.setShowOtherRoutes(prev => !prev)}
+            onOpenFullscreen={editor.handleOpenFullscreen}
+            onRouteClick={handleRouteClickFromTopo}
+            onImageLoad={editor.handleImageLoad}
+            onImageError={editor.handleImageError}
+            MultiTopoLineOverlay={MultiTopoLineOverlay}
+          />
 
           {/* 线路信息编辑 */}
           <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
@@ -1061,21 +588,21 @@ export default function RouteAnnotationPage() {
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>名称 *</label>
                 <Input
-                  value={editedRoute.name || ''}
-                  onChange={(v) => { setEditedRoute((prev) => ({ ...prev, name: v })); setFormErrors(prev => { const next = {...prev}; delete next.name; return next }) }}
-                  style={formErrors.name ? { borderColor: 'var(--theme-error)' } : undefined}
+                  value={editor.editedRoute.name || ''}
+                  onChange={(v) => { editor.setEditedRoute((prev) => ({ ...prev, name: v })); editor.setFormErrors(prev => { const next = {...prev}; delete next.name; return next }) }}
+                  style={editor.formErrors.name ? { borderColor: 'var(--theme-error)' } : undefined}
                 />
-                {formErrors.name && (
+                {editor.formErrors.name && (
                   <p className="text-xs mt-1" style={{ color: 'var(--theme-error)' }} role="alert">
-                    {formErrors.name}
+                    {editor.formErrors.name}
                   </p>
                 )}
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>难度</label>
                 <select
-                  value={editedRoute.grade || ''}
-                  onChange={(e) => setEditedRoute((prev) => ({ ...prev, grade: e.target.value }))}
+                  value={editor.editedRoute.grade || ''}
+                  onChange={(e) => editor.setEditedRoute((prev) => ({ ...prev, grade: e.target.value }))}
                 >
                   {GRADE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
                 </select>
@@ -1084,32 +611,32 @@ export default function RouteAnnotationPage() {
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>区域</label>
                 <AreaSelect
                   areas={areas}
-                  value={editedRoute?.area || ''}
-                  onChange={(area) => { setEditedRoute(prev => prev ? { ...prev, area } : prev); setFormErrors(prev => { const next = {...prev}; delete next.area; return next }) }}
+                  value={editor.editedRoute?.area || ''}
+                  onChange={(area) => { editor.setEditedRoute(prev => prev ? { ...prev, area } : prev); editor.setFormErrors(prev => { const next = {...prev}; delete next.area; return next }) }}
                   placeholder="选择区域..."
                   required
-                  error={formErrors.area}
+                  error={editor.formErrors.area}
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>首攀者 (FA)</label>
                 <Input
-                  value={editedRoute.FA || ''}
-                  onChange={(v) => setEditedRoute((prev) => ({ ...prev, FA: v }))}
+                  value={editor.editedRoute.FA || ''}
+                  onChange={(v) => editor.setEditedRoute((prev) => ({ ...prev, FA: v }))}
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>定线者</label>
                 <Input
-                  value={editedRoute.setter || ''}
-                  onChange={(v) => setEditedRoute((prev) => ({ ...prev, setter: v }))}
+                  value={editor.editedRoute.setter || ''}
+                  onChange={(v) => editor.setEditedRoute((prev) => ({ ...prev, setter: v }))}
                 />
               </div>
               <div className="col-span-2 lg:col-span-3">
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>描述</label>
                 <Textarea
-                  value={editedRoute.description || ''}
-                  onChange={(v) => setEditedRoute((prev) => ({ ...prev, description: v }))}
+                  value={editor.editedRoute.description || ''}
+                  onChange={(v) => editor.setEditedRoute((prev) => ({ ...prev, description: v }))}
                   rows={3}
                 />
               </div>
@@ -1120,27 +647,27 @@ export default function RouteAnnotationPage() {
           <button
             className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
             style={{
-              backgroundColor: saveSuccess ? 'var(--theme-success)' : 'var(--theme-primary)',
-              color: saveSuccess ? 'white' : 'var(--theme-on-primary)',
-              boxShadow: `0 4px 16px ${saveSuccess ? 'var(--theme-success)' : 'var(--theme-primary)'}40`,
-              opacity: isSaving ? 0.8 : 1,
+              backgroundColor: editor.saveSuccess ? 'var(--theme-success)' : 'var(--theme-primary)',
+              color: editor.saveSuccess ? 'white' : 'var(--theme-on-primary)',
+              boxShadow: `0 4px 16px ${editor.saveSuccess ? 'var(--theme-success)' : 'var(--theme-primary)'}40`,
+              opacity: editor.isSaving ? 0.8 : 1,
             }}
-            onClick={handleSave}
-            disabled={isSaving}
+            onClick={editor.handleSave}
+            disabled={editor.isSaving}
           >
-            {isSaving ? (
+            {editor.isSaving ? (
               <><div className="w-5 h-5 animate-spin"><Loader2 className="w-full h-full" /></div> 保存中...</>
-            ) : saveSuccess ? (
+            ) : editor.saveSuccess ? (
               <><Check className="w-5 h-5" /> 保存成功</>
             ) : (
               <><Save className="w-5 h-5" /> 保存更改</>
             )}
           </button>
 
-          {saveError && (
+          {editor.saveError && (
             <div className="p-3 rounded-xl flex items-center gap-2 animate-fade-in-up" style={{ backgroundColor: 'color-mix(in srgb, var(--theme-error) 12%, var(--theme-surface))', color: 'var(--theme-error)' }}>
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm">{saveError}</span>
+              <span className="text-sm">{editor.saveError}</span>
             </div>
           )}
 
@@ -1151,7 +678,7 @@ export default function RouteAnnotationPage() {
               color: 'var(--theme-error)',
               backgroundColor: 'color-mix(in srgb, var(--theme-error) 8%, transparent)',
             }}
-            onClick={() => setShowDeleteConfirm(true)}
+            onClick={() => editor.setShowDeleteConfirm(true)}
           >
             <Trash2 className="w-4 h-4" />
             删除线路
@@ -1169,23 +696,16 @@ export default function RouteAnnotationPage() {
         icon={<Edit3 className="w-5 h-5" style={{ color: 'var(--theme-primary)' }} />}
         isDetailMode={showEditorPanel}
         onBackToList={() => {
-          if (isCreatingRoute) {
+          if (creation.isCreatingRoute) {
             handleCancelCreate()
             return
           }
-          if (hasUnsavedChanges()) {
-            setPendingAction({ type: 'goBackMobile' })
-            setShowUnsavedDialog(true)
-            return
-          }
-          setShowEditorPanel(false)
-          setSelectedRoute(null)
+          dirtyGuard.guardAction({ type: 'goBackMobile' })
         }}
         listLabel="线路列表"
       />
 
       <div className="max-w-4xl lg:max-w-none mx-auto px-4 lg:px-6 py-4">
-        {/* 桌面端双栏 */}
         <div className="hidden lg:flex lg:gap-6 lg:h-[calc(100vh-73px)]">
           <div className="w-[380px] flex-shrink-0 flex flex-col overflow-hidden">
             {leftPanel}
@@ -1195,7 +715,6 @@ export default function RouteAnnotationPage() {
           </div>
         </div>
 
-        {/* 移动端 */}
         <div className="lg:hidden">
           {!showEditorPanel ? (
             leftPanel
@@ -1208,141 +727,64 @@ export default function RouteAnnotationPage() {
       </div>
 
       {/* 全屏编辑 */}
-      {isFullscreenEdit && imageUrl && (
+      {editor.isFullscreenEdit && editor.imageUrl && (
         <FullscreenTopoEditor
-          imageUrl={imageUrl}
-          imageAspectRatio={imageAspectRatio}
-          topoLine={topoLine}
-          routeColor={routeColor}
-          tension={topoTension}
+          imageUrl={editor.imageUrl}
+          imageAspectRatio={editor.imageAspectRatio}
+          topoLine={editor.topoLine}
+          routeColor={editor.routeColor}
+          tension={editor.topoTension}
           otherRoutes={sameFaceRoutes}
-          onAddPoint={(point) => setTopoLine(prev => [...prev, point])}
-          onRemoveLastPoint={handleRemoveLastPoint}
-          onClearPoints={handleClearPoints}
-          onTensionChange={setTopoTension}
-          onClose={handleFullscreenClose}
+          onAddPoint={(point) => editor.setTopoLine(prev => [...prev, point])}
+          onRemoveLastPoint={editor.handleRemoveLastPoint}
+          onClearPoints={editor.handleClearPoints}
+          onTensionChange={editor.setTopoTension}
+          onClose={editor.handleFullscreenClose}
         />
       )}
 
       {/* 未保存更改确认对话框 */}
-      {showUnsavedDialog && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-          onClick={() => { setShowUnsavedDialog(false); setPendingAction(null) }}
-        >
-          <div
-            className="mx-4 w-full max-w-sm p-6 rounded-xl"
-            style={{ backgroundColor: 'var(--theme-surface)', boxShadow: 'var(--theme-shadow-lg)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--theme-on-surface)' }}>
-              有未保存的修改
-            </h3>
-            <p className="text-sm mb-6" style={{ color: 'var(--theme-on-surface-variant)' }}>
-              当前线路的修改尚未保存，切换后将丢失这些更改。
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={handleDiscardAndExecute}
-                disabled={isSaving}
-                className="flex-1 py-2.5 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
-                style={{
-                  backgroundColor: 'transparent',
-                  color: 'var(--theme-on-surface)',
-                  border: '1.5px solid var(--theme-outline)',
-                  opacity: isSaving ? 0.5 : 1,
-                }}
-              >
-                丢弃
-              </button>
-              <button
-                onClick={handleSaveAndExecute}
-                disabled={isSaving}
-                className="flex-1 py-2.5 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98]"
-                style={{
-                  backgroundColor: 'var(--theme-primary)',
-                  color: 'var(--theme-on-primary)',
-                  opacity: isSaving ? 0.7 : 1,
-                }}
-              >
-                {isSaving ? '保存中...' : '保存并切换'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={dirtyGuard.showUnsavedDialog}
+        title="有未保存的修改"
+        description="当前线路的修改尚未保存，切换后将丢失这些更改。"
+        confirmLabel={dirtyGuard.isSavingForGuard ? '保存中...' : '保存并切换'}
+        cancelLabel="丢弃"
+        variant="warning"
+        isLoading={dirtyGuard.isSavingForGuard}
+        onConfirm={dirtyGuard.handleSaveAndProceed}
+        onCancel={dirtyGuard.handleDiscard}
+      />
 
       {/* 删除确认对话框 */}
-      {showDeleteConfirm && selectedRoute && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
-        >
+      <ConfirmDialog
+        isOpen={editor.showDeleteConfirm && !!selectedRoute}
+        title="删除线路"
+        description={`确定要删除线路「${selectedRoute?.name}」(${selectedRoute?.grade}) 吗？`}
+        confirmLabel="确认删除"
+        variant="danger"
+        isLoading={editor.isDeleting}
+        icon={
           <div
-            className="max-w-sm w-full p-6 animate-scale-in"
-            style={{
-              backgroundColor: 'var(--theme-surface)',
-              borderRadius: 'var(--theme-radius-xl)',
-              boxShadow: 'var(--theme-shadow-lg)',
-            }}
+            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--theme-error) 15%, var(--theme-surface))' }}
           >
-            <div className="flex items-start gap-4 mb-5">
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: 'color-mix(in srgb, var(--theme-error) 15%, var(--theme-surface))' }}
-              >
-                <Trash2 className="w-6 h-6" style={{ color: 'var(--theme-error)' }} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg mb-1" style={{ color: 'var(--theme-on-surface)' }}>
-                  删除线路
-                </h3>
-                <p className="text-sm" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  确定要删除线路「{selectedRoute.name}」({selectedRoute.grade}) 吗？
-                </p>
-              </div>
-            </div>
-
-            <div
-              className="p-3 mb-5 rounded-lg text-xs"
-              style={{
-                backgroundColor: 'color-mix(in srgb, var(--theme-error) 8%, var(--theme-surface))',
-                color: 'var(--theme-on-surface-variant)',
-              }}
-            >
-              删除后，该线路的 Topo 标注和 Beta 视频链接将一并移除，此操作不可撤销。
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                className="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 active:scale-[0.98] glass-light"
-                style={{ color: 'var(--theme-on-surface)' }}
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={isDeleting}
-              >
-                取消
-              </button>
-              <button
-                className="flex-1 py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
-                style={{
-                  backgroundColor: 'var(--theme-error)',
-                  color: 'white',
-                  opacity: isDeleting ? 0.7 : 1,
-                }}
-                onClick={handleDeleteRoute}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> 删除中...</>
-                ) : (
-                  '确认删除'
-                )}
-              </button>
-            </div>
+            <Trash2 className="w-6 h-6" style={{ color: 'var(--theme-error)' }} />
           </div>
+        }
+        onConfirm={handleDeleteRoute}
+        onCancel={() => editor.setShowDeleteConfirm(false)}
+      >
+        <div
+          className="p-3 mb-5 rounded-lg text-xs"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--theme-error) 8%, var(--theme-surface))',
+            color: 'var(--theme-on-surface-variant)',
+          }}
+        >
+          删除后，该线路的 Topo 标注和 Beta 视频链接将一并移除，此操作不可撤销。
         </div>
-      )}
+      </ConfirmDialog>
     </div>
   )
 }
