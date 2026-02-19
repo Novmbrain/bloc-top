@@ -1,5 +1,5 @@
 // apps/editor/src/hooks/use-face-upload.ts
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useToast } from '@bloctop/ui/components/toast'
 
 export function useFaceUpload() {
@@ -11,6 +11,7 @@ export function useFaceUpload() {
   const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false)
   const [clearTopoOnUpload, setClearTopoOnUpload] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const previewUrlRef = useRef<string | null>(null)
   const { showToast } = useToast()
 
   const handleFile = useCallback((file: File) => {
@@ -18,7 +19,9 @@ export function useFaceUpload() {
       showToast('请上传图片文件', 'error')
       return
     }
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
     const url = URL.createObjectURL(file)
+    previewUrlRef.current = url
     setUploadedFile(file)
     setPreviewUrl(url)
   }, [showToast])
@@ -46,6 +49,10 @@ export function useFaceUpload() {
   }, [handleFile])
 
   const clearFile = useCallback(() => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current)
+      previewUrlRef.current = null
+    }
     setUploadedFile(null)
     setPreviewUrl(null)
   }, [])
@@ -71,7 +78,6 @@ export function useFaceUpload() {
           useWebWorker: true,
           onProgress: (p: number) => setCompressionProgress(Math.round(p)),
         })
-        setCompressionProgress(null)
       }
       const formData = new FormData()
       formData.append('file', fileToUpload)
@@ -85,6 +91,10 @@ export function useFaceUpload() {
       if (!res.ok) throw new Error(data.error || '上传失败')
 
       onSuccess(data.url)
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current)
+        previewUrlRef.current = null
+      }
       setUploadedFile(null)
       setPreviewUrl(null)
       setClearTopoOnUpload(false)
@@ -93,6 +103,7 @@ export function useFaceUpload() {
       showToast(msg, 'error', 4000)
     } finally {
       setIsUploading(false)
+      setCompressionProgress(null)
     }
   }, [uploadedFile, clearTopoOnUpload, showToast])
 
@@ -120,6 +131,12 @@ export function useFaceUpload() {
       // 检查失败时直接上传
     }
     onDirectUpload()
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
+    }
   }, [])
 
   return {

@@ -157,9 +157,16 @@ export function useFaceData({
     isCreating: boolean
     newArea: string
   }) => {
-    const { url, faceId, area, isCreating, newArea } = params
-    await preloadImage(url)
+    const { url: _url, faceId, area, isCreating, newArea } = params
+    // 1. 先 invalidate，生成带新版本号的 URL
     faceImageCache.invalidate(`${selectedCragId}/${area}/${faceId}`)
+    // 2. 用 invalidate 后的版本化 URL 预加载（与订阅组件将使用的 URL 一致）
+    const versionedUrl = faceImageCache.getImageUrl({
+      cragId: selectedCragId!,
+      area,
+      faceId,
+    })
+    await preloadImage(versionedUrl)
     showToast('照片上传成功！', 'success', 3000)
 
     if (isCreating) {
