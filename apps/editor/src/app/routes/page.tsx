@@ -112,6 +112,7 @@ export default function RouteAnnotationPage() {
       case 'switchArea':
         setSelectedArea(action.payload)
         setSelectedRoute(null)
+        setActiveTab('topo')
         setShowEditorPanel(false)
         break
       case 'switchCrag':
@@ -119,11 +120,13 @@ export default function RouteAnnotationPage() {
         setSelectedRoute(null)
         setSelectedArea(null)
         editor.resetEditor()
+        setActiveTab('topo')
         setShowEditorPanel(false)
         break
       case 'goBackMobile':
         setShowEditorPanel(false)
         setSelectedRoute(null)
+        setActiveTab('topo')
         break
     }
   }, [setSelectedCragId, editor])
@@ -245,6 +248,7 @@ export default function RouteAnnotationPage() {
     const started = creation.handleStartCreate()
     if (started) {
       setSelectedRoute(null)
+      setActiveTab('topo')
       setShowEditorPanel(true)
     }
   }, [creation])
@@ -265,6 +269,7 @@ export default function RouteAnnotationPage() {
     const deleted = await editor.handleDeleteRoute()
     if (deleted) {
       setSelectedRoute(null)
+      setActiveTab('topo')
       setShowEditorPanel(false)
     }
   }, [editor])
