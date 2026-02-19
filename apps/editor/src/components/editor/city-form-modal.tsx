@@ -59,11 +59,12 @@ export function CityFormModal({
         sortOrder: parseInt(sortOrder) || 0,
       }
 
+      const { id: _omit, ...patchPayload } = payload
       const res = isEdit
         ? await fetch(`/api/cities/${city.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
+            body: JSON.stringify(patchPayload),
           })
         : await fetch('/api/cities', {
             method: 'POST',
@@ -88,7 +89,7 @@ export function CityFormModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
-      style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+      style={{ backgroundColor: 'color-mix(in srgb, black 40%, transparent)' }}
     >
       <div
         className="glass-heavy w-full max-w-lg max-h-[80vh] overflow-y-auto p-6 animate-drawer-in"
@@ -101,7 +102,7 @@ export function CityFormModal({
           >
             {isEdit ? '编辑城市' : '新建城市'}
           </h3>
-          <button onClick={onClose} className="p-1">
+          <button onClick={onClose} className="p-1" aria-label="关闭">
             <X className="w-5 h-5" style={{ color: 'var(--theme-on-surface-variant)' }} />
           </button>
         </div>

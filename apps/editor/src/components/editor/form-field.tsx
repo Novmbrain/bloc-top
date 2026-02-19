@@ -1,5 +1,3 @@
-'use client'
-
 import React from 'react'
 
 export function FormField({
@@ -11,9 +9,8 @@ export function FormField({
   children: React.ReactNode
   disabled?: boolean
 }) {
-  void disabled
   return (
-    <div>
+    <div style={{ opacity: disabled ? 0.5 : 1 }}>
       <label
         className="block text-xs font-medium mb-1.5"
         style={{ color: 'var(--theme-on-surface-variant)' }}
