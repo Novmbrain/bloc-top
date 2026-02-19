@@ -39,6 +39,11 @@ import { useRouteEditor } from '@/hooks/use-route-editor'
 import { useRouteCreation } from '@/hooks/use-route-creation'
 import { useDirtyGuard } from '@/hooks/use-dirty-guard'
 import type { R2FaceInfo, FaceGroup } from '@/types/face'
+import { useBetaManagement } from '@/hooks/use-beta-management'
+import { BetaCard } from '@/components/editor/beta-card'
+import { BetaSubmitDrawer } from '@/components/beta-submit-drawer'
+import type { BetaLink } from '@bloctop/shared/types'
+import { Play } from 'lucide-react'
 
 const FullscreenTopoEditor = dynamic(
   () => import('@/components/editor/fullscreen-topo-editor'),
@@ -92,6 +97,31 @@ export default function RouteAnnotationPage() {
     selectedCragId,
     updateCragAreas,
   })
+
+  // ============ Beta 管理 ============
+  const {
+    editingBetaId, setEditingBetaId,
+    editForm, setEditForm,
+    isSaving: isBetaSaving, deletingBetaId,
+    handleStartEdit: handleStartBetaEdit,
+    handleSaveBeta,
+    handleDeleteBeta,
+  } = useBetaManagement({ setRoutes })
+
+  const [showBetaSubmitDrawer, setShowBetaSubmitDrawer] = useState(false)
+
+  const handleBetaSubmitSuccess = useCallback((newBeta: BetaLink) => {
+    if (!selectedRoute) return
+    setRoutes(prev => prev.map(r =>
+      r.id === selectedRoute.id
+        ? { ...r, betaLinks: [...(r.betaLinks || []), newBeta] }
+        : r
+    ))
+    setSelectedRoute(prev => prev && prev.id === selectedRoute.id
+      ? { ...prev, betaLinks: [...(prev.betaLinks || []), newBeta] }
+      : prev
+    )
+  }, [selectedRoute, setRoutes])
 
   const creation = useRouteCreation({
     selectedCragId,
