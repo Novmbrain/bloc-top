@@ -17,6 +17,7 @@ interface ImageUploadZoneProps {
   emptyTitle?: string
   emptySubtitle?: string
   disabled?: boolean
+  fileInputRef?: React.RefObject<HTMLInputElement>
 }
 
 export function ImageUploadZone({
@@ -34,8 +35,10 @@ export function ImageUploadZone({
   emptyTitle = '上传照片',
   emptySubtitle = '拖拽或点击选择',
   disabled = false,
+  fileInputRef: externalRef,
 }: ImageUploadZoneProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const internalRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = externalRef ?? internalRef
 
   return (
     <>
@@ -67,9 +70,12 @@ export function ImageUploadZone({
             <button
               onClick={onClearFile}
               className="absolute top-2 right-2 p-2 rounded-full transition-all active:scale-90"
-              style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--theme-on-surface) 70%, transparent)',
+                color: 'var(--theme-surface)',
+              }}
             >
-              <X className="w-4 h-4 text-white" />
+              <X className="w-4 h-4" />
             </button>
           </div>
           {onUpload && (

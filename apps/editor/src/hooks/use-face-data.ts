@@ -5,7 +5,8 @@ import type { Route } from '@bloctop/shared/types'
 import type { FaceImageCacheService } from '@bloctop/ui/face-image'
 import { preloadImage } from '@bloctop/shared/editor-utils'
 
-const FACE_ID_PATTERN = /^[\u4e00-\u9fffa-z0-9-]+$/
+export const FACE_ID_PATTERN = /^[\u4e00-\u9fffa-z0-9-]+$/
+export const FACE_ID_CLEANUP = /[^\u4e00-\u9fffa-z0-9-]/g
 
 export interface R2FaceInfo { faceId: string; area: string }
 

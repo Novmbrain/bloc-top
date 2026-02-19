@@ -2,13 +2,11 @@
 import { Pencil, Check, X, Loader2, Trash2 } from 'lucide-react'
 import { Input } from '@bloctop/ui/components/input'
 import { ImageUploadZone } from '@/components/editor/image-upload-zone'
+import { FACE_ID_CLEANUP } from '@/hooks/use-face-data'
 import type { FaceGroup } from '@/hooks/use-face-data'
-
-const FACE_ID_CLEANUP = /[^\u4e00-\u9fffa-z0-9-]/g
 
 interface FaceDetailPanelProps {
   selectedFace: FaceGroup
-  imageUrl: string
   isRenaming: boolean
   renameValue: string
   setRenameValue: (v: string) => void

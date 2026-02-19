@@ -2,8 +2,7 @@
 import { Input } from '@bloctop/ui/components/input'
 import { AreaSelect } from '@/components/editor/area-select'
 import { ImageUploadZone } from '@/components/editor/image-upload-zone'
-
-const FACE_ID_CLEANUP = /[^\u4e00-\u9fffa-z0-9-]/g
+import { FACE_ID_CLEANUP } from '@/hooks/use-face-data'
 
 interface FaceCreationPanelProps {
   areas: string[]
