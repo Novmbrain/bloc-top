@@ -1,3 +1,4 @@
+'use client'
 // apps/editor/src/components/editor/face-list-panel.tsx
 import { Image as ImageIcon, Plus, Loader2 } from 'lucide-react'
 import { Input } from '@bloctop/ui/components/input'
@@ -99,7 +100,12 @@ export function FaceListPanel({
                   <div className="flex items-center gap-3">
                     <div className="w-16 h-12 rounded-lg overflow-hidden flex-shrink-0" style={{ backgroundColor: 'var(--theme-surface-variant)' }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={face.imageUrl} alt={face.faceId} className="w-full h-full object-cover" />
+                      <img
+                        src={face.imageUrl}
+                        alt={face.faceId}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="font-semibold block truncate" style={{ color: 'var(--theme-on-surface)' }}>{face.faceId}</span>

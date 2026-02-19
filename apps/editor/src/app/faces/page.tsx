@@ -34,6 +34,7 @@ export default function FaceManagementPage() {
   const [faceFormErrors, setFaceFormErrors] = useState<Record<string, string>>({})
   const [isRenaming, setIsRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
+  const [isSubmittingRename, setIsSubmittingRename] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isAddingArea, setIsAddingArea] = useState(false)
@@ -84,7 +85,8 @@ export default function FaceManagementPage() {
         },
       }),
     })
-  }, [isCreating, newFaceId, newArea, selectedFace, selectedCragId, upload, handleUploadSuccess])
+  }, [isCreating, newFaceId, newArea, selectedFace, selectedCragId, upload, handleUploadSuccess,
+      setSelectedFace, setIsCreating, setNewFaceId, setNewArea])
 
   const canCreate = isCreating && newFaceId.trim() && newArea.trim() && FACE_ID_PATTERN.test(newFaceId) && !!upload.uploadedFile
 
@@ -102,6 +104,24 @@ export default function FaceManagementPage() {
       setNewAreaName(''); setIsAddingArea(false)
     }
   }, [newAreaName, selectedCragId, persistedAreas, updateCragAreas, showToast])
+
+  const handleConfirmRename = useCallback(async () => {
+    if (!selectedFace || !selectedCragId) return
+    setIsSubmittingRename(true)
+    try {
+      const result = await handleRenameFace(selectedFace, renameValue)
+      if (result) {
+        setSelectedFace(prev => prev ? {
+          ...prev,
+          faceId: result,
+          imageUrl: faceImageCache.getImageUrl({ cragId: selectedCragId, area: prev.area, faceId: result }),
+        } : null)
+        setIsRenaming(false)
+      }
+    } finally {
+      setIsSubmittingRename(false)
+    }
+  }, [selectedFace, selectedCragId, renameValue, handleRenameFace, faceImageCache])
 
   const uploadProps = {
     previewUrl: upload.previewUrl, isDragging: upload.isDragging,
@@ -143,16 +163,10 @@ export default function FaceManagementPage() {
     <FaceDetailPanel
       selectedFace={selectedFace}
       isRenaming={isRenaming} renameValue={renameValue} setRenameValue={setRenameValue}
-      isSubmittingRename={false}
+      isSubmittingRename={isSubmittingRename}
       onStartRename={() => { setIsRenaming(true); setRenameValue(selectedFace.faceId) }}
       onCancelRename={() => setIsRenaming(false)}
-      onConfirmRename={async () => {
-        const result = await handleRenameFace(selectedFace, renameValue)
-        if (result) {
-          setSelectedFace(prev => prev ? { ...prev, faceId: result as string, imageUrl: faceImageCache.getImageUrl({ cragId: selectedCragId!, area: prev.area, faceId: result as string }) } : null)
-          setIsRenaming(false)
-        }
-      }}
+      onConfirmRename={handleConfirmRename}
       onDeleteClick={() => setShowDeleteConfirm(true)}
       {...uploadProps}
     />
