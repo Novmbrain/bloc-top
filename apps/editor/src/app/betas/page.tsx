@@ -12,15 +12,15 @@ import { EditorPageHeader } from '@/components/editor/editor-page-header'
 import { Input } from '@bloctop/ui/components/input'
 import type { Route, BetaLink } from '@bloctop/shared/types'
 import { getGradeColor } from '@bloctop/shared/tokens'
-import { useToast } from '@bloctop/ui/components/toast'
 import { matchRouteByQuery } from '@/hooks/use-route-search'
 import { useCragRoutes } from '@/hooks/use-crag-routes'
 import { CragSelector } from '@/components/editor/crag-selector'
 import { RouteCard } from '@/components/editor/route-card'
 import { deriveAreas } from '@bloctop/shared/editor-areas'
 import { BetaSubmitDrawer } from '@/components/beta-submit-drawer'
-import { BetaCard, type BetaEditForm } from '@/components/editor/beta-card'
+import { BetaCard } from '@/components/editor/beta-card'
 import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
+import { useBetaManagement } from '@/hooks/use-beta-management'
 
 /**
  * Beta 管理页面
@@ -29,7 +29,7 @@ import { useBreakAppShellLimit } from '@/hooks/use-break-app-shell-limit'
 export default function BetaEditorPage() {
   const {
     crags, routes, setRoutes, selectedCragId, setSelectedCragId,
-    isLoadingCrags, isLoadingRoutes, stats,
+    isLoadingCrags, isLoadingRoutes,
   } = useCragRoutes({ editorMode: true })
 
   // ============ 选择状态 ============
@@ -37,19 +37,19 @@ export default function BetaEditorPage() {
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // ============ 编辑状态 ============
-  const [editingBetaId, setEditingBetaId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState<BetaEditForm>({ title: '', author: '', climberHeight: '', climberReach: '' })
-  const [isSaving, setIsSaving] = useState(false)
-  const [deletingBetaId, setDeletingBetaId] = useState<string | null>(null)
-
   // ============ 添加 Beta ============
   const [showSubmitDrawer, setShowSubmitDrawer] = useState(false)
 
   // ============ UI 状态 ============
   const [showRightPanel, setShowRightPanel] = useState(false)
 
-  const { showToast } = useToast()
+  // ============ Beta CRUD (hook) ============
+  const {
+    editingBetaId, setEditingBetaId,
+    editForm, setEditForm,
+    isSaving, deletingBetaId,
+    handleStartEdit, handleSaveBeta, handleDeleteBeta,
+  } = useBetaManagement({ setRoutes })
 
   // ============ 桌面端突破 app-shell 宽度限制 ============
   useBreakAppShellLimit()
@@ -90,110 +90,21 @@ export default function BetaEditorPage() {
     setSelectedRoute(route)
     setEditingBetaId(null)
     setShowRightPanel(true)
-  }, [])
-
-  // ============ 同步 routes + selectedRoute 辅助 ============
-  const updateRouteAndSelected = useCallback(
-    (routeId: number, transform: (r: Route) => Route) => {
-      setRoutes(prev => prev.map(r => r.id === routeId ? transform(r) : r))
-      setSelectedRoute(prev => prev && prev.id === routeId ? transform(prev) : prev)
-    },
-    [setRoutes],
-  )
-
-  // ============ 开始编辑 Beta ============
-  const handleStartEdit = useCallback((beta: BetaLink) => {
-    setEditingBetaId(beta.id)
-    setEditForm({
-      title: beta.title || '',
-      author: beta.author || '',
-      climberHeight: beta.climberHeight ? String(beta.climberHeight) : '',
-      climberReach: beta.climberReach ? String(beta.climberReach) : '',
-    })
-  }, [])
-
-  // ============ 保存 Beta 编辑 ============
-  const handleSaveBeta = useCallback(async (betaId: string) => {
-    if (!selectedRoute) return
-    setIsSaving(true)
-    try {
-      const res = await fetch('/api/beta', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          routeId: selectedRoute.id,
-          betaId,
-          title: editForm.title.trim() || undefined,
-          author: editForm.author.trim() || undefined,
-          climberHeight: editForm.climberHeight ? parseInt(editForm.climberHeight, 10) : undefined,
-          climberReach: editForm.climberReach ? parseInt(editForm.climberReach, 10) : undefined,
-        }),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || '保存失败')
-      }
-
-      // 更新本地状态
-      const newValues = {
-        title: editForm.title.trim() || undefined,
-        author: editForm.author.trim() || undefined,
-        climberHeight: editForm.climberHeight ? parseInt(editForm.climberHeight, 10) : undefined,
-        climberReach: editForm.climberReach ? parseInt(editForm.climberReach, 10) : undefined,
-      }
-      updateRouteAndSelected(selectedRoute.id, r => ({
-        ...r,
-        betaLinks: (r.betaLinks || []).map(b =>
-          b.id === betaId ? { ...b, ...newValues } : b
-        ),
-      }))
-
-      setEditingBetaId(null)
-      showToast('Beta 信息已更新', 'success', 3000)
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : '保存失败', 'error', 4000)
-    } finally {
-      setIsSaving(false)
-    }
-  }, [selectedRoute, editForm, updateRouteAndSelected, showToast])
-
-  // ============ 删除 Beta ============
-  const handleDeleteBeta = useCallback(async (betaId: string) => {
-    if (!selectedRoute) return
-    setDeletingBetaId(betaId)
-    try {
-      const res = await fetch('/api/beta', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ routeId: selectedRoute.id, betaId }),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || '删除失败')
-      }
-
-      // 更新本地状态
-      updateRouteAndSelected(selectedRoute.id, r => ({
-        ...r,
-        betaLinks: (r.betaLinks || []).filter(b => b.id !== betaId),
-      }))
-
-      showToast('Beta 已删除', 'success', 3000)
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : '删除失败', 'error', 4000)
-    } finally {
-      setDeletingBetaId(null)
-    }
-  }, [selectedRoute, updateRouteAndSelected, showToast])
+  }, [setEditingBetaId])
 
   // ============ 添加 Beta 成功回调 (乐观更新) ============
   const handleBetaSubmitSuccess = useCallback((newBeta: BetaLink) => {
     if (!selectedRoute) return
-    updateRouteAndSelected(selectedRoute.id, r => ({
-      ...r,
-      betaLinks: [...(r.betaLinks || []), newBeta],
-    }))
-  }, [selectedRoute, updateRouteAndSelected])
+    setRoutes(prev => prev.map(r =>
+      r.id === selectedRoute.id
+        ? { ...r, betaLinks: [...(r.betaLinks || []), newBeta] }
+        : r
+    ))
+    setSelectedRoute(prev => prev && prev.id === selectedRoute.id
+      ? { ...prev, betaLinks: [...(prev.betaLinks || []), newBeta] }
+      : prev
+    )
+  }, [selectedRoute, setRoutes])
 
   // ============ Beta 统计 (用于 CragSelector) ============
   const betaStats = useMemo(() => {
@@ -394,8 +305,8 @@ export default function BetaEditorPage() {
                   setEditForm={setEditForm}
                   onStartEdit={() => handleStartEdit(beta)}
                   onCancelEdit={() => setEditingBetaId(null)}
-                  onSave={() => handleSaveBeta(beta.id)}
-                  onDelete={() => handleDeleteBeta(beta.id)}
+                  onSave={() => handleSaveBeta(beta.id, selectedRoute!, setSelectedRoute)}
+                  onDelete={() => handleDeleteBeta(beta.id, selectedRoute!, setSelectedRoute)}
                   isSaving={isSaving}
                   isDeleting={deletingBetaId === beta.id}
                 />

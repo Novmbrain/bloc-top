@@ -52,32 +52,25 @@ export function useBetaManagement({ setRoutes }: UseBetaManagementOptions) {
   ) => {
     setIsSaving(true)
     try {
+      const parsedValues = {
+        title: editForm.title.trim() || undefined,
+        author: editForm.author.trim() || undefined,
+        climberHeight: editForm.climberHeight ? parseInt(editForm.climberHeight, 10) : undefined,
+        climberReach: editForm.climberReach ? parseInt(editForm.climberReach, 10) : undefined,
+      }
       const res = await fetch('/api/beta', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          routeId: selectedRoute.id,
-          betaId,
-          title: editForm.title.trim() || undefined,
-          author: editForm.author.trim() || undefined,
-          climberHeight: editForm.climberHeight ? parseInt(editForm.climberHeight, 10) : undefined,
-          climberReach: editForm.climberReach ? parseInt(editForm.climberReach, 10) : undefined,
-        }),
+        body: JSON.stringify({ routeId: selectedRoute.id, betaId, ...parsedValues }),
       })
       if (!res.ok) {
         const data = await res.json()
         throw new Error(data.error || '保存失败')
       }
 
-      const newValues = {
-        title: editForm.title.trim() || undefined,
-        author: editForm.author.trim() || undefined,
-        climberHeight: editForm.climberHeight ? parseInt(editForm.climberHeight, 10) : undefined,
-        climberReach: editForm.climberReach ? parseInt(editForm.climberReach, 10) : undefined,
-      }
       updateRouteAndSelected(selectedRoute.id, r => ({
         ...r,
-        betaLinks: (r.betaLinks || []).map(b => b.id === betaId ? { ...b, ...newValues } : b),
+        betaLinks: (r.betaLinks || []).map(b => b.id === betaId ? { ...b, ...parsedValues } : b),
       }), setSelectedRoute)
 
       setEditingBetaId(null)
