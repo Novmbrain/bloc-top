@@ -26,7 +26,7 @@ export function InlineFaceUpload({ cragId, area, onUploadSuccess }: InlineFaceUp
   const handleFaceIdChange = useCallback((value: string) => {
     setFaceId(value)
     if (value && !FACE_ID_REGEX.test(value)) {
-      setFaceIdError('只能包含小写字母、数字和连字符，且以字母开头结尾')
+      setFaceIdError('只能包含小写字母、数字和连字符，且以字母开头和结尾，最少 2 个字符')
     } else {
       setFaceIdError('')
     }
@@ -41,7 +41,10 @@ export function InlineFaceUpload({ cragId, area, onUploadSuccess }: InlineFaceUp
         return
       }
       setSelectedFile(file)
-      setPreviewUrl(URL.createObjectURL(file))
+      setPreviewUrl(prev => {
+        if (prev) URL.revokeObjectURL(prev)
+        return URL.createObjectURL(file)
+      })
     },
     [showToast]
   )
@@ -64,14 +67,20 @@ export function InlineFaceUpload({ cragId, area, onUploadSuccess }: InlineFaceUp
         return
       }
       setSelectedFile(file)
-      setPreviewUrl(URL.createObjectURL(file))
+      setPreviewUrl(prev => {
+        if (prev) URL.revokeObjectURL(prev)
+        return URL.createObjectURL(file)
+      })
     },
     [showToast]
   )
 
   const handleClearFile = useCallback(() => {
+    setPreviewUrl(prev => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
     setSelectedFile(null)
-    setPreviewUrl(null)
   }, [])
 
   const handleUpload = useCallback(async () => {
@@ -159,7 +168,7 @@ export function InlineFaceUpload({ cragId, area, onUploadSuccess }: InlineFaceUp
         onClearFile={handleClearFile}
         onUpload={handleUpload}
         uploadButtonText="上传并开始标注"
-        disabled={!faceId || !!faceIdError}
+        disabled={!faceId || !!faceIdError || !selectedFile}
         emptyTitle="上传岩面照片"
         emptySubtitle="拖拽或点击选择图片"
       />
