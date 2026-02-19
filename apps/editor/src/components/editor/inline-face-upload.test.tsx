@@ -59,4 +59,35 @@ describe('InlineFaceUpload', () => {
     fireEvent.change(input, { target: { value: 'ZhuQiang' } })
     expect(screen.getByText(/只能包含小写字母/)).toBeInTheDocument()
   })
+
+  it('上传成功后调用 onUploadSuccess 并传入正确的 faceId', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({}),
+    })
+    vi.stubGlobal('fetch', mockFetch)
+    const onSuccess = vi.fn()
+
+    render(
+      <InlineFaceUpload cragId="crag-1" area="主墙" onUploadSuccess={onSuccess} />
+    )
+
+    // 1. 输入合法 faceId
+    const input = screen.getByPlaceholderText(/如.*zhu-qiang/)
+    fireEvent.change(input, { target: { value: 'zhu-qiang' } })
+
+    // 2. 触发文件选择（通过 mock 的 file-select-trigger button）
+    fireEvent.click(screen.getByTestId('file-select-trigger'))
+
+    // 3. 点击上传按钮（此时 disabled 应已解除）
+    const uploadBtn = screen.getByRole('button', { name: /上传并开始标注/ })
+    expect(uploadBtn).not.toBeDisabled()
+    fireEvent.click(uploadBtn)
+
+    // 4. 验证 fetch 被调用，以及 onSuccess 被调用并传入正确 faceId
+    await vi.waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/upload', expect.objectContaining({ method: 'POST' }))
+      expect(onSuccess).toHaveBeenCalledWith('zhu-qiang')
+    })
+  })
 })
