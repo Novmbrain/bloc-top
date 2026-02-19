@@ -596,142 +596,225 @@ export default function RouteAnnotationPage() {
             </div>
           </div>
 
-          {/* 岩面选择器 */}
-          <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
-            <label className="block text-xs font-medium mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
-              选择岩面 {editor.selectedFaceId && <span style={{ color: 'var(--theme-primary)' }}>· {editor.selectedFaceId}</span>}
-            </label>
-            <FaceSelector
-              faceGroups={areaFaceGroups}
-              selectedFaceId={editor.selectedFaceId}
-              isLoading={isLoadingFaces}
-              onSelect={editor.handleFaceSelect}
-            />
-          </div>
-
-          {/* Topo 画布 */}
-          <TopoPreview
-            imageUrl={editor.imageUrl}
-            imageLoadError={editor.imageLoadError}
-            isImageLoading={editor.isImageLoading}
-            imageAspectRatio={editor.imageAspectRatio}
-            topoLine={editor.topoLine}
-            routeColor={editor.routeColor}
-            scaledPoints={editor.scaledPoints}
-            pathData={editor.pathData}
-            vb={editor.vb}
-            sameFaceRoutes={sameFaceRoutes}
-            showOtherRoutes={editor.showOtherRoutes}
-            onToggleOtherRoutes={() => editor.setShowOtherRoutes(prev => !prev)}
-            onOpenFullscreen={editor.handleOpenFullscreen}
-            onRouteClick={handleRouteClickFromTopo}
-            onImageLoad={editor.handleImageLoad}
-            onImageError={editor.handleImageError}
-            MultiTopoLineOverlay={MultiTopoLineOverlay}
-          />
-
-          {/* 线路信息编辑 */}
-          <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
-            <h3 className="font-semibold mb-4" style={{ color: 'var(--theme-on-surface)' }}>线路信息</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>名称 *</label>
-                <Input
-                  value={editor.editedRoute.name || ''}
-                  onChange={(v) => { editor.setEditedRoute((prev) => ({ ...prev, name: v })); editor.setFormErrors(prev => { const next = {...prev}; delete next.name; return next }) }}
-                  style={editor.formErrors.name ? { borderColor: 'var(--theme-error)' } : undefined}
-                />
-                {editor.formErrors.name && (
-                  <p className="text-xs mt-1" style={{ color: 'var(--theme-error)' }} role="alert">
-                    {editor.formErrors.name}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>难度</label>
-                <select
-                  value={editor.editedRoute.grade || ''}
-                  onChange={(e) => editor.setEditedRoute((prev) => ({ ...prev, grade: e.target.value }))}
+          {/* Tab 切换栏 */}
+          <div className="flex glass-light rounded-xl p-1 gap-1">
+            {(['topo', 'beta'] as const).map(tab => {
+              const label = tab === 'topo'
+                ? 'Topo 标注'
+                : `Beta 视频${selectedRoute.betaLinks?.length ? ` (${selectedRoute.betaLinks.length})` : ''}`
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 active:scale-[0.98]"
+                  style={{
+                    backgroundColor: activeTab === tab ? 'var(--theme-primary)' : undefined,
+                    color: activeTab === tab ? 'var(--theme-on-primary)' : 'var(--theme-on-surface-variant)',
+                  }}
                 >
-                  {GRADE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>区域</label>
-                <AreaSelect
-                  areas={areas}
-                  value={editor.editedRoute?.area || ''}
-                  onChange={(area) => { editor.setEditedRoute(prev => prev ? { ...prev, area } : prev); editor.setFormErrors(prev => { const next = {...prev}; delete next.area; return next }) }}
-                  placeholder="选择区域..."
-                  required
-                  error={editor.formErrors.area}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>首攀者 (FA)</label>
-                <Input
-                  value={editor.editedRoute.FA || ''}
-                  onChange={(v) => editor.setEditedRoute((prev) => ({ ...prev, FA: v }))}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>定线者</label>
-                <Input
-                  value={editor.editedRoute.setter || ''}
-                  onChange={(v) => editor.setEditedRoute((prev) => ({ ...prev, setter: v }))}
-                />
-              </div>
-              <div className="col-span-2 lg:col-span-3">
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>描述</label>
-                <Textarea
-                  value={editor.editedRoute.description || ''}
-                  onChange={(v) => editor.setEditedRoute((prev) => ({ ...prev, description: v }))}
-                  rows={3}
-                />
-              </div>
-            </div>
+                  {label}
+                </button>
+              )
+            })}
           </div>
 
-          {/* 保存按钮 */}
-          <button
-            className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
-            style={{
-              backgroundColor: editor.saveSuccess ? 'var(--theme-success)' : 'var(--theme-primary)',
-              color: editor.saveSuccess ? 'white' : 'var(--theme-on-primary)',
-              boxShadow: `0 4px 16px ${editor.saveSuccess ? 'var(--theme-success)' : 'var(--theme-primary)'}40`,
-              opacity: editor.isSaving ? 0.8 : 1,
-            }}
-            onClick={editor.handleSave}
-            disabled={editor.isSaving}
-          >
-            {editor.isSaving ? (
-              <><div className="w-5 h-5 animate-spin"><Loader2 className="w-full h-full" /></div> 保存中...</>
-            ) : editor.saveSuccess ? (
-              <><Check className="w-5 h-5" /> 保存成功</>
-            ) : (
-              <><Save className="w-5 h-5" /> 保存更改</>
-            )}
-          </button>
+          {activeTab === 'topo' && (
+            <>
+              {/* 岩面选择器 */}
+              <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
+                <label className="block text-xs font-medium mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                  选择岩面 {editor.selectedFaceId && <span style={{ color: 'var(--theme-primary)' }}>· {editor.selectedFaceId}</span>}
+                </label>
+                <FaceSelector
+                  faceGroups={areaFaceGroups}
+                  selectedFaceId={editor.selectedFaceId}
+                  isLoading={isLoadingFaces}
+                  onSelect={editor.handleFaceSelect}
+                />
+              </div>
 
-          {editor.saveError && (
-            <div className="p-3 rounded-xl flex items-center gap-2 animate-fade-in-up" style={{ backgroundColor: 'color-mix(in srgb, var(--theme-error) 12%, var(--theme-surface))', color: 'var(--theme-error)' }}>
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm">{editor.saveError}</span>
-            </div>
+              {/* Topo 画布 */}
+              <TopoPreview
+                imageUrl={editor.imageUrl}
+                imageLoadError={editor.imageLoadError}
+                isImageLoading={editor.isImageLoading}
+                imageAspectRatio={editor.imageAspectRatio}
+                topoLine={editor.topoLine}
+                routeColor={editor.routeColor}
+                scaledPoints={editor.scaledPoints}
+                pathData={editor.pathData}
+                vb={editor.vb}
+                sameFaceRoutes={sameFaceRoutes}
+                showOtherRoutes={editor.showOtherRoutes}
+                onToggleOtherRoutes={() => editor.setShowOtherRoutes(prev => !prev)}
+                onOpenFullscreen={editor.handleOpenFullscreen}
+                onRouteClick={handleRouteClickFromTopo}
+                onImageLoad={editor.handleImageLoad}
+                onImageError={editor.handleImageError}
+                MultiTopoLineOverlay={MultiTopoLineOverlay}
+              />
+
+              {/* 线路信息编辑 */}
+              <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
+                <h3 className="font-semibold mb-4" style={{ color: 'var(--theme-on-surface)' }}>线路信息</h3>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>名称 *</label>
+                    <Input
+                      value={editor.editedRoute.name || ''}
+                      onChange={(v) => { editor.setEditedRoute((prev) => ({ ...prev, name: v })); editor.setFormErrors(prev => { const next = {...prev}; delete next.name; return next }) }}
+                      style={editor.formErrors.name ? { borderColor: 'var(--theme-error)' } : undefined}
+                    />
+                    {editor.formErrors.name && (
+                      <p className="text-xs mt-1" style={{ color: 'var(--theme-error)' }} role="alert">
+                        {editor.formErrors.name}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>难度</label>
+                    <select
+                      value={editor.editedRoute.grade || ''}
+                      onChange={(e) => editor.setEditedRoute((prev) => ({ ...prev, grade: e.target.value }))}
+                    >
+                      {GRADE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>区域</label>
+                    <AreaSelect
+                      areas={areas}
+                      value={editor.editedRoute?.area || ''}
+                      onChange={(area) => { editor.setEditedRoute(prev => prev ? { ...prev, area } : prev); editor.setFormErrors(prev => { const next = {...prev}; delete next.area; return next }) }}
+                      placeholder="选择区域..."
+                      required
+                      error={editor.formErrors.area}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>首攀者 (FA)</label>
+                    <Input
+                      value={editor.editedRoute.FA || ''}
+                      onChange={(v) => editor.setEditedRoute((prev) => ({ ...prev, FA: v }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>定线者</label>
+                    <Input
+                      value={editor.editedRoute.setter || ''}
+                      onChange={(v) => editor.setEditedRoute((prev) => ({ ...prev, setter: v }))}
+                    />
+                  </div>
+                  <div className="col-span-2 lg:col-span-3">
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--theme-on-surface-variant)' }}>描述</label>
+                    <Textarea
+                      value={editor.editedRoute.description || ''}
+                      onChange={(v) => editor.setEditedRoute((prev) => ({ ...prev, description: v }))}
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 保存按钮 */}
+              <button
+                className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
+                style={{
+                  backgroundColor: editor.saveSuccess ? 'var(--theme-success)' : 'var(--theme-primary)',
+                  color: editor.saveSuccess ? 'white' : 'var(--theme-on-primary)',
+                  boxShadow: `0 4px 16px ${editor.saveSuccess ? 'var(--theme-success)' : 'var(--theme-primary)'}40`,
+                  opacity: editor.isSaving ? 0.8 : 1,
+                }}
+                onClick={editor.handleSave}
+                disabled={editor.isSaving}
+              >
+                {editor.isSaving ? (
+                  <><div className="w-5 h-5 animate-spin"><Loader2 className="w-full h-full" /></div> 保存中...</>
+                ) : editor.saveSuccess ? (
+                  <><Check className="w-5 h-5" /> 保存成功</>
+                ) : (
+                  <><Save className="w-5 h-5" /> 保存更改</>
+                )}
+              </button>
+
+              {editor.saveError && (
+                <div className="p-3 rounded-xl flex items-center gap-2 animate-fade-in-up" style={{ backgroundColor: 'color-mix(in srgb, var(--theme-error) 12%, var(--theme-surface))', color: 'var(--theme-error)' }}>
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm">{editor.saveError}</span>
+                </div>
+              )}
+
+              {/* 删除线路按钮 */}
+              <button
+                className="w-full py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
+                style={{
+                  color: 'var(--theme-error)',
+                  backgroundColor: 'color-mix(in srgb, var(--theme-error) 8%, transparent)',
+                }}
+                onClick={() => editor.setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="w-4 h-4" />
+                删除线路
+              </button>
+            </>
           )}
 
-          {/* 删除线路按钮 */}
-          <button
-            className="w-full py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]"
-            style={{
-              color: 'var(--theme-error)',
-              backgroundColor: 'color-mix(in srgb, var(--theme-error) 8%, transparent)',
-            }}
-            onClick={() => editor.setShowDeleteConfirm(true)}
-          >
-            <Trash2 className="w-4 h-4" />
-            删除线路
-          </button>
+          {activeTab === 'beta' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
+                  Beta 视频 ({selectedRoute.betaLinks?.length || 0})
+                </h3>
+                <button
+                  onClick={() => setShowBetaSubmitDrawer(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 active:scale-95"
+                  style={{
+                    backgroundColor: 'var(--theme-primary)',
+                    color: 'var(--theme-on-primary)',
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                  添加 Beta
+                </button>
+              </div>
+
+              {(!selectedRoute.betaLinks || selectedRoute.betaLinks.length === 0) ? (
+                <div
+                  className="text-center py-8 glass-light"
+                  style={{
+                    borderRadius: 'var(--theme-radius-xl)',
+                    color: 'var(--theme-on-surface-variant)',
+                  }}
+                >
+                  <Play className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">暂无 Beta 视频</p>
+                  <button
+                    onClick={() => setShowBetaSubmitDrawer(true)}
+                    className="text-sm font-medium mt-2 inline-block"
+                    style={{ color: 'var(--theme-primary)' }}
+                  >
+                    添加第一个 Beta →
+                  </button>
+                </div>
+              ) : (
+                selectedRoute.betaLinks.map((beta) => (
+                  <BetaCard
+                    key={beta.id}
+                    beta={beta}
+                    isEditing={editingBetaId === beta.id}
+                    editForm={editForm}
+                    setEditForm={setEditForm}
+                    onStartEdit={() => handleStartBetaEdit(beta)}
+                    onCancelEdit={() => setEditingBetaId(null)}
+                    onSave={() => handleSaveBeta(beta.id, selectedRoute, setSelectedRoute)}
+                    onDelete={() => handleDeleteBeta(beta.id, selectedRoute, setSelectedRoute)}
+                    isSaving={isBetaSaving}
+                    isDeleting={deletingBetaId === beta.id}
+                  />
+                ))
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -834,6 +917,17 @@ export default function RouteAnnotationPage() {
           删除后，该线路的 Topo 标注和 Beta 视频链接将一并移除，此操作不可撤销。
         </div>
       </ConfirmDialog>
+
+      {/* Beta 提交抽屉 */}
+      {selectedRoute && (
+        <BetaSubmitDrawer
+          isOpen={showBetaSubmitDrawer}
+          onClose={() => setShowBetaSubmitDrawer(false)}
+          routeId={selectedRoute.id}
+          routeName={selectedRoute.name}
+          onSuccess={handleBetaSubmitSuccess}
+        />
+      )}
     </div>
   )
 }
