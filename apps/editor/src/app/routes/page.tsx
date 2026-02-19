@@ -44,6 +44,7 @@ import { BetaCard } from '@/components/editor/beta-card'
 import { BetaSubmitDrawer } from '@/components/beta-submit-drawer'
 import type { BetaLink } from '@bloctop/shared/types'
 import { Play } from 'lucide-react'
+import { InlineFaceUpload } from '@/components/editor/inline-face-upload'
 
 const FullscreenTopoEditor = dynamic(
   () => import('@/components/editor/fullscreen-topo-editor'),
@@ -214,6 +215,11 @@ export default function RouteAnnotationPage() {
     if (selectedArea) result = result.filter(f => f.area === selectedArea)
     return result
   }, [routes, r2Faces, selectedCragId, selectedArea, faceImageCache])
+
+  const showInlineUpload = !!selectedRoute
+    && activeTab === 'topo'
+    && !isLoadingFaces
+    && areaFaceGroups.length === 0
 
   const areaRoutes = useMemo(() => {
     if (!selectedArea) return routes
@@ -620,39 +626,52 @@ export default function RouteAnnotationPage() {
 
           {activeTab === 'topo' && (
             <>
-              {/* 岩面选择器 */}
-              <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
-                <label className="block text-xs font-medium mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                  选择岩面 {editor.selectedFaceId && <span style={{ color: 'var(--theme-primary)' }}>· {editor.selectedFaceId}</span>}
-                </label>
-                <FaceSelector
-                  faceGroups={areaFaceGroups}
-                  selectedFaceId={editor.selectedFaceId}
-                  isLoading={isLoadingFaces}
-                  onSelect={editor.handleFaceSelect}
+              {/* 岩面选择器（有岩面时）/ 内嵌上传（无岩面时）*/}
+              {showInlineUpload ? (
+                <InlineFaceUpload
+                  cragId={selectedCragId!}
+                  area={selectedRoute.area}
+                  onUploadSuccess={(newFaceId) => {
+                    setR2Faces(prev => [...prev, { faceId: newFaceId, area: selectedRoute.area }])
+                    editor.handleFaceSelect(newFaceId, selectedRoute.area)
+                    editor.handleOpenFullscreen()
+                  }}
                 />
-              </div>
+              ) : (
+                <>
+                  <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
+                    <label className="block text-xs font-medium mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                      选择岩面 {editor.selectedFaceId && <span style={{ color: 'var(--theme-primary)' }}>· {editor.selectedFaceId}</span>}
+                    </label>
+                    <FaceSelector
+                      faceGroups={areaFaceGroups}
+                      selectedFaceId={editor.selectedFaceId}
+                      isLoading={isLoadingFaces}
+                      onSelect={editor.handleFaceSelect}
+                    />
+                  </div>
 
-              {/* Topo 画布 */}
-              <TopoPreview
-                imageUrl={editor.imageUrl}
-                imageLoadError={editor.imageLoadError}
-                isImageLoading={editor.isImageLoading}
-                imageAspectRatio={editor.imageAspectRatio}
-                topoLine={editor.topoLine}
-                routeColor={editor.routeColor}
-                scaledPoints={editor.scaledPoints}
-                pathData={editor.pathData}
-                vb={editor.vb}
-                sameFaceRoutes={sameFaceRoutes}
-                showOtherRoutes={editor.showOtherRoutes}
-                onToggleOtherRoutes={() => editor.setShowOtherRoutes(prev => !prev)}
-                onOpenFullscreen={editor.handleOpenFullscreen}
-                onRouteClick={handleRouteClickFromTopo}
-                onImageLoad={editor.handleImageLoad}
-                onImageError={editor.handleImageError}
-                MultiTopoLineOverlay={MultiTopoLineOverlay}
-              />
+                  <TopoPreview
+                    imageUrl={editor.imageUrl}
+                    imageLoadError={editor.imageLoadError}
+                    isImageLoading={editor.isImageLoading}
+                    imageAspectRatio={editor.imageAspectRatio}
+                    topoLine={editor.topoLine}
+                    routeColor={editor.routeColor}
+                    scaledPoints={editor.scaledPoints}
+                    pathData={editor.pathData}
+                    vb={editor.vb}
+                    sameFaceRoutes={sameFaceRoutes}
+                    showOtherRoutes={editor.showOtherRoutes}
+                    onToggleOtherRoutes={() => editor.setShowOtherRoutes(prev => !prev)}
+                    onOpenFullscreen={editor.handleOpenFullscreen}
+                    onRouteClick={handleRouteClickFromTopo}
+                    onImageLoad={editor.handleImageLoad}
+                    onImageError={editor.handleImageError}
+                    MultiTopoLineOverlay={MultiTopoLineOverlay}
+                  />
+                </>
+              )}
 
               {/* 线路信息编辑 */}
               <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
