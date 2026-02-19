@@ -73,6 +73,7 @@ export default function RouteAnnotationPage() {
   const [showEditorPanel, setShowEditorPanel] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterMode, setFilterMode] = useState<'all' | 'marked' | 'unmarked'>('all')
+  const [activeTab, setActiveTab] = useState<'topo' | 'beta'>('topo')
 
   // ============ 派生数据 ============
   const selectedCrag = useMemo(() => crags.find(c => c.id === selectedCragId), [crags, selectedCragId])
@@ -106,6 +107,7 @@ export default function RouteAnnotationPage() {
     switch (action.type) {
       case 'switchRoute':
         setSelectedRoute(action.payload)
+        setActiveTab('topo')
         break
       case 'switchArea':
         setSelectedArea(action.payload)
@@ -124,7 +126,7 @@ export default function RouteAnnotationPage() {
         setSelectedRoute(null)
         break
     }
-  }, [setSelectedCragId, editor.resetEditor])
+  }, [setSelectedCragId, editor])
 
   const dirtyGuard = useDirtyGuard<PendingAction>({
     hasUnsavedChanges: editor.hasUnsavedChanges,
@@ -133,13 +135,21 @@ export default function RouteAnnotationPage() {
   })
 
   // ============ 从 R2 加载岩面列表 ============
-  useEffect(() => {
+  // Render-time state adjustment: reset faces and trigger loading when cragId changes
+  const [prevFacesCragId, setPrevFacesCragId] = useState(selectedCragId)
+  if (prevFacesCragId !== selectedCragId) {
+    setPrevFacesCragId(selectedCragId)
     if (!selectedCragId) {
       setR2Faces([])
-      return
+      setIsLoadingFaces(false)
+    } else {
+      setIsLoadingFaces(true)
     }
+  }
+
+  useEffect(() => {
+    if (!selectedCragId) return
     let cancelled = false
-    setIsLoadingFaces(true)
     fetch(`/api/faces?cragId=${encodeURIComponent(selectedCragId)}`)
       .then(res => res.json())
       .then(data => {
@@ -220,16 +230,16 @@ export default function RouteAnnotationPage() {
   const handleRouteClick = useCallback((route: Route) => {
     if (selectedRoute?.id === route.id) return
     dirtyGuard.guardAction({ type: 'switchRoute', payload: route })
-  }, [selectedRoute, dirtyGuard.guardAction])
+  }, [selectedRoute, dirtyGuard])
 
   const handleAreaSwitch = useCallback((area: string | null) => {
     if (selectedArea === area) return
     dirtyGuard.guardAction({ type: 'switchArea', payload: area })
-  }, [selectedArea, dirtyGuard.guardAction])
+  }, [selectedArea, dirtyGuard])
 
   const handleSelectCrag = useCallback((id: string) => {
     dirtyGuard.guardAction({ type: 'switchCrag', payload: id })
-  }, [dirtyGuard.guardAction])
+  }, [dirtyGuard])
 
   const handleStartCreate = useCallback(() => {
     const started = creation.handleStartCreate()
@@ -237,19 +247,19 @@ export default function RouteAnnotationPage() {
       setSelectedRoute(null)
       setShowEditorPanel(true)
     }
-  }, [creation.handleStartCreate])
+  }, [creation])
 
   const handleSubmitCreate = useCallback(async () => {
     const created = await creation.handleSubmitCreate()
     if (created) {
       setSelectedRoute(created)
     }
-  }, [creation.handleSubmitCreate])
+  }, [creation])
 
   const handleCancelCreate = useCallback(() => {
     creation.handleCancelCreate()
     setShowEditorPanel(false)
-  }, [creation.handleCancelCreate])
+  }, [creation])
 
   const handleDeleteRoute = useCallback(async () => {
     const deleted = await editor.handleDeleteRoute()
@@ -257,17 +267,21 @@ export default function RouteAnnotationPage() {
       setSelectedRoute(null)
       setShowEditorPanel(false)
     }
-  }, [editor.handleDeleteRoute])
+  }, [editor])
 
   const handleRouteClickFromTopo = useCallback((routeId: number) => {
     const target = routes.find(r => r.id === routeId)
     if (target) handleRouteClick(target)
   }, [routes, handleRouteClick])
 
-  // Sync editor panel with route selection
-  useEffect(() => {
-    if (selectedRoute) setShowEditorPanel(true)
-  }, [selectedRoute])
+  // Render-time state adjustment: open editor panel when a route is selected
+  const [prevSelectedRoute, setPrevSelectedRoute] = useState(selectedRoute)
+  if (prevSelectedRoute !== selectedRoute) {
+    setPrevSelectedRoute(selectedRoute)
+    if (selectedRoute) {
+      setShowEditorPanel(true)
+    }
+  }
 
   // ============ 左栏 ============
   const leftPanel = (
