@@ -132,4 +132,26 @@ describe('useRouteEditor', () => {
     const { result } = setup()
     expect(result.current.routeColor).toBe('#ff0000')
   })
+
+  it('切换岩面时 topoLine 不被清空', () => {
+    const { result } = setup()
+    // 初始化后 topoLine 应有 2 个点
+    expect(result.current.topoLine).toHaveLength(2)
+    act(() => {
+      result.current.handleFaceSelect('face-2', '主墙')
+    })
+    // 切换 face 后 topoLine 应保留
+    expect(result.current.topoLine).toHaveLength(2)
+    expect(result.current.selectedFaceId).toBe('face-2')
+  })
+
+  it('切换岩面后 hasUnsavedChanges 返回 true', () => {
+    const { result } = setup()
+    // mockRoute.faceId 为 'face-1'，切换到 'face-2' 应标记为 dirty
+    expect(result.current.hasUnsavedChanges()).toBe(false)
+    act(() => {
+      result.current.handleFaceSelect('face-2', '主墙')
+    })
+    expect(result.current.hasUnsavedChanges()).toBe(true)
+  })
 })
