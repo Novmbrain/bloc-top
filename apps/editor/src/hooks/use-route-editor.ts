@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
-import type { Route, TopoPoint } from '@bloctop/shared/types'
+import type { Route, TopoPoint, RouteTopoAnnotation } from '@bloctop/shared/types'
 import { catmullRomCurve, scalePoints } from '@bloctop/shared/topo-utils'
 import { getGradeColor } from '@bloctop/shared/tokens'
 import { computeViewBox } from '@bloctop/shared/topo-constants'
@@ -16,6 +16,22 @@ export interface UseRouteEditorOptions {
   updateCragAreas: (cragId: string, areas: string[]) => Promise<string[]>
 }
 
+/** 从路由数据初始化 annotations（兼容旧字段） */
+function buildInitialAnnotations(route: Route): RouteTopoAnnotation[] {
+  if (route.topoAnnotations && route.topoAnnotations.length > 0) {
+    return route.topoAnnotations
+  }
+  if (route.faceId && route.area && route.topoLine && route.topoLine.length >= 2) {
+    return [{
+      faceId: route.faceId,
+      area: route.area,
+      topoLine: route.topoLine,
+      topoTension: route.topoTension,
+    }]
+  }
+  return []
+}
+
 export function useRouteEditor({
   selectedRoute,
   faceImageCache,
@@ -28,12 +44,19 @@ export function useRouteEditor({
 
   // Edit state
   const [editedRoute, setEditedRoute] = useState<Partial<Route>>({})
-  const [topoLine, setTopoLine] = useState<TopoPoint[]>([])
-  const [topoTension, setTopoTension] = useState(0)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
+  // Multi-annotation state（替代旧的 topoLine/topoTension/selectedFaceId）
+  const [annotations, setAnnotations] = useState<RouteTopoAnnotation[]>([])
+  const [activeAnnotationIndex, setActiveAnnotationIndex] = useState(0)
+
+  // Derived values from active annotation
+  const activeAnnotation = annotations[activeAnnotationIndex] ?? null
+  const topoLine = activeAnnotation?.topoLine ?? []
+  const topoTension = activeAnnotation?.topoTension ?? 0
+  const selectedFaceId = activeAnnotation?.faceId ?? null
+
   // Image state
-  const [selectedFaceId, setSelectedFaceId] = useState<string | null>(null)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [isImageLoading, setIsImageLoading] = useState(false)
   const [imageLoadError, setImageLoadError] = useState(false)
@@ -53,24 +76,34 @@ export function useRouteEditor({
   const [showOtherRoutes, setShowOtherRoutes] = useState(true)
 
   const justSavedRef = useRef(false)
-  const topoSnapshotRef = useRef<{ line: TopoPoint[]; tension: number } | null>(null)
+  const topoSnapshotRef = useRef<{ annotations: RouteTopoAnnotation[]; index: number } | null>(null)
 
-  // Dirty check
+  // Dirty check：比较当前 annotations 与路由原始数据
   const hasUnsavedChanges = useCallback((): boolean => {
     if (!selectedRoute) return false
-    if ((selectedFaceId ?? null) !== (selectedRoute.faceId ?? null)) return true
+
+    // 字段变更
     const fields = ['name', 'grade', 'area', 'FA', 'setter', 'description'] as const
     for (const field of fields) {
       if ((editedRoute[field] ?? '') !== (selectedRoute[field] ?? '')) return true
     }
-    const original = selectedRoute.topoLine || []
-    if (topoLine.length !== original.length) return true
-    for (let i = 0; i < topoLine.length; i++) {
-      if (topoLine[i].x !== original[i].x || topoLine[i].y !== original[i].y) return true
+
+    // annotations 变更：与原始数据对比
+    const original = buildInitialAnnotations(selectedRoute)
+    if (annotations.length !== original.length) return true
+    for (let i = 0; i < annotations.length; i++) {
+      if (annotations[i].faceId !== original[i].faceId) return true
+      const aLine = annotations[i].topoLine
+      const oLine = original[i].topoLine
+      if (aLine.length !== oLine.length) return true
+      for (let j = 0; j < aLine.length; j++) {
+        if (aLine[j].x !== oLine[j].x || aLine[j].y !== oLine[j].y) return true
+      }
+      if ((annotations[i].topoTension ?? 0) !== (original[i].topoTension ?? 0)) return true
     }
-    if (topoTension !== (selectedRoute.topoTension ?? 0)) return true
+
     return false
-  }, [selectedRoute, editedRoute, topoLine, topoTension, selectedFaceId])
+  }, [selectedRoute, editedRoute, annotations])
 
   // Initialize edit state when route is selected
   useEffect(() => {
@@ -84,20 +117,24 @@ export function useRouteEditor({
       FA: selectedRoute.FA,
       description: selectedRoute.description,
     })
-    setTopoLine(selectedRoute.topoLine || [])
-    setTopoTension(selectedRoute.topoTension ?? 0)
     setFormErrors({})
+
+    const initialAnnotations = buildInitialAnnotations(selectedRoute)
+    setAnnotations(initialAnnotations)
+    setActiveAnnotationIndex(0)
 
     if (justSavedRef.current) {
       justSavedRef.current = false
       return
     }
 
-    const autoFaceId = selectedRoute.faceId || null
-    setSelectedFaceId(autoFaceId)
-
-    if (autoFaceId && selectedRoute.area) {
-      const url = faceImageCache.getImageUrl({ cragId: selectedRoute.cragId, area: selectedRoute.area, faceId: autoFaceId })
+    const firstAnnotation = initialAnnotations[0] ?? null
+    if (firstAnnotation) {
+      const url = faceImageCache.getImageUrl({
+        cragId: selectedRoute.cragId,
+        area: firstAnnotation.area,
+        faceId: firstAnnotation.faceId,
+      })
       setImageUrl(prev => {
         if (prev === url) return prev
         setIsImageLoading(true)
@@ -111,26 +148,62 @@ export function useRouteEditor({
     }
   }, [selectedRoute, faceImageCache])
 
-  // Canvas operations
-  const handleRemoveLastPoint = useCallback(() => {
-    setTopoLine((prev) => prev.slice(0, -1))
+  // Annotation management
+  const addAnnotation = useCallback((faceId: string, area: string) => {
+    if (!selectedRoute) return
+    const newAnnotation: RouteTopoAnnotation = { faceId, area, topoLine: [] }
+    setAnnotations(prev => {
+      const next = [...prev, newAnnotation]
+      setActiveAnnotationIndex(next.length - 1)
+      return next
+    })
+    const url = faceImageCache.getImageUrl({ cragId: selectedRoute.cragId, area, faceId })
+    setImageUrl(url)
+    setIsImageLoading(true)
+    setImageLoadError(false)
+    setImageAspectRatio(undefined)
+  }, [selectedRoute, faceImageCache])
+
+  const removeAnnotation = useCallback((index: number) => {
+    setAnnotations(prev => {
+      const next = prev.filter((_, i) => i !== index)
+      setActiveAnnotationIndex(cur => Math.min(cur, Math.max(0, next.length - 1)))
+      return next
+    })
   }, [])
 
+  const updateActiveTopoLine = useCallback((points: TopoPoint[]) => {
+    setAnnotations(prev => prev.map((a, i) =>
+      i === activeAnnotationIndex ? { ...a, topoLine: points } : a
+    ))
+  }, [activeAnnotationIndex])
+
+  const updateActiveTopoTension = useCallback((tension: number) => {
+    setAnnotations(prev => prev.map((a, i) =>
+      i === activeAnnotationIndex ? { ...a, topoTension: tension } : a
+    ))
+  }, [activeAnnotationIndex])
+
+  // Canvas operations (delegate to active annotation)
+  const handleRemoveLastPoint = useCallback(() => {
+    updateActiveTopoLine(topoLine.slice(0, -1))
+  }, [topoLine, updateActiveTopoLine])
+
   const handleClearPoints = useCallback(() => {
-    setTopoLine([])
-    setTopoTension(0)
-  }, [])
+    updateActiveTopoLine([])
+    updateActiveTopoTension(0)
+  }, [updateActiveTopoLine, updateActiveTopoTension])
 
   // Fullscreen topo
   const handleOpenFullscreen = useCallback(() => {
-    topoSnapshotRef.current = { line: [...topoLine], tension: topoTension }
+    topoSnapshotRef.current = { annotations: annotations.map(a => ({ ...a, topoLine: [...a.topoLine] })), index: activeAnnotationIndex }
     setIsFullscreenEdit(true)
-  }, [topoLine, topoTension])
+  }, [annotations, activeAnnotationIndex])
 
   const handleFullscreenClose = useCallback((confirmed: boolean) => {
     if (!confirmed && topoSnapshotRef.current) {
-      setTopoLine(topoSnapshotRef.current.line)
-      setTopoTension(topoSnapshotRef.current.tension)
+      setAnnotations(topoSnapshotRef.current.annotations)
+      setActiveAnnotationIndex(topoSnapshotRef.current.index)
     }
     topoSnapshotRef.current = null
     setIsFullscreenEdit(false)
@@ -152,14 +225,19 @@ export function useRouteEditor({
     setSaveSuccess(false)
 
     try {
+      const validAnnotations = annotations.filter(a => a.topoLine.length >= 2)
+      const firstAnnotation = validAnnotations[0]
+
       const response = await fetch(`/api/routes/${selectedRoute.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...editedRoute,
-          faceId: selectedFaceId,
-          topoLine: topoLine.length >= 2 ? topoLine : null,
-          topoTension: topoLine.length >= 2 && topoTension > 0 ? topoTension : null,
+          topoAnnotations: validAnnotations,
+          // compat sync：旧字段同步自第一条标注，保持向后兼容
+          faceId: firstAnnotation?.faceId ?? null,
+          topoLine: firstAnnotation?.topoLine ?? null,
+          topoTension: firstAnnotation?.topoTension ?? null,
         }),
       })
 
@@ -188,7 +266,7 @@ export function useRouteEditor({
     } finally {
       setIsSaving(false)
     }
-  }, [selectedRoute, editedRoute, topoLine, topoTension, selectedFaceId, setRoutes, showToast, persistedAreas, selectedCragId, updateCragAreas])
+  }, [selectedRoute, editedRoute, annotations, setRoutes, showToast, persistedAreas, selectedCragId, updateCragAreas])
 
   // Delete
   const handleDeleteRoute = useCallback(async () => {
@@ -212,16 +290,10 @@ export function useRouteEditor({
     }
   }, [selectedRoute, isDeleting, setRoutes, showToast])
 
-  // Face selection — 纯 UI 状态更新，不立即 PATCH，等用户点 Save 时统一提交
+  // Face selection — 新增标注（兼容旧 handleFaceSelect 调用）
   const handleFaceSelect = useCallback((faceId: string, area: string) => {
-    if (!selectedRoute || faceId === selectedFaceId) return
-    setSelectedFaceId(faceId)
-    const url = faceImageCache.getImageUrl({ cragId: selectedRoute.cragId, area, faceId })
-    setImageUrl(url)
-    setIsImageLoading(true)
-    setImageLoadError(false)
-    setImageAspectRatio(undefined)
-  }, [selectedRoute, selectedFaceId, faceImageCache])
+    addAnnotation(faceId, area)
+  }, [addAnnotation])
 
   // Image event handlers
   const handleImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -238,7 +310,7 @@ export function useRouteEditor({
     setImageLoadError(true)
   }, [])
 
-  // SVG computations
+  // SVG computations（基于激活标注的派生值）
   const routeColor = useMemo(
     () => getGradeColor(editedRoute.grade || selectedRoute?.grade || '？'),
     [editedRoute.grade, selectedRoute?.grade]
@@ -258,7 +330,8 @@ export function useRouteEditor({
 
   // Reset on deselect
   const resetEditor = useCallback(() => {
-    setSelectedFaceId(null)
+    setAnnotations([])
+    setActiveAnnotationIndex(0)
     setImageUrl(null)
     setImageLoadError(false)
     setIsImageLoading(false)
@@ -268,15 +341,28 @@ export function useRouteEditor({
     // Edit state
     editedRoute,
     setEditedRoute,
-    topoLine,
-    setTopoLine,
-    topoTension,
-    setTopoTension,
     formErrors,
     setFormErrors,
 
-    // Image state
+    // Multi-annotation state
+    annotations,
+    activeAnnotationIndex,
+    setActiveAnnotationIndex,
+    addAnnotation,
+    removeAnnotation,
+    updateActiveTopoLine,
+    updateActiveTopoTension,
+
+    // Derived from active annotation（供现有 UI 组件直接读取，无需改动）
+    topoLine,
+    topoTension,
     selectedFaceId,
+
+    // Legacy setters（保持向后兼容，供 routes/page.tsx 画布点击使用）
+    setTopoLine: updateActiveTopoLine,
+    setTopoTension: updateActiveTopoTension,
+
+    // Image state
     imageUrl,
     isImageLoading,
     imageLoadError,
