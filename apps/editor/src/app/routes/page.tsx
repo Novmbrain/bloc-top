@@ -80,6 +80,7 @@ export default function RouteAnnotationPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterMode, setFilterMode] = useState<'all' | 'marked' | 'unmarked'>('all')
   const [activeTab, setActiveTab] = useState<'topo' | 'beta'>('topo')
+  const [showFaceSelector, setShowFaceSelector] = useState(false)
 
   // ============ 派生数据 ============
   const selectedCrag = useMemo(() => crags.find(c => c.id === selectedCragId), [crags, selectedCragId])
@@ -315,13 +316,14 @@ export default function RouteAnnotationPage() {
     if (target) handleRouteClick(target)
   }, [routes, handleRouteClick])
 
-  // Render-time state adjustment: open editor panel when a route is selected
+  // Render-time state adjustment: open editor panel when a route is selected; reset face selector on route change
   const [prevSelectedRoute, setPrevSelectedRoute] = useState(selectedRoute)
   if (prevSelectedRoute !== selectedRoute) {
     setPrevSelectedRoute(selectedRoute)
     if (selectedRoute) {
       setShowEditorPanel(true)
     }
+    setShowFaceSelector(false)
   }
 
   // ============ 左栏 ============
@@ -626,6 +628,40 @@ export default function RouteAnnotationPage() {
 
           {activeTab === 'topo' && (
             <>
+              {/* 多图标注 Tab 栏：有标注时显示 */}
+              {!showInlineUpload && editor.annotations.length > 0 && (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                  {editor.annotations.map((annotation, index) => (
+                    <button
+                      key={`${annotation.faceId}-${index}`}
+                      onClick={() => { editor.setActiveAnnotationIndex(index); setShowFaceSelector(false) }}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
+                      style={
+                        index === editor.activeAnnotationIndex
+                          ? { backgroundColor: 'var(--theme-primary)', color: 'var(--theme-on-primary)' }
+                          : { backgroundColor: 'var(--theme-surface-variant)', color: 'var(--theme-on-surface-variant)' }
+                      }
+                    >
+                      <span>角度{index + 1}</span>
+                      <span
+                        role="button"
+                        className="ml-1 opacity-60 hover:opacity-100"
+                        onClick={(e) => { e.stopPropagation(); editor.removeAnnotation(index) }}
+                        aria-label={`删除标注${index + 1}`}
+                      >×</span>
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setShowFaceSelector(prev => !prev)}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors"
+                    style={{ border: '1px dashed var(--theme-outline)', color: 'var(--theme-on-surface-variant)' }}
+                  >
+                    <Plus className="w-3 h-3" />
+                    添加标注
+                  </button>
+                </div>
+              )}
+
               {/* 岩面选择器（有岩面时）/ 内嵌上传（无岩面时）*/}
               {showInlineUpload ? (
                 <InlineFaceUpload
@@ -633,23 +669,29 @@ export default function RouteAnnotationPage() {
                   area={selectedRoute.area}
                   onUploadSuccess={(newFaceId) => {
                     setR2Faces(prev => [...prev, { faceId: newFaceId, area: selectedRoute.area }])
-                    editor.handleFaceSelect(newFaceId, selectedRoute.area)
+                    editor.addAnnotation(newFaceId, selectedRoute.area)
                     editor.handleOpenFullscreen()
                   }}
                 />
               ) : (
                 <>
-                  <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
-                    <label className="block text-xs font-medium mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                      选择岩面 {editor.selectedFaceId && <span style={{ color: 'var(--theme-primary)' }}>· {editor.selectedFaceId}</span>}
-                    </label>
-                    <FaceSelector
-                      faceGroups={areaFaceGroups}
-                      selectedFaceId={editor.selectedFaceId}
-                      isLoading={isLoadingFaces}
-                      onSelect={editor.handleFaceSelect}
-                    />
-                  </div>
+                  {/* 岩面选择器：首次无标注时始终可见；添加新标注时通过 showFaceSelector 控制 */}
+                  {(editor.annotations.length === 0 || showFaceSelector) && (
+                    <div className="glass-light p-4" style={{ borderRadius: 'var(--theme-radius-xl)' }}>
+                      <label className="block text-xs font-medium mb-2" style={{ color: 'var(--theme-on-surface-variant)' }}>
+                        {editor.annotations.length === 0 ? '选择岩面' : '选择新角度岩面'}
+                      </label>
+                      <FaceSelector
+                        faceGroups={areaFaceGroups}
+                        selectedFaceId={editor.selectedFaceId}
+                        isLoading={isLoadingFaces}
+                        onSelect={(faceId, area) => {
+                          editor.addAnnotation(faceId, area)
+                          setShowFaceSelector(false)
+                        }}
+                      />
+                    </div>
+                  )}
 
                   <TopoPreview
                     imageUrl={editor.imageUrl}
