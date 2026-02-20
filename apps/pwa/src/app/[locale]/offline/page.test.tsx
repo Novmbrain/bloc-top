@@ -153,26 +153,17 @@ describe('OfflinePage', () => {
   })
 
   describe('网络状态', () => {
-    it('离线时显示离线状态', async () => {
-      Object.defineProperty(navigator, 'onLine', { value: false })
+    it('离线时不显示返回首页按钮', async () => {
+      Object.defineProperty(navigator, 'onLine', { value: false, configurable: true })
       render(<OfflinePage />)
 
       await waitFor(() => {
-        expect(screen.getByText('offline')).toBeInTheDocument()
-      })
-    })
-
-    it('在线时显示恢复提示', async () => {
-      Object.defineProperty(navigator, 'onLine', { value: true })
-      render(<OfflinePage />)
-
-      await waitFor(() => {
-        expect(screen.getByText('backOnline')).toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'goHome' })).not.toBeInTheDocument()
       })
     })
 
     it('在线时显示返回首页按钮', async () => {
-      Object.defineProperty(navigator, 'onLine', { value: true })
+      Object.defineProperty(navigator, 'onLine', { value: true, configurable: true })
       render(<OfflinePage />)
 
       await waitFor(() => {
