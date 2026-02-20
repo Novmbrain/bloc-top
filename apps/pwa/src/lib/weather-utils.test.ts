@@ -229,23 +229,29 @@ describe('天气工具函数', () => {
   })
 
   describe('isToday', () => {
+    // 使用本地日期分量拼接，避免 toISOString() 返回 UTC 日期在非 UTC 时区造成偏差
+    function toLocalDateStr(date: Date): string {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
     it('判断今天的日期', () => {
-      const today = new Date().toISOString().split('T')[0]
+      const today = toLocalDateStr(new Date())
       expect(isToday(today)).toBe(true)
     })
 
     it('判断昨天的日期', () => {
       const yesterday = new Date()
       yesterday.setDate(yesterday.getDate() - 1)
-      const yesterdayStr = yesterday.toISOString().split('T')[0]
-      expect(isToday(yesterdayStr)).toBe(false)
+      expect(isToday(toLocalDateStr(yesterday))).toBe(false)
     })
 
     it('判断明天的日期', () => {
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
-      const tomorrowStr = tomorrow.toISOString().split('T')[0]
-      expect(isToday(tomorrowStr)).toBe(false)
+      expect(isToday(toLocalDateStr(tomorrow))).toBe(false)
     })
   })
 
