@@ -23,8 +23,66 @@ import { RouteLegendPanel } from '@/components/route-legend-panel'
 import { getGradeColor } from '@/lib/tokens'
 import { vToFont } from '@/lib/grade-utils'
 import { TOPO_ANIMATION_CONFIG } from '@/lib/topo-constants'
-import { useFaceImage } from '@/hooks/use-face-image'
+import { useFaceImage, useFaceImageCache } from '@/hooks/use-face-image'
+import { getTopoAnnotations } from '@/lib/topo-annotations'
+import type { RouteTopoAnnotation } from '@bloctop/shared/types'
 import type { Route, Crag, BetaLink } from '@/types'
+
+interface AnnotationSlideProps {
+  annotation: RouteTopoAnnotation
+  cragId: string
+  routeColor: string
+  routeName: string
+  imageAspectRatio: number | undefined
+  setImageAspectRatio: (r: number) => void
+  onClick: () => void
+}
+
+function AnnotationSlide({
+  annotation, cragId, routeColor, routeName, imageAspectRatio, setImageAspectRatio, onClick,
+}: AnnotationSlideProps) {
+  const { src, isLoading, isError, onLoad, onError } = useFaceImage({
+    cragId,
+    area: annotation.area,
+    faceId: annotation.faceId,
+  })
+
+  return (
+    <button
+      className="relative flex-none w-full h-full snap-start"
+      onClick={onClick}
+      aria-label="点击放大"
+    >
+      {isLoading && <div className="absolute inset-0 skeleton-shimmer" />}
+      {!isError && src && (
+        <Image
+          src={src}
+          alt={routeName}
+          fill
+          className={`object-contain transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          sizes="(max-width: 768px) 100vw, 50vw"
+          onLoad={(e) => {
+            onLoad()
+            const img = e.currentTarget as HTMLImageElement
+            if (img.naturalWidth && img.naturalHeight) {
+              setImageAspectRatio(img.naturalWidth / img.naturalHeight)
+            }
+          }}
+          onError={onError}
+        />
+      )}
+      {!isLoading && annotation.topoLine.length >= 2 && (
+        <TopoLineOverlay
+          points={annotation.topoLine}
+          color={routeColor}
+          tension={annotation.topoTension}
+          objectFit="contain"
+          aspectRatio={imageAspectRatio}
+        />
+      )}
+    </button>
+  )
+}
 
 interface RouteDetailDrawerProps {
   isOpen: boolean
@@ -71,6 +129,10 @@ export function RouteDetailDrawer({
   // 用户手动切换「显示全部叠加线路」（仅 >3 条时需要）
   const [showAllOverlay, setShowAllOverlay] = useState(false)
 
+  // 多图轮播状态
+  const [activeAnnotationIndex, setActiveAnnotationIndex] = useState(0)
+  const carouselRef = useRef<HTMLDivElement>(null)
+
   // Topo 线路 overlay refs (用于触发动画)
   const drawerOverlayRef = useRef<TopoLineOverlayRef>(null)
   const fullscreenOverlayRef = useRef<TopoLineOverlayRef>(null)
@@ -88,6 +150,10 @@ export function RouteDetailDrawer({
 
   // 是否有 Topo 线路数据
   const hasTopoLine = route?.topoLine && route.topoLine.length >= 2
+
+  // 多图标注支持（兼容旧字段）
+  const topoAnnotations = route ? getTopoAnnotations(route) : []
+  const hasMultiAnnotations = topoAnnotations.length > 1
 
   // 过滤出有效的同岩面线路（有 topoLine 数据的）
   const validSiblingRoutes = useMemo((): MultiTopoRoute[] => {
@@ -119,6 +185,7 @@ export function RouteDetailDrawer({
       setLocalBetaLinks(null)
       setDrawerAnimated(false)
       setImageAspectRatio(undefined)
+      setActiveAnnotationIndex(0)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅依赖 route.id 变化
   }, [route?.id])
@@ -168,6 +235,21 @@ export function RouteDetailDrawer({
     }
   }, [siblingRoutes, onRouteChange])
 
+  const handleCarouselScroll = useCallback(() => {
+    if (!carouselRef.current) return
+    const el = carouselRef.current
+    const index = Math.round(el.scrollLeft / el.clientWidth)
+    setActiveAnnotationIndex(index)
+  }, [])
+
+  const scrollToAnnotation = useCallback((index: number) => {
+    if (!carouselRef.current) return
+    carouselRef.current.scrollTo({ left: index * carouselRef.current.clientWidth, behavior: 'smooth' })
+  }, [])
+
+  // 多图标注时用于 ImageViewer URL 生成
+  const faceImageCache = useFaceImageCache()
+
   if (!route) return null
 
   // 使用本地数据（如果有）或 props 数据
@@ -188,8 +270,51 @@ export function RouteDetailDrawer({
               backgroundColor: 'var(--theme-surface-variant)',
             }}
           >
-            {imageError ? (
-              // 图片加载失败的占位符
+            {hasMultiAnnotations ? (
+              /* 多图轮播模式 */
+              <>
+                <div
+                  className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+                  ref={carouselRef}
+                  onScroll={handleCarouselScroll}
+                >
+                  {topoAnnotations.map((annotation, index) => (
+                    <AnnotationSlide
+                      key={`${annotation.faceId}-${index}`}
+                      annotation={annotation}
+                      cragId={route.cragId}
+                      routeColor={routeColor}
+                      routeName={route.name}
+                      imageAspectRatio={imageAspectRatio}
+                      setImageAspectRatio={setImageAspectRatio}
+                      onClick={() => setImageViewerOpen(true)}
+                    />
+                  ))}
+                </div>
+                {/* 页码圆点 */}
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none">
+                  {topoAnnotations.map((_, index) => (
+                    <button
+                      key={index}
+                      className={`w-1.5 h-1.5 rounded-full transition-colors pointer-events-auto ${
+                        index === activeAnnotationIndex ? 'bg-white' : 'bg-white/40'
+                      }`}
+                      onClick={() => scrollToAnnotation(index)}
+                      aria-label={`切换到角度${index + 1}`}
+                    />
+                  ))}
+                </div>
+                {/* 关闭按钮 */}
+                <button
+                  className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center bg-black/50 backdrop-blur-sm transition-transform active:scale-95"
+                  onClick={onClose}
+                  aria-label={tCommon('close')}
+                >
+                  <X className="w-4.5 h-4.5 text-white" />
+                </button>
+              </>
+            ) : imageError ? (
+              /* 单图加载失败 */
               <div className="w-full h-full flex flex-col items-center justify-center">
                 <ImageIcon
                   className="w-12 h-12 mb-2"
@@ -203,7 +328,7 @@ export function RouteDetailDrawer({
                 </span>
               </div>
             ) : (
-              // 正常显示图片（带 loading 状态）
+              /* 单图正常模式（原有代码不变） */
               <button
                 onClick={() => setImageViewerOpen(true)}
                 className="relative w-full h-full group"
@@ -508,11 +633,19 @@ export function RouteDetailDrawer({
       </Drawer>
 
       {/* 图片查看器（带 Topo 线路叠加） */}
-      {!imageError && (
+      {(hasMultiAnnotations || !imageError) && (
         <ImageViewer
           isOpen={imageViewerOpen}
           onClose={() => setImageViewerOpen(false)}
-          src={topoImageUrl!}
+          src={
+            hasMultiAnnotations
+              ? faceImageCache.getImageUrl({
+                  cragId: route.cragId,
+                  area: topoAnnotations[activeAnnotationIndex]?.area ?? '',
+                  faceId: topoAnnotations[activeAnnotationIndex]?.faceId ?? '',
+                })
+              : topoImageUrl!
+          }
           alt={route.name}
           topSlot={
             <div className="absolute top-12 left-4 right-4 z-10 flex items-start justify-between">
@@ -524,8 +657,18 @@ export function RouteDetailDrawer({
             </div>
           }
         >
-          {/* Topo 线路叠加层 - 全屏模式使用 contain 匹配图片 object-contain */}
-          {hasTopoLine && (
+          {/* Topo 线路叠加层 */}
+          {hasMultiAnnotations ? (
+            (topoAnnotations[activeAnnotationIndex]?.topoLine?.length ?? 0) >= 2 && (
+              <TopoLineOverlay
+                points={topoAnnotations[activeAnnotationIndex].topoLine}
+                color={routeColor}
+                tension={topoAnnotations[activeAnnotationIndex].topoTension}
+                objectFit="contain"
+                aspectRatio={imageAspectRatio}
+              />
+            )
+          ) : hasTopoLine ? (
             useMultiLineMode ? (
               <MultiTopoLineOverlay
                 ref={multiFullscreenOverlayRef}
@@ -546,7 +689,7 @@ export function RouteDetailDrawer({
                 aspectRatio={imageAspectRatio}
               />
             )
-          )}
+          ) : null}
         </ImageViewer>
       )}
 
