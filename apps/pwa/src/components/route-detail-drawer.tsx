@@ -647,6 +647,14 @@ export function RouteDetailDrawer({
               : topoImageUrl!
           }
           alt={route.name}
+          images={hasMultiAnnotations ? topoAnnotations.map(a =>
+            faceImageCache.getImageUrl({ cragId: route.cragId, area: a.area, faceId: a.faceId })
+          ) : undefined}
+          activeImageIndex={hasMultiAnnotations ? activeAnnotationIndex : undefined}
+          onImageChange={hasMultiAnnotations ? (index) => {
+            setActiveAnnotationIndex(index)
+            scrollToAnnotation(index)
+          } : undefined}
           topSlot={
             <div className="absolute top-12 left-4 right-4 z-10 flex items-start justify-between">
               <ContextualHint
