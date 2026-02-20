@@ -135,21 +135,21 @@ describe('useRouteEditor', () => {
 
   it('切换岩面时 topoLine 不被清空', () => {
     const { result } = setup()
-    // 初始化后 topoLine 应有 2 个点
-    expect(result.current.topoLine).toHaveLength(2)
     act(() => {
       result.current.handleFaceSelect('face-2', '主墙')
     })
-    // 切换 face 后 topoLine 应保留
     expect(result.current.topoLine).toHaveLength(2)
     expect(result.current.selectedFaceId).toBe('face-2')
   })
 
   it('切换岩面后 hasUnsavedChanges 返回 true', () => {
-    const { result } = setup()
-    // mockRoute.faceId 为 'face-1'，切换到 'face-2' 应标记为 dirty
+    // 使用无 topoLine 的 mockRoute，排除 topoLine 长度差异对 dirty 检测的干扰
+    // 这样测试只能依赖 faceId 比较来感知变更（当前实现无 faceId 比较，所以此测试应 FAIL）
+    const routeWithoutTopo = { ...mockRoute, topoLine: undefined }
+    const { result } = setup(routeWithoutTopo)
     expect(result.current.hasUnsavedChanges()).toBe(false)
     act(() => {
+      // faceId 从 'face-1' 切换到 'face-2'；topoLine 从 [] 变成 []，长度不变
       result.current.handleFaceSelect('face-2', '主墙')
     })
     expect(result.current.hasUnsavedChanges()).toBe(true)
