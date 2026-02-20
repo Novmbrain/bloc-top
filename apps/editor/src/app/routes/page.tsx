@@ -633,7 +633,7 @@ export default function RouteAnnotationPage() {
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
                   {editor.annotations.map((annotation, index) => (
                     <button
-                      key={`${annotation.faceId}-${index}`}
+                      key={annotation.faceId}
                       onClick={() => { editor.setActiveAnnotationIndex(index); setShowFaceSelector(false) }}
                       className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
                       style={
@@ -643,12 +643,12 @@ export default function RouteAnnotationPage() {
                       }
                     >
                       <span>角度{index + 1}</span>
-                      <span
-                        role="button"
-                        className="ml-1 opacity-60 hover:opacity-100"
+                      <button
+                        type="button"
+                        className="ml-1 opacity-60 hover:opacity-100 p-0 leading-none"
                         onClick={(e) => { e.stopPropagation(); editor.removeAnnotation(index) }}
                         aria-label={`删除标注${index + 1}`}
-                      >×</span>
+                      >×</button>
                     </button>
                   ))}
                   <button
