@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Image as ImageIcon, Edit3, Play, Mountain, MapPin, Users } from 'lucide-react'
+import { ArrowLeft, Image as ImageIcon, Edit3, Mountain, MapPin, Users } from 'lucide-react'
 import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
 
@@ -42,16 +42,9 @@ export default function TopoEditorPage() {
     {
       href: '/routes',
       icon: Edit3,
-      title: '线路标注',
-      description: '标注线路攀爬路径',
-      detail: '选择岩面 → 选择线路 → 画 Topo 路线',
-    },
-    {
-      href: '/betas',
-      icon: Play,
-      title: 'Beta 管理',
-      description: '管理用户提交的 Beta 视频',
-      detail: '选择线路 → 查看 Beta → 编辑或删除',
+      title: '线路标注 & Beta',
+      description: '标注线路 Topo 路径，管理 Beta 视频',
+      detail: '选择线路 → 画 Topo → 切换 Tab 编辑 Beta',
     },
     {
       href: '/users',
