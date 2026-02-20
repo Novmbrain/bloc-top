@@ -144,7 +144,7 @@ describe('useRouteEditor', () => {
 
   it('切换岩面后 hasUnsavedChanges 返回 true', () => {
     // 使用无 topoLine 的 mockRoute，排除 topoLine 长度差异对 dirty 检测的干扰
-    // 这样测试只能依赖 faceId 比较来感知变更（当前实现无 faceId 比较，所以此测试应 FAIL）
+    // faceId 变更应被 hasUnsavedChanges 感知，即使 topoLine 长度不变
     const routeWithoutTopo = { ...mockRoute, topoLine: undefined }
     const { result } = setup(routeWithoutTopo)
     expect(result.current.hasUnsavedChanges()).toBe(false)
