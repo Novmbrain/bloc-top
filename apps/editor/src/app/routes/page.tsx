@@ -886,7 +886,7 @@ export default function RouteAnnotationPage() {
           routeColor={editor.routeColor}
           tension={editor.topoTension}
           otherRoutes={sameFaceRoutes}
-          onAddPoint={(point) => editor.setTopoLine(prev => [...prev, point])}
+          onAddPoint={(point) => editor.setTopoLine([...editor.topoLine, point])}
           onRemoveLastPoint={editor.handleRemoveLastPoint}
           onClearPoints={editor.handleClearPoints}
           onTensionChange={editor.setTopoTension}

@@ -133,13 +133,16 @@ describe('useRouteEditor', () => {
     expect(result.current.routeColor).toBe('#ff0000')
   })
 
-  it('切换岩面时 topoLine 不被清空', () => {
+  it('切换岩面时原有标注的 topoLine 不被清空', () => {
     const { result } = setup()
     act(() => {
       result.current.handleFaceSelect('face-2', '主墙')
     })
-    expect(result.current.topoLine).toHaveLength(2)
+    // 新模型：handleFaceSelect 新增标注，激活 face-2（新标注，topoLine 为空）
     expect(result.current.selectedFaceId).toBe('face-2')
+    // face-1 的原有 topoLine 保留在第一条标注中
+    expect(result.current.annotations[0].topoLine).toHaveLength(2)
+    expect(result.current.annotations[0].faceId).toBe('face-1')
   })
 
   it('切换岩面后 hasUnsavedChanges 返回 true', () => {
@@ -153,5 +156,97 @@ describe('useRouteEditor', () => {
       result.current.handleFaceSelect('face-2', '主墙')
     })
     expect(result.current.hasUnsavedChanges()).toBe(true)
+  })
+
+  describe('多图标注管理', () => {
+    it('初始化时从旧字段合成 annotations', () => {
+      const { result } = setup()
+      // mockRoute 有 faceId: 'face-1' 和 topoLine (2 点)
+      expect(result.current.annotations).toHaveLength(1)
+      expect(result.current.annotations[0].faceId).toBe('face-1')
+      expect(result.current.annotations[0].topoLine).toHaveLength(2)
+      expect(result.current.activeAnnotationIndex).toBe(0)
+    })
+
+    it('初始化时从新字段加载 annotations', () => {
+      const routeWithAnnotations: Route = {
+        ...mockRoute,
+        topoAnnotations: [
+          { faceId: 'face-1', area: '主墙', topoLine: [{ x: 0.1, y: 0.2 }, { x: 0.3, y: 0.4 }] },
+          { faceId: 'face-2', area: '主墙', topoLine: [{ x: 0.5, y: 0.6 }, { x: 0.7, y: 0.8 }] },
+        ],
+      }
+      const { result } = setup(routeWithAnnotations)
+      expect(result.current.annotations).toHaveLength(2)
+      expect(result.current.annotations[1].faceId).toBe('face-2')
+    })
+
+    it('addAnnotation 新增标注并激活新 index', () => {
+      const { result } = setup()
+      act(() => {
+        result.current.addAnnotation('face-2', '主墙')
+      })
+      expect(result.current.annotations).toHaveLength(2)
+      expect(result.current.annotations[1].faceId).toBe('face-2')
+      expect(result.current.annotations[1].topoLine).toHaveLength(0)
+      expect(result.current.activeAnnotationIndex).toBe(1)
+    })
+
+    it('removeAnnotation 后 activeAnnotationIndex 不越界', () => {
+      const routeWith2: Route = {
+        ...mockRoute,
+        topoAnnotations: [
+          { faceId: 'face-1', area: '主墙', topoLine: [{ x: 0.1, y: 0.2 }, { x: 0.3, y: 0.4 }] },
+          { faceId: 'face-2', area: '主墙', topoLine: [{ x: 0.5, y: 0.6 }, { x: 0.7, y: 0.8 }] },
+        ],
+      }
+      const { result } = setup(routeWith2)
+      act(() => { result.current.setActiveAnnotationIndex(1) })
+      act(() => { result.current.removeAnnotation(1) })
+      expect(result.current.annotations).toHaveLength(1)
+      expect(result.current.activeAnnotationIndex).toBe(0)
+    })
+
+    it('updateActiveTopoLine 只修改激活标注的 topoLine', () => {
+      const routeWith2: Route = {
+        ...mockRoute,
+        topoAnnotations: [
+          { faceId: 'face-1', area: '主墙', topoLine: [{ x: 0.1, y: 0.2 }, { x: 0.3, y: 0.4 }] },
+          { faceId: 'face-2', area: '主墙', topoLine: [{ x: 0.5, y: 0.6 }, { x: 0.7, y: 0.8 }] },
+        ],
+      }
+      const { result } = setup(routeWith2)
+      act(() => { result.current.setActiveAnnotationIndex(0) })
+      act(() => {
+        result.current.updateActiveTopoLine([{ x: 0.9, y: 0.9 }, { x: 0.8, y: 0.8 }])
+      })
+      expect(result.current.annotations[0].topoLine[0]).toEqual({ x: 0.9, y: 0.9 })
+      // 第二条标注不变
+      expect(result.current.annotations[1].topoLine[0]).toEqual({ x: 0.5, y: 0.6 })
+    })
+
+    it('保存时 patch body 包含 topoAnnotations 和 compat sync', async () => {
+      const { result } = setup()
+      await act(async () => {
+        await result.current.handleSave()
+      })
+      const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+      const body = JSON.parse(fetchCall[1].body)
+      // 新字段
+      expect(body.topoAnnotations).toBeDefined()
+      expect(Array.isArray(body.topoAnnotations)).toBe(true)
+      // compat sync：旧字段与第一条标注一致
+      if (result.current.annotations.length > 0) {
+        expect(body.faceId).toBe(result.current.annotations[0].faceId)
+      }
+    })
+
+    it('添加标注后 hasUnsavedChanges 返回 true', () => {
+      const { result } = setup()
+      act(() => {
+        result.current.addAnnotation('face-2', '主墙')
+      })
+      expect(result.current.hasUnsavedChanges()).toBe(true)
+    })
   })
 })
