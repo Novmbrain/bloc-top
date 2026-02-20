@@ -2,7 +2,7 @@
 
 import { useRef, useCallback, useEffect } from 'react'
 import Image from 'next/image'
-import { X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
+import { X, ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   TransformWrapper,
   TransformComponent,
@@ -20,6 +20,12 @@ interface ImageViewerProps {
   children?: React.ReactNode
   /** 固定在顶部的内容（不随缩放移动，如提示条） */
   topSlot?: React.ReactNode
+  /** 多图模式：所有图片 URL（传入时显示左右导航箭头） */
+  images?: string[]
+  /** 多图模式：当前激活图片 index */
+  activeImageIndex?: number
+  /** 多图模式：切换图片回调 */
+  onImageChange?: (index: number) => void
 }
 
 // 底部控制栏组件（缩放 + 关闭）
@@ -85,7 +91,11 @@ function BottomControls({ onClose }: { onClose: () => void }) {
   )
 }
 
-export function ImageViewer({ isOpen, onClose, src, alt = '', children, topSlot }: ImageViewerProps) {
+export function ImageViewer({ isOpen, onClose, src, alt = '', children, topSlot, images, activeImageIndex, onImageChange }: ImageViewerProps) {
+  const effectiveSrc = images ? (images[activeImageIndex ?? 0] ?? src) : src
+  const effectiveIndex = activeImageIndex ?? 0
+  const canGoPrev = !!images && images.length > 1 && effectiveIndex > 0
+  const canGoNext = !!images && images.length > 1 && effectiveIndex < images.length - 1
   const transformRef = useRef<ReactZoomPanPinchRef>(null)
   const startYRef = useRef<number>(0)
   const scaleRef = useRef<number>(1)
@@ -101,24 +111,29 @@ export function ImageViewer({ isOpen, onClose, src, alt = '', children, topSlot 
     }
   }, [isOpen])
 
-  // ESC 键关闭
+  // ESC 键关闭 / 左右方向键切换图片（多图模式）
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (!isOpen) return
+      if (e.key === 'Escape') {
         onClose()
+      } else if (e.key === 'ArrowLeft' && canGoPrev) {
+        onImageChange?.(effectiveIndex - 1)
+      } else if (e.key === 'ArrowRight' && canGoNext) {
+        onImageChange?.(effectiveIndex + 1)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, canGoPrev, canGoNext, effectiveIndex, onImageChange])
 
-  // 重置状态（打开时）
+  // 重置状态（打开时 或 切换图片时）
   useEffect(() => {
     if (isOpen && transformRef.current) {
       transformRef.current.resetTransform()
       scaleRef.current = 1
     }
-  }, [isOpen])
+  }, [isOpen, activeImageIndex])
 
   // 下滑关闭（仅在未缩放状态）
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -162,6 +177,30 @@ export function ImageViewer({ isOpen, onClose, src, alt = '', children, topSlot 
       {/* 顶部插槽 */}
       {topSlot}
 
+      {/* 多图导航箭头（在 TransformWrapper 外，不随缩放移动） */}
+      {images && images.length > 1 && (
+        <>
+          <button
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity"
+            style={{ opacity: canGoPrev ? 1 : 0.3 }}
+            disabled={!canGoPrev}
+            onClick={(e) => { e.stopPropagation(); onImageChange?.(effectiveIndex - 1) }}
+            aria-label="上一张"
+          >
+            <ChevronLeft className="w-5 h-5 text-white" />
+          </button>
+          <button
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity"
+            style={{ opacity: canGoNext ? 1 : 0.3 }}
+            disabled={!canGoNext}
+            onClick={(e) => { e.stopPropagation(); onImageChange?.(effectiveIndex + 1) }}
+            aria-label="下一张"
+          >
+            <ChevronRight className="w-5 h-5 text-white" />
+          </button>
+        </>
+      )}
+
       {/* 图片查看器 */}
       <TransformWrapper
         ref={transformRef}
@@ -179,31 +218,31 @@ export function ImageViewer({ isOpen, onClose, src, alt = '', children, topSlot 
         <>
           <BottomControls onClose={onClose} />
           <TransformComponent
-              wrapperStyle={{
-                width: '100%',
-                height: '100%',
-              }}
-              contentStyle={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <div className="relative w-full h-full flex items-center justify-center">
-                <Image
-                  src={src}
-                  alt={alt}
-                  fill
-                  className="object-contain select-none"
-                  sizes="100vw"
-                  priority
-                  draggable={false}
-                />
-                {/* 叠加层内容（如 Topo 线路 SVG） */}
-                {children}
-              </div>
+            wrapperStyle={{
+              width: '100%',
+              height: '100%',
+            }}
+            contentStyle={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Image
+                src={effectiveSrc}
+                alt={alt}
+                fill
+                className="object-contain select-none"
+                sizes="100vw"
+                priority
+                draggable={false}
+              />
+              {/* 叠加层内容（如 Topo 线路 SVG） */}
+              {children}
+            </div>
           </TransformComponent>
         </>
       </TransformWrapper>
