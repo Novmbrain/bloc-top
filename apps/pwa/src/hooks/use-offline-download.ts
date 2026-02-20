@@ -127,11 +127,13 @@ export function useOfflineDownload(): UseOfflineDownloadReturn {
       const downloadedCount = await prefetchImages(
         imageUrls,
         (downloaded, total) => {
-          setDownloadProgress(prev => prev ? {
-            ...prev,
-            downloadedImages: downloaded,
-            totalImages: total,
-          } : null)
+          setDownloadProgress(prev =>
+            prev && prev.cragId === cragId ? {
+              ...prev,
+              downloadedImages: downloaded,
+              totalImages: total,
+            } : prev
+          )
         }
       )
 

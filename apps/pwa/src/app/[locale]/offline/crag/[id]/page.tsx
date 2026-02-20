@@ -338,7 +338,7 @@ export default function OfflineCragDetailPage() {
         style={{ background: `linear-gradient(to top, var(--theme-surface), transparent)` }}
       >
         <Button
-          onClick={() => router.push(`/${locale}/route?crag=${crag.id}&offline=true`)}
+          onClick={() => router.push(`/${locale}/route?crag=${crag.id}`)}
           className="w-full h-12 font-semibold"
           style={{
             backgroundColor: 'var(--theme-primary)',
