@@ -52,6 +52,14 @@ export interface TopoPoint {
   y: number  // 0-1 归一化 Y 坐标
 }
 
+// 单张图的 topo 标注数据（多图标注功能用）
+export interface RouteTopoAnnotation {
+  faceId: string
+  area: string
+  topoLine: TopoPoint[]     // 有效值：至少 2 个点
+  topoTension?: number      // Catmull-Rom 张力 0-1
+}
+
 // ==================== 核心数据类型 ====================
 
 // 线路数据类型
@@ -69,6 +77,7 @@ export interface Route {
   betaLinks?: BetaLink[] // Beta 视频链接
   topoLine?: TopoPoint[] // Topo 线路标注 (归一化坐标)
   topoTension?: number   // Catmull-Rom 曲线张力 0-1 (0=平滑, 1=折线, 默认 0)
+  topoAnnotations?: RouteTopoAnnotation[] // 多图标注列表（新字段，空=未设置）
 }
 
 // 岩场坐标类型
