@@ -58,6 +58,7 @@ export function useRouteEditor({
   // Dirty check
   const hasUnsavedChanges = useCallback((): boolean => {
     if (!selectedRoute) return false
+    if ((selectedFaceId ?? null) !== (selectedRoute.faceId ?? null)) return true
     const fields = ['name', 'grade', 'area', 'FA', 'setter', 'description'] as const
     for (const field of fields) {
       if ((editedRoute[field] ?? '') !== (selectedRoute[field] ?? '')) return true
@@ -69,7 +70,7 @@ export function useRouteEditor({
     }
     if (topoTension !== (selectedRoute.topoTension ?? 0)) return true
     return false
-  }, [selectedRoute, editedRoute, topoLine, topoTension])
+  }, [selectedRoute, editedRoute, topoLine, topoTension, selectedFaceId])
 
   // Initialize edit state when route is selected
   useEffect(() => {
@@ -211,28 +212,16 @@ export function useRouteEditor({
     }
   }, [selectedRoute, isDeleting, setRoutes, showToast])
 
-  // Face selection
-  const handleFaceSelect = useCallback(async (faceId: string, area: string) => {
+  // Face selection — 纯 UI 状态更新，不立即 PATCH，等用户点 Save 时统一提交
+  const handleFaceSelect = useCallback((faceId: string, area: string) => {
     if (!selectedRoute || faceId === selectedFaceId) return
     setSelectedFaceId(faceId)
-    setTopoLine([])
     const url = faceImageCache.getImageUrl({ cragId: selectedRoute.cragId, area, faceId })
     setImageUrl(url)
     setIsImageLoading(true)
     setImageLoadError(false)
     setImageAspectRatio(undefined)
-    try {
-      const res = await fetch(`/api/routes/${selectedRoute.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ faceId }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setRoutes(prev => prev.map(r => r.id === selectedRoute.id ? data.route : r))
-      }
-    } catch { /* 静默失败，保存时会再次绑定 */ }
-  }, [selectedRoute, selectedFaceId, faceImageCache, setRoutes])
+  }, [selectedRoute, selectedFaceId, faceImageCache])
 
   // Image event handlers
   const handleImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
