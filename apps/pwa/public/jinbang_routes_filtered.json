@@ -1,0 +1,533 @@
+{
+  "areas": [
+    {
+      "area_name": "金亭山区域(A区)",
+      "routes": [
+        {
+          "name": "路边的尖尖",
+          "description": "图示起步,翻顶结束,可以从侧面慢慢下来",
+          "set": null,
+          "fa": null,
+          "grade": "V2"
+        },
+        {
+          "name": "龙",
+          "description": "图示起步,标识的口袋大点结束",
+          "set": null,
+          "fa": null,
+          "grade": "V6-7"
+        },
+        {
+          "name": "见龙",
+          "description": "图示起步,翻起",
+          "set": "陈朋",
+          "fa": "洪凡凌",
+          "grade": "V1"
+        },
+        {
+          "name": "初识野抱",
+          "description": "起步后直上",
+          "set": "陈朋",
+          "fa": "洪凡凌",
+          "grade": "V1"
+        },
+        {
+          "name": "花式翻起",
+          "description": "往左横移后翻起,右侧棱只有顶上手点可用",
+          "set": "陈朋",
+          "fa": "任峰",
+          "grade": "V2-3"
+        },
+        {
+          "name": "2",
+          "description": "侧拉起步,沿裂缝直上",
+          "set": null,
+          "fa": null,
+          "grade": "V3"
+        },
+        {
+          "name": "朝阳",
+          "description": "直上翻顶,左侧可用",
+          "set": "Rocker",
+          "fa": "孙璐",
+          "grade": "V1"
+        },
+        {
+          "name": "夕阳",
+          "description": "起步后走右边翻顶",
+          "set": "Rocker",
+          "fa": "孙璐",
+          "grade": "V2"
+        },
+        {
+          "name": "Dangerous",
+          "description": "右脚可以挂右手点,直上翻顶",
+          "set": "Rocker",
+          "fa": "陈朋",
+          "grade": "V4"
+        },
+        {
+          "name": "平步青云",
+          "description": "起步直上翻顶,右侧岩壁可用",
+          "set": "Rocker",
+          "fa": "孙璐",
+          "grade": "V3"
+        },
+        {
+          "name": "我只爬一次",
+          "description": "起步直上翻顶",
+          "set": null,
+          "fa": "慢慢",
+          "grade": "V4"
+        },
+        {
+          "name": "波折中起飞",
+          "description": "两个扣片起步,翻起结束",
+          "set": null,
+          "fa": "飞飞",
+          "grade": "V2"
+        },
+        {
+          "name": "Batwoman",
+          "description": "屋檐内部手点起步,檐后直上翻顶出屋",
+          "set": "陈朋",
+          "fa": "洪凡凌",
+          "grade": "V3"
+        },
+        {
+          "name": "爱上出差",
+          "description": "两个扣扣起步,不用右侧岩壁,直上翻顶",
+          "set": "KONG",
+          "fa": "KONG",
+          "grade": "V5-6"
+        },
+        {
+          "name": "龙景攀岩",
+          "description": "延裂缝起步直上翻顶,不用右侧岩壁",
+          "set": "任峰",
+          "fa": "Alex",
+          "grade": "V4-5"
+        },
+        {
+          "name": "水波不兴",
+          "description": "侧拉起步,直上翻起结束",
+          "set": null,
+          "fa": "洪凡凌",
+          "grade": "V3"
+        },
+        {
+          "name": "百变酒精",
+          "description": "反提起步,直上翻顶",
+          "set": "陈朋",
+          "fa": "李思橦",
+          "grade": "V4"
+        },
+        {
+          "name": "黄色卫士",
+          "description": "侧拉起步,直上",
+          "set": null,
+          "fa": null,
+          "grade": "V2"
+        },
+        {
+          "name": "加个脚点",
+          "description": "两个对侧侧拉起步,直上,不要去左边",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V7-8"
+        },
+        {
+          "name": "好想走左边",
+          "description": "扣点起步,直上翻顶",
+          "set": null,
+          "fa": null,
+          "grade": "V4"
+        },
+        {
+          "name": "鸡立鹤群",
+          "description": "助跑抓大点或者侧拉起步",
+          "set": "吴景龙",
+          "fa": null,
+          "grade": "V1"
+        },
+        {
+          "name": "你们玩吧",
+          "description": "较低位置反提起步,直上",
+          "set": null,
+          "fa": null,
+          "grade": "V3"
+        },
+        {
+          "name": "绝唱",
+          "description": "侧拉起步,直上,无右边石块(爆点待修复)",
+          "set": "陈朋",
+          "fa": "叶鹰英",
+          "grade": "V4"
+        },
+        {
+          "name": "异想天开",
+          "description": "同1,有右侧石块",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V3"
+        },
+        {
+          "name": "One Move",
+          "description": "起步后往右上方翻起",
+          "set": null,
+          "fa": null,
+          "grade": "V2"
+        },
+        {
+          "name": "变电站",
+          "description": "起步左侧侧楞可用,图片没有拍全",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V4"
+        },
+        {
+          "name": "没那么远",
+          "description": "起步往左上翻起,无右侧边",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V5"
+        },
+        {
+          "name": "方宅",
+          "description": "起步往左上翻起,有右侧边",
+          "set": null,
+          "fa": null,
+          "grade": "V3"
+        },
+        {
+          "name": "小碎步",
+          "description": "直上",
+          "set": "陈朋",
+          "fa": "洪凡凌",
+          "grade": "V2"
+        },
+        {
+          "name": "小小2米",
+          "description": "往左横切后直上",
+          "set": "陈朋",
+          "fa": "Livia",
+          "grade": "V3"
+        },
+        {
+          "name": "反提起步",
+          "description": "反提起步",
+          "set": "Jason",
+          "fa": null,
+          "grade": "V5"
+        },
+        {
+          "name": "侧拉起步",
+          "description": "侧拉起步",
+          "set": "Jason",
+          "fa": null,
+          "grade": "V5"
+        }
+      ]
+    },
+    {
+      "area_name": "紫竹林区域(B区)",
+      "routes": [
+        {
+          "name": "迎宾",
+          "description": "起步左上翻起“迎宾”右侧,平衡起步后向右上方翻起",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V4-5?"
+        },
+        {
+          "name": "咋起步",
+          "description": "平衡起步后向右上方翻起",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V5-6?"
+        },
+        {
+          "name": "Symbol of JinBang",
+          "description": "起步双手pinch,向右上翻起,注意右侧树木",
+          "set": "陈朋",
+          "fa": "泓深",
+          "grade": "V4"
+        },
+        {
+          "name": "别开门",
+          "description": "左手S3+右手岩面任意手点,直上",
+          "set": null,
+          "fa": null,
+          "grade": "V2-3"
+        },
+        {
+          "name": "别开门pro",
+          "description": "S1+S2起步,直上,不翻顶",
+          "set": "陈朋",
+          "fa": "KONG",
+          "grade": "V3-4"
+        },
+        {
+          "name": "匍匐前进",
+          "description": "别开门pro翻顶",
+          "set": "邱红树",
+          "fa": "邱红树",
+          "grade": "V5"
+        },
+        {
+          "name": "DeepSeet",
+          "description": "左手反提,右手侧边凸起手点起步,脚点为下方任意小脚点,往左翻起出屋檐结束,仅可使用本块石头",
+          "set": "陈朋",
+          "fa": "邱红树",
+          "grade": "V8,臂展165以下很困难"
+        },
+        {
+          "name": "翻顶愉快",
+          "description": "直上",
+          "set": "陈朋",
+          "fa": "陈朋",
+          "grade": "V0"
+        },
+        {
+          "name": "苹果C/美式",
+          "description": "反提起,直上",
+          "set": "陈朋",
+          "fa": "洪凡凌",
+          "grade": "V1"
+        },
+        {
+          "name": "周五下午没班",
+          "description": "反提起,直上",
+          "set": "陈朋",
+          "fa": "洪凡凌",
+          "grade": "V2"
+        },
+        {
+          "name": "转角遇到爱",
+          "description": "侧拉起步向左横移至1号线直上",
+          "set": "陈朋",
+          "fa": "孙璐",
+          "grade": "V3"
+        },
+        {
+          "name": "Barely Footable",
+          "description": "沿裂缝直上",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V3"
+        },
+        {
+          "name": "没必要",
+          "description": "直上",
+          "set": "陈朋",
+          "fa": "吴景龙",
+          "grade": "V2"
+        },
+        {
+          "name": "All The Way Up",
+          "description": "侧拉起,直上",
+          "set": "孙璐",
+          "fa": "陈泓冰",
+          "grade": "V1"
+        },
+        {
+          "name": "夹缝求生",
+          "description": "右侧平台起步,直上",
+          "set": "孙璐",
+          "fa": "陈泓冰",
+          "grade": "V1"
+        },
+        {
+          "name": "起步半小时",
+          "description": "左手下方扣点,右手上方侧楞,挂脚起步",
+          "set": "陈朋",
+          "fa": "KONG",
+          "grade": "使用起步手点上方较大抠点V4,不使用V5"
+        },
+        {
+          "name": "翻山越岭",
+          "description": "起步后向右上翻起",
+          "set": "陈朋",
+          "fa": "远爸",
+          "grade": "V4"
+        },
+        {
+          "name": "拍拍手",
+          "description": "起步后向上翻起",
+          "set": "陈朋",
+          "fa": "叶鹰英",
+          "grade": "V4"
+        },
+        {
+          "name": "潮起潮落",
+          "description": "起步后向右横移接线路2",
+          "set": "陈朋",
+          "fa": "陈朋",
+          "grade": "V6"
+        },
+        {
+          "name": "关关难过关关过",
+          "description": "起步向左横移接线路1",
+          "set": "陈朋",
+          "fa": "陈朋",
+          "grade": "V6"
+        },
+        {
+          "name": "线路6",
+          "description": "起步向左上方经中间缺口翻起",
+          "set": "陈朋",
+          "fa": "甲师傅",
+          "grade": "V5"
+        },
+        {
+          "name": "线路7",
+          "description": "起步直上",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V7"
+        },
+        {
+          "name": "线路8",
+          "description": "起步向右横移不经中间缺口向右上翻起",
+          "set": "孙璐",
+          "fa": null,
+          "grade": "V7-8"
+        },
+        {
+          "name": "另辟蹊径",
+          "description": "起步后向右上翻起",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V1"
+        },
+        {
+          "name": "Passion",
+          "description": "起步后向右上翻起",
+          "set": "陈朋",
+          "fa": "孙璐",
+          "grade": "V2"
+        },
+        {
+          "name": "大点小用",
+          "description": "窝窝手点坐起,向右翻起,不能往左走",
+          "set": "陈朋",
+          "fa": "陈朋",
+          "grade": "V5"
+        }
+      ]
+    },
+    {
+      "area_name": "卧云亭区域(C区)",
+      "routes": [
+        {
+          "name": "Sloper Killer",
+          "description": "左下小脚点配合两个手点起步,往左延裂缝,再向右上拍包翻起结束",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V8-9?"
+        },
+        {
+          "name": "矮挫难",
+          "description": "Sloper Killer左侧,起步右下方有配合的脚点起步,向左上翻起",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V5-6"
+        },
+        {
+          "name": "站起来就有",
+          "description": "S1单点起步,翻起结束",
+          "set": "陈朋",
+          "fa": "吴景龙",
+          "grade": "V3"
+        },
+        {
+          "name": "简单线",
+          "description": "向上 S2单点起步,踩岩面,向上翻起结束",
+          "set": "慢慢",
+          "fa": "陈朋",
+          "grade": "V4"
+        },
+        {
+          "name": "不够热身",
+          "description": "延裂缝直上",
+          "set": "Alex",
+          "fa": "越越",
+          "grade": "V0-1"
+        },
+        {
+          "name": "一鼓作气",
+          "description": "单点起步,直上",
+          "set": "陈朋",
+          "fa": "泓深",
+          "grade": "V4"
+        },
+        {
+          "name": "有朋自北京来",
+          "description": "起步后一直横移到顶部再翻起结束",
+          "set": "吴景龙",
+          "fa": "周佳杰",
+          "grade": "V1"
+        },
+        {
+          "name": "NB拖鞋战神",
+          "description": "扣扣起步,往左上翻起",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "V7"
+        },
+        {
+          "name": "一线生机",
+          "description": "沿细缝直上,到V字顶结束,双手抓",
+          "set": "邱红树",
+          "fa": "邱红树",
+          "grade": "V9"
+        }
+      ]
+    },
+    {
+      "area_name": "文屏区域(D区)",
+      "routes": [
+        {
+          "name": "The Project",
+          "description": "坐起,直上翻出屋檐,旁边石头不可用",
+          "set": "陈朋",
+          "fa": null,
+          "grade": "Project,估计V12以上"
+        },
+        {
+          "name": "嘤嘤怪",
+          "description": "抠点起步,右上翻起",
+          "set": "陈朋",
+          "fa": "Alex",
+          "grade": "V6-7"
+        },
+        {
+          "name": "站在2米巨人的肩膀上",
+          "description": "两点平衡起步,往左上翻起",
+          "set": "Rocker",
+          "fa": "孙璐",
+          "grade": "V3"
+        },
+        {
+          "name": "女人四个半",
+          "description": "沿明显侧楞向上翻起",
+          "set": "吴景龙",
+          "fa": "孙璐&慢慢&越越&牧童",
+          "grade": "V1"
+        }
+      ]
+    },
+    {
+      "area_name": "涌石亭区域(E区)",
+      "routes": [
+        {
+          "name": "糖炒栗子",
+          "description": "右下角sloper起步,沿缝一直橫移至背面翻起",
+          "set": "叶鹰英",
+          "fa": "陈朋",
+          "grade": "V5"
+        }
+      ]
+    }
+  ]
+}
