@@ -167,10 +167,25 @@ export function useRouteEditor({
   const removeAnnotation = useCallback((index: number) => {
     setAnnotations(prev => {
       const next = prev.filter((_, i) => i !== index)
-      setActiveAnnotationIndex(cur => Math.min(cur, Math.max(0, next.length - 1)))
+      const newIndex = Math.min(index, Math.max(0, next.length - 1))
+      setActiveAnnotationIndex(newIndex)
+      // 更新 imageUrl 到新的 active annotation
+      const newActive = next[newIndex]
+      if (newActive && selectedRoute) {
+        const url = faceImageCache.getImageUrl({
+          cragId: selectedRoute.cragId,
+          area: newActive.area,
+          faceId: newActive.faceId,
+        })
+        setImageUrl(url)
+        setIsImageLoading(true)
+        setImageAspectRatio(undefined)
+      } else {
+        setImageUrl(null)
+      }
       return next
     })
-  }, [])
+  }, [selectedRoute, faceImageCache])
 
   const updateActiveTopoLine = useCallback((points: TopoPoint[]) => {
     setAnnotations(prev => prev.map((a, i) =>

@@ -231,11 +231,13 @@ export function formatShortDate(date: string): string {
  */
 export function isToday(dateStr: string): boolean {
   const today = new Date()
-  const date = new Date(dateStr)
+  // 直接解析 YYYY-MM-DD 分量，避免 new Date(str) 将日期字符串解析为 UTC 午夜
+  // 导致在非 UTC 时区时 getDate() 返回错误的本地日期
+  const [year, month, day] = dateStr.split('-').map(Number)
   return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
+    year === today.getFullYear() &&
+    month - 1 === today.getMonth() &&
+    day === today.getDate()
   )
 }
 

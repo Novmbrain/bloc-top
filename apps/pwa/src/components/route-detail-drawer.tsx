@@ -33,19 +33,18 @@ interface AnnotationSlideProps {
   cragId: string
   routeColor: string
   routeName: string
-  imageAspectRatio: number | undefined
-  setImageAspectRatio: (r: number) => void
   onClick: () => void
 }
 
 function AnnotationSlide({
-  annotation, cragId, routeColor, routeName, imageAspectRatio, setImageAspectRatio, onClick,
+  annotation, cragId, routeColor, routeName, onClick,
 }: AnnotationSlideProps) {
   const { src, isLoading, isError, onLoad, onError } = useFaceImage({
     cragId,
     area: annotation.area,
     faceId: annotation.faceId,
   })
+  const [aspectRatio, setAspectRatio] = useState<number | undefined>(undefined)
 
   return (
     <button
@@ -65,7 +64,7 @@ function AnnotationSlide({
             onLoad()
             const img = e.currentTarget as HTMLImageElement
             if (img.naturalWidth && img.naturalHeight) {
-              setImageAspectRatio(img.naturalWidth / img.naturalHeight)
+              setAspectRatio(img.naturalWidth / img.naturalHeight)
             }
           }}
           onError={onError}
@@ -77,7 +76,7 @@ function AnnotationSlide({
           color={routeColor}
           tension={annotation.topoTension}
           objectFit="contain"
-          aspectRatio={imageAspectRatio}
+          aspectRatio={aspectRatio}
         />
       )}
     </button>
@@ -285,8 +284,6 @@ export function RouteDetailDrawer({
                       cragId={route.cragId}
                       routeColor={routeColor}
                       routeName={route.name}
-                      imageAspectRatio={imageAspectRatio}
-                      setImageAspectRatio={setImageAspectRatio}
                       onClick={() => setImageViewerOpen(true)}
                     />
                   ))}
