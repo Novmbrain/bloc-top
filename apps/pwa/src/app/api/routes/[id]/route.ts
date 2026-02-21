@@ -224,7 +224,12 @@ export async function PATCH(
             )
           }
         }
-        updates.topoAnnotations = body.topoAnnotations
+        updates.topoAnnotations = body.topoAnnotations.map((a: Record<string, unknown>) => ({
+          faceId: a.faceId,
+          area: a.area,
+          topoLine: a.topoLine,
+          ...(typeof a.topoTension === 'number' ? { topoTension: a.topoTension } : {}),
+        }))
       }
     }
 
