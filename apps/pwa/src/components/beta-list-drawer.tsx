@@ -47,11 +47,10 @@ export function BetaListDrawer({
       const res = await fetch(`/api/beta?routeId=${routeId}`)
       const data = await res.json()
       if (data.success && data.betaLinks) {
-        console.log('[BetaListDrawer] Refreshed betaLinks:', data.betaLinks.length)
         setRefreshedLinks(data.betaLinks)
       }
-    } catch (err) {
-      console.error('[BetaListDrawer] Failed to refresh:', err)
+    } catch {
+      // Silent fail — user sees stale data, can retry
     } finally {
       setRefreshing(false)
     }
@@ -69,12 +68,10 @@ export function BetaListDrawer({
     try {
       await navigator.clipboard.writeText(url)
       setCopiedId(betaId)
-      console.log('[BetaListDrawer] Copied URL:', url)
 
       // 2秒后重置复制状态
       setTimeout(() => setCopiedId(null), 2000)
-    } catch (err) {
-      console.error('[BetaListDrawer] Failed to copy:', err)
+    } catch {
       // 降级方案：使用传统的复制方法
       const textArea = document.createElement('textarea')
       textArea.value = url
@@ -91,11 +88,8 @@ export function BetaListDrawer({
 
   /**
    * 打开外部链接
-   * 调试：打印实际点击的 URL
    */
   const handleLinkClick = (url: string) => {
-    console.log('[BetaListDrawer] Opening URL:', url)
-
     // 创建临时 <a> 标签并模拟点击
     const link = document.createElement('a')
     link.href = url

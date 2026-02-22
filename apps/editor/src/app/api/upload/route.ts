@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
+import { PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { createModuleLogger } from '@bloctop/shared/logger'
 import { sanitizePathSegment } from '@bloctop/shared/request-utils'
 import { getDatabase } from '@bloctop/shared/mongodb'
 import { requireAuth } from '@/lib/require-auth'
+import { getS3Client, getBucketName } from '@/lib/r2-client'
 import { canEditCrag } from '@bloctop/shared/permissions'
 
 const log = createModuleLogger('API:Upload')
@@ -14,42 +15,14 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024
 // 允许的图片类型
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
-// 懒加载 S3 客户端（R2 兼容）
-let s3Client: S3Client | null = null
-
-function getS3Client(): S3Client {
-  if (!s3Client) {
-    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
-    const accessKeyId = process.env.R2_ACCESS_KEY_ID
-    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
-
-    if (!accountId || !accessKeyId || !secretAccessKey) {
-      throw new Error('Missing R2 configuration')
-    }
-
-    s3Client = new S3Client({
-      region: 'auto',
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-    })
-  }
-  return s3Client
-}
-
 /**
  * 检查文件是否已存在于 R2
  * 使用 HeadObject 轻量级检查（不下载文件）
  */
 async function checkFileExists(key: string): Promise<boolean> {
-  const bucketName = process.env.R2_BUCKET_NAME
-  if (!bucketName) return false
-
   try {
     await getS3Client().send(new HeadObjectCommand({
-      Bucket: bucketName,
+      Bucket: getBucketName(),
       Key: key,
     }))
     return true
@@ -154,13 +127,8 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer())
 
     // 上传到 R2
-    const bucketName = process.env.R2_BUCKET_NAME
-    if (!bucketName) {
-      throw new Error('Missing R2_BUCKET_NAME')
-    }
-
     const command = new PutObjectCommand({
-      Bucket: bucketName,
+      Bucket: getBucketName(),
       Key: key,
       Body: buffer,
       ContentType: 'image/jpeg',

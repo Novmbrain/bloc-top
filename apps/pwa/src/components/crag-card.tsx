@@ -1,10 +1,11 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { MapPin, GitBranch } from 'lucide-react'
 import type { Crag, Route, WeatherData } from '@/types'
 import { getCragTheme } from '@/lib/crag-theme'
-import { compareGrades } from '@/lib/grade-utils'
+import { computeGradeRange, formatGradeRange } from '@/lib/grade-utils'
 import { WeatherBadge } from '@/components/weather-badge'
 import { DownloadButton } from '@/components/download-button'
 import { useOfflineDownloadContextSafe } from '@/components/offline-download-provider'
@@ -17,7 +18,7 @@ interface CragCardProps {
   showDownload?: boolean  // 是否显示下载按钮
 }
 
-export function CragCard({ crag, routes = [], index = 0, weather, showDownload = true }: CragCardProps) {
+export const CragCard = memo(function CragCard({ crag, routes = [], index = 0, weather, showDownload = true }: CragCardProps) {
   const routeCount = routes.length
   const theme = getCragTheme(crag.id)
 
@@ -25,14 +26,7 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
   const offlineDownload = useOfflineDownloadContextSafe()
 
   // 计算难度范围
-  const grades = routes
-    .map((r) => r.grade)
-    .filter((g) => g !== '？')
-    .sort(compareGrades)
-
-  const minGrade = grades[0] || 'V0'
-  const maxGrade = grades[grades.length - 1] || minGrade
-  const gradeRange = minGrade === maxGrade ? minGrade : `${minGrade}-${maxGrade}`
+  const gradeRange = formatGradeRange(computeGradeRange(routes.map((r) => r.grade)), '-') ?? 'V0'
 
   return (
     <Link
@@ -124,4 +118,4 @@ export function CragCard({ crag, routes = [], index = 0, weather, showDownload =
       </div>
     </Link>
   )
-}
+})

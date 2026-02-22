@@ -17,7 +17,7 @@ export { getClientIp, sanitizePathSegment } from './request-utils'
 export { IMAGE_VERSION, getRouteTopoUrl, getCragCoverUrl, getFaceTopoUrl, getTopoImageUrl } from './constants'
 export { gradeColors, getGradeColor } from './tokens'
 export { cn } from './utils'
-export { parseGrade, compareGrades, vToFont } from './grade-utils'
+export { parseGrade, compareGrades, vToFont, computeGradeRange, formatGradeRange } from './grade-utils'
 export {
   DEFAULT_CITY_ID, CITY_COOKIE_NAME, CITY_COOKIE_MAX_AGE,
   findCityById, findCityName, isCityValid, isCityAvailable,
@@ -43,3 +43,5 @@ export type { CragTheme } from './crag-theme'
 export { VIEW_WIDTH, VIEW_HEIGHT, GRADE_OPTIONS, preloadImage } from './editor-utils'
 export { deriveAreas, getPersistedAreas } from './editor-areas'
 export { revalidateCragPages, revalidateHomePage } from './revalidate-helpers'
+export { matchRouteByQuery, filterRoutesByQuery } from './route-search'
+export type { MatchType, MatchInfo } from './route-search'

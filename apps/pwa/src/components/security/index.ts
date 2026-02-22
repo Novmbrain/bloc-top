@@ -1,0 +1,5 @@
+export { AvatarSection } from './avatar-section'
+export { ProfileSection } from './profile-section'
+export { PasswordSection } from './password-section'
+export { PasskeySection } from './passkey-section'
+export { AuthActionsSection } from './auth-actions-section'

@@ -1,37 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { S3Client, ListObjectsV2Command, DeleteObjectCommand, CopyObjectCommand } from '@aws-sdk/client-s3'
+import { ListObjectsV2Command, DeleteObjectCommand, CopyObjectCommand } from '@aws-sdk/client-s3'
 import { getDatabase } from '@/lib/mongodb'
 import { requireAuth } from '@/lib/require-auth'
 import { canEditCrag } from '@/lib/permissions'
 import { createModuleLogger } from '@/lib/logger'
 import { revalidateCragPages } from '@/lib/revalidate-helpers'
+import { getS3Client, getBucketName } from '@/lib/r2-client'
 
 const log = createModuleLogger('API:Faces')
-
-// 复用 upload 中相同的 S3 客户端初始化模式
-let s3Client: S3Client | null = null
-
-function getS3Client(): S3Client {
-  if (!s3Client) {
-    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
-    const accessKeyId = process.env.R2_ACCESS_KEY_ID
-    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
-
-    if (!accountId || !accessKeyId || !secretAccessKey) {
-      throw new Error('Missing R2 configuration')
-    }
-
-    s3Client = new S3Client({
-      region: 'auto',
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-    })
-  }
-  return s3Client
-}
 
 interface FaceInfo {
   faceId: string
@@ -69,15 +45,9 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const bucketName = process.env.R2_BUCKET_NAME
-  if (!bucketName) {
-    return NextResponse.json(
-      { success: false, error: 'R2 配置未设置' },
-      { status: 500 }
-    )
-  }
-
   try {
+    const bucketName = getBucketName()
+
     // 列出 {cragId}/ 下所有文件，解析 area/faceId 层级
     const prefix = `${cragId}/`
     const result = await getS3Client().send(new ListObjectsV2Command({
@@ -170,13 +140,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const bucketName = process.env.R2_BUCKET_NAME
-    if (!bucketName) {
-      return NextResponse.json(
-        { success: false, error: 'R2 配置未设置' },
-        { status: 500 }
-      )
-    }
+    const bucketName = getBucketName()
 
     const client = getS3Client()
     const oldKey = `${cragId}/${area}/${oldFaceId}.jpg`
@@ -261,13 +225,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const bucketName = process.env.R2_BUCKET_NAME
-    if (!bucketName) {
-      return NextResponse.json(
-        { success: false, error: 'R2 配置未设置' },
-        { status: 500 }
-      )
-    }
+    const bucketName = getBucketName()
 
     // 1. 删除 R2 文件
     const key = `${cragId}/${area}/${faceId}.jpg`

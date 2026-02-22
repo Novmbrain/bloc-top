@@ -52,3 +52,31 @@ const V_TO_FONT: Record<string, string> = {
 export function vToFont(grade: string): string | null {
   return V_TO_FONT[grade] ?? null
 }
+
+/**
+ * 从线路难度数组中计算难度范围
+ * 过滤掉未知难度（？/?），按 V-Scale 排序后返回最低和最高难度
+ *
+ * @param grades - 线路难度字符串数组 (e.g. ['V3', 'V5', '？', 'V1'])
+ * @returns `{ min, max }` 或 `null`（所有线路均为未知难度时）
+ */
+export function computeGradeRange(grades: string[]): { min: string; max: string } | null {
+  const valid = grades.filter((g) => g !== '？' && g !== '?')
+  if (valid.length === 0) return null
+  const sorted = [...valid].sort(compareGrades)
+  return { min: sorted[0], max: sorted[sorted.length - 1] }
+}
+
+/**
+ * 将难度范围格式化为显示字符串
+ * @param range - `computeGradeRange()` 的返回值
+ * @param separator - 分隔符，默认 ' - '
+ * @returns 格式化字符串，如 'V2 - V8' 或 'V5'（相同时不显示范围）
+ */
+export function formatGradeRange(
+  range: { min: string; max: string } | null,
+  separator = ' - '
+): string | null {
+  if (!range) return null
+  return range.min === range.max ? range.min : `${range.min}${separator}${range.max}`
+}

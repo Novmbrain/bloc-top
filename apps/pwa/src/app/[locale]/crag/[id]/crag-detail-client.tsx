@@ -6,11 +6,14 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
 import { FileText, Car, ChevronLeft, Heart, Mountain } from 'lucide-react'
+import { CoverCarousel } from '@/components/cover-carousel'
 import { Button } from '@/components/ui/button'
 import { Drawer } from '@/components/ui/drawer'
 import { getCragCoverUrl } from '@/lib/constants'
+import { computeGradeRange, formatGradeRange } from '@/lib/grade-utils'
 import AMapContainer from '@/components/amap-container'
 import { WeatherCard } from '@/components/weather-card'
+import { InfoCard } from '@/components/info-card'
 import type { Crag, Route } from '@/types'
 
 /** 默认坐标 fallback: 罗源县中心 (WGS-84) */
@@ -24,8 +27,6 @@ interface CragDetailClientProps {
 export default function CragDetailClient({ crag, routes }: CragDetailClientProps) {
   const t = useTranslations('CragDetail')
   const router = useRouter()
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [currentIndex, setCurrentIndex] = useState(0)
   const isMobile = useMediaQuery('(max-width: 640px)')
   const heroRef = useRef<HTMLDivElement>(null)
   const [imageVisible, setImageVisible] = useState(true)
@@ -45,22 +46,6 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
     ? Array.from({ length: coverCount }, (_, i) => getCragCoverUrl(crag.id, i, coverTimestamp))
     : [getCragCoverUrl(crag.id, 0)]
 
-  // 监听滚动位置更新当前索引
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const handleScroll = () => {
-      const scrollLeft = container.scrollLeft
-      const itemWidth = container.offsetWidth
-      const newIndex = Math.round(scrollLeft / itemWidth)
-      setCurrentIndex(newIndex)
-    }
-
-    container.addEventListener('scroll', handleScroll, { passive: true })
-    return () => container.removeEventListener('scroll', handleScroll)
-  }, [])
-
   // 监听 Hero 图片可见性（Mobile only）
   useEffect(() => {
     if (!isMobile) return
@@ -77,18 +62,8 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
 
   // 计算难度范围
   const gradeRange = useMemo(() => {
-    const grades = routes
-      .map((r) => r.grade)
-      .filter((g) => g !== '？')
-      .sort((a, b) => {
-        const numA = parseInt(a.replace('V', ''))
-        const numB = parseInt(b.replace('V', ''))
-        return numA - numB
-      })
-    if (grades.length === 0) return '暂无'
-    return grades[0] === grades[grades.length - 1]
-      ? grades[0]
-      : `${grades[0]} - ${grades[grades.length - 1]}`
+    const range = computeGradeRange(routes.map((r) => r.grade))
+    return formatGradeRange(range) ?? '暂无'
   }, [routes])
 
   return (
@@ -132,50 +107,12 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
             />
           </div>
         ) : (
-          /* Desktop: 保留轮播 */
-          <div
-            ref={scrollContainerRef}
-            className="relative h-48 overflow-x-auto scrollbar-hide"
-            style={{
-              scrollSnapType: 'x mandatory',
-              WebkitOverflowScrolling: 'touch',
-            }}
-          >
-            <div className="flex h-full">
-              {images.map((src, idx) => (
-                <div
-                  key={idx}
-                  className="w-full flex-shrink-0 h-48 relative"
-                  style={{ scrollSnapAlign: 'start' }}
-                >
-                  <Image
-                    src={src}
-                    alt={`${crag.name} ${idx + 1}`}
-                    fill
-                    priority={idx === 0}
-                    sizes="100vw"
-                    className="object-cover"
-                    draggable={false}
-                    onError={() => setCoverError(true)}
-                  />
-                </div>
-              ))}
-            </div>
-
-            {/* 底部圆点指示器 */}
-            {images.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                {images.map((_, idx) => (
-                  <div
-                    key={idx}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      idx === currentIndex ? 'bg-white' : 'bg-white/50'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          /* Desktop: 轮播组件 */
+          <CoverCarousel
+            images={images}
+            alt={crag.name}
+            onError={() => setCoverError(true)}
+          />
         )}
       </div>
 
@@ -398,38 +335,3 @@ export default function CragDetailClient({ crag, routes }: CragDetailClientProps
   )
 }
 
-interface InfoCardProps {
-  icon: React.ReactNode
-  iconBg: string
-  title: string
-  content: string
-  delay?: number
-}
-
-function InfoCard({ icon, iconBg, title, content, delay = 0 }: InfoCardProps) {
-  return (
-    <div
-      className="glass p-3 mb-2 animate-fade-in-up"
-      style={{
-        borderRadius: 'var(--theme-radius-xl)',
-        animationDelay: `${delay}ms`,
-        transition: 'var(--theme-transition)',
-      }}
-    >
-      <div className="flex items-center mb-2">
-        <div
-          className="w-8 h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0"
-          style={{ backgroundColor: iconBg }}
-        >
-          {icon}
-        </div>
-        <span className="text-base font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-          {title}
-        </span>
-      </div>
-      <p className="text-sm leading-relaxed" style={{ color: 'var(--theme-on-surface-variant)' }}>
-        {content}
-      </p>
-    </div>
-  )
-}
