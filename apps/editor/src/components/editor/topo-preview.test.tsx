@@ -27,17 +27,17 @@ const baseProps = {
 describe('TopoPreview', () => {
   it('无图片时显示提示', () => {
     render(<TopoPreview {...baseProps} />)
-    expect(screen.getByText('暂无岩面照片')).toBeInTheDocument()
+    expect(screen.getByText('暂无岩面照片')).toBeTruthy()
   })
 
   it('有图片时渲染 img 元素', () => {
     render(<TopoPreview {...baseProps} imageUrl="https://img.example.com/face.jpg" />)
-    expect(screen.getByAltText('岩面照片')).toBeInTheDocument()
+    expect(screen.getByAltText('岩面照片')).toBeTruthy()
   })
 
   it('无标注点时显示"开始标注"', () => {
     render(<TopoPreview {...baseProps} imageUrl="https://img.example.com/face.jpg" />)
-    expect(screen.getByText('开始标注')).toBeInTheDocument()
+    expect(screen.getByText('开始标注')).toBeTruthy()
   })
 
   it('有标注点时显示"编辑标注"', () => {
@@ -51,13 +51,13 @@ describe('TopoPreview', () => {
         pathData="M10,20 L30,40"
       />
     )
-    expect(screen.getByText('编辑标注')).toBeInTheDocument()
-    expect(screen.getByText('2 个控制点')).toBeInTheDocument()
+    expect(screen.getByText('编辑标注')).toBeTruthy()
+    expect(screen.getByText('2 个控制点')).toBeTruthy()
   })
 
   it('isImageLoading 显示加载状态', () => {
     render(<TopoPreview {...baseProps} imageUrl="https://img.example.com/face.jpg" isImageLoading />)
-    expect(screen.getByText('加载云端图片...')).toBeInTheDocument()
+    expect(screen.getByText('加载云端图片...')).toBeTruthy()
   })
 
   it('点击标注按钮触发 onOpenFullscreen', async () => {
