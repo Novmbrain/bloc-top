@@ -6,6 +6,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@/test/utils'
 import { BetaSubmitDrawer } from './beta-submit-drawer'
 
+// Mock auth-client
+const mockUseSession = vi.fn()
+vi.mock('@/lib/auth-client', () => ({
+  useSession: () => mockUseSession(),
+}))
+
 // Mock fetch
 const mockFetch = vi.fn()
 
@@ -39,6 +45,11 @@ describe('BetaSubmitDrawer', () => {
     vi.clearAllMocks()
     localStorageMock.clear()
     global.fetch = mockFetch
+    // 默认模拟已登录状态
+    mockUseSession.mockReturnValue({
+      data: { user: { id: 'user-1', email: 'test@example.com' } },
+      isPending: false,
+    })
     Object.defineProperty(window, 'localStorage', {
       value: localStorageMock,
       writable: true,
@@ -413,6 +424,33 @@ describe('BetaSubmitDrawer', () => {
       const savedData = JSON.parse(lastSetItemCall![1])
       expect(savedData.height).toBe('180')
       expect(savedData.reach).toBe('175') // 保留旧值
+    })
+  })
+
+  describe('未登录状态', () => {
+    beforeEach(() => {
+      mockUseSession.mockReturnValue({ data: null, isPending: false })
+    })
+
+    it('未登录时应显示登录提示而非表单', () => {
+      render(<BetaSubmitDrawer {...defaultProps} />)
+
+      // 应显示登录提示
+      expect(screen.getByText('loginRequired')).toBeTruthy()
+      expect(screen.getByText('loginToShare')).toBeTruthy()
+      expect(screen.getByText('loginOrRegister')).toBeTruthy()
+
+      // 不应显示表单字段
+      expect(screen.queryByPlaceholderText('urlPlaceholder')).toBeNull()
+      expect(screen.queryByText('submit')).toBeNull()
+    })
+
+    it('登录按钮应链接到登录页', () => {
+      render(<BetaSubmitDrawer {...defaultProps} />)
+
+      const loginLink = screen.getByText('loginOrRegister')
+      expect(loginLink.closest('a')).toBeTruthy()
+      expect(loginLink.closest('a')?.getAttribute('href')).toContain('/login')
     })
   })
 })
