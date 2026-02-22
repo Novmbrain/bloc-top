@@ -74,7 +74,7 @@ describe('OfflinePage', () => {
       render(<OfflinePage />)
 
       await waitFor(() => {
-        expect(screen.getByTestId('app-tabbar')).toBeInTheDocument()
+        expect(screen.getByTestId('app-tabbar')).toBeTruthy()
       })
     })
 
@@ -83,9 +83,9 @@ describe('OfflinePage', () => {
 
       await waitFor(() => {
         const tabbar = screen.getByTestId('app-tabbar')
-        expect(tabbar.querySelector('a[href="/"]')).toBeInTheDocument()
-        expect(tabbar.querySelector('a[href="/route"]')).toBeInTheDocument()
-        expect(tabbar.querySelector('a[href="/profile"]')).toBeInTheDocument()
+        expect(tabbar.querySelector('a[href="/"]')).toBeTruthy()
+        expect(tabbar.querySelector('a[href="/route"]')).toBeTruthy()
+        expect(tabbar.querySelector('a[href="/profile"]')).toBeTruthy()
       })
     })
   })
@@ -97,7 +97,7 @@ describe('OfflinePage', () => {
 
       // 等待数据加载
       await waitFor(() => {
-        expect(screen.getByText('八井村')).toBeInTheDocument()
+        expect(screen.getByText('八井村')).toBeTruthy()
       })
 
       // 点击岩场卡片
@@ -113,7 +113,7 @@ describe('OfflinePage', () => {
       render(<OfflinePage />)
 
       await waitFor(() => {
-        expect(screen.getByText('八井村')).toBeInTheDocument()
+        expect(screen.getByText('八井村')).toBeTruthy()
       })
 
       const cragButton = screen.getByRole('button', { name: /八井村/i })
@@ -129,7 +129,7 @@ describe('OfflinePage', () => {
       render(<OfflinePage />)
 
       await waitFor(() => {
-        expect(screen.getByText('title')).toBeInTheDocument()
+        expect(screen.getByText('title')).toBeTruthy()
       })
     })
 
@@ -138,7 +138,7 @@ describe('OfflinePage', () => {
 
       await waitFor(() => {
         // Mock 的翻译函数会直接返回 key + 参数
-        expect(screen.getByText(/downloadedCrags/i)).toBeInTheDocument()
+        expect(screen.getByText(/downloadedCrags/i)).toBeTruthy()
       })
     })
 
@@ -147,7 +147,7 @@ describe('OfflinePage', () => {
 
       await waitFor(() => {
         // routeCount 带参数 count: 2
-        expect(screen.getByText(/routeCount/i)).toBeInTheDocument()
+        expect(screen.getByText(/routeCount/i)).toBeTruthy()
       })
     })
   })
@@ -158,7 +158,7 @@ describe('OfflinePage', () => {
       render(<OfflinePage />)
 
       await waitFor(() => {
-        expect(screen.queryByRole('button', { name: 'goHome' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'goHome' })).not.toBeTruthy()
       })
     })
 
@@ -167,7 +167,7 @@ describe('OfflinePage', () => {
       render(<OfflinePage />)
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'goHome' })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'goHome' })).toBeTruthy()
       })
     })
   })

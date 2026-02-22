@@ -97,7 +97,7 @@ describe('WeatherCard', () => {
       const { container } = renderWithSWR(<WeatherCard adcode="350123" />)
 
       // 检查骨架屏元素
-      expect(container.querySelector('.skeleton-shimmer')).toBeInTheDocument()
+      expect(container.querySelector('.skeleton-shimmer')).toBeTruthy()
     })
 
     it('应该有 loading 动画', () => {
@@ -105,7 +105,7 @@ describe('WeatherCard', () => {
 
       const { container } = renderWithSWR(<WeatherCard adcode="350123" />)
 
-      expect(container.querySelector('.animate-fade-in-up')).toBeInTheDocument()
+      expect(container.querySelector('.animate-fade-in-up')).toBeTruthy()
     })
   })
 
@@ -116,8 +116,8 @@ describe('WeatherCard', () => {
       const { container } = renderWithSWR(<WeatherCard adcode="350123" />)
 
       await waitFor(() => {
-        expect(container.querySelector('.animate-fade-in-up')).not.toBeInTheDocument()
-        expect(container.querySelector('.skeleton-shimmer')).not.toBeInTheDocument()
+        expect(container.querySelector('.animate-fade-in-up')).not.toBeTruthy()
+        expect(container.querySelector('.skeleton-shimmer')).not.toBeTruthy()
       })
     })
 
@@ -130,8 +130,8 @@ describe('WeatherCard', () => {
       const { container } = renderWithSWR(<WeatherCard adcode="350123" />)
 
       await waitFor(() => {
-        expect(container.querySelector('.animate-fade-in-up')).not.toBeInTheDocument()
-        expect(container.querySelector('.skeleton-shimmer')).not.toBeInTheDocument()
+        expect(container.querySelector('.animate-fade-in-up')).not.toBeTruthy()
+        expect(container.querySelector('.skeleton-shimmer')).not.toBeTruthy()
       })
     })
   })
@@ -148,8 +148,8 @@ describe('WeatherCard', () => {
       renderWithSWR(<WeatherCard adcode="350123" />)
 
       await waitFor(() => {
-        expect(screen.getByText('25°')).toBeInTheDocument()
-        expect(screen.getByText('晴')).toBeInTheDocument()
+        expect(screen.getByText('25°')).toBeTruthy()
+        expect(screen.getByText('晴')).toBeTruthy()
       })
     })
 
@@ -158,7 +158,7 @@ describe('WeatherCard', () => {
 
       await waitFor(() => {
         // Mock useTranslations 使用参数替换: humidityValue -> "humidityValue" with {value: 60}
-        expect(screen.getByText('humidityValue')).toBeInTheDocument()
+        expect(screen.getByText('humidityValue')).toBeTruthy()
       })
     })
 
@@ -167,7 +167,7 @@ describe('WeatherCard', () => {
 
       await waitFor(() => {
         // Mock useTranslations: windValue with {direction: 东南, power: 3}
-        expect(screen.getByText('windValue')).toBeInTheDocument()
+        expect(screen.getByText('windValue')).toBeTruthy()
       })
     })
 
@@ -176,7 +176,7 @@ describe('WeatherCard', () => {
 
       await waitFor(() => {
         // Mock useTranslations: climbingLabel with {level: excellent}
-        expect(screen.getByText('climbingLabel')).toBeInTheDocument()
+        expect(screen.getByText('climbingLabel')).toBeTruthy()
       })
     })
 
@@ -185,7 +185,7 @@ describe('WeatherCard', () => {
 
       await waitFor(() => {
         // Mock useTranslations: excellentDesc
-        expect(screen.getByText('excellentDesc')).toBeInTheDocument()
+        expect(screen.getByText('excellentDesc')).toBeTruthy()
       })
     })
 
@@ -194,7 +194,7 @@ describe('WeatherCard', () => {
 
       await waitFor(() => {
         // Mock useTranslations: liveWeather
-        expect(screen.getByText('liveWeather')).toBeInTheDocument()
+        expect(screen.getByText('liveWeather')).toBeTruthy()
       })
     })
   })
@@ -212,13 +212,13 @@ describe('WeatherCard', () => {
 
       await waitFor(() => {
         // Mock useTranslations: futureWeather
-        expect(screen.getByText('futureWeather')).toBeInTheDocument()
+        expect(screen.getByText('futureWeather')).toBeTruthy()
       })
 
       // 检查温度范围
-      expect(screen.getByText('15° / 28°')).toBeInTheDocument()
-      expect(screen.getByText('16° / 26°')).toBeInTheDocument()
-      expect(screen.getByText('14° / 22°')).toBeInTheDocument()
+      expect(screen.getByText('15° / 28°')).toBeTruthy()
+      expect(screen.getByText('16° / 26°')).toBeTruthy()
+      expect(screen.getByText('14° / 22°')).toBeTruthy()
     })
 
     it('应该在预报中显示适宜度图标', async () => {
@@ -263,11 +263,11 @@ describe('WeatherCard', () => {
       renderWithSWR(<WeatherCard adcode="350123" />)
 
       await waitFor(() => {
-        expect(screen.getByText('25°')).toBeInTheDocument()
+        expect(screen.getByText('25°')).toBeTruthy()
       })
 
       // Mock useTranslations: futureWeather
-      expect(screen.queryByText('futureWeather')).not.toBeInTheDocument()
+      expect(screen.queryByText('futureWeather')).not.toBeTruthy()
     })
   })
 
@@ -310,7 +310,7 @@ describe('WeatherCard', () => {
 
       await waitFor(() => {
         const card = container.firstChild as HTMLElement
-        expect(card).toHaveStyle({ animationDelay: '100ms' })
+        expect(card.style.animationDelay).toBe('100ms')
       })
     })
   })

@@ -8,9 +8,9 @@ describe('Textarea', () => {
   it('renders with default form variant', () => {
     render(<Textarea value="" onChange={() => {}} placeholder="test" />)
     const textarea = screen.getByPlaceholderText('test')
-    expect(textarea).toBeInTheDocument()
+    expect(textarea).toBeTruthy()
     expect(textarea.tagName).toBe('TEXTAREA')
-    expect(textarea).toHaveAttribute('data-variant', 'form')
+    expect(textarea.getAttribute('data-variant')).toBe('form')
     expect(textarea.className).toContain('rounded-xl')
   })
 
@@ -51,7 +51,7 @@ describe('Textarea', () => {
   it('passes rows and other HTML attributes', () => {
     render(<Textarea value="" onChange={() => {}} placeholder="attrs" rows={5} disabled />)
     const textarea = screen.getByPlaceholderText('attrs')
-    expect(textarea).toHaveAttribute('rows', '5')
-    expect(textarea).toBeDisabled()
+    expect(textarea.getAttribute('rows')).toBe('5')
+    expect((textarea as HTMLButtonElement).disabled).toBe(true)
   })
 })

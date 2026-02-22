@@ -54,31 +54,30 @@ describe('CragCard', () => {
   describe('基础渲染', () => {
     it('显示岩场名称', () => {
       render(<CragCard crag={mockCrag} routes={mockRoutes} />)
-      expect(screen.getByText('测试岩场')).toBeInTheDocument()
+      expect(screen.getByText('测试岩场')).toBeTruthy()
     })
 
     it('显示线路数量', () => {
       render(<CragCard crag={mockCrag} routes={mockRoutes} />)
-      expect(screen.getByText('3 条线路')).toBeInTheDocument()
+      expect(screen.getByText('3 条线路')).toBeTruthy()
     })
 
     it('显示位置信息', () => {
       render(<CragCard crag={mockCrag} routes={mockRoutes} />)
-      expect(screen.getByText('福州市罗源县')).toBeInTheDocument()
+      expect(screen.getByText('福州市罗源县')).toBeTruthy()
     })
 
     it('链接指向正确的岩场详情页', () => {
       render(<CragCard crag={mockCrag} routes={mockRoutes} />)
       const link = screen.getByRole('link')
-      expect(link).toHaveAttribute('href', '/crag/test-crag')
+      expect(link.getAttribute('href')).toBe('/crag/test-crag')
     })
   })
 
   describe('难度范围计算', () => {
     it('显示难度范围 (最小-最大)', () => {
       render(<CragCard crag={mockCrag} routes={mockRoutes} />)
-      // V2, V3, V5 排序后范围是 V2-V5
-      expect(screen.getByText('V2-V5')).toBeInTheDocument()
+      expect(screen.getByText('V2-V5')).toBeTruthy()
     })
 
     it('单一难度只显示一个值', () => {
@@ -87,7 +86,7 @@ describe('CragCard', () => {
         { id: 2, name: '线路B', grade: 'V4', cragId: 'test-crag', area: '区域1' },
       ]
       render(<CragCard crag={mockCrag} routes={sameGradeRoutes} />)
-      expect(screen.getByText('V4')).toBeInTheDocument()
+      expect(screen.getByText('V4')).toBeTruthy()
     })
 
     it('忽略未知难度 (？)', () => {
@@ -97,13 +96,13 @@ describe('CragCard', () => {
         { id: 3, name: '线路C', grade: 'V6', cragId: 'test-crag', area: '区域1' },
       ]
       render(<CragCard crag={mockCrag} routes={routesWithUnknown} />)
-      expect(screen.getByText('V2-V6')).toBeInTheDocument()
+      expect(screen.getByText('V2-V6')).toBeTruthy()
     })
 
     it('空线路列表显示默认难度', () => {
       render(<CragCard crag={mockCrag} routes={[]} />)
-      expect(screen.getByText('V0')).toBeInTheDocument()
-      expect(screen.getByText('0 条线路')).toBeInTheDocument()
+      expect(screen.getByText('V0')).toBeTruthy()
+      expect(screen.getByText('0 条线路')).toBeTruthy()
     })
 
     it('全部未知难度显示默认值', () => {
@@ -112,7 +111,7 @@ describe('CragCard', () => {
         { id: 2, name: '线路B', grade: '？', cragId: 'test-crag', area: '区域1' },
       ]
       render(<CragCard crag={mockCrag} routes={unknownRoutes} />)
-      expect(screen.getByText('V0')).toBeInTheDocument()
+      expect(screen.getByText('V0')).toBeTruthy()
     })
   })
 
@@ -120,14 +119,13 @@ describe('CragCard', () => {
     it('卡片使用 glass 类和强调色左边框', () => {
       render(<CragCard crag={mockCrag} routes={mockRoutes} />)
       const link = screen.getByRole('link')
-      expect(link).toHaveClass('glass')
+      expect((link as HTMLElement).classList.contains('glass')).toBe(true)
       expect(link.getAttribute('style')).toContain('border-left')
     })
 
     it('不再渲染图片元素（统一使用毛玻璃）', () => {
       render(<CragCard crag={mockCragWithImage} routes={mockRoutes} />)
-      // 即使有 coverImages，也不应该渲染 img 元素
-      expect(screen.queryByRole('img')).not.toBeInTheDocument()
+      expect(screen.queryByRole('img')).toBeNull()
     })
   })
 
@@ -138,7 +136,7 @@ describe('CragCard', () => {
         location: '',
       }
       render(<CragCard crag={cragNoLocation} routes={mockRoutes} />)
-      expect(screen.queryByText('福州市罗源县')).not.toBeInTheDocument()
+      expect(screen.queryByText('福州市罗源县')).toBeNull()
     })
   })
 })

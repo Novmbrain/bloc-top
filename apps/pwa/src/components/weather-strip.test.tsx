@@ -58,8 +58,8 @@ describe('WeatherStrip', () => {
 
       const { container } = renderWithSWR(<WeatherStrip adcode="350123" />)
 
-      expect(container.querySelector('.skeleton-shimmer')).toBeInTheDocument()
-      expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+      expect(container.querySelector('.skeleton-shimmer')).toBeTruthy()
+      expect(container.querySelector('.animate-pulse')).toBeTruthy()
     })
   })
 
@@ -70,8 +70,8 @@ describe('WeatherStrip', () => {
       const { container } = renderWithSWR(<WeatherStrip adcode="350123" />)
 
       await waitFor(() => {
-        expect(container.querySelector('.animate-fade-in')).not.toBeInTheDocument()
-        expect(container.querySelector('.animate-pulse')).not.toBeInTheDocument()
+        expect(container.querySelector('.animate-fade-in')).not.toBeTruthy()
+        expect(container.querySelector('.animate-pulse')).not.toBeTruthy()
       })
     })
 
@@ -79,7 +79,7 @@ describe('WeatherStrip', () => {
       const { container } = renderWithSWR(<WeatherStrip />)
 
       expect(mockFetch).not.toHaveBeenCalled()
-      expect(container.querySelector('.animate-fade-in')).not.toBeInTheDocument()
+      expect(container.querySelector('.animate-fade-in')).not.toBeTruthy()
     })
   })
 
@@ -95,7 +95,7 @@ describe('WeatherStrip', () => {
       renderWithSWR(<WeatherStrip adcode="350123" />)
 
       await waitFor(() => {
-        expect(screen.getByText('25°')).toBeInTheDocument()
+        expect(screen.getByText('25°')).toBeTruthy()
       })
     })
 
@@ -103,7 +103,7 @@ describe('WeatherStrip', () => {
       renderWithSWR(<WeatherStrip adcode="350123" />)
 
       await waitFor(() => {
-        expect(screen.getByText(/晴/)).toBeInTheDocument()
+        expect(screen.getByText(/晴/)).toBeTruthy()
       })
     })
 
@@ -112,7 +112,7 @@ describe('WeatherStrip', () => {
 
       await waitFor(() => {
         // Mock useTranslations 返回翻译键，所以匹配 'excellent' 而不是 '极佳'
-        expect(screen.getByText('excellent')).toBeInTheDocument()
+        expect(screen.getByText('excellent')).toBeTruthy()
       })
     })
 
@@ -120,7 +120,7 @@ describe('WeatherStrip', () => {
       renderWithSWR(<WeatherStrip adcode="350123" />)
 
       await waitFor(() => {
-        expect(screen.getByText('60%')).toBeInTheDocument()
+        expect(screen.getByText('60%')).toBeTruthy()
       })
     })
   })

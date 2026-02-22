@@ -10,17 +10,17 @@ describe('AuthorDrawer', () => {
 
   it('打开时显示作者名和签名', () => {
     render(<AuthorDrawer isOpen={true} onClose={vi.fn()} />)
-    expect(screen.getByText('傅文杰')).toBeInTheDocument()
+    expect(screen.getByText('傅文杰')).toBeTruthy()
   })
 
   it('显示微信联系方式', () => {
     render(<AuthorDrawer isOpen={true} onClose={vi.fn()} />)
-    expect(screen.getByText('Novmbrain')).toBeInTheDocument()
+    expect(screen.getByText('Novmbrain')).toBeTruthy()
   })
 
   it('显示小红书联系方式', () => {
     render(<AuthorDrawer isOpen={true} onClose={vi.fn()} />)
-    expect(screen.getByText('WindOfBretagne')).toBeInTheDocument()
+    expect(screen.getByText('WindOfBretagne')).toBeTruthy()
   })
 
   it('点击微信按钮复制到剪贴板', async () => {
@@ -60,7 +60,7 @@ describe('AuthorDrawer', () => {
   it('显示反馈文本区域', () => {
     render(<AuthorDrawer isOpen={true} onClose={vi.fn()} />)
     const textarea = screen.getByRole('textbox')
-    expect(textarea).toBeInTheDocument()
+    expect(textarea).toBeTruthy()
   })
 
   it('反馈为空时提交按钮禁用', () => {
@@ -70,7 +70,7 @@ describe('AuthorDrawer', () => {
     const sendButton = buttons.find(btn =>
       btn.classList.contains('absolute')
     )
-    expect(sendButton).toHaveAttribute('disabled')
+    expect(sendButton!.getAttribute('disabled')).not.toBeNull()
   })
 
   it('输入反馈后可提交', async () => {
@@ -111,13 +111,13 @@ describe('AuthorDrawer', () => {
 
     // mock translation returns the key
     await waitFor(() => {
-      expect(screen.getByText('feedbackThanks')).toBeInTheDocument()
+      expect(screen.getByText('feedbackThanks')).toBeTruthy()
     })
   })
 
   it('显示捐赠按钮', () => {
     render(<AuthorDrawer isOpen={true} onClose={vi.fn()} />)
     // mock translation returns the key 'donate'
-    expect(screen.getByText('donate')).toBeInTheDocument()
+    expect(screen.getByText('donate')).toBeTruthy()
   })
 })

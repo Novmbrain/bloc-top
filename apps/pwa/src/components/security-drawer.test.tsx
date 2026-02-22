@@ -127,29 +127,29 @@ describe('SecurityDrawer', () => {
 
     it('renders avatar section with camera overlay', () => {
       renderDrawer()
-      expect(screen.getByTestId('user-avatar')).toBeInTheDocument()
+      expect(screen.getByTestId('user-avatar')).toBeTruthy()
     })
 
     it('renders profile fields with initial values', () => {
       renderDrawer()
       // Nickname input
       const nicknameInput = screen.getByPlaceholderText('nicknamePlaceholder')
-      expect(nicknameInput).toHaveValue('TestUser')
+      expect((nicknameInput as HTMLInputElement).value).toBe('TestUser')
     })
 
     it('renders passkey section with one passkey', () => {
       renderDrawer()
-      expect(screen.getByText('MacBook Pro')).toBeInTheDocument()
+      expect(screen.getByText('MacBook Pro')).toBeTruthy()
     })
 
     it('renders logout button', () => {
       renderDrawer()
-      expect(screen.getByText('logout')).toBeInTheDocument()
+      expect(screen.getByText('logout')).toBeTruthy()
     })
 
     it('does not render when isOpen is false', () => {
       renderDrawer({ isOpen: false })
-      expect(screen.queryByTestId('drawer')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('drawer')).not.toBeTruthy()
     })
   })
 
@@ -157,12 +157,12 @@ describe('SecurityDrawer', () => {
   describe('editor access', () => {
     it('shows editor link when hasEditorAccess is true', () => {
       renderDrawer({ hasEditorAccess: true })
-      expect(screen.getByText('editorEntry')).toBeInTheDocument()
+      expect(screen.getByText('editorEntry')).toBeTruthy()
     })
 
     it('hides editor link when hasEditorAccess is false', () => {
       renderDrawer({ hasEditorAccess: false })
-      expect(screen.queryByText('editorEntry')).not.toBeInTheDocument()
+      expect(screen.queryByText('editorEntry')).not.toBeTruthy()
     })
   })
 
@@ -171,7 +171,7 @@ describe('SecurityDrawer', () => {
     it('computes ape index from height and reach', () => {
       renderDrawer()
       // reach(180) - height(175) = 5.0
-      expect(screen.getByText('apeIndexPositive')).toBeInTheDocument()
+      expect(screen.getByText('apeIndexPositive')).toBeTruthy()
     })
 
     it('does not show ape index when height or reach is empty', () => {
@@ -180,7 +180,7 @@ describe('SecurityDrawer', () => {
           user: { ...baseSession.user, height: undefined, reach: undefined },
         },
       })
-      expect(screen.queryByText('apeIndex')).not.toBeInTheDocument()
+      expect(screen.queryByText('apeIndex')).not.toBeTruthy()
     })
 
     it('calls updateUser with profile data on save', async () => {
@@ -225,7 +225,7 @@ describe('SecurityDrawer', () => {
       mockListAccounts.mockResolvedValue({ data: [] })
       renderDrawer()
       await waitFor(() => {
-        expect(screen.getByText('noPassword')).toBeInTheDocument()
+        expect(screen.getByText('noPassword')).toBeTruthy()
       })
     })
 
@@ -235,19 +235,19 @@ describe('SecurityDrawer', () => {
       })
       renderDrawer()
       await waitFor(() => {
-        expect(screen.getByText('hasPassword')).toBeInTheDocument()
+        expect(screen.getByText('hasPassword')).toBeTruthy()
       })
     })
 
     it('expands password form on click', async () => {
       const { user } = renderDrawer()
       await waitFor(() => {
-        expect(screen.getByText('setPassword')).toBeInTheDocument()
+        expect(screen.getByText('setPassword')).toBeTruthy()
       })
       await user.click(screen.getByText('setPassword'))
       // Should now show password input fields
-      expect(screen.getByPlaceholderText('newPassword')).toBeInTheDocument()
-      expect(screen.getByPlaceholderText('confirmPassword')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('newPassword')).toBeTruthy()
+      expect(screen.getByPlaceholderText('confirmPassword')).toBeTruthy()
     })
 
     it('validates password length (min 4)', async () => {
@@ -327,7 +327,7 @@ describe('SecurityDrawer', () => {
       await user.click(screen.getByText('cancel'))
 
       // Form should be collapsed (no password inputs)
-      expect(screen.queryByPlaceholderText('newPassword')).not.toBeInTheDocument()
+      expect(screen.queryByPlaceholderText('newPassword')).not.toBeTruthy()
     })
   })
 
@@ -335,7 +335,7 @@ describe('SecurityDrawer', () => {
   describe('passkey management', () => {
     it('displays passkey list', () => {
       renderDrawer()
-      expect(screen.getByText('MacBook Pro')).toBeInTheDocument()
+      expect(screen.getByText('MacBook Pro')).toBeTruthy()
     })
 
     it('calls addPasskey when "add device" is clicked', async () => {
@@ -387,12 +387,12 @@ describe('SecurityDrawer', () => {
       renderDrawer({
         session: { user: { ...baseSession.user, image: 'https://example.com/avatar.jpg' } },
       })
-      expect(screen.getByText('avatarRemove')).toBeInTheDocument()
+      expect(screen.getByText('avatarRemove')).toBeTruthy()
     })
 
     it('does not show delete avatar option when user has no image', () => {
       renderDrawer()
-      expect(screen.queryByText('avatarRemove')).not.toBeInTheDocument()
+      expect(screen.queryByText('avatarRemove')).not.toBeTruthy()
     })
 
     it('calls delete avatar API and notifies parent', async () => {

@@ -57,8 +57,8 @@ describe('DownloadButton', () => {
 
     // 按钮应该存在
     const button = screen.getByRole('button')
-    expect(button).toBeInTheDocument()
-    expect(button).toHaveAttribute('title', 'download')
+    expect(button).toBeTruthy()
+    expect(button.getAttribute('title')).toBe('download')
   })
 
   it('should render check icon when completed', () => {
@@ -74,7 +74,7 @@ describe('DownloadButton', () => {
     )
 
     const button = screen.getByRole('button')
-    expect(button).toHaveAttribute('title', 'downloaded')
+    expect(button.getAttribute('title')).toBe('downloaded')
   })
 
   it('should render progress when downloading', () => {
@@ -98,7 +98,7 @@ describe('DownloadButton', () => {
 
     const button = screen.getByRole('button')
     // 进度应该是 50%
-    expect(button).toHaveAttribute('title', 'downloading 50%')
+    expect(button.getAttribute('title')).toBe('downloading 50%')
   })
 
   it('should call onDownload when clicked in idle state', async () => {
@@ -165,7 +165,7 @@ describe('DownloadButton', () => {
     )
 
     const button = screen.getByRole('button')
-    expect(button).toHaveAttribute('title', 'failed')
+    expect(button.getAttribute('title')).toBe('failed')
   })
 
   it('should render badge variant when downloaded', () => {
@@ -182,7 +182,7 @@ describe('DownloadButton', () => {
     )
 
     // Badge 变体应该显示文字
-    expect(screen.getByText('downloaded')).toBeInTheDocument()
+    expect(screen.getByText('downloaded')).toBeTruthy()
   })
 
   it('should stop event propagation', () => {
@@ -219,11 +219,11 @@ describe('DownloadStatusIndicator', () => {
 
   it('should show available text when downloaded', () => {
     render(<DownloadStatusIndicator isDownloaded={true} />)
-    expect(screen.getByText('available')).toBeInTheDocument()
+    expect(screen.getByText('available')).toBeTruthy()
   })
 
   it('should show downloading state', () => {
     render(<DownloadStatusIndicator isDownloaded={false} isDownloading={true} />)
-    expect(screen.getByText('downloading')).toBeInTheDocument()
+    expect(screen.getByText('downloading')).toBeTruthy()
   })
 })

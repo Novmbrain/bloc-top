@@ -80,7 +80,7 @@ describe('CitySelector', () => {
       render(<CitySelector {...defaultProps} />)
 
       // luoyuan 属于福州市，标题格式：「福州 · 罗源」
-      expect(screen.getByText('福州 · 罗源')).toBeInTheDocument()
+      expect(screen.getByText('福州 · 罗源')).toBeTruthy()
     })
 
     it('地级市名等于区名时只显示一次', () => {
@@ -93,7 +93,7 @@ describe('CitySelector', () => {
       )
 
       // 厦门市 → 厦门区，名称相同，不重复
-      expect(screen.getByText('厦门')).toBeInTheDocument()
+      expect(screen.getByText('厦门')).toBeTruthy()
     })
 
     it('地级市选中时显示地级市名', () => {
@@ -104,21 +104,21 @@ describe('CitySelector', () => {
         />
       )
 
-      expect(screen.getByText('福州')).toBeInTheDocument()
+      expect(screen.getByText('福州')).toBeTruthy()
     })
 
     it('应该渲染为可点击的按钮', () => {
       render(<CitySelector {...defaultProps} />)
 
-      expect(screen.getByRole('button')).toBeInTheDocument()
+      expect(screen.getByRole('button')).toBeTruthy()
     })
 
     it('下拉菜单初始应该关闭', () => {
       render(<CitySelector {...defaultProps} />)
 
       // 不显示地级市选项（翻译 key）
-      expect(screen.queryByText('prefectureFuzhou')).not.toBeInTheDocument()
-      expect(screen.queryByText('prefectureXiamen')).not.toBeInTheDocument()
+      expect(screen.queryByText('prefectureFuzhou')).not.toBeTruthy()
+      expect(screen.queryByText('prefectureXiamen')).not.toBeTruthy()
     })
   })
 
@@ -130,8 +130,8 @@ describe('CitySelector', () => {
 
       await waitFor(() => {
         // 两个地级市选项（翻译 key）
-        expect(screen.getByText('prefectureFuzhou')).toBeInTheDocument()
-        expect(screen.getByText('prefectureXiamen')).toBeInTheDocument()
+        expect(screen.getByText('prefectureFuzhou')).toBeTruthy()
+        expect(screen.getByText('prefectureXiamen')).toBeTruthy()
       })
     })
 
@@ -142,8 +142,8 @@ describe('CitySelector', () => {
 
       await waitFor(() => {
         // currentSelection=city:luoyuan → 福州应自动展开，显示所有子区域
-        expect(screen.getByText('罗源')).toBeInTheDocument()
-        expect(screen.getByText('长乐')).toBeInTheDocument()
+        expect(screen.getByText('罗源')).toBeTruthy()
+        expect(screen.getByText('长乐')).toBeTruthy()
       })
     })
 
@@ -154,13 +154,13 @@ describe('CitySelector', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(screen.getByText('prefectureXiamen')).toBeInTheDocument()
+        expect(screen.getByText('prefectureXiamen')).toBeTruthy()
       })
 
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(screen.queryByText('prefectureXiamen')).not.toBeInTheDocument()
+        expect(screen.queryByText('prefectureXiamen')).not.toBeTruthy()
       })
     })
 
@@ -170,8 +170,8 @@ describe('CitySelector', () => {
       fireEvent.click(screen.getByRole('button'))
 
       await waitFor(() => {
-        expect(screen.getByText('prefectureFuzhou')).toBeInTheDocument()
-        expect(screen.getByText('prefectureXiamen')).toBeInTheDocument()
+        expect(screen.getByText('prefectureFuzhou')).toBeTruthy()
+        expect(screen.getByText('prefectureXiamen')).toBeTruthy()
       })
     })
   })
@@ -184,7 +184,7 @@ describe('CitySelector', () => {
 
       await waitFor(() => {
         // 长乐 (changle) 在 mockCities 中 available: false
-        expect(screen.getByText('comingSoon')).toBeInTheDocument()
+        expect(screen.getByText('comingSoon')).toBeTruthy()
       })
     })
 
@@ -199,7 +199,7 @@ describe('CitySelector', () => {
         const changleButton = buttons.find((btn) =>
           btn.textContent?.includes('长乐')
         )
-        expect(changleButton).toBeDisabled()
+        expect((changleButton as HTMLButtonElement).disabled).toBe(true)
       })
     })
 
@@ -216,7 +216,7 @@ describe('CitySelector', () => {
           !btn.textContent?.includes('福州')
         )
         expect(luoyuanButton).toBeDefined()
-        expect(luoyuanButton).not.toBeDisabled()
+        expect((luoyuanButton as HTMLButtonElement).disabled).toBe(false)
       })
     })
   })
@@ -231,7 +231,7 @@ describe('CitySelector', () => {
       fireEvent.click(screen.getByRole('button'))
 
       await waitFor(() => {
-        expect(screen.getByText('prefectureXiamen')).toBeInTheDocument()
+        expect(screen.getByText('prefectureXiamen')).toBeTruthy()
       })
 
       // 厦门是单区地级市，点击直接选中为 city 类型
@@ -254,7 +254,7 @@ describe('CitySelector', () => {
       fireEvent.click(screen.getByRole('button'))
 
       await waitFor(() => {
-        expect(screen.getByText('prefectureFuzhou')).toBeInTheDocument()
+        expect(screen.getByText('prefectureFuzhou')).toBeTruthy()
       })
 
       // 点击福州名称 → 选中整个地级市
@@ -278,7 +278,7 @@ describe('CitySelector', () => {
 
       // 点击福州的箭头展开
       await waitFor(() => {
-        expect(screen.getByText('prefectureFuzhou')).toBeInTheDocument()
+        expect(screen.getByText('prefectureFuzhou')).toBeTruthy()
       })
 
       // 找到福州行的箭头按钮（ChevronRight）
@@ -288,7 +288,7 @@ describe('CitySelector', () => {
 
       // 选择罗源
       await waitFor(() => {
-        expect(screen.getByText('罗源')).toBeInTheDocument()
+        expect(screen.getByText('罗源')).toBeTruthy()
       })
       fireEvent.click(screen.getByText('罗源'))
 
@@ -304,7 +304,7 @@ describe('CitySelector', () => {
       fireEvent.click(screen.getByRole('button'))
 
       await waitFor(() => {
-        expect(screen.getByText('prefectureXiamen')).toBeInTheDocument()
+        expect(screen.getByText('prefectureXiamen')).toBeTruthy()
       })
 
       // 点击厦门（单区，直接选中并关闭）
@@ -312,7 +312,7 @@ describe('CitySelector', () => {
 
       await waitFor(() => {
         // 下拉菜单应已关闭
-        expect(screen.queryByText('prefectureXiamen')).not.toBeInTheDocument()
+        expect(screen.queryByText('prefectureXiamen')).not.toBeTruthy()
       })
     })
 
@@ -348,14 +348,14 @@ describe('CitySelector', () => {
       fireEvent.click(screen.getByRole('button'))
 
       await waitFor(() => {
-        expect(screen.getByText('prefectureXiamen')).toBeInTheDocument()
+        expect(screen.getByText('prefectureXiamen')).toBeTruthy()
       })
 
       // 点击外部
       fireEvent.mouseDown(screen.getByTestId('outside'))
 
       await waitFor(() => {
-        expect(screen.queryByText('prefectureXiamen')).not.toBeInTheDocument()
+        expect(screen.queryByText('prefectureXiamen')).not.toBeTruthy()
       })
     })
   })

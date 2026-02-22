@@ -17,7 +17,7 @@ describe('FilterChip', () => {
         />
       )
 
-      expect(screen.getByText('全部')).toBeInTheDocument()
+      expect(screen.getByText('全部')).toBeTruthy()
     })
 
     it('应渲染为 button 元素', () => {
@@ -29,7 +29,7 @@ describe('FilterChip', () => {
         />
       )
 
-      expect(screen.getByRole('button')).toBeInTheDocument()
+      expect(screen.getByRole('button')).toBeTruthy()
     })
   })
 
@@ -80,7 +80,7 @@ describe('FilterChip', () => {
       )
 
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('text-[var(--theme-on-surface-variant)]')
+      expect((button as HTMLElement).classList.contains('text-[var(--theme-on-surface-variant)]')).toBe(true)
     })
 
     it('选中时应有正确的样式类', () => {
@@ -93,7 +93,7 @@ describe('FilterChip', () => {
       )
 
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('text-[var(--theme-on-primary)]')
+      expect((button as HTMLElement).classList.contains('text-[var(--theme-on-primary)]')).toBe(true)
     })
   })
 
@@ -109,7 +109,7 @@ describe('FilterChip', () => {
       )
 
       const button = screen.getByRole('button')
-      expect(button).toHaveStyle({ backgroundColor: '#FF9800' })
+      expect((button as HTMLElement).style.backgroundColor).toBe('rgb(255, 152, 0)')
     })
 
     it('未选中时应忽略自定义颜色并使用 glass-light', () => {
@@ -123,8 +123,8 @@ describe('FilterChip', () => {
       )
 
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('glass-light')
-      expect(button).not.toHaveStyle({ backgroundColor: '#FF9800' })
+      expect((button as HTMLElement).classList.contains('glass-light')).toBe(true)
+      expect((button as HTMLElement).style.backgroundColor).not.toBe('rgb(255, 152, 0)')
     })
   })
 
@@ -139,7 +139,7 @@ describe('FilterChip', () => {
         />
       )
 
-      expect(screen.getByRole('button')).toHaveClass('custom-class')
+      expect((screen.getByRole('button') as HTMLElement).classList.contains('custom-class')).toBe(true)
     })
   })
 })
@@ -155,9 +155,9 @@ describe('FilterChipGroup', () => {
         </FilterChipGroup>
       )
 
-      expect(screen.getByText('A')).toBeInTheDocument()
-      expect(screen.getByText('B')).toBeInTheDocument()
-      expect(screen.getByText('C')).toBeInTheDocument()
+      expect(screen.getByText('A')).toBeTruthy()
+      expect(screen.getByText('B')).toBeTruthy()
+      expect(screen.getByText('C')).toBeTruthy()
     })
 
     it('应有正确的容器样式', () => {
@@ -168,9 +168,9 @@ describe('FilterChipGroup', () => {
       )
 
       const group = container.firstChild as HTMLElement
-      expect(group).toHaveClass('flex')
-      expect(group).toHaveClass('gap-2')
-      expect(group).toHaveClass('overflow-x-auto')
+      expect(group.classList.contains('flex')).toBe(true)
+      expect(group.classList.contains('gap-2')).toBe(true)
+      expect(group.classList.contains('overflow-x-auto')).toBe(true)
     })
   })
 
@@ -182,7 +182,7 @@ describe('FilterChipGroup', () => {
         </FilterChipGroup>
       )
 
-      expect(container.firstChild).toHaveClass('custom-group')
+      expect((container.firstChild as HTMLElement).classList.contains('custom-group')).toBe(true)
     })
   })
 })

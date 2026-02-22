@@ -21,14 +21,14 @@ describe('RouteLegendPanel', () => {
   describe('渲染', () => {
     it('应渲染所有线路名称', () => {
       render(<RouteLegendPanel {...defaultProps} />)
-      expect(screen.getByText('猴子捞月')).toBeInTheDocument()
-      expect(screen.getByText('飞燕走壁')).toBeInTheDocument()
+      expect(screen.getByText('猴子捞月')).toBeTruthy()
+      expect(screen.getByText('飞燕走壁')).toBeTruthy()
     })
 
     it('应渲染所有线路的难度等级', () => {
       render(<RouteLegendPanel {...defaultProps} />)
-      expect(screen.getByText('V3')).toBeInTheDocument()
-      expect(screen.getByText('V5')).toBeInTheDocument()
+      expect(screen.getByText('V3')).toBeTruthy()
+      expect(screen.getByText('V5')).toBeTruthy()
     })
   })
 

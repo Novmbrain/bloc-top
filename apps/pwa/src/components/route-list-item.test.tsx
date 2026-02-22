@@ -15,24 +15,24 @@ const baseRoute: Route = {
 describe('RouteListItem', () => {
   it('渲染线路名称和难度', () => {
     render(<RouteListItem route={baseRoute} onClick={vi.fn()} />)
-    expect(screen.getByText('月亮弯弯')).toBeInTheDocument()
-    expect(screen.getByText('V5')).toBeInTheDocument()
+    expect(screen.getByText('月亮弯弯')).toBeTruthy()
+    expect(screen.getByText('V5')).toBeTruthy()
   })
 
   it('渲染区域名称', () => {
     render(<RouteListItem route={baseRoute} onClick={vi.fn()} />)
-    expect(screen.getByText('主墙')).toBeInTheDocument()
+    expect(screen.getByText('主墙')).toBeTruthy()
   })
 
   it('有 FA 时显示首攀者', () => {
     const route = { ...baseRoute, FA: '小明' }
     render(<RouteListItem route={route} onClick={vi.fn()} />)
-    expect(screen.getByText('小明')).toBeInTheDocument()
+    expect(screen.getByText('小明')).toBeTruthy()
   })
 
   it('无 FA 时不显示首攀者', () => {
     render(<RouteListItem route={baseRoute} onClick={vi.fn()} />)
-    expect(screen.queryByText('FA:')).not.toBeInTheDocument()
+    expect(screen.queryByText('FA:')).not.toBeTruthy()
   })
 
   it('点击时调用 onClick 并传递 route', async () => {
@@ -49,7 +49,7 @@ describe('RouteListItem', () => {
     )
     // compact 模式下难度标签用 w-10 h-10
     const badge = container.querySelector('.w-10.h-10')
-    expect(badge).toBeInTheDocument()
+    expect(badge).toBeTruthy()
   })
 
   it('默认模式下使用较大尺寸', () => {
@@ -58,7 +58,7 @@ describe('RouteListItem', () => {
     )
     // 默认模式下难度标签用 w-12 h-12
     const badge = container.querySelector('.w-12.h-12')
-    expect(badge).toBeInTheDocument()
+    expect(badge).toBeTruthy()
   })
 
   it('compact 模式下有 Beta 链接时显示 Beta 标签', () => {
@@ -67,7 +67,7 @@ describe('RouteListItem', () => {
       betaLinks: [{ id: '1', platform: 'xiaohongshu' as const, noteId: 'n1', url: 'https://example.com' }],
     }
     render(<RouteListItem route={route} onClick={vi.fn()} compact />)
-    expect(screen.getByText('Beta')).toBeInTheDocument()
+    expect(screen.getByText('Beta')).toBeTruthy()
   })
 
   it('默认模式下不显示 Beta 标签', () => {
@@ -76,7 +76,7 @@ describe('RouteListItem', () => {
       betaLinks: [{ id: '1', platform: 'xiaohongshu' as const, noteId: 'n1', url: 'https://example.com' }],
     }
     render(<RouteListItem route={route} onClick={vi.fn()} />)
-    expect(screen.queryByText('Beta')).not.toBeInTheDocument()
+    expect(screen.queryByText('Beta')).not.toBeTruthy()
   })
 
   it('接受额外 className 和 style', () => {

@@ -32,23 +32,20 @@ describe('LocaleSwitcher', () => {
     it('应该渲染为按钮', () => {
       render(<LocaleSwitcher />)
 
-      expect(screen.getByRole('button')).toBeInTheDocument()
+      expect(screen.getByRole('button')).toBeTruthy()
     })
 
     it('应该显示切换目标语言', () => {
       render(<LocaleSwitcher />)
 
       // 当前是 zh，显示 en 翻译 key
-      expect(screen.getByText('en')).toBeInTheDocument()
+      expect(screen.getByText('en')).toBeTruthy()
     })
 
     it('应该有 aria-label', () => {
       render(<LocaleSwitcher />)
 
-      expect(screen.getByRole('button')).toHaveAttribute(
-        'aria-label',
-        'switchLanguage'
-      )
+      expect(screen.getByRole('button').getAttribute('aria-label')).toBe('switchLanguage')
     })
   })
 
@@ -74,22 +71,22 @@ describe('LocaleSegmented', () => {
 
       // 等待 SSR hydration
       // SegmentedControl 使用 role="tablist"
-      expect(await screen.findByRole('tablist')).toBeInTheDocument()
+      expect(await screen.findByRole('tablist')).toBeTruthy()
     })
 
     it('应该渲染所有语言选项', async () => {
       render(<LocaleSegmented />)
 
       // 等待 mounted
-      expect(await screen.findByText('zh')).toBeInTheDocument()
-      expect(screen.getByText('en')).toBeInTheDocument()
+      expect(await screen.findByText('zh')).toBeTruthy()
+      expect(screen.getByText('en')).toBeTruthy()
     })
 
     it('应该支持 className', async () => {
       render(<LocaleSegmented className="custom-class" />)
 
       const tablist = await screen.findByRole('tablist')
-      expect(tablist).toHaveClass('custom-class')
+      expect((tablist as HTMLElement).classList.contains('custom-class')).toBe(true)
     })
   })
 
@@ -117,7 +114,7 @@ describe('LocaleSelect', () => {
     it('应该渲染下拉选择框', () => {
       render(<LocaleSelect />)
 
-      expect(screen.getByRole('combobox')).toBeInTheDocument()
+      expect(screen.getByRole('combobox')).toBeTruthy()
     })
 
     it('应该包含所有语言选项', () => {
@@ -130,7 +127,7 @@ describe('LocaleSelect', () => {
     it('应该支持 className', () => {
       const { container } = render(<LocaleSelect className="custom-class" />)
 
-      expect(container.firstChild).toHaveClass('custom-class')
+      expect((container.firstChild as HTMLElement).classList.contains('custom-class')).toBe(true)
     })
   })
 

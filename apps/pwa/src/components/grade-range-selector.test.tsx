@@ -32,7 +32,7 @@ describe('GradeRangeSelector', () => {
       // 检查是否渲染了所有 14 个难度（显示为数字 0-13）
       V_GRADES.forEach(grade => {
         const num = grade.replace('V', '')
-        expect(screen.getByText(num)).toBeInTheDocument()
+        expect(screen.getByText(num)).toBeTruthy()
       })
     })
 
@@ -44,7 +44,7 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(screen.getByText('allGrades')).toBeInTheDocument()
+      expect(screen.getByText('allGrades')).toBeTruthy()
     })
 
     it('单个选择时应显示难度名称', () => {
@@ -55,7 +55,7 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(screen.getByText('V5')).toBeInTheDocument()
+      expect(screen.getByText('V5')).toBeTruthy()
     })
 
     it('连续范围选择时应显示范围', () => {
@@ -66,7 +66,7 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(screen.getByText('V2 - V5')).toBeInTheDocument()
+      expect(screen.getByText('V2 - V5')).toBeTruthy()
     })
 
     it('有选择时应显示清除按钮', () => {
@@ -77,7 +77,7 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(screen.getByText('clear')).toBeInTheDocument()
+      expect(screen.getByText('clear')).toBeTruthy()
     })
 
     it('无选择时不应显示清除按钮', () => {
@@ -88,21 +88,11 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(screen.queryByText('clear')).not.toBeInTheDocument()
+      expect(screen.queryByText('clear')).toBeNull()
     })
   })
 
   describe('交互', () => {
-    /**
-     * 注意：以下测试需要真实浏览器环境（Playwright）
-     * 因为 jsdom 中 getBoundingClientRect() 返回 { width: 0, height: 0 }
-     * 导致位置计算无法正常工作
-     *
-     * 在 Playwright 组件测试中应覆盖：
-     * - 点选单个等级
-     * - 拖动范围选择
-     */
-
     it('色谱条容器应支持鼠标事件', () => {
       const { container } = render(
         <GradeRangeSelector
@@ -112,8 +102,8 @@ describe('GradeRangeSelector', () => {
       )
 
       const colorBar = container.querySelector('.touch-none')
-      expect(colorBar).toBeInTheDocument()
-      expect(colorBar).toHaveClass('cursor-pointer')
+      expect(colorBar).toBeTruthy()
+      expect((colorBar as HTMLElement).classList.contains('cursor-pointer')).toBe(true)
     })
 
     it('色谱条容器应支持触摸事件', () => {
@@ -125,7 +115,7 @@ describe('GradeRangeSelector', () => {
       )
 
       const colorBar = container.querySelector('.touch-none')
-      expect(colorBar).toBeInTheDocument()
+      expect(colorBar).toBeTruthy()
 
       fireEvent.touchStart(colorBar!, {
         touches: [{ clientX: 100, clientY: 0 }],
@@ -176,7 +166,7 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(screen.getByText('gradeHint')).toBeInTheDocument()
+      expect(screen.getByText('gradeHint')).toBeTruthy()
     })
   })
 
@@ -190,7 +180,7 @@ describe('GradeRangeSelector', () => {
         />
       )
 
-      expect(container.firstChild).toHaveClass('custom-class')
+      expect((container.firstChild as HTMLElement).classList.contains('custom-class')).toBe(true)
     })
   })
 })

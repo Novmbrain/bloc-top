@@ -52,13 +52,13 @@ describe('SearchOverlay', () => {
     it('isOpen=false 时不渲染', () => {
       render(<SearchOverlay {...defaultProps} isOpen={false} />)
       // 使用翻译键匹配
-      expect(screen.queryByPlaceholderText('placeholder')).not.toBeInTheDocument()
+      expect(screen.queryByPlaceholderText('placeholder')).not.toBeTruthy()
     })
 
     it('isOpen=true 时渲染', () => {
       render(<SearchOverlay {...defaultProps} />)
       // 使用翻译键匹配
-      expect(screen.getByPlaceholderText('placeholder')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('placeholder')).toBeTruthy()
     })
   })
 
@@ -66,15 +66,15 @@ describe('SearchOverlay', () => {
     it('显示"全部线路"标题', () => {
       render(<SearchOverlay {...defaultProps} />)
       // 使用翻译键匹配
-      expect(screen.getByText('allRoutes')).toBeInTheDocument()
+      expect(screen.getByText('allRoutes')).toBeTruthy()
     })
 
     it('显示所有线路', () => {
       render(<SearchOverlay {...defaultProps} />)
-      expect(screen.getByText('猴子捞月')).toBeInTheDocument()
-      expect(screen.getByText('蜻蜓点水')).toBeInTheDocument()
-      expect(screen.getByText('飞龙在天')).toBeInTheDocument()
-      expect(screen.getByText('猴王出世')).toBeInTheDocument()
+      expect(screen.getByText('猴子捞月')).toBeTruthy()
+      expect(screen.getByText('蜻蜓点水')).toBeTruthy()
+      expect(screen.getByText('飞龙在天')).toBeTruthy()
+      expect(screen.getByText('猴王出世')).toBeTruthy()
     })
   })
 
@@ -88,7 +88,7 @@ describe('SearchOverlay', () => {
         />
       )
       // 使用翻译键匹配（参数会被替换）
-      expect(screen.getByText(/resultsTitle/i)).toBeInTheDocument()
+      expect(screen.getByText(/resultsTitle/i)).toBeTruthy()
     })
 
     it('只显示匹配的线路', () => {
@@ -99,10 +99,10 @@ describe('SearchOverlay', () => {
           results={mockSearchResults}
         />
       )
-      expect(screen.getByText('猴子捞月')).toBeInTheDocument()
-      expect(screen.getByText('猴王出世')).toBeInTheDocument()
-      expect(screen.queryByText('蜻蜓点水')).not.toBeInTheDocument()
-      expect(screen.queryByText('飞龙在天')).not.toBeInTheDocument()
+      expect(screen.getByText('猴子捞月')).toBeTruthy()
+      expect(screen.getByText('猴王出世')).toBeTruthy()
+      expect(screen.queryByText('蜻蜓点水')).not.toBeTruthy()
+      expect(screen.queryByText('飞龙在天')).not.toBeTruthy()
     })
   })
 
@@ -116,7 +116,7 @@ describe('SearchOverlay', () => {
         />
       )
       // 使用翻译键匹配
-      expect(screen.getByText('noResults')).toBeInTheDocument()
+      expect(screen.getByText('noResults')).toBeTruthy()
     })
   })
 
@@ -185,8 +185,8 @@ describe('SearchOverlay', () => {
   describe('线路信息显示', () => {
     it('显示线路难度', () => {
       render(<SearchOverlay {...defaultProps} />)
-      expect(screen.getByText('V3')).toBeInTheDocument()
-      expect(screen.getByText('V5')).toBeInTheDocument()
+      expect(screen.getByText('V3')).toBeTruthy()
+      expect(screen.getByText('V5')).toBeTruthy()
     })
 
     it('显示线路区域', () => {

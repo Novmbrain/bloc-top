@@ -53,27 +53,27 @@ describe('BetaSubmitDrawer', () => {
     it('应该渲染表单字段', () => {
       render(<BetaSubmitDrawer {...defaultProps} />)
 
-      expect(screen.getByText('urlLabel')).toBeInTheDocument()
-      expect(screen.getByText('bodyDataLabel')).toBeInTheDocument()
+      expect(screen.getByText('urlLabel')).toBeTruthy()
+      expect(screen.getByText('bodyDataLabel')).toBeTruthy()
     })
 
     it('应该渲染 URL 输入框', () => {
       render(<BetaSubmitDrawer {...defaultProps} />)
 
-      expect(screen.getByPlaceholderText('urlPlaceholder')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('urlPlaceholder')).toBeTruthy()
     })
 
     it('应该渲染身高和臂长输入框', () => {
       render(<BetaSubmitDrawer {...defaultProps} />)
 
-      expect(screen.getByPlaceholderText('heightPlaceholder')).toBeInTheDocument()
-      expect(screen.getByPlaceholderText('reachPlaceholder')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('heightPlaceholder')).toBeTruthy()
+      expect(screen.getByPlaceholderText('reachPlaceholder')).toBeTruthy()
     })
 
     it('应该渲染提交按钮', () => {
       render(<BetaSubmitDrawer {...defaultProps} />)
 
-      expect(screen.getByText('submit')).toBeInTheDocument()
+      expect(screen.getByText('submit')).toBeTruthy()
     })
   })
 
@@ -82,7 +82,7 @@ describe('BetaSubmitDrawer', () => {
       render(<BetaSubmitDrawer {...defaultProps} />)
 
       const submitButton = screen.getByText('submit')
-      expect(submitButton).toBeDisabled()
+      expect((submitButton as HTMLButtonElement).disabled).toBe(true)
     })
 
     it('输入 URL 后提交按钮应启用', async () => {
@@ -93,7 +93,7 @@ describe('BetaSubmitDrawer', () => {
 
       await waitFor(() => {
         const submitButton = screen.getByText('submit')
-        expect(submitButton).not.toBeDisabled()
+        expect((submitButton as HTMLButtonElement).disabled).toBe(false)
       })
     })
 
@@ -107,7 +107,7 @@ describe('BetaSubmitDrawer', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText('onlyXiaohongshu')).toBeInTheDocument()
+        expect(screen.getByText('onlyXiaohongshu')).toBeTruthy()
       })
     })
 
@@ -118,7 +118,7 @@ describe('BetaSubmitDrawer', () => {
       fireEvent.change(urlInput, { target: { value: 'https://xhslink.com/abc123' } })
 
       await waitFor(() => {
-        expect(screen.getByText('urlDetected')).toBeInTheDocument()
+        expect(screen.getByText('urlDetected')).toBeTruthy()
       })
     })
   })
@@ -139,7 +139,7 @@ describe('BetaSubmitDrawer', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText('submitSuccess')).toBeInTheDocument()
+        expect(screen.getByText('submitSuccess')).toBeTruthy()
       })
     })
 
@@ -159,7 +159,7 @@ describe('BetaSubmitDrawer', () => {
 
       await waitFor(() => {
         // 错误消息会被翻译
-        expect(screen.getByText('DUPLICATE_BETA')).toBeInTheDocument()
+        expect(screen.getByText('DUPLICATE_BETA')).toBeTruthy()
       })
     })
 
@@ -221,7 +221,7 @@ describe('BetaSubmitDrawer', () => {
       fireEvent.click(screen.getByText('submit'))
 
       await waitFor(() => {
-        expect(screen.getByText('submitting')).toBeInTheDocument()
+        expect(screen.getByText('submitting')).toBeTruthy()
       })
     })
 
@@ -243,7 +243,7 @@ describe('BetaSubmitDrawer', () => {
 
       // 等待 success 状态
       await waitFor(() => {
-        expect(screen.getByText('submitSuccess')).toBeInTheDocument()
+        expect(screen.getByText('submitSuccess')).toBeTruthy()
       })
 
       // 等待 1500ms 的 setTimeout 触发 onSuccess
@@ -272,7 +272,7 @@ describe('BetaSubmitDrawer', () => {
       // 表单应该被重置
       // 注意：由于 Drawer 关闭时会调用 handleClose 重置表单
       // 但这取决于组件内部实现，此处仅验证重新打开不会崩溃
-      expect(screen.getByPlaceholderText('urlPlaceholder')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('urlPlaceholder')).toBeTruthy()
     })
   })
 
@@ -280,7 +280,7 @@ describe('BetaSubmitDrawer', () => {
     it('isOpen=false 时不应渲染内容', () => {
       render(<BetaSubmitDrawer {...defaultProps} isOpen={false} />)
 
-      expect(screen.queryByText('urlLabel')).not.toBeInTheDocument()
+      expect(screen.queryByText('urlLabel')).not.toBeTruthy()
     })
   })
 
@@ -333,7 +333,7 @@ describe('BetaSubmitDrawer', () => {
       fireEvent.click(screen.getByText('submit'))
 
       await waitFor(() => {
-        expect(screen.getByText('submitSuccess')).toBeInTheDocument()
+        expect(screen.getByText('submitSuccess')).toBeTruthy()
       })
 
       // 验证缓存数据
@@ -362,7 +362,7 @@ describe('BetaSubmitDrawer', () => {
       fireEvent.click(screen.getByText('submit'))
 
       await waitFor(() => {
-        expect(screen.getByText('DUPLICATE_BETA')).toBeInTheDocument()
+        expect(screen.getByText('DUPLICATE_BETA')).toBeTruthy()
       })
 
       // 不应该调用 setItem 保存身体数据
@@ -401,7 +401,7 @@ describe('BetaSubmitDrawer', () => {
       fireEvent.click(screen.getByText('submit'))
 
       await waitFor(() => {
-        expect(screen.getByText('submitSuccess')).toBeInTheDocument()
+        expect(screen.getByText('submitSuccess')).toBeTruthy()
       })
 
       // 验证：身高更新，臂长保留旧值
