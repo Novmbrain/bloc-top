@@ -43,18 +43,18 @@ describe('ThemeSwitcher', () => {
       render(<ThemeSwitcher />)
 
       // 使用翻译键匹配（mock 返回键名）
-      expect(screen.getByRole('tab', { name: /themeLight/i })).toBeInTheDocument()
-      expect(screen.getByRole('tab', { name: /themeDark/i })).toBeInTheDocument()
-      expect(screen.getByRole('tab', { name: /themeSystem/i })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: /themeLight/i })).toBeTruthy()
+      expect(screen.getByRole('tab', { name: /themeDark/i })).toBeTruthy()
+      expect(screen.getByRole('tab', { name: /themeSystem/i })).toBeTruthy()
     })
 
     it('渲染 tablist 容器', () => {
       render(<ThemeSwitcher />)
 
       const tablist = screen.getByRole('tablist')
-      expect(tablist).toBeInTheDocument()
+      expect(tablist).toBeTruthy()
       // aria-label 使用翻译键
-      expect(tablist).toHaveAttribute('aria-label', 'themeSelector')
+      expect(tablist.getAttribute('aria-label')).toBe('themeSelector')
     })
 
     it('每个选项都有正确的 ARIA 属性', () => {
@@ -64,8 +64,8 @@ describe('ThemeSwitcher', () => {
       expect(tabs).toHaveLength(3)
 
       tabs.forEach((tab) => {
-        expect(tab).toHaveAttribute('aria-selected')
-        expect(tab).toHaveAttribute('aria-controls')
+        expect(tab.getAttribute('aria-selected')).not.toBeNull()
+        expect(tab.getAttribute('aria-controls')).not.toBeNull()
       })
     })
   })
@@ -76,10 +76,10 @@ describe('ThemeSwitcher', () => {
       render(<ThemeSwitcher />)
 
       const lightTab = screen.getByRole('tab', { name: /themeLight/i })
-      expect(lightTab).toHaveAttribute('aria-selected', 'true')
+      expect(lightTab.getAttribute('aria-selected')).toBe('true')
 
       const darkTab = screen.getByRole('tab', { name: /themeDark/i })
-      expect(darkTab).toHaveAttribute('aria-selected', 'false')
+      expect(darkTab.getAttribute('aria-selected')).toBe('false')
     })
 
     it('dark 模式下暗夜按钮选中', () => {
@@ -87,10 +87,10 @@ describe('ThemeSwitcher', () => {
       render(<ThemeSwitcher />)
 
       const darkTab = screen.getByRole('tab', { name: /themeDark/i })
-      expect(darkTab).toHaveAttribute('aria-selected', 'true')
+      expect(darkTab.getAttribute('aria-selected')).toBe('true')
 
       const lightTab = screen.getByRole('tab', { name: /themeLight/i })
-      expect(lightTab).toHaveAttribute('aria-selected', 'false')
+      expect(lightTab.getAttribute('aria-selected')).toBe('false')
     })
 
     it('system 模式下自动按钮选中', () => {
@@ -98,7 +98,7 @@ describe('ThemeSwitcher', () => {
       render(<ThemeSwitcher />)
 
       const systemTab = screen.getByRole('tab', { name: /themeSystem/i })
-      expect(systemTab).toHaveAttribute('aria-selected', 'true')
+      expect(systemTab.getAttribute('aria-selected')).toBe('true')
     })
   })
 
@@ -139,7 +139,7 @@ describe('ThemeSwitcher', () => {
       render(<ThemeSwitcher />)
 
       // 翻译键格式：followingSystem，参数 {theme} 替换为 themeDark
-      expect(screen.getByText(/followingSystem/i)).toBeInTheDocument()
+      expect(screen.getByText(/followingSystem/i)).toBeTruthy()
     })
 
     it('system 模式显示当前跟随的主题（日间）', () => {
@@ -147,21 +147,21 @@ describe('ThemeSwitcher', () => {
       mockState.resolvedTheme = 'light'
       render(<ThemeSwitcher />)
 
-      expect(screen.getByText(/followingSystem/i)).toBeInTheDocument()
+      expect(screen.getByText(/followingSystem/i)).toBeTruthy()
     })
 
     it('非 system 模式不显示跟随提示', () => {
       mockState.theme = 'light'
       render(<ThemeSwitcher />)
 
-      expect(screen.queryByText(/followingSystem/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/followingSystem/i)).toBeNull()
     })
 
     it('dark 模式不显示跟随提示', () => {
       mockState.theme = 'dark'
       render(<ThemeSwitcher />)
 
-      expect(screen.queryByText(/followingSystem/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/followingSystem/i)).toBeNull()
     })
   })
 
@@ -184,10 +184,7 @@ describe('ThemeSwitcher', () => {
       render(<ThemeSwitcher />)
 
       // 初始状态：日间选中
-      expect(screen.getByRole('tab', { name: /themeLight/i })).toHaveAttribute(
-        'aria-selected',
-        'true'
-      )
+      expect(screen.getByRole('tab', { name: /themeLight/i }).getAttribute('aria-selected')).toBe('true')
 
       // 点击暗夜
       fireEvent.click(screen.getByRole('tab', { name: /themeDark/i }))
@@ -200,13 +197,10 @@ describe('ThemeSwitcher', () => {
       render(<ThemeSwitcher />)
 
       // 自动模式选中
-      expect(screen.getByRole('tab', { name: /themeSystem/i })).toHaveAttribute(
-        'aria-selected',
-        'true'
-      )
+      expect(screen.getByRole('tab', { name: /themeSystem/i }).getAttribute('aria-selected')).toBe('true')
 
       // 显示当前跟随的主题
-      expect(screen.getByText(/followingSystem/i)).toBeInTheDocument()
+      expect(screen.getByText(/followingSystem/i)).toBeTruthy()
     })
   })
 })

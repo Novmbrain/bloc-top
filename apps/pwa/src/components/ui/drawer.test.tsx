@@ -44,7 +44,7 @@ describe('Drawer', () => {
         </Drawer>
       )
 
-      expect(screen.getByText('抽屉内容')).toBeInTheDocument()
+      expect(screen.getByText('抽屉内容')).toBeTruthy()
     })
   })
 
@@ -56,7 +56,7 @@ describe('Drawer', () => {
         </Drawer>
       )
 
-      expect(screen.getByText('测试标题')).toBeInTheDocument()
+      expect(screen.getByText('测试标题')).toBeTruthy()
     })
 
     it('showCloseButton 为 true 时应显示关闭按钮', () => {
@@ -66,7 +66,7 @@ describe('Drawer', () => {
         </Drawer>
       )
 
-      expect(screen.getByLabelText('关闭')).toBeInTheDocument()
+      expect(screen.getByLabelText('关闭')).toBeTruthy()
     })
 
     it('默认不显示关闭按钮', () => {
@@ -76,7 +76,7 @@ describe('Drawer', () => {
         </Drawer>
       )
 
-      expect(screen.queryByLabelText('关闭')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('关闭')).not.toBeTruthy()
     })
 
     it('点击关闭按钮应触发 onClose（带动画延迟）', async () => {
@@ -107,7 +107,7 @@ describe('Drawer', () => {
 
       // 手柄是一个 w-10 h-1 的 div
       const handle = container.querySelector('.w-10.h-1')
-      expect(handle).toBeInTheDocument()
+      expect(handle).toBeTruthy()
     })
 
     it('showHandle 为 false 时不显示手柄', () => {
@@ -118,7 +118,7 @@ describe('Drawer', () => {
       )
 
       const handle = container.querySelector('.w-10.h-1')
-      expect(handle).not.toBeInTheDocument()
+      expect(handle).not.toBeTruthy()
     })
   })
 
@@ -132,7 +132,7 @@ describe('Drawer', () => {
 
       // 遮罩是 fixed inset-0 容器下的第一个 absolute inset-0 子元素
       const backdrop = container.querySelector('.absolute.inset-0')
-      expect(backdrop).toBeInTheDocument()
+      expect(backdrop).toBeTruthy()
 
       fireEvent.click(backdrop!)
 
@@ -185,7 +185,7 @@ describe('Drawer', () => {
       )
 
       const drawer = container.querySelector('.animate-drawer-in')
-      expect(drawer).toHaveStyle({ height: '50vh' })
+      expect((drawer as HTMLElement).style.height).toBe('50vh')
     })
 
     it('应支持 quarter 高度', () => {
@@ -196,7 +196,7 @@ describe('Drawer', () => {
       )
 
       const drawer = container.querySelector('.animate-drawer-in')
-      expect(drawer).toHaveStyle({ height: '25vh' })
+      expect((drawer as HTMLElement).style.height).toBe('25vh')
     })
 
     it('应支持 three-quarter 高度', () => {
@@ -207,7 +207,7 @@ describe('Drawer', () => {
       )
 
       const drawer = container.querySelector('.animate-drawer-in')
-      expect(drawer).toHaveStyle({ height: '75vh' })
+      expect((drawer as HTMLElement).style.height).toBe('75vh')
     })
 
     it('应支持 full 高度', () => {
@@ -218,7 +218,7 @@ describe('Drawer', () => {
       )
 
       const drawer = container.querySelector('.animate-drawer-in')
-      expect(drawer).toHaveStyle({ height: '100vh' })
+      expect((drawer as HTMLElement).style.height).toBe('100vh')
     })
 
     it('应支持 auto 高度', () => {
@@ -229,7 +229,7 @@ describe('Drawer', () => {
       )
 
       const drawer = container.querySelector('.animate-drawer-in')
-      expect(drawer).toHaveStyle({ height: 'auto' })
+      expect((drawer as HTMLElement).style.height).toBe('auto')
     })
   })
 

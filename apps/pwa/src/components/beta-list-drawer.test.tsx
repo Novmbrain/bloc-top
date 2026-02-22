@@ -57,30 +57,30 @@ describe('BetaListDrawer', () => {
         <BetaListDrawer {...defaultProps} betaLinks={[]} />
       )
 
-      expect(screen.getByText('noBeta')).toBeInTheDocument()
-      expect(screen.getByText('beFirst')).toBeInTheDocument()
+      expect(screen.getByText('noBeta')).toBeTruthy()
+      expect(screen.getByText('beFirst')).toBeTruthy()
     })
 
     it('应该渲染 Beta 视频列表', () => {
       render(<BetaListDrawer {...defaultProps} />)
 
-      expect(screen.getByText('V5 月光攀爬记录')).toBeInTheDocument()
-      expect(screen.getByText('月光线路分享')).toBeInTheDocument()
+      expect(screen.getByText('V5 月光攀爬记录')).toBeTruthy()
+      expect(screen.getByText('月光线路分享')).toBeTruthy()
     })
 
     it('应该显示作者信息', () => {
       render(<BetaListDrawer {...defaultProps} />)
 
-      expect(screen.getByText('@攀岩爱好者')).toBeInTheDocument()
-      expect(screen.getByText('@户外达人')).toBeInTheDocument()
+      expect(screen.getByText('@攀岩爱好者')).toBeTruthy()
+      expect(screen.getByText('@户外达人')).toBeTruthy()
     })
 
     it('应该显示攀岩者身高/臂长', () => {
       render(<BetaListDrawer {...defaultProps} />)
 
       // 第一个 Beta 有身高和臂长
-      expect(screen.getByText(/175/)).toBeInTheDocument()
-      expect(screen.getByText(/180/)).toBeInTheDocument()
+      expect(screen.getByText(/175/)).toBeTruthy()
+      expect(screen.getByText(/180/)).toBeTruthy()
     })
 
     it('无身高臂长时不应显示相关信息', () => {
@@ -95,7 +95,7 @@ describe('BetaListDrawer', () => {
       )
 
       // 只有作者信息，没有身高臂长
-      expect(screen.getByText('@攀岩爱好者')).toBeInTheDocument()
+      expect(screen.getByText('@攀岩爱好者')).toBeTruthy()
     })
 
     it('应该显示视频数量', () => {
@@ -103,7 +103,7 @@ describe('BetaListDrawer', () => {
 
       // videoCount 翻译包含 {count} 参数，mock 会返回 "videoCount"
       // 检查列表区域存在
-      expect(screen.getByText('V5 月光攀爬记录')).toBeInTheDocument()
+      expect(screen.getByText('V5 月光攀爬记录')).toBeTruthy()
     })
   })
 
@@ -111,7 +111,7 @@ describe('BetaListDrawer', () => {
     it('有 onAddBeta 时应显示分享按钮', () => {
       render(<BetaListDrawer {...defaultProps} />)
 
-      expect(screen.getByText('shareButton')).toBeInTheDocument()
+      expect(screen.getByText('shareButton')).toBeTruthy()
     })
 
     it('点击分享按钮应调用 onAddBeta', () => {
@@ -128,7 +128,7 @@ describe('BetaListDrawer', () => {
         <BetaListDrawer {...defaultProps} onAddBeta={undefined} />
       )
 
-      expect(screen.queryByText('shareButton')).not.toBeInTheDocument()
+      expect(screen.queryByText('shareButton')).not.toBeTruthy()
     })
   })
 
@@ -144,7 +144,7 @@ describe('BetaListDrawer', () => {
       fireEvent.click(copyButtons[0])
 
       // 验证复制按钮存在且可点击
-      expect(copyButtons[0]).toBeInTheDocument()
+      expect(copyButtons[0]).toBeTruthy()
     })
   })
 
@@ -152,7 +152,7 @@ describe('BetaListDrawer', () => {
     it('应该显示刷新按钮', () => {
       render(<BetaListDrawer {...defaultProps} />)
 
-      expect(screen.getByText('refresh')).toBeInTheDocument()
+      expect(screen.getByText('refresh')).toBeTruthy()
     })
 
     it('刷新按钮应可点击', async () => {
@@ -164,7 +164,7 @@ describe('BetaListDrawer', () => {
       render(<BetaListDrawer {...defaultProps} />)
 
       const refreshButton = screen.getByText('refresh').closest('button')
-      expect(refreshButton).not.toBeDisabled()
+      expect((refreshButton as HTMLButtonElement).disabled).toBe(false)
     })
   })
 
@@ -172,7 +172,7 @@ describe('BetaListDrawer', () => {
     it('isOpen=false 时不应渲染内容', () => {
       render(<BetaListDrawer {...defaultProps} isOpen={false} />)
 
-      expect(screen.queryByText('V5 月光攀爬记录')).not.toBeInTheDocument()
+      expect(screen.queryByText('V5 月光攀爬记录')).not.toBeTruthy()
     })
   })
 })

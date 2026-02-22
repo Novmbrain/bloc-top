@@ -108,21 +108,21 @@ describe('RouteDetailDrawer', () => {
     it('应该渲染线路名称', () => {
       render(<RouteDetailDrawer {...defaultProps} />)
 
-      expect(screen.getByText('月光')).toBeInTheDocument()
+      expect(screen.getByText('月光')).toBeTruthy()
     })
 
     it('应该渲染难度等级', () => {
       render(<RouteDetailDrawer {...defaultProps} />)
 
-      expect(screen.getByText('V5')).toBeInTheDocument()
+      expect(screen.getByText('V5')).toBeTruthy()
     })
 
     it('应该显示岩场名称和区域', () => {
       render(<RouteDetailDrawer {...defaultProps} />)
 
       // 格式: "圆通寺 · A 区"
-      expect(screen.getByText(/圆通寺/)).toBeInTheDocument()
-      expect(screen.getByText(/A 区/)).toBeInTheDocument()
+      expect(screen.getByText(/圆通寺/)).toBeTruthy()
+      expect(screen.getByText(/A 区/)).toBeTruthy()
     })
 
     it('无 crag 时仅显示区域', () => {
@@ -130,8 +130,8 @@ describe('RouteDetailDrawer', () => {
         <RouteDetailDrawer {...defaultProps} crag={null} />
       )
 
-      expect(screen.getByText('A 区')).toBeInTheDocument()
-      expect(screen.queryByText('圆通寺')).not.toBeInTheDocument()
+      expect(screen.getByText('A 区')).toBeTruthy()
+      expect(screen.queryByText('圆通寺')).not.toBeTruthy()
     })
   })
 
@@ -140,16 +140,16 @@ describe('RouteDetailDrawer', () => {
       render(<RouteDetailDrawer {...defaultProps} />)
 
       // faLabel 是翻译 key
-      expect(screen.getByText('faLabel')).toBeInTheDocument()
-      expect(screen.getByText('张三')).toBeInTheDocument()
+      expect(screen.getByText('faLabel')).toBeTruthy()
+      expect(screen.getByText('张三')).toBeTruthy()
     })
 
     it('应该显示 setter 信息', () => {
       render(<RouteDetailDrawer {...defaultProps} />)
 
       // setter 是翻译 key
-      expect(screen.getByText('setter')).toBeInTheDocument()
-      expect(screen.getByText('李四')).toBeInTheDocument()
+      expect(screen.getByText('setter')).toBeTruthy()
+      expect(screen.getByText('李四')).toBeTruthy()
     })
 
     it('无 FA 和 setter 时不应显示该区域', () => {
@@ -160,8 +160,8 @@ describe('RouteDetailDrawer', () => {
         />
       )
 
-      expect(screen.queryByText('faLabel')).not.toBeInTheDocument()
-      expect(screen.queryByText('setter')).not.toBeInTheDocument()
+      expect(screen.queryByText('faLabel')).not.toBeTruthy()
+      expect(screen.queryByText('setter')).not.toBeTruthy()
     })
   })
 
@@ -169,8 +169,8 @@ describe('RouteDetailDrawer', () => {
     it('应该显示线路描述', () => {
       render(<RouteDetailDrawer {...defaultProps} />)
 
-      expect(screen.getByText('descriptionLabel')).toBeInTheDocument()
-      expect(screen.getByText('一条经典的线路，起步比较困难。')).toBeInTheDocument()
+      expect(screen.getByText('descriptionLabel')).toBeTruthy()
+      expect(screen.getByText('一条经典的线路，起步比较困难。')).toBeTruthy()
     })
 
     it('无描述时不应显示该区域', () => {
@@ -181,7 +181,7 @@ describe('RouteDetailDrawer', () => {
         />
       )
 
-      expect(screen.queryByText('descriptionLabel')).not.toBeInTheDocument()
+      expect(screen.queryByText('descriptionLabel')).not.toBeTruthy()
     })
   })
 
@@ -190,8 +190,8 @@ describe('RouteDetailDrawer', () => {
       render(<RouteDetailDrawer {...defaultProps} />)
 
       // videoCount 翻译 key 格式
-      expect(screen.getByText('title')).toBeInTheDocument()
-      expect(screen.getByText('videoCount')).toBeInTheDocument()
+      expect(screen.getByText('title')).toBeTruthy()
+      expect(screen.getByText('videoCount')).toBeTruthy()
     })
 
     it('无 Beta 视频时应显示"暂无"', () => {
@@ -202,7 +202,7 @@ describe('RouteDetailDrawer', () => {
         />
       )
 
-      expect(screen.getByText('noVideo')).toBeInTheDocument()
+      expect(screen.getByText('noVideo')).toBeTruthy()
     })
 
     it('点击 Beta 按钮应打开 Beta 列表', async () => {
@@ -217,7 +217,7 @@ describe('RouteDetailDrawer', () => {
       // BetaListDrawer 应该打开（会渲染新的内容）
       await waitFor(() => {
         // 检查是否有 beta 列表相关的内容
-        expect(screen.getByText('title')).toBeInTheDocument()
+        expect(screen.getByText('title')).toBeTruthy()
       })
     })
 
@@ -225,7 +225,7 @@ describe('RouteDetailDrawer', () => {
       render(<RouteDetailDrawer {...defaultProps} />)
 
       // 检查数字 1
-      expect(screen.getByText('1')).toBeInTheDocument()
+      expect(screen.getByText('1')).toBeTruthy()
     })
   })
 
@@ -233,7 +233,7 @@ describe('RouteDetailDrawer', () => {
     it('isOpen=false 时不应渲染内容', () => {
       render(<RouteDetailDrawer {...defaultProps} isOpen={false} />)
 
-      expect(screen.queryByText('月光')).not.toBeInTheDocument()
+      expect(screen.queryByText('月光')).not.toBeTruthy()
     })
 
     it('应该渲染图片区域', () => {
@@ -241,7 +241,7 @@ describe('RouteDetailDrawer', () => {
 
       // 检查图片相关元素
       const image = screen.getByRole('img')
-      expect(image).toBeInTheDocument()
+      expect(image).toBeTruthy()
     })
 
     it('图片加载失败时应显示占位符', async () => {
@@ -254,7 +254,7 @@ describe('RouteDetailDrawer', () => {
 
       await waitFor(() => {
         // noTopo 是翻译 key
-        expect(screen.getByText('noTopo')).toBeInTheDocument()
+        expect(screen.getByText('noTopo')).toBeTruthy()
       })
     })
   })
@@ -275,11 +275,9 @@ describe('RouteDetailDrawer', () => {
       render(<RouteDetailDrawer {...defaultProps} />)
 
       const gradeBadge = screen.getByText('V5')
-      expect(gradeBadge).toBeInTheDocument()
+      expect(gradeBadge).toBeTruthy()
       // 难度标签现在是 span 元素，直接检查其样式
-      expect(gradeBadge).toHaveStyle({
-        borderRadius: 'var(--theme-radius-full)',
-      })
+      expect((gradeBadge as HTMLElement).style.borderRadius).toBe('var(--theme-radius-full)')
     })
   })
 
@@ -293,13 +291,13 @@ describe('RouteDetailDrawer', () => {
       )
 
       // 图片加载前不应有 overlay
-      expect(screen.queryByTestId('topo-line-overlay')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('topo-line-overlay')).not.toBeTruthy()
 
       // 触发图片加载完成
       fireEvent.load(screen.getByRole('img'))
 
       await waitFor(() => {
-        expect(screen.getByTestId('topo-line-overlay')).toBeInTheDocument()
+        expect(screen.getByTestId('topo-line-overlay')).toBeTruthy()
       })
     })
 
@@ -320,10 +318,10 @@ describe('RouteDetailDrawer', () => {
       fireEvent.load(screen.getByRole('img'))
 
       await waitFor(() => {
-        expect(screen.getByTestId('multi-topo-line-overlay')).toBeInTheDocument()
+        expect(screen.getByTestId('multi-topo-line-overlay')).toBeTruthy()
       })
       // 单线路 overlay 不应同时存在
-      expect(screen.queryByTestId('topo-line-overlay')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('topo-line-overlay')).not.toBeTruthy()
     })
 
     it('无 topoLine 时不应渲染任何叠加层', () => {
@@ -334,8 +332,8 @@ describe('RouteDetailDrawer', () => {
         />
       )
 
-      expect(screen.queryByTestId('topo-line-overlay')).not.toBeInTheDocument()
-      expect(screen.queryByTestId('multi-topo-line-overlay')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('topo-line-overlay')).not.toBeTruthy()
+      expect(screen.queryByTestId('multi-topo-line-overlay')).not.toBeTruthy()
     })
   })
 
@@ -354,7 +352,7 @@ describe('RouteDetailDrawer', () => {
         />
       )
 
-      expect(screen.getByTestId('route-legend-panel')).toBeInTheDocument()
+      expect(screen.getByTestId('route-legend-panel')).toBeTruthy()
     })
 
     it('无同岩面线路时不应渲染 RouteLegendPanel', () => {
@@ -365,7 +363,7 @@ describe('RouteDetailDrawer', () => {
         />
       )
 
-      expect(screen.queryByTestId('route-legend-panel')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('route-legend-panel')).not.toBeTruthy()
     })
 
     it('点击图例面板中的线路应触发 onRouteChange', () => {

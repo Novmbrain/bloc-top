@@ -42,7 +42,7 @@ describe('CragDetailClient', () => {
 
   it('renders crag name', () => {
     render(<CragDetailClient crag={mockCrag} routes={mockRoutes} />)
-    expect(screen.getByText('测试岩场')).toBeInTheDocument()
+    expect(screen.getByText('测试岩场')).toBeTruthy()
   })
 
   describe('Mobile layout', () => {

@@ -49,10 +49,10 @@ describe('SegmentedControl', () => {
 
       // 等待 mounted 状态更新
       await waitFor(() => {
-        expect(screen.getByText('日间')).toBeInTheDocument()
+        expect(screen.getByText('日间')).toBeTruthy()
       })
-      expect(screen.getByText('暗夜')).toBeInTheDocument()
-      expect(screen.getByText('自动')).toBeInTheDocument()
+      expect(screen.getByText('暗夜')).toBeTruthy()
+      expect(screen.getByText('自动')).toBeTruthy()
     })
 
     it('应该渲染选项图标', async () => {
@@ -65,10 +65,10 @@ describe('SegmentedControl', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByTestId('icon-sun')).toBeInTheDocument()
+        expect(screen.getByTestId('icon-sun')).toBeTruthy()
       })
-      expect(screen.getByTestId('icon-moon')).toBeInTheDocument()
-      expect(screen.getByTestId('icon-monitor')).toBeInTheDocument()
+      expect(screen.getByTestId('icon-moon')).toBeTruthy()
+      expect(screen.getByTestId('icon-monitor')).toBeTruthy()
     })
 
     it('应该在无图标时正常渲染', async () => {
@@ -81,9 +81,9 @@ describe('SegmentedControl', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByText('选项 A')).toBeInTheDocument()
+        expect(screen.getByText('选项 A')).toBeTruthy()
       })
-      expect(screen.getByText('选项 B')).toBeInTheDocument()
+      expect(screen.getByText('选项 B')).toBeTruthy()
     })
 
     it('SSR 时应该显示骨架占位符', () => {
@@ -99,7 +99,7 @@ describe('SegmentedControl', () => {
       // 初始渲染可能是骨架 (.animate-pulse)
       // 注意：由于 useEffect 立即执行，skeleton 可能不存在
       // 这个测试主要验证组件不会崩溃
-      expect(container.firstChild).toBeInTheDocument()
+      expect(container.firstChild).toBeTruthy()
     })
 
     it('应该支持 sm 尺寸', async () => {
@@ -113,12 +113,12 @@ describe('SegmentedControl', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByText('选项 A')).toBeInTheDocument()
+        expect(screen.getByText('选项 A')).toBeTruthy()
       })
 
       // sm 尺寸使用 p-0.5 padding
       const wrapper = container.querySelector('[role="tablist"]')
-      expect(wrapper).toHaveClass('p-0.5')
+      expect((wrapper as HTMLElement).classList.contains('p-0.5')).toBe(true)
     })
 
     it('应该支持 md 尺寸 (默认)', async () => {
@@ -131,12 +131,12 @@ describe('SegmentedControl', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByText('选项 A')).toBeInTheDocument()
+        expect(screen.getByText('选项 A')).toBeTruthy()
       })
 
       // md 尺寸使用 p-1 padding
       const wrapper = container.querySelector('[role="tablist"]')
-      expect(wrapper).toHaveClass('p-1')
+      expect((wrapper as HTMLElement).classList.contains('p-1')).toBe(true)
     })
 
     it('应该支持自定义 className', async () => {
@@ -151,7 +151,7 @@ describe('SegmentedControl', () => {
 
       await waitFor(() => {
         const wrapper = container.querySelector('[role="tablist"]')
-        expect(wrapper).toHaveClass('custom-class')
+        expect((wrapper as HTMLElement).classList.contains('custom-class')).toBe(true)
       })
     })
   })
@@ -169,7 +169,7 @@ describe('SegmentedControl', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByText('选项 B')).toBeInTheDocument()
+        expect(screen.getByText('选项 B')).toBeTruthy()
       })
 
       fireEvent.click(screen.getByText('选项 B'))
@@ -190,7 +190,7 @@ describe('SegmentedControl', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByText('选项 A')).toBeInTheDocument()
+        expect(screen.getByText('选项 A')).toBeTruthy()
       })
 
       fireEvent.click(screen.getByText('选项 A'))
@@ -210,7 +210,7 @@ describe('SegmentedControl', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByText('暗夜')).toBeInTheDocument()
+        expect(screen.getByText('暗夜')).toBeTruthy()
       })
 
       fireEvent.click(screen.getByText('暗夜'))
@@ -233,7 +233,7 @@ describe('SegmentedControl', () => {
 
       await waitFor(() => {
         const selectedTab = screen.getByRole('tab', { selected: true })
-        expect(selectedTab).toHaveTextContent('选项 A')
+        expect(selectedTab.textContent).toContain('选项 A')
       })
     })
 
@@ -251,7 +251,7 @@ describe('SegmentedControl', () => {
         const unselectedTab = tabs.find(tab =>
           tab.getAttribute('aria-selected') === 'false'
         )
-        expect(unselectedTab).toHaveTextContent('选项 B')
+        expect(unselectedTab!.textContent).toContain('选项 B')
       })
     })
 
@@ -265,7 +265,7 @@ describe('SegmentedControl', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('选项 A')
+        expect(screen.getByRole('tab', { selected: true }).textContent).toContain('选项 A')
       })
 
       rerender(
@@ -277,7 +277,7 @@ describe('SegmentedControl', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('选项 B')
+        expect(screen.getByRole('tab', { selected: true }).textContent).toContain('选项 B')
       })
     })
   })
@@ -293,7 +293,7 @@ describe('SegmentedControl', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByRole('tablist')).toBeInTheDocument()
+        expect(screen.getByRole('tablist')).toBeTruthy()
       })
     })
 
@@ -323,7 +323,7 @@ describe('SegmentedControl', () => {
       )
 
       await waitFor(() => {
-        expect(screen.getByRole('tablist')).toHaveAttribute('aria-label', '主题选择')
+        expect(screen.getByRole('tablist').getAttribute('aria-label')).toBe('主题选择')
       })
     })
 
@@ -338,8 +338,8 @@ describe('SegmentedControl', () => {
 
       await waitFor(() => {
         const tabs = screen.getAllByRole('tab')
-        expect(tabs[0]).toHaveAttribute('aria-controls', 'panel-a')
-        expect(tabs[1]).toHaveAttribute('aria-controls', 'panel-b')
+        expect(tabs[0].getAttribute('aria-controls')).toBe('panel-a')
+        expect(tabs[1].getAttribute('aria-controls')).toBe('panel-b')
       })
     })
   })

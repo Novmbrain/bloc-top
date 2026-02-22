@@ -47,38 +47,38 @@ describe('FilterDrawer', () => {
     it('应该渲染岩场筛选芯片', () => {
       render(<FilterDrawer {...defaultProps} />)
 
-      expect(screen.getByText('圆通寺')).toBeInTheDocument()
-      expect(screen.getByText('八井村')).toBeInTheDocument()
+      expect(screen.getByText('圆通寺')).toBeTruthy()
+      expect(screen.getByText('八井村')).toBeTruthy()
     })
 
     it('应该渲染"全部"选项', () => {
       render(<FilterDrawer {...defaultProps} />)
 
       // 使用翻译 key，mock 返回 key 本身
-      expect(screen.getByText('all')).toBeInTheDocument()
+      expect(screen.getByText('all')).toBeTruthy()
     })
 
     it('应该渲染难度等级筛选芯片', () => {
       render(<FilterDrawer {...defaultProps} />)
 
       // 检查单个难度等级标签
-      expect(screen.getByText('V0')).toBeInTheDocument()
-      expect(screen.getByText('V3')).toBeInTheDocument()
-      expect(screen.getByText('V6')).toBeInTheDocument()
+      expect(screen.getByText('V0')).toBeTruthy()
+      expect(screen.getByText('V3')).toBeTruthy()
+      expect(screen.getByText('V6')).toBeTruthy()
     })
 
     it('应该渲染清除和应用按钮', () => {
       render(<FilterDrawer {...defaultProps} />)
 
-      expect(screen.getByText('clear')).toBeInTheDocument()
-      expect(screen.getByText('applyFilter')).toBeInTheDocument()
+      expect(screen.getByText('clear')).toBeTruthy()
+      expect(screen.getByText('applyFilter')).toBeTruthy()
     })
 
     it('isOpen=false 时不应渲染内容', () => {
       render(<FilterDrawer {...defaultProps} isOpen={false} />)
 
       // Drawer 组件在 isOpen=false 时不渲染内容
-      expect(screen.queryByText('圆通寺')).not.toBeInTheDocument()
+      expect(screen.queryByText('圆通寺')).not.toBeTruthy()
     })
   })
 
@@ -172,7 +172,7 @@ describe('FilterDrawer', () => {
       render(<FilterDrawer {...defaultProps} />)
 
       const clearButton = screen.getByText('clear').closest('button')
-      expect(clearButton).toBeDisabled()
+      expect((clearButton as HTMLButtonElement).disabled).toBe(true)
     })
 
     it('有筛选时清除按钮应启用', () => {
@@ -181,7 +181,7 @@ describe('FilterDrawer', () => {
       )
 
       const clearButton = screen.getByText('clear').closest('button')
-      expect(clearButton).not.toBeDisabled()
+      expect((clearButton as HTMLButtonElement).disabled).toBe(false)
     })
 
     it('点击清除应重置所有筛选', () => {
@@ -240,7 +240,7 @@ describe('FilterDrawer', () => {
       // 验证状态已同步 - 岩场应该被选中
       await waitFor(() => {
         // 圆通寺应该被选中状态
-        expect(screen.getByText('圆通寺')).toBeInTheDocument()
+        expect(screen.getByText('圆通寺')).toBeTruthy()
       })
     })
   })
