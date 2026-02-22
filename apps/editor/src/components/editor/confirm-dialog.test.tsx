@@ -19,8 +19,8 @@ describe('ConfirmDialog', () => {
 
   it('isOpen=true 渲染标题和描述', () => {
     render(<ConfirmDialog {...defaults} />)
-    expect(screen.getByText('确认操作')).toBeInTheDocument()
-    expect(screen.getByText('是否继续？')).toBeInTheDocument()
+    expect(screen.getByText('确认操作')).toBeTruthy()
+    expect(screen.getByText('是否继续？')).toBeTruthy()
   })
 
   it('点击确认按钮触发 onConfirm', async () => {
@@ -39,13 +39,13 @@ describe('ConfirmDialog', () => {
 
   it('自定义 cancelLabel', () => {
     render(<ConfirmDialog {...defaults} cancelLabel="丢弃" />)
-    expect(screen.getByText('丢弃')).toBeInTheDocument()
+    expect(screen.getByText('丢弃')).toBeTruthy()
   })
 
   it('isLoading 时按钮禁用', () => {
     render(<ConfirmDialog {...defaults} isLoading />)
     const buttons = screen.getAllByRole('button')
-    buttons.forEach(btn => expect(btn).toBeDisabled())
+    buttons.forEach(btn => expect((btn as HTMLButtonElement).disabled).toBe(true))
   })
 
   it('点击遮罩触发 onCancel', async () => {
@@ -61,6 +61,6 @@ describe('ConfirmDialog', () => {
         <div data-testid="custom-content">自定义内容</div>
       </ConfirmDialog>
     )
-    expect(screen.getByTestId('custom-content')).toBeInTheDocument()
+    expect(screen.getByTestId('custom-content')).toBeTruthy()
   })
 })

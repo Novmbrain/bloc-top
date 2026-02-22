@@ -39,7 +39,7 @@ describe('InlineFaceUpload', () => {
     render(
       <InlineFaceUpload cragId="test-crag" area="主墙" onUploadSuccess={vi.fn()} />
     )
-    expect(screen.getByText('主墙')).toBeInTheDocument()
+    expect(screen.getByText('主墙')).toBeTruthy()
   })
 
   it('faceId 为空时上传按钮 disabled', () => {
@@ -48,7 +48,7 @@ describe('InlineFaceUpload', () => {
     )
     // The upload button text comes from uploadButtonText prop
     const btn = screen.getByRole('button', { name: /上传并开始标注/ })
-    expect(btn).toBeDisabled()
+    expect((btn as HTMLButtonElement).disabled).toBe(true)
   })
 
   it('faceId 格式非法时提示错误', () => {
@@ -57,7 +57,7 @@ describe('InlineFaceUpload', () => {
     )
     const input = screen.getByPlaceholderText(/如.*zhu-qiang/)
     fireEvent.change(input, { target: { value: 'ZhuQiang' } })
-    expect(screen.getByText(/只能包含小写字母/)).toBeInTheDocument()
+    expect(screen.getByText(/只能包含小写字母/)).toBeTruthy()
   })
 
   it('上传成功后调用 onUploadSuccess 并传入正确的 faceId', async () => {
@@ -81,7 +81,7 @@ describe('InlineFaceUpload', () => {
 
     // 3. 点击上传按钮（此时 disabled 应已解除）
     const uploadBtn = screen.getByRole('button', { name: /上传并开始标注/ })
-    expect(uploadBtn).not.toBeDisabled()
+    expect((uploadBtn as HTMLButtonElement).disabled).toBe(false)
     fireEvent.click(uploadBtn)
 
     // 4. 验证 fetch 被调用，以及 onSuccess 被调用并传入正确 faceId
