@@ -2,11 +2,13 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { Link2, User, Ruler, MoveHorizontal, Check, AlertCircle } from 'lucide-react'
+import { Link2, User, Ruler, MoveHorizontal, Check, AlertCircle, LogIn } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
+import { Link, usePathname } from '@/i18n/navigation'
 import { detectPlatformFromUrl, isXiaohongshuUrl, extractUrlFromText, BETA_PLATFORMS } from '@/lib/beta-constants'
 import { useClimberBodyData } from '@/hooks/use-climber-body-data'
+import { useSession } from '@/lib/auth-client'
 import type { BetaLink } from '@/types'
 
 interface BetaSubmitDrawerProps {
@@ -25,7 +27,11 @@ export function BetaSubmitDrawer({
   onSuccess,
 }: BetaSubmitDrawerProps) {
   const t = useTranslations('Beta')
+  const tAuth = useTranslations('Auth')
   const tApiError = useTranslations('APIError')
+  const session = useSession()
+  const isLoggedIn = !!session.data
+  const pathname = usePathname()
   const { bodyData, updateBodyData } = useClimberBodyData()
   const [url, setUrl] = useState('')
   const [nickname, setNickname] = useState('')
@@ -156,8 +162,50 @@ export function BetaSubmitDrawer({
       showCloseButton
     >
       <div className="px-4 pb-4 space-y-4">
-        {/* 成功提示 */}
-        {success && (
+        {/* 未登录提示 */}
+        {!isLoggedIn && (
+          <div
+            className="flex flex-col items-center gap-4 py-8 animate-fade-in"
+          >
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, var(--theme-surface))',
+              }}
+            >
+              <LogIn className="w-7 h-7" style={{ color: 'var(--theme-primary)' }} />
+            </div>
+            <div className="text-center space-y-1">
+              <p
+                className="text-base font-medium"
+                style={{ color: 'var(--theme-on-surface)' }}
+              >
+                {tAuth('loginRequired')}
+              </p>
+              <p
+                className="text-sm"
+                style={{ color: 'var(--theme-on-surface-variant)' }}
+              >
+                {t('loginToShare')}
+              </p>
+            </div>
+            <Link
+              href={`/login?callbackURL=${encodeURIComponent(pathname)}`}
+              className="px-8 py-3 text-sm font-medium transition-all active:scale-[0.98]"
+              style={{
+                backgroundColor: 'var(--theme-primary)',
+                color: 'var(--theme-on-primary)',
+                borderRadius: 'var(--theme-radius-xl)',
+              }}
+              onClick={handleClose}
+            >
+              {tAuth('loginOrRegister')}
+            </Link>
+          </div>
+        )}
+
+        {/* 已登录：显示表单 */}
+        {isLoggedIn && success && (
           <div
             className="flex items-center gap-3 p-4 animate-fade-in-up"
             style={{
@@ -172,7 +220,7 @@ export function BetaSubmitDrawer({
         )}
 
         {/* 错误提示 */}
-        {error && (
+        {isLoggedIn && error && (
           <div
             className="flex items-center gap-3 p-4 animate-fade-in-up"
             style={{
@@ -187,6 +235,7 @@ export function BetaSubmitDrawer({
         )}
 
         {/* 链接输入 */}
+        {isLoggedIn && (<>
         <div>
           <label
             className="text-sm font-medium mb-2 block"
@@ -342,6 +391,7 @@ export function BetaSubmitDrawer({
         >
           {isSubmitting ? t('submitting') : success ? t('submitted') : t('submit')}
         </button>
+        </>)}
       </div>
     </Drawer>
   )

@@ -281,6 +281,7 @@
     "platformVideo": "Vidéo {platform}",
     "copyLink": "Copier le lien",
     "shareTitle": "Partager le Beta pour {name}",
+    "loginToShare": "Connectez-vous pour partager des vidéos beta",
     "submitSuccess": "Beta partagé avec succès !",
     "submitting": "Soumission en cours...",
     "submitted": "Soumis",
