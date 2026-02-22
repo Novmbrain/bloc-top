@@ -313,6 +313,7 @@
     "platformVideo": "{platform}视频",
     "copyLink": "复制链接",
     "shareTitle": "分享 {name} 的 Beta",
+    "loginToShare": "登录后即可分享 Beta 视频",
     "submitSuccess": "Beta 分享成功！",
     "submitting": "提交中...",
     "submitted": "已提交",

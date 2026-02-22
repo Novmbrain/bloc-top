@@ -70,6 +70,10 @@ export async function POST(request: NextRequest) {
   const start = Date.now()
   const clientIp = getClientIp(request)
 
+  // ==================== 0. 认证检查 ====================
+  const authResult = await requireAuth(request)
+  if (authResult instanceof NextResponse) return authResult
+
   try {
     // ==================== 1. Rate Limiting ====================
     const rateLimitResult = checkRateLimit(`beta:${clientIp}`, BETA_RATE_LIMIT_CONFIG)
