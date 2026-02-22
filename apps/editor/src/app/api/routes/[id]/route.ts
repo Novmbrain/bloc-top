@@ -201,6 +201,37 @@ export async function PATCH(
       }
     }
 
+    // 验证 topoAnnotations
+    if (body.topoAnnotations !== undefined) {
+      if (body.topoAnnotations === null || (Array.isArray(body.topoAnnotations) && body.topoAnnotations.length === 0)) {
+        updates.topoAnnotations = []
+      } else if (!Array.isArray(body.topoAnnotations)) {
+        return NextResponse.json(
+          { success: false, error: 'topoAnnotations 必须是数组' },
+          { status: 400 }
+        )
+      } else {
+        for (const annotation of body.topoAnnotations) {
+          if (
+            typeof annotation.faceId !== 'string' ||
+            typeof annotation.area !== 'string' ||
+            !validateTopoLine(annotation.topoLine)
+          ) {
+            return NextResponse.json(
+              { success: false, error: 'topoAnnotations 中的标注数据格式无效' },
+              { status: 400 }
+            )
+          }
+        }
+        updates.topoAnnotations = body.topoAnnotations.map((a: Record<string, unknown>) => ({
+          faceId: a.faceId,
+          area: a.area,
+          topoLine: a.topoLine,
+          ...(typeof a.topoTension === 'number' ? { topoTension: a.topoTension } : {}),
+        }))
+      }
+    }
+
     // 检查是否有需要更新的字段
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(

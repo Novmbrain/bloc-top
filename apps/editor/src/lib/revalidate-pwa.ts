@@ -45,10 +45,10 @@ export async function revalidatePwa(options: {
   }
 }
 
-/** 重验证岩场相关页面 */
+/** 重验证岩场相关页面 + 线路列表页 */
 export async function revalidateCragPages(cragId: string) {
   await revalidatePwa({
-    paths: [`/crag/${cragId}`, '/'],
+    paths: [`/crag/${cragId}`, '/', '/route'],
   })
 }
 
