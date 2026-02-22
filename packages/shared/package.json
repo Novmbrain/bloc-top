@@ -29,6 +29,7 @@
     "./crag-theme": "./src/crag-theme.ts",
     "./editor-utils": "./src/editor-utils.ts",
     "./editor-areas": "./src/editor-areas.ts",
+    "./route-search": "./src/route-search.ts",
     "./revalidate-helpers": "./src/revalidate-helpers.ts",
     "./cache-config": "./src/cache-config.ts",
     "./*": "./src/*/index.ts"
@@ -37,6 +38,7 @@
     "better-auth": "^1.4.18",
     "clsx": "^2.1.1",
     "mongodb": "^7.0.0",
+    "pinyin-pro": "^3.28.0",
     "tailwind-merge": "^3.0.2"
   },
   "peerDependencies": {

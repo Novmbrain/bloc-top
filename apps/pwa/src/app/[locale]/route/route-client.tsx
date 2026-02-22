@@ -3,8 +3,6 @@
 import { useMemo, useCallback, useState, useTransition, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { ChevronRight } from 'lucide-react'
-import { getGradeColor } from '@/lib/tokens'
 import { FILTER_PARAMS, getGradesByValues, DEFAULT_SORT_DIRECTION, type SortDirection } from '@/lib/filter-constants'
 import { compareGrades } from '@/lib/grade-utils'
 import { getSiblingRoutes } from '@/lib/route-utils'
@@ -13,6 +11,7 @@ import { GradeRangeSelectorVertical } from '@/components/grade-range-selector-ve
 import { RouteFilterBar } from '@/components/route-filter-bar'
 import { FloatingSearchInput } from '@/components/floating-search-input'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
+import { RouteListItem } from '@/components/route-list-item'
 import { AppTabbar } from '@/components/app-tabbar'
 import type { Route, Crag } from '@/types'
 
@@ -319,54 +318,19 @@ export default function RouteListClient({ routes, crags }: RouteListClientProps)
           >
             <div className="space-y-2">
               {filteredRoutes.map((route, index) => (
-                <button
+                <RouteListItem
                   key={route.id}
-                  onClick={() => handleRouteClick(route)}
-                  className={`w-full flex items-center p-3 transition-all active:scale-[0.98] text-left ${
-                    !hasInitialRender && index < MAX_ANIMATED_CARDS ? 'animate-fade-in-up' : ''
-                  }`}
+                  route={route}
+                  onClick={handleRouteClick}
+                  className={!hasInitialRender && index < MAX_ANIMATED_CARDS ? 'animate-fade-in-up' : ''}
                   style={{
                     backgroundColor: 'var(--theme-surface)',
-                    borderRadius: 'var(--theme-radius-xl)',
                     boxShadow: 'var(--theme-shadow-sm)',
                     contentVisibility: 'auto' as React.CSSProperties['contentVisibility'],
                     containIntrinsicSize: '0 72px',
                     ...(!hasInitialRender && index < MAX_ANIMATED_CARDS ? { animationDelay: `${index * 30}ms` } : {}),
                   }}
-                >
-                  {/* 难度标签 */}
-                  <div
-                    className="w-12 h-12 flex items-center justify-center mr-3 flex-shrink-0"
-                    style={{
-                      backgroundColor: getGradeColor(route.grade),
-                      borderRadius: 'var(--theme-radius-lg)',
-                    }}
-                  >
-                    <span className="text-sm font-bold text-white">
-                      {route.grade}
-                    </span>
-                  </div>
-
-                  {/* 线路信息 */}
-                  <div className="flex-1 min-w-0">
-                    <span
-                      className="text-base font-semibold block truncate"
-                      style={{ color: 'var(--theme-on-surface)' }}
-                    >
-                      {route.name}
-                    </span>
-                    <span className="text-xs" style={{ color: 'var(--theme-on-surface-variant)' }}>
-                      {route.area}
-                      {route.FA && ` · FA: ${route.FA}`}
-                    </span>
-                  </div>
-
-                  {/* 箭头 */}
-                  <ChevronRight
-                    className="w-5 h-5 flex-shrink-0"
-                    style={{ color: 'var(--theme-on-surface-variant)' }}
-                  />
-                </button>
+                />
               ))}
             </div>
 

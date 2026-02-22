@@ -7,14 +7,16 @@
  * 离线模式下禁用天气和地图功能
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import Image from 'next/image'
 import { useTranslations, useLocale } from 'next-intl'
 import { ChevronLeft, WifiOff, FileText, Car, CloudOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getCragOffline, type OfflineCragData, OFFLINE_IMAGE_CACHE_NAME } from '@/lib/offline-storage'
 import { getCragCoverUrl } from '@/lib/constants'
+import { computeGradeRange, formatGradeRange } from '@/lib/grade-utils'
+import { InfoCard } from '@/components/info-card'
+import { CoverCarousel } from '@/components/cover-carousel'
 
 export default function OfflineCragDetailPage() {
   const t = useTranslations('OfflineCragDetail')
@@ -24,8 +26,6 @@ export default function OfflineCragDetailPage() {
   const params = useParams()
   const cragId = params.id as string
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [cragData, setCragData] = useState<OfflineCragData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [coverUrls, setCoverUrls] = useState<string[]>([])
@@ -77,39 +77,10 @@ export default function OfflineCragDetailPage() {
     }
   }
 
-  // 监听滚动位置更新当前索引
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const handleScroll = () => {
-      const scrollLeft = container.scrollLeft
-      const itemWidth = container.offsetWidth
-      const newIndex = Math.round(scrollLeft / itemWidth)
-      setCurrentIndex(newIndex)
-    }
-
-    container.addEventListener('scroll', handleScroll, { passive: true })
-    return () => container.removeEventListener('scroll', handleScroll)
-  }, [])
 
   // 计算难度范围
   const gradeRange = cragData
-    ? (() => {
-        const grades = cragData.routes
-          .map((r) => r.grade)
-          .filter((g) => g !== '?')
-          .sort((a, b) => {
-            const numA = parseInt(a.replace('V', ''))
-            const numB = parseInt(b.replace('V', ''))
-            return numA - numB
-          })
-
-        if (grades.length === 0) return t('noGrade')
-        return grades[0] === grades[grades.length - 1]
-          ? grades[0]
-          : `${grades[0]} - ${grades[grades.length - 1]}`
-      })()
+    ? (formatGradeRange(computeGradeRange(cragData.routes.map((r) => r.grade))) ?? t('noGrade'))
     : ''
 
   // 加载中状态
@@ -197,49 +168,11 @@ export default function OfflineCragDetailPage() {
         </button>
 
         {/* 图片滑动查看 */}
-        <div
-          ref={scrollContainerRef}
-          className="relative h-48 overflow-x-auto scrollbar-hide"
-          style={{
-            scrollSnapType: 'x mandatory',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          <div className="flex h-full">
-            {coverUrls.map((src, idx) => (
-              <div
-                key={idx}
-                className="w-full flex-shrink-0 h-48 relative"
-                style={{ scrollSnapAlign: 'start' }}
-              >
-                <Image
-                  src={src}
-                  alt={`${crag.name} ${idx + 1}`}
-                  fill
-                  priority={idx === 0}
-                  sizes="100vw"
-                  className="object-cover"
-                  draggable={false}
-                  unoptimized
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* 底部圆点指示器 */}
-          {coverUrls.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {coverUrls.map((_, idx) => (
-                <div
-                  key={idx}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    idx === currentIndex ? 'bg-white' : 'bg-white/50'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <CoverCarousel
+          images={coverUrls}
+          alt={crag.name}
+          unoptimized
+        />
       </div>
 
       {/* 内容滚动区域 */}
@@ -354,38 +287,3 @@ export default function OfflineCragDetailPage() {
   )
 }
 
-interface InfoCardProps {
-  icon: React.ReactNode
-  iconBg: string
-  title: string
-  content: string
-  delay?: number
-}
-
-function InfoCard({ icon, iconBg, title, content, delay = 0 }: InfoCardProps) {
-  return (
-    <div
-      className="glass p-3 mb-2 animate-fade-in-up"
-      style={{
-        borderRadius: 'var(--theme-radius-xl)',
-        animationDelay: `${delay}ms`,
-        transition: 'var(--theme-transition)',
-      }}
-    >
-      <div className="flex items-center mb-2">
-        <div
-          className="w-8 h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0"
-          style={{ backgroundColor: iconBg }}
-        >
-          {icon}
-        </div>
-        <span className="text-base font-semibold" style={{ color: 'var(--theme-on-surface)' }}>
-          {title}
-        </span>
-      </div>
-      <p className="text-sm leading-relaxed" style={{ color: 'var(--theme-on-surface-variant)' }}>
-        {content}
-      </p>
-    </div>
-  )
-}

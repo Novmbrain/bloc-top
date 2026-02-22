@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
-import { Search, X, ChevronRight, ArrowRight, SlidersHorizontal, Video, User } from 'lucide-react'
+import { Search, X, ArrowRight, SlidersHorizontal } from 'lucide-react'
 import { Drawer } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { ContextualHint } from '@/components/contextual-hint'
 import { RouteDetailDrawer } from '@/components/route-detail-drawer'
-import { getGradeColor } from '@/lib/tokens'
+import { RouteListItem } from '@/components/route-list-item'
 import { getSiblingRoutes } from '@/lib/route-utils'
 import type { Route, Crag } from '@/types'
 
@@ -143,73 +143,14 @@ export function SearchDrawer({
               {displayResults.length > 0 ? (
                 <div className="space-y-2">
                   {displayResults.map((route, index) => (
-                    <button
+                    <RouteListItem
                       key={route.id}
-                      onClick={() => handleRouteClick(route)}
-                      className="w-full flex items-center p-3 transition-all active:scale-[0.98] animate-fade-in-up text-left glass"
-                      style={{
-                        borderRadius: 'var(--theme-radius-xl)',
-                        animationDelay: `${index * 30}ms`,
-                      }}
-                    >
-                      {/* 难度标签 - 实色背景，与难度选择 bar 颜色一致 */}
-                      <div
-                        className="w-10 h-10 flex items-center justify-center mr-3 flex-shrink-0"
-                        style={{
-                          backgroundColor: getGradeColor(route.grade),
-                          borderRadius: 'var(--theme-radius-lg)',
-                        }}
-                      >
-                        <span className="text-xs font-bold text-white">
-                          {route.grade}
-                        </span>
-                      </div>
-
-                      {/* 线路信息 */}
-                      <div className="flex-1 min-w-0">
-                        <span
-                          className="text-sm font-semibold block truncate"
-                          style={{ color: 'var(--theme-on-surface)' }}
-                        >
-                          {route.name}
-                        </span>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span
-                            className="text-xs"
-                            style={{ color: 'var(--theme-on-surface-variant)' }}
-                          >
-                            {route.area}
-                          </span>
-                          {route.FA && (
-                            <span
-                              className="inline-flex items-center gap-0.5 text-xs"
-                              style={{ color: 'var(--theme-on-surface-variant)' }}
-                            >
-                              <User className="w-3 h-3" />
-                              <span className="truncate max-w-[80px]">{route.FA}</span>
-                            </span>
-                          )}
-                          {route.betaLinks && route.betaLinks.length > 0 && (
-                            <span
-                              className="inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full"
-                              style={{
-                                backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)',
-                                color: 'var(--theme-primary)',
-                              }}
-                            >
-                              <Video className="w-3 h-3" />
-                              Beta
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* 箭头 */}
-                      <ChevronRight
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: 'var(--theme-on-surface-variant)' }}
-                      />
-                    </button>
+                      route={route}
+                      onClick={handleRouteClick}
+                      compact
+                      className="animate-fade-in-up glass"
+                      style={{ animationDelay: `${index * 30}ms` }}
+                    />
                   ))}
 
                   {/* 查看更多按钮 */}

@@ -10,7 +10,7 @@
  * - failed: 显示错误图标 + 重试
  */
 
-import { useCallback, useMemo, useEffect, useRef } from 'react'
+import { memo, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Download, Check, AlertCircle, Loader2, RefreshCw } from 'lucide-react'
 import type { Crag, Route, DownloadProgress } from '@/types'
@@ -33,7 +33,7 @@ interface DownloadButtonProps {
 /**
  * 环形进度条组件
  */
-function CircularProgress({
+const CircularProgress = memo(function CircularProgress({
   progress,
   size = 24,
   strokeWidth = 2.5,
@@ -77,7 +77,7 @@ function CircularProgress({
       />
     </svg>
   )
-}
+})
 
 export function DownloadButton({
   crag,
